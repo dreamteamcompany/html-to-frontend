@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Chart, registerables } from 'chart.js';
@@ -44,7 +44,7 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    if (!barChartRef.current || !doughnutChartRef.current || loading) return;
+    if (!barChartRef.current || !doughnutChartRef.current || loading || stats.categories.length === 0) return;
 
     const barCtx = barChartRef.current.getContext('2d');
     const doughnutCtx = doughnutChartRef.current.getContext('2d');
@@ -233,22 +233,6 @@ const Index = () => {
             <CardContent className="p-[25px]">
               <div className="flex justify-between items-start mb-5">
                 <div>
-                  <h3 className="text-base font-bold mb-[5px]">Серверная Инфраструктура</h3>
-                  <p className="text-sm text-muted-foreground">Расходы на серверы</p>
-                </div>
-                <div className="w-[45px] h-[45px] rounded-[12px] bg-primary/10 flex items-center justify-center text-primary text-xl">
-                  <Icon name="Database" size={20} />
-                </div>
-              </div>
-              <div className="text-[34px] font-extrabold mb-[5px] leading-[42px]">{stats.categories.servers.toLocaleString('ru-RU')} ₽</div>
-              <p className="text-sm text-muted-foreground">{stats.total > 0 ? `${Math.round((stats.categories.servers / stats.total) * 100)}%` : '0%'} от общего бюджета</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-[20px]">
-            <CardContent className="p-[25px]">
-              <div className="flex justify-between items-start mb-5">
-                <div>
                   <h3 className="text-base font-bold mb-[5px]">Всего Платежей</h3>
                   <p className="text-sm text-muted-foreground">История операций</p>
                 </div>
@@ -260,82 +244,59 @@ const Index = () => {
               <p className="text-sm text-muted-foreground">платежей за все время</p>
             </CardContent>
           </Card>
+
+          <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-[20px]">
+            <CardContent className="p-[25px]">
+              <div className="flex justify-between items-start mb-5">
+                <div>
+                  <h3 className="text-base font-bold mb-[5px]">Категории</h3>
+                  <p className="text-sm text-muted-foreground">Всего</p>
+                </div>
+                <div className="w-[45px] h-[45px] rounded-[12px] bg-primary/10 flex items-center justify-center text-primary text-xl">
+                  <Icon name="Tag" size={20} />
+                </div>
+              </div>
+              <div className="text-[34px] font-extrabold mb-[5px] leading-[42px]">{stats.categories.length}</div>
+              <p className="text-sm text-muted-foreground">категорий расходов</p>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-[30px]">
-          {[
-            { icon: 'Server', label: 'Серверы', value: `${stats.categories.servers.toLocaleString('ru-RU')} ₽` },
-            { icon: 'MessageSquare', label: 'Коммуникации', value: `${stats.categories.communications.toLocaleString('ru-RU')} ₽` },
-            { icon: 'Globe', label: 'Веб-сайты', value: `${stats.categories.websites.toLocaleString('ru-RU')} ₽` },
-            { icon: 'Shield', label: 'Безопасность', value: `${stats.categories.security.toLocaleString('ru-RU')} ₽` }
-          ].map((item, index) => (
-            <Card key={index} className="border-white/5 bg-card rounded-[20px]">
+          {stats.categories.map((category) => (
+            <Card key={category.id} className="border-white/5 bg-card rounded-[20px]">
               <CardContent className="p-[20px] flex items-center gap-[15px]">
-                <div className="w-[56px] h-[56px] rounded-[15px] bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                  <Icon name={item.icon} size={20} />
+                <div className="w-[56px] h-[56px] rounded-[15px] bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">
+                  {category.icon}
                 </div>
                 <div>
-                  <div className="text-2xl font-bold mb-[2px] leading-[32px]">{item.value}</div>
-                  <p className="text-sm text-muted-foreground">{item.label}</p>
+                  <div className="text-2xl font-bold mb-[2px] leading-[32px]">{category.total.toLocaleString('ru-RU')} ₽</div>
+                  <p className="text-sm text-muted-foreground">{category.name}</p>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-[30px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-[20px]">
-            <CardHeader>
-              <CardTitle>IT Расходы по Категориям</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[350px] relative">
+            <CardContent className="p-[25px]">
+              <h3 className="text-lg font-bold mb-5">Расходы по категориям</h3>
+              <div className="h-[300px]">
                 <canvas ref={barChartRef}></canvas>
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-[20px]">
-            <CardHeader>
-              <CardTitle>Распределение Затрат</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[350px] relative">
+            <CardContent className="p-[25px]">
+              <h3 className="text-lg font-bold mb-5">Распределение бюджета</h3>
+              <div className="h-[300px]">
                 <canvas ref={doughnutChartRef}></canvas>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-[20px]">
-          <CardContent className="p-[25px]">
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="text-lg font-bold">IT Сервисы и Расходы</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left py-4 px-4 text-sm font-bold text-muted-foreground">Сервис</th>
-                    <th className="text-left py-4 px-4 text-sm font-bold text-muted-foreground">Категория</th>
-                    <th className="text-left py-4 px-4 text-sm font-bold text-muted-foreground">Сумма (₽)</th>
-                    <th className="text-left py-4 px-4 text-sm font-bold text-muted-foreground">Дата</th>
-                    <th className="text-left py-4 px-4 text-sm font-bold text-muted-foreground">Статус</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colSpan={5} className="text-center py-10">
-                      <Icon name="CreditCard" size={48} className="mx-auto mb-4 opacity-50 text-muted-foreground" />
-                      <div className="text-muted-foreground">Платежи не найдены</div>
-                      <div className="text-sm text-muted-foreground mt-2.5">Добавьте первый платеж</div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );
