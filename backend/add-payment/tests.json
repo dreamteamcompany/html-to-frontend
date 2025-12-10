@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "Add payment successfully",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "category": "servers",
+        "amount": 15000,
+        "description": "Аренда сервера"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "id": "number",
+        "category": "servers",
+        "amount": 15000,
+        "description": "Аренда сервера"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject invalid category",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "category": "invalid",
+        "amount": 1000
+      },
+      "expectedStatus": 500
+    }
+  ]
+}
