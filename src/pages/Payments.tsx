@@ -19,11 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 
 interface Payment {
   id: number;
@@ -124,19 +119,22 @@ const Payments = () => {
             </a>
           </li>
           <li>
-            <Collapsible open={dictionariesOpen} onOpenChange={setDictionariesOpen}>
-              <CollapsibleTrigger className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
-                <div className="flex items-center gap-3">
-                  <Icon name="BookOpen" size={20} />
-                  <span>Справочники</span>
-                </div>
-                <Icon 
-                  name="ChevronDown" 
-                  size={16} 
-                  className={`transition-transform ${dictionariesOpen ? 'rotate-180' : ''}`}
-                />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-1 space-y-1">
+            <button 
+              onClick={() => setDictionariesOpen(!dictionariesOpen)}
+              className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Icon name="BookOpen" size={20} />
+                <span>Справочники</span>
+              </div>
+              <Icon 
+                name="ChevronDown" 
+                size={16} 
+                className={`transition-transform ${dictionariesOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {dictionariesOpen && (
+              <div className="mt-1 space-y-1">
                 <a 
                   href="#" 
                   className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground/60 cursor-not-allowed"
@@ -153,8 +151,8 @@ const Payments = () => {
                   <Icon name="Tag" size={18} />
                   <span>Категории платежей</span>
                 </a>
-              </CollapsibleContent>
-            </Collapsible>
+              </div>
+            )}
           </li>
           <li>
             <a href="#" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
