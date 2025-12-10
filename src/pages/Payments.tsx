@@ -19,6 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 interface Payment {
   id: number;
@@ -46,6 +51,7 @@ const Payments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dictionariesOpen, setDictionariesOpen] = useState(false);
   const [formData, setFormData] = useState({
     category: '',
     description: '',
@@ -116,6 +122,39 @@ const Payments = () => {
               <Icon name="CreditCard" size={20} />
               <span>Платежи</span>
             </a>
+          </li>
+          <li>
+            <Collapsible open={dictionariesOpen} onOpenChange={setDictionariesOpen}>
+              <CollapsibleTrigger className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+                <div className="flex items-center gap-3">
+                  <Icon name="BookOpen" size={20} />
+                  <span>Справочники</span>
+                </div>
+                <Icon 
+                  name="ChevronDown" 
+                  size={16} 
+                  className={`transition-transform ${dictionariesOpen ? 'rotate-180' : ''}`}
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-1 space-y-1">
+                <a 
+                  href="#" 
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground/60 cursor-not-allowed"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <Icon name="Building2" size={18} />
+                  <span>Компании</span>
+                </a>
+                <a 
+                  href="#" 
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground/60 cursor-not-allowed"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <Icon name="Tag" size={18} />
+                  <span>Категории платежей</span>
+                </a>
+              </CollapsibleContent>
+            </Collapsible>
           </li>
           <li>
             <a href="#" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
