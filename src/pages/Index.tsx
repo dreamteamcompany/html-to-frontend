@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
@@ -6,17 +6,59 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
+interface Stats {
+  total: number;
+  payment_count: number;
+  categories: {
+    servers: number;
+    communications: number;
+    websites: number;
+    security: number;
+  };
+}
+
 const Index = () => {
   const barChartRef = useRef<HTMLCanvasElement>(null);
   const doughnutChartRef = useRef<HTMLCanvasElement>(null);
+  const [stats, setStats] = useState<Stats>({
+    total: 0,
+    payment_count: 0,
+    categories: {
+      servers: 0,
+      communications: 0,
+      websites: 0,
+      security: 0
+    }
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!barChartRef.current || !doughnutChartRef.current) return;
+    fetch('https://functions.poehali.dev/0f0eb161-07cd-4e34-b95b-9ff274f3390a')
+      .then(res => res.json())
+      .then(data => {
+        setStats(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load stats:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!barChartRef.current || !doughnutChartRef.current || loading) return;
 
     const barCtx = barChartRef.current.getContext('2d');
     const doughnutCtx = doughnutChartRef.current.getContext('2d');
 
     if (!barCtx || !doughnutCtx) return;
+
+    const categoryData = [
+      stats.categories.servers,
+      stats.categories.communications,
+      stats.categories.websites,
+      stats.categories.security
+    ];
 
     const barChart = new Chart(barCtx, {
       type: 'bar',
@@ -24,7 +66,7 @@ const Index = () => {
         labels: ['Серверы', 'Коммуникации', 'Веб-сайты', 'Безопасность'],
         datasets: [{
           label: 'Расходы',
-          data: [15000, 8000, 5000, 3000],
+          data: categoryData,
           backgroundColor: [
             'rgba(117, 81, 233, 0.8)',
             'rgba(57, 101, 255, 0.8)',
@@ -61,7 +103,7 @@ const Index = () => {
       data: {
         labels: ['Серверы', 'Коммуникации', 'Веб-сайты', 'Безопасность'],
         datasets: [{
-          data: [15000, 8000, 5000, 3000],
+          data: categoryData,
           backgroundColor: [
             'rgba(117, 81, 233, 0.8)',
             'rgba(57, 101, 255, 0.8)',
@@ -87,7 +129,7 @@ const Index = () => {
       barChart.destroy();
       doughnutChart.destroy();
     };
-  }, []);
+  }, [stats, loading]);
 
   return (
     <div className="flex min-h-screen">
@@ -106,7 +148,7 @@ const Index = () => {
             </a>
           </li>
           <li>
-            <a href="#" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+            <a href="/payments" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
               <Icon name="CreditCard" size={20} />
               <span>Платежи</span>
             </a>
@@ -153,8 +195,8 @@ const Index = () => {
                   <Icon name="Server" size={20} />
                 </div>
               </div>
-              <div className="text-[32px] font-extrabold mb-2">0 ₽</div>
-              <p className="text-sm text-muted-foreground">Начните добавлять платежи</p>
+              <div className="text-[32px] font-extrabold mb-2">{stats.total.toLocaleString('ru-RU')} ₽</div>
+              <p className="text-sm text-muted-foreground">{stats.payment_count > 0 ? `${stats.payment_count} платежей` : 'Начните добавлять платежи'}</p>
             </CardContent>
           </Card>
 
@@ -169,8 +211,8 @@ const Index = () => {
                   <Icon name="Database" size={20} />
                 </div>
               </div>
-              <div className="text-[34px] font-extrabold mb-[5px] leading-[42px]">0 ₽</div>
-              <p className="text-sm text-muted-foreground">0% от общего бюджета</p>
+              <div className="text-[34px] font-extrabold mb-[5px] leading-[42px]">{stats.categories.servers.toLocaleString('ru-RU')} ₽</div>
+              <p className="text-sm text-muted-foreground">{stats.total > 0 ? `${Math.round((stats.categories.servers / stats.total) * 100)}%` : '0%'} от общего бюджета</p>
             </CardContent>
           </Card>
 
@@ -185,7 +227,7 @@ const Index = () => {
                   <Icon name="Box" size={20} />
                 </div>
               </div>
-              <div className="text-[34px] font-extrabold mb-[5px] leading-[42px]">0</div>
+              <div className="text-[34px] font-extrabold mb-[5px] leading-[42px]">{stats.payment_count}</div>
               <p className="text-sm text-muted-foreground">платежей за все время</p>
             </CardContent>
           </Card>
@@ -193,10 +235,10 @@ const Index = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-[30px]">
           {[
-            { icon: 'Server', label: 'Серверы', value: '0 ₽' },
-            { icon: 'MessageSquare', label: 'Коммуникации', value: '0 ₽' },
-            { icon: 'Globe', label: 'Веб-сайты', value: '0 ₽' },
-            { icon: 'Shield', label: 'Безопасность', value: '0 ₽' }
+            { icon: 'Server', label: 'Серверы', value: `${stats.categories.servers.toLocaleString('ru-RU')} ₽` },
+            { icon: 'MessageSquare', label: 'Коммуникации', value: `${stats.categories.communications.toLocaleString('ru-RU')} ₽` },
+            { icon: 'Globe', label: 'Веб-сайты', value: `${stats.categories.websites.toLocaleString('ru-RU')} ₽` },
+            { icon: 'Shield', label: 'Безопасность', value: `${stats.categories.security.toLocaleString('ru-RU')} ₽` }
           ].map((item, index) => (
             <Card key={index} className="border-white/5 bg-card rounded-[20px]">
               <CardContent className="p-[20px] flex items-center gap-[15px]">
