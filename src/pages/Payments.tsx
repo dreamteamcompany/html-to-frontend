@@ -196,16 +196,16 @@ const Payments = () => {
           </div>
         </header>
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold mb-2">История платежей</h1>
-            <p className="text-muted-foreground">Все операции по IT расходам</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">История платежей</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Все операции по IT расходам</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 gap-2">
+              <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
                 <Icon name="Plus" size={18} />
-                Добавить платёж
+                <span>Добавить платёж</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -275,43 +275,71 @@ const Payments = () => {
                 Нет платежей. Добавьте первый платёж для начала работы.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Категория</th>
-                      <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Назначение</th>
-                      <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
-                      <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Дата</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map((payment) => (
-                      <tr key={payment.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="p-4">
+              <>
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Категория</th>
+                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Назначение</th>
+                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
+                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Дата</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments.map((payment) => (
+                        <tr key={payment.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                <Icon name={payment.category_icon} size={18} />
+                              </div>
+                              <span className="font-medium">{payment.category_name}</span>
+                            </div>
+                          </td>
+                          <td className="p-4 text-muted-foreground">{payment.description}</td>
+                          <td className="p-4">
+                            <span className="font-bold text-lg">{payment.amount.toLocaleString('ru-RU')} ₽</span>
+                          </td>
+                          <td className="p-4 text-muted-foreground">
+                            {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
+                              day: '2-digit',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div className="md:hidden space-y-3 p-4">
+                  {payments.map((payment) => (
+                    <Card key={payment.id} className="border-white/10 bg-white/5">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                               <Icon name={payment.category_icon} size={18} />
                             </div>
                             <span className="font-medium">{payment.category_name}</span>
                           </div>
-                        </td>
-                        <td className="p-4 text-muted-foreground">{payment.description}</td>
-                        <td className="p-4">
                           <span className="font-bold text-lg">{payment.amount.toLocaleString('ru-RU')} ₽</span>
-                        </td>
-                        <td className="p-4 text-muted-foreground">
+                        </div>
+                        <div className="text-sm text-muted-foreground">{payment.description}</div>
+                        <div className="text-xs text-muted-foreground">
                           {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
                             day: '2-digit',
                             month: 'long',
                             year: 'numeric'
                           })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

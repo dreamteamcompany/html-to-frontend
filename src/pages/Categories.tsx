@@ -224,16 +224,16 @@ const Categories = () => {
           </div>
         </header>
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Категории платежей</h1>
-            <p className="text-muted-foreground">Управление категориями для классификации расходов</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">Категории платежей</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Управление категориями для классификации расходов</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 gap-2">
+              <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
                 <Icon name="Plus" size={18} />
-                Добавить категорию
+                <span className="sm:inline">Добавить категорию</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
