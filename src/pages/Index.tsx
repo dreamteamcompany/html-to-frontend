@@ -29,6 +29,7 @@ const Index = () => {
   });
   const [loading, setLoading] = useState(true);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=stats')
@@ -127,7 +128,7 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="w-[250px] bg-[#1b254b] border-r border-white/10 fixed left-0 top-0 h-screen">
+      <aside className={`w-[250px] bg-[#1b254b] border-r border-white/10 fixed left-0 top-0 h-screen z-50 transition-transform lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <a href="#" className="flex items-center gap-3 px-5 py-5 pb-[30px] border-b border-white/10">
           <div className="w-8 h-8 bg-primary rounded-[10px] flex items-center justify-center font-bold text-white">
             V
@@ -191,9 +192,22 @@ const Index = () => {
         </ul>
       </aside>
 
-      <main className="ml-[250px] p-[30px] min-h-screen flex-1">
-        <header className="flex justify-between items-center mb-[30px] px-[25px] py-[18px] bg-[#1b254b]/50 backdrop-blur-[20px] rounded-[15px] border border-white/10">
-          <div className="flex items-center gap-3 bg-card border border-white/10 rounded-[15px] px-5 py-[10px] w-[400px]">
+      {menuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-[30px] px-4 md:px-[25px] py-4 md:py-[18px] bg-[#1b254b]/50 backdrop-blur-[20px] rounded-[15px] border border-white/10">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="lg:hidden p-2 text-white"
+          >
+            <Icon name="Menu" size={24} />
+          </button>
+          <div className="flex items-center gap-3 bg-card border border-white/10 rounded-[15px] px-4 md:px-5 py-2 md:py-[10px] w-full sm:w-[300px] lg:w-[400px]">
             <Icon name="Search" size={20} className="text-muted-foreground" />
             <Input 
               type="text" 
@@ -201,18 +215,18 @@ const Index = () => {
               className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
             />
           </div>
-          <div className="flex items-center gap-3 px-[15px] py-[10px] rounded-[12px] bg-white/5 border border-white/10">
-            <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold text-white">
+          <div className="flex items-center gap-2 md:gap-3 px-3 md:px-[15px] py-2 md:py-[10px] rounded-[12px] bg-white/5 border border-white/10">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-[10px] bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold text-white text-sm md:text-base">
               А
             </div>
-            <div>
+            <div className="hidden sm:block">
               <div className="text-sm font-medium">Администратор</div>
               <div className="text-xs text-muted-foreground">Администратор</div>
             </div>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-[30px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 mb-6 md:mb-[30px]">
           <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-5">
@@ -262,7 +276,7 @@ const Index = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-[30px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-6 md:mb-[30px]">
           {stats.categories.map((category) => (
             <Card key={category.id} className="border-white/5 bg-card rounded-[20px]">
               <CardContent className="p-[20px] flex items-center gap-[15px]">
@@ -278,7 +292,7 @@ const Index = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
           <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-[20px]">
             <CardContent className="p-[25px]">
               <h3 className="text-lg font-bold mb-5">Расходы по категориям</h3>
