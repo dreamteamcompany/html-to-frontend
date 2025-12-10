@@ -20,78 +20,106 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface Payment {
-  id: number;
-  category_id: number;
-  category_name: string;
-  category_icon: string;
-  description: string;
-  amount: number;
-  payment_date: string;
-}
-
 interface Category {
   id: number;
   name: string;
   icon: string;
+  created_at?: string;
 }
 
-const Payments = () => {
-  const [payments, setPayments] = useState<Payment[]>([]);
+const availableIcons = [
+  'Server', 'MessageSquare', 'Globe', 'Shield', 'Tag', 'Briefcase', 
+  'DollarSign', 'TrendingUp', 'ShoppingCart', 'Zap', 'Coffee', 'Wifi'
+];
+
+const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dictionariesOpen, setDictionariesOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState({
-    category_id: '',
-    description: '',
-    amount: '',
+    name: '',
+    icon: 'Tag',
   });
+  const [dictionariesOpen, setDictionariesOpen] = useState(true);
 
-  const loadPayments = () => {
-    fetch('https://functions.poehali.dev/0f0eb161-07cd-4e34-b95b-9ff274f3390a')
+  const loadCategories = () => {
+    fetch('https://functions.poehali.dev/eb1ea9c3-8bfb-40dd-b581-d200a162ee9a')
       .then(res => res.json())
-      .then(() => {
-        setPayments([]);
+      .then((data) => {
+        setCategories(data);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to load payments:', err);
+        console.error('Failed to load categories:', err);
         setLoading(false);
       });
   };
 
   useEffect(() => {
-    loadPayments();
-    fetch('https://functions.poehali.dev/eb1ea9c3-8bfb-40dd-b581-d200a162ee9a')
-      .then(res => res.json())
-      .then(setCategories)
-      .catch(err => console.error('Failed to load categories:', err));
+    loadCategories();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const response = await fetch('https://functions.poehali.dev/4b19ebef-58d6-4d8b-8d7a-e941f6229594', {
-        method: 'POST',
+      const url = 'https://functions.poehali.dev/eb1ea9c3-8bfb-40dd-b581-d200a162ee9a';
+      const method = editingCategory ? 'PUT' : 'POST';
+      const body = editingCategory 
+        ? { id: editingCategory.id, ...formData }
+        : formData;
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          category_id: parseInt(formData.category_id),
-          description: formData.description,
-          amount: parseFloat(formData.amount),
-        }),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
         setDialogOpen(false);
-        setFormData({ category_id: '', description: '', amount: '' });
-        loadPayments();
+        setEditingCategory(null);
+        setFormData({ name: '', icon: 'Tag' });
+        loadCategories();
       }
     } catch (err) {
-      console.error('Failed to add payment:', err);
+      console.error('Failed to save category:', err);
+    }
+  };
+
+  const handleEdit = (category: Category) => {
+    setEditingCategory(category);
+    setFormData({ name: category.name, icon: category.icon });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Вы уверены, что хотите удалить эту категорию?')) return;
+
+    try {
+      const response = await fetch(
+        `https://functions.poehali.dev/eb1ea9c3-8bfb-40dd-b581-d200a162ee9a?id=${id}`,
+        { method: 'DELETE' }
+      );
+
+      if (response.ok) {
+        loadCategories();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Не удалось удалить категорию');
+      }
+    } catch (err) {
+      console.error('Failed to delete category:', err);
+    }
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setEditingCategory(null);
+      setFormData({ name: '', icon: 'Tag' });
     }
   };
 
@@ -112,7 +140,7 @@ const Payments = () => {
             </a>
           </li>
           <li>
-            <a href="/payments" className="flex items-center gap-3 px-[15px] py-3 rounded-lg bg-primary text-white">
+            <a href="/payments" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
               <Icon name="CreditCard" size={20} />
               <span>Платежи</span>
             </a>
@@ -144,7 +172,7 @@ const Payments = () => {
                 </a>
                 <a 
                   href="/categories" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg bg-primary/20 text-primary"
                 >
                   <Icon name="Tag" size={18} />
                   <span>Категории платежей</span>
@@ -167,7 +195,7 @@ const Payments = () => {
             <Icon name="Search" size={20} className="text-muted-foreground" />
             <Input 
               type="text" 
-              placeholder="Поиск платежей..." 
+              placeholder="Поиск категорий..." 
               className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
             />
           </div>
@@ -184,68 +212,61 @@ const Payments = () => {
 
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold mb-2">История платежей</h1>
-            <p className="text-muted-foreground">Все операции по IT расходам</p>
+            <h1 className="text-3xl font-bold mb-2">Категории платежей</h1>
+            <p className="text-muted-foreground">Управление категориями для классификации расходов</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90 gap-2">
                 <Icon name="Plus" size={18} />
-                Добавить платёж
+                Добавить категорию
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Новый платёж</DialogTitle>
+                <DialogTitle>
+                  {editingCategory ? 'Редактировать категорию' : 'Новая категория'}
+                </DialogTitle>
                 <DialogDescription>
-                  Добавьте информацию о новой операции
+                  {editingCategory 
+                    ? 'Измените данные категории' 
+                    : 'Добавьте новую категорию платежей'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="category">Категория</Label>
+                  <Label htmlFor="name">Название</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Название категории"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="icon">Иконка</Label>
                   <Select
-                    value={formData.category_id}
-                    onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                    value={formData.icon}
+                    onValueChange={(value) => setFormData({ ...formData, icon: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Выберите категорию" />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {availableIcons.map((icon) => (
+                        <SelectItem key={icon} value={icon}>
                           <div className="flex items-center gap-2">
-                            <Icon name={cat.icon} size={16} />
-                            {cat.name}
+                            <Icon name={icon} size={16} />
+                            {icon}
                           </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Назначение</Label>
-                  <Input
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Описание платежа"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Сумма</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    placeholder="0"
-                    required
-                  />
-                </div>
                 <Button type="submit" className="w-full">
-                  Добавить
+                  {editingCategory ? 'Сохранить' : 'Добавить'}
                 </Button>
               </form>
             </DialogContent>
@@ -253,50 +274,51 @@ const Payments = () => {
         </div>
 
         <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
-          <CardContent className="p-0">
+          <CardContent className="p-6">
             {loading ? (
-              <div className="p-8 text-center text-muted-foreground">Загрузка...</div>
-            ) : payments.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                Нет платежей. Добавьте первый платёж для начала работы.
+              <div className="text-center text-muted-foreground py-8">Загрузка...</div>
+            ) : categories.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                Нет категорий. Добавьте первую категорию для начала работы.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Категория</th>
-                      <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Назначение</th>
-                      <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
-                      <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Дата</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map((payment) => (
-                      <tr key={payment.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                              <Icon name={payment.category_icon} size={18} />
-                            </div>
-                            <span className="font-medium">{payment.category_name}</span>
-                          </div>
-                        </td>
-                        <td className="p-4 text-muted-foreground">{payment.description}</td>
-                        <td className="p-4">
-                          <span className="font-bold text-lg">{payment.amount.toLocaleString('ru-RU')} ₽</span>
-                        </td>
-                        <td className="p-4 text-muted-foreground">
-                          {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
-                            day: '2-digit',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {categories.map((category) => (
+                  <div
+                    key={category.id}
+                    className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                          <Icon name={category.icon} size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">{category.name}</h3>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(category)}
+                        className="flex-1"
+                      >
+                        <Icon name="Edit" size={14} className="mr-1" />
+                        Редактировать
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(category.id)}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                      >
+                        <Icon name="Trash2" size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
@@ -306,4 +328,4 @@ const Payments = () => {
   );
 };
 
-export default Payments;
+export default Categories;

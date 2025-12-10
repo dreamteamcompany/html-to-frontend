@@ -180,9 +180,8 @@ const Index = () => {
                   <span>Компании</span>
                 </a>
                 <a 
-                  href="#" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground/60 cursor-not-allowed"
-                  onClick={(e) => e.preventDefault()}
+                  href="/categories" 
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                 >
                   <Icon name="Tag" size={18} />
                   <span>Категории платежей</span>
