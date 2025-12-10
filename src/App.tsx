@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Payments from "./pages/Payments";
 import Categories from "./pages/Categories";
 import LegalEntities from "./pages/LegalEntities";
+import CustomFields from "./pages/CustomFields";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/payments" element={<Payments />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/legal-entities" element={<LegalEntities />} />
+          <Route path="/custom-fields" element={<CustomFields />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

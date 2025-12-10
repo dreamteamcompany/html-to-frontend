@@ -13,27 +13,39 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
-interface LegalEntity {
+interface CustomField {
   id: number;
   name: string;
-  inn: string;
-  kpp: string;
-  address: string;
+  field_type: string;
+  options: string;
   created_at?: string;
 }
 
-const LegalEntities = () => {
-  const [entities, setEntities] = useState<LegalEntity[]>([]);
+const fieldTypes = [
+  { value: 'text', label: 'Текст', icon: 'Type' },
+  { value: 'select', label: 'Выбор', icon: 'List' },
+  { value: 'file', label: 'Загрузка файла', icon: 'Upload' },
+  { value: 'toggle', label: 'Переключатель да/нет', icon: 'ToggleLeft' },
+];
+
+const CustomFields = () => {
+  const [fields, setFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingEntity, setEditingEntity] = useState<LegalEntity | null>(null);
+  const [editingField, setEditingField] = useState<CustomField | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    inn: '',
-    kpp: '',
-    address: '',
+    field_type: 'text',
+    options: '',
   });
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -54,31 +66,31 @@ const LegalEntities = () => {
     }
   };
 
-  const loadEntities = () => {
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities')
+  const loadFields = () => {
+    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=custom-fields')
       .then(res => res.json())
       .then((data) => {
-        setEntities(data);
+        setFields(data);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to load legal entities:', err);
+        console.error('Failed to load custom fields:', err);
         setLoading(false);
       });
   };
 
   useEffect(() => {
-    loadEntities();
+    loadFields();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities';
-      const method = editingEntity ? 'PUT' : 'POST';
-      const body = editingEntity 
-        ? { id: editingEntity.id, ...formData }
+      const url = 'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=custom-fields';
+      const method = editingField ? 'PUT' : 'POST';
+      const body = editingField 
+        ? { id: editingField.id, ...formData }
         : formData;
 
       const response = await fetch(url, {
@@ -91,27 +103,27 @@ const LegalEntities = () => {
 
       if (response.ok) {
         setDialogOpen(false);
-        setEditingEntity(null);
-        setFormData({ name: '', inn: '', kpp: '', address: '' });
-        loadEntities();
+        setEditingField(null);
+        setFormData({ name: '', field_type: 'text', options: '' });
+        loadFields();
       }
     } catch (err) {
-      console.error('Failed to save legal entity:', err);
+      console.error('Failed to save custom field:', err);
     }
   };
 
-  const handleEdit = (entity: LegalEntity) => {
-    setEditingEntity(entity);
-    setFormData({ name: entity.name, inn: entity.inn, kpp: entity.kpp, address: entity.address });
+  const handleEdit = (field: CustomField) => {
+    setEditingField(field);
+    setFormData({ name: field.name, field_type: field.field_type, options: field.options });
     setDialogOpen(true);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Вы уверены, что хотите удалить это юридическое лицо?')) return;
+    if (!confirm('Вы уверены, что хотите удалить это дополнительное поле?')) return;
 
     try {
       const response = await fetch(
-        'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities',
+        'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=custom-fields',
         {
           method: 'DELETE',
           headers: {
@@ -122,20 +134,30 @@ const LegalEntities = () => {
       );
 
       if (response.ok) {
-        loadEntities();
+        loadFields();
       }
     } catch (err) {
-      console.error('Failed to delete legal entity:', err);
+      console.error('Failed to delete custom field:', err);
     }
   };
 
   const handleDialogClose = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setEditingEntity(null);
-      setFormData({ name: '', inn: '', kpp: '', address: '' });
+      setEditingField(null);
+      setFormData({ name: '', field_type: 'text', options: '' });
     }
   };
+
+  const getFieldTypeLabel = (type: string) => {
+    return fieldTypes.find(ft => ft.value === type)?.label || type;
+  };
+
+  const getFieldTypeIcon = (type: string) => {
+    return fieldTypes.find(ft => ft.value === type)?.icon || 'HelpCircle';
+  };
+
+  const needsOptions = formData.field_type === 'select' || formData.field_type === 'toggle';
 
   return (
     <div className="flex min-h-screen">
@@ -183,7 +205,7 @@ const LegalEntities = () => {
               <div className="mt-1 space-y-1">
                 <Link 
                   to="/legal-entities" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg bg-primary/20 text-primary"
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                 >
                   <Icon name="Building2" size={18} />
                   <span>Юридические лица</span>
@@ -197,7 +219,7 @@ const LegalEntities = () => {
                 </Link>
                 <Link 
                   to="/custom-fields" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg bg-primary/20 text-primary"
                 >
                   <Icon name="Settings" size={18} />
                   <span>Дополнительные поля</span>
@@ -233,7 +255,7 @@ const LegalEntities = () => {
             <Icon name="Search" size={20} className="text-muted-foreground" />
             <Input 
               type="text" 
-              placeholder="Поиск юридических лиц..." 
+              placeholder="Поиск полей..." 
               className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
             />
           </div>
@@ -250,70 +272,85 @@ const LegalEntities = () => {
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Юридические лица</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Управление юридическими лицами и их данными</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">Дополнительные поля</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Настройка дополнительных полей для платежей</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
                 <Icon name="Plus" size={18} />
-                <span className="sm:inline">Добавить юридическое лицо</span>
+                <span className="sm:inline">Добавить поле</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>
-                  {editingEntity ? 'Редактировать юридическое лицо' : 'Новое юридическое лицо'}
+                  {editingField ? 'Редактировать поле' : 'Новое дополнительное поле'}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingEntity 
-                    ? 'Измените данные юридического лица' 
-                    : 'Добавьте новое юридическое лицо'}
+                  {editingField 
+                    ? 'Измените параметры дополнительного поля' 
+                    : 'Добавьте новое поле для формы платежа'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Название *</Label>
+                  <Label htmlFor="name">Название поля *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="ООО &quot;Название&quot;"
+                    placeholder="Например: Номер договора"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="inn">ИНН</Label>
-                  <Input
-                    id="inn"
-                    value={formData.inn}
-                    onChange={(e) => setFormData({ ...formData, inn: e.target.value })}
-                    placeholder="1234567890"
-                    maxLength={12}
-                  />
+                  <Label htmlFor="field_type">Тип поля *</Label>
+                  <Select
+                    value={formData.field_type}
+                    onValueChange={(value) => setFormData({ ...formData, field_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {fieldTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          <div className="flex items-center gap-2">
+                            <Icon name={type.icon} size={16} />
+                            {type.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="kpp">КПП</Label>
-                  <Input
-                    id="kpp"
-                    value={formData.kpp}
-                    onChange={(e) => setFormData({ ...formData, kpp: e.target.value })}
-                    placeholder="123456789"
-                    maxLength={9}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address">Адрес</Label>
-                  <Textarea
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    placeholder="Юридический адрес"
-                    rows={3}
-                  />
-                </div>
+                {needsOptions && (
+                  <div className="space-y-2">
+                    <Label htmlFor="options">
+                      {formData.field_type === 'select' ? 'Варианты выбора' : 'Варианты переключения'}
+                    </Label>
+                    <Textarea
+                      id="options"
+                      value={formData.options}
+                      onChange={(e) => setFormData({ ...formData, options: e.target.value })}
+                      placeholder={
+                        formData.field_type === 'select' 
+                          ? 'Каждый вариант с новой строки:\nВариант 1\nВариант 2\nВариант 3'
+                          : 'Введите два значения через новую строку:\nДа\nНет'
+                      }
+                      rows={formData.field_type === 'select' ? 5 : 3}
+                      required={needsOptions}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {formData.field_type === 'select' 
+                        ? 'Введите каждый вариант с новой строки' 
+                        : 'Введите два значения (например: Да и Нет)'}
+                    </p>
+                  </div>
+                )}
                 <Button type="submit" className="w-full">
-                  {editingEntity ? 'Сохранить' : 'Добавить'}
+                  {editingField ? 'Сохранить' : 'Добавить'}
                 </Button>
               </form>
             </DialogContent>
@@ -324,37 +361,43 @@ const LegalEntities = () => {
           <CardContent className="p-6">
             {loading ? (
               <div className="text-center text-muted-foreground py-8">Загрузка...</div>
-            ) : entities.length === 0 ? (
+            ) : fields.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
-                Нет юридических лиц. Добавьте первое юридическое лицо для начала работы.
+                Нет дополнительных полей. Добавьте первое поле для начала работы.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {entities.map((entity) => (
+                {fields.map((field) => (
                   <div
-                    key={entity.id}
+                    key={field.id}
                     className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                          <Icon name="Building2" size={24} />
+                          <Icon name={getFieldTypeIcon(field.field_type)} size={24} />
                         </div>
                         <div>
-                          <h3 className="font-semibold">{entity.name}</h3>
+                          <h3 className="font-semibold">{field.name}</h3>
+                          <p className="text-xs text-muted-foreground">{getFieldTypeLabel(field.field_type)}</p>
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-1 text-sm text-muted-foreground mb-4">
-                      {entity.inn && <div>ИНН: {entity.inn}</div>}
-                      {entity.kpp && <div>КПП: {entity.kpp}</div>}
-                      {entity.address && <div className="line-clamp-2">{entity.address}</div>}
-                    </div>
+                    {field.options && (
+                      <div className="mb-3 text-sm text-muted-foreground">
+                        <div className="font-medium mb-1">Варианты:</div>
+                        <div className="text-xs space-y-1">
+                          {field.options.split('\n').filter(opt => opt.trim()).map((opt, idx) => (
+                            <div key={idx} className="truncate">• {opt}</div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEdit(entity)}
+                        onClick={() => handleEdit(field)}
                         className="flex-1"
                       >
                         <Icon name="Pencil" size={16} />
@@ -363,7 +406,7 @@ const LegalEntities = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDelete(entity.id)}
+                        onClick={() => handleDelete(field.id)}
                         className="flex-1 text-red-400 hover:text-red-300"
                       >
                         <Icon name="Trash2" size={16} />
@@ -381,4 +424,4 @@ const LegalEntities = () => {
   );
 };
 
-export default LegalEntities;
+export default CustomFields;

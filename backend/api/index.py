@@ -25,6 +25,16 @@ class LegalEntityRequest(BaseModel):
     kpp: str = Field(default='')
     address: str = Field(default='')
 
+class CustomFieldRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    field_type: str = Field(..., pattern='^(text|select|file|toggle)$')
+    options: str = Field(default='')
+
+class CustomFieldRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    field_type: str = Field(..., pattern='^(text|select|file|toggle)$')
+    options: str = Field(default='')
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Универсальный API для работы с платежами, категориями и статистикой
@@ -65,6 +75,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Юридические лица
         elif endpoint == 'legal-entities':
             return handle_legal_entities(method, event, conn)
+        
+        # Дополнительные поля
+        elif endpoint == 'custom-fields':
+            return handle_custom_fields(method, event, conn)
         
         return {
             'statusCode': 404,
@@ -362,6 +376,171 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             
             conn.commit()
             return response(200, {'message': 'Legal entity deleted'})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
+
+def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    '''Обработка запросов к дополнительным полям'''
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            cur.execute('SELECT id, name, field_type, options, created_at FROM custom_fields ORDER BY created_at DESC')
+            rows = cur.fetchall()
+            fields = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'field_type': row[2],
+                    'options': row[3] or '',
+                    'created_at': row[4].isoformat() if row[4] else None
+                }
+                for row in rows
+            ]
+            return response(200, fields)
+        
+        elif method == 'POST':
+            body = json.loads(event.get('body', '{}'))
+            field_req = CustomFieldRequest(**body)
+            
+            cur.execute(
+                "INSERT INTO custom_fields (name, field_type, options) VALUES (%s, %s, %s) RETURNING id, name, field_type, options, created_at",
+                (field_req.name, field_req.field_type, field_req.options)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'field_type': row[2],
+                'options': row[3] or '',
+                'created_at': row[4].isoformat() if row[4] else None
+            })
+        
+        elif method == 'PUT':
+            body = json.loads(event.get('body', '{}'))
+            field_id = body.get('id')
+            field_req = CustomFieldRequest(**body)
+            
+            if not field_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(
+                "UPDATE custom_fields SET name = %s, field_type = %s, options = %s WHERE id = %s RETURNING id, name, field_type, options, created_at",
+                (field_req.name, field_req.field_type, field_req.options, field_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Custom field not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'field_type': row[2],
+                'options': row[3] or '',
+                'created_at': row[4].isoformat() if row[4] else None
+            })
+        
+        elif method == 'DELETE':
+            body_data = json.loads(event.get('body', '{}'))
+            field_id = body_data.get('id')
+            
+            cur.execute("DELETE FROM custom_fields WHERE id = %s RETURNING id", (field_id,))
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Custom field not found'})
+            
+            conn.commit()
+            return response(200, {'message': 'Custom field deleted'})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+    
+    try:
+        if method == 'GET':
+            cur.execute('SELECT id, name, field_type, options, created_at FROM custom_fields ORDER BY created_at DESC')
+            rows = cur.fetchall()
+            fields = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'field_type': row[2],
+                    'options': row[3] or '',
+                    'created_at': row[4].isoformat() if row[4] else None
+                }
+                for row in rows
+            ]
+            return response(200, fields)
+        
+        elif method == 'POST':
+            body = json.loads(event.get('body', '{}'))
+            field_req = CustomFieldRequest(**body)
+            
+            cur.execute(
+                "INSERT INTO custom_fields (name, field_type, options) VALUES (%s, %s, %s) RETURNING id, name, field_type, options, created_at",
+                (field_req.name, field_req.field_type, field_req.options)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'field_type': row[2],
+                'options': row[3] or '',
+                'created_at': row[4].isoformat() if row[4] else None
+            })
+        
+        elif method == 'PUT':
+            body = json.loads(event.get('body', '{}'))
+            field_id = body.get('id')
+            field_req = CustomFieldRequest(**body)
+            
+            if not field_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(
+                "UPDATE custom_fields SET name = %s, field_type = %s, options = %s WHERE id = %s RETURNING id, name, field_type, options, created_at",
+                (field_req.name, field_req.field_type, field_req.options, field_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Custom field not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'field_type': row[2],
+                'options': row[3] or '',
+                'created_at': row[4].isoformat() if row[4] else None
+            })
+        
+        elif method == 'DELETE':
+            body = json.loads(event.get('body', '{}'))
+            field_id = body.get('id')
+            
+            if not field_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute('DELETE FROM payment_custom_values WHERE custom_field_id = %s', (field_id,))
+            cur.execute('DELETE FROM custom_fields WHERE id = %s', (field_id,))
+            conn.commit()
+            
+            return response(200, {'success': True})
         
         return response(405, {'error': 'Method not allowed'})
     

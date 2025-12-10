@@ -47,10 +47,18 @@ interface LegalEntity {
   address: string;
 }
 
+interface CustomField {
+  id: number;
+  name: string;
+  field_type: string;
+  options: string;
+}
+
 const Payments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
@@ -71,7 +79,7 @@ const Payments = () => {
       setMenuOpen(false);
     }
   };
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Record<string, string>>({
     category_id: '',
     description: '',
     amount: '',
@@ -101,6 +109,10 @@ const Payments = () => {
       .then(res => res.json())
       .then(setLegalEntities)
       .catch(err => console.error('Failed to load legal entities:', err));
+    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=custom-fields')
+      .then(res => res.json())
+      .then(setCustomFields)
+      .catch(err => console.error('Failed to load custom fields:', err));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,7 +134,16 @@ const Payments = () => {
 
       if (response.ok) {
         setDialogOpen(false);
-        setFormData({ category_id: '', description: '', amount: '', legal_entity_id: '' });
+        const resetData: Record<string, string> = {
+          category_id: '',
+          description: '',
+          amount: '',
+          legal_entity_id: '',
+        };
+        customFields.forEach(field => {
+          resetData[`custom_field_${field.id}`] = '';
+        });
+        setFormData(resetData);
         loadPayments();
       }
     } catch (err) {
@@ -187,6 +208,13 @@ const Payments = () => {
                 >
                   <Icon name="Tag" size={18} />
                   <span>Категории платежей</span>
+                </Link>
+                <Link 
+                  to="/custom-fields" 
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <Icon name="Settings" size={18} />
+                  <span>Дополнительные поля</span>
                 </Link>
               </div>
             )}
@@ -315,6 +343,69 @@ const Payments = () => {
                     required
                   />
                 </div>
+                
+                {customFields.length > 0 && (
+                  <div className="border-t border-white/10 pt-4 space-y-4">
+                    <h4 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h4>
+                    {customFields.map((field) => (
+                      <div key={field.id} className="space-y-2">
+                        <Label htmlFor={`custom_${field.id}`}>{field.name}</Label>
+                        {field.field_type === 'text' && (
+                          <Input
+                            id={`custom_${field.id}`}
+                            value={customFieldValues[field.id] || ''}
+                            onChange={(e) => setCustomFieldValues({...customFieldValues, [field.id]: e.target.value})}
+                            placeholder={`Введите ${field.name.toLowerCase()}`}
+                          />
+                        )}
+                        {field.field_type === 'select' && (
+                          <Select
+                            value={customFieldValues[field.id] || ''}
+                            onValueChange={(value) => setCustomFieldValues({...customFieldValues, [field.id]: value})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите значение" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {field.options.split('\n').filter(opt => opt.trim()).map((option, idx) => (
+                                <SelectItem key={idx} value={option.trim()}>
+                                  {option.trim()}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {field.field_type === 'toggle' && (
+                          <Select
+                            value={customFieldValues[field.id] || ''}
+                            onValueChange={(value) => setCustomFieldValues({...customFieldValues, [field.id]: value})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите значение" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {field.options.split('\n').filter(opt => opt.trim()).map((option, idx) => (
+                                <SelectItem key={idx} value={option.trim()}>
+                                  {option.trim()}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {field.field_type === 'file' && (
+                          <Input
+                            id={`custom_${field.id}`}
+                            type="text"
+                            value={customFieldValues[field.id] || ''}
+                            onChange={(e) => setCustomFieldValues({...customFieldValues, [field.id]: e.target.value})}
+                            placeholder="URL файла"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
                 <Button type="submit" className="w-full">
                   Добавить
                 </Button>
