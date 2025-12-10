@@ -6,15 +6,17 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
+interface Category {
+  id: number;
+  name: string;
+  icon: string;
+  total: number;
+}
+
 interface Stats {
   total: number;
   payment_count: number;
-  categories: {
-    servers: number;
-    communications: number;
-    websites: number;
-    security: number;
-  };
+  categories: Category[];
 }
 
 const Index = () => {
@@ -23,18 +25,13 @@ const Index = () => {
   const [stats, setStats] = useState<Stats>({
     total: 0,
     payment_count: 0,
-    categories: {
-      servers: 0,
-      communications: 0,
-      websites: 0,
-      security: 0
-    }
+    categories: []
   });
   const [loading, setLoading] = useState(true);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
 
   useEffect(() => {
-    fetch('https://functions.poehali.dev/0f0eb161-07cd-4e34-b95b-9ff274f3390a')
+    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=stats')
       .then(res => res.json())
       .then(data => {
         setStats(data);
@@ -54,17 +51,13 @@ const Index = () => {
 
     if (!barCtx || !doughnutCtx) return;
 
-    const categoryData = [
-      stats.categories.servers,
-      stats.categories.communications,
-      stats.categories.websites,
-      stats.categories.security
-    ];
+    const categoryData = stats.categories.map(c => c.total);
+    const categoryLabels = stats.categories.map(c => c.name);
 
     const barChart = new Chart(barCtx, {
       type: 'bar',
       data: {
-        labels: ['Серверы', 'Коммуникации', 'Веб-сайты', 'Безопасность'],
+        labels: categoryLabels,
         datasets: [{
           label: 'Расходы',
           data: categoryData,
@@ -102,7 +95,7 @@ const Index = () => {
     const doughnutChart = new Chart(doughnutCtx, {
       type: 'doughnut',
       data: {
-        labels: ['Серверы', 'Коммуникации', 'Веб-сайты', 'Безопасность'],
+        labels: categoryLabels,
         datasets: [{
           data: categoryData,
           backgroundColor: [

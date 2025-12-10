@@ -49,10 +49,10 @@ const Payments = () => {
   });
 
   const loadPayments = () => {
-    fetch('https://functions.poehali.dev/0f0eb161-07cd-4e34-b95b-9ff274f3390a')
+    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=payments')
       .then(res => res.json())
-      .then(() => {
-        setPayments([]);
+      .then(data => {
+        setPayments(data);
         setLoading(false);
       })
       .catch(err => {
@@ -63,7 +63,7 @@ const Payments = () => {
 
   useEffect(() => {
     loadPayments();
-    fetch('https://functions.poehali.dev/eb1ea9c3-8bfb-40dd-b581-d200a162ee9a')
+    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=categories')
       .then(res => res.json())
       .then(setCategories)
       .catch(err => console.error('Failed to load categories:', err));
@@ -73,7 +73,7 @@ const Payments = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch('https://functions.poehali.dev/4b19ebef-58d6-4d8b-8d7a-e941f6229594', {
+      const response = await fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=payments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
