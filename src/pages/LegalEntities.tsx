@@ -12,34 +12,27 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
-interface Category {
+interface LegalEntity {
   id: number;
   name: string;
-  icon: string;
+  inn: string;
+  kpp: string;
+  address: string;
   created_at?: string;
 }
 
-const availableIcons = [
-  'Server', 'MessageSquare', 'Globe', 'Shield', 'Tag', 'Briefcase', 
-  'DollarSign', 'TrendingUp', 'ShoppingCart', 'Zap', 'Coffee', 'Wifi'
-];
-
-const Categories = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+const LegalEntities = () => {
+  const [entities, setEntities] = useState<LegalEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingEntity, setEditingEntity] = useState<LegalEntity | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    icon: 'Tag',
+    inn: '',
+    kpp: '',
+    address: '',
   });
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -60,31 +53,31 @@ const Categories = () => {
     }
   };
 
-  const loadCategories = () => {
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=categories')
+  const loadEntities = () => {
+    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities')
       .then(res => res.json())
       .then((data) => {
-        setCategories(data);
+        setEntities(data);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to load categories:', err);
+        console.error('Failed to load legal entities:', err);
         setLoading(false);
       });
   };
 
   useEffect(() => {
-    loadCategories();
+    loadEntities();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=categories';
-      const method = editingCategory ? 'PUT' : 'POST';
-      const body = editingCategory 
-        ? { id: editingCategory.id, ...formData }
+      const url = 'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities';
+      const method = editingEntity ? 'PUT' : 'POST';
+      const body = editingEntity 
+        ? { id: editingEntity.id, ...formData }
         : formData;
 
       const response = await fetch(url, {
@@ -97,46 +90,49 @@ const Categories = () => {
 
       if (response.ok) {
         setDialogOpen(false);
-        setEditingCategory(null);
-        setFormData({ name: '', icon: 'Tag' });
-        loadCategories();
+        setEditingEntity(null);
+        setFormData({ name: '', inn: '', kpp: '', address: '' });
+        loadEntities();
       }
     } catch (err) {
-      console.error('Failed to save category:', err);
+      console.error('Failed to save legal entity:', err);
     }
   };
 
-  const handleEdit = (category: Category) => {
-    setEditingCategory(category);
-    setFormData({ name: category.name, icon: category.icon });
+  const handleEdit = (entity: LegalEntity) => {
+    setEditingEntity(entity);
+    setFormData({ name: entity.name, inn: entity.inn, kpp: entity.kpp, address: entity.address });
     setDialogOpen(true);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Вы уверены, что хотите удалить эту категорию?')) return;
+    if (!confirm('Вы уверены, что хотите удалить это юридическое лицо?')) return;
 
     try {
       const response = await fetch(
-        `https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=categories&id=${id}`,
-        { method: 'DELETE' }
+        'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities',
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id }),
+        }
       );
 
       if (response.ok) {
-        loadCategories();
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Не удалось удалить категорию');
+        loadEntities();
       }
     } catch (err) {
-      console.error('Failed to delete category:', err);
+      console.error('Failed to delete legal entity:', err);
     }
   };
 
   const handleDialogClose = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setEditingCategory(null);
-      setFormData({ name: '', icon: 'Tag' });
+      setEditingEntity(null);
+      setFormData({ name: '', inn: '', kpp: '', address: '' });
     }
   };
 
@@ -186,14 +182,14 @@ const Categories = () => {
               <div className="mt-1 space-y-1">
                 <a 
                   href="/legal-entities" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg bg-primary/20 text-primary"
                 >
                   <Icon name="Building2" size={18} />
                   <span>Юридические лица</span>
                 </a>
                 <a 
                   href="/categories" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg bg-primary/20 text-primary"
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                 >
                   <Icon name="Tag" size={18} />
                   <span>Категории платежей</span>
@@ -229,7 +225,7 @@ const Categories = () => {
             <Icon name="Search" size={20} className="text-muted-foreground" />
             <Input 
               type="text" 
-              placeholder="Поиск категорий..." 
+              placeholder="Поиск юридических лиц..." 
               className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
             />
           </div>
@@ -246,61 +242,70 @@ const Categories = () => {
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Категории платежей</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Управление категориями для классификации расходов</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">Юридические лица</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Управление юридическими лицами и их данными</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
                 <Icon name="Plus" size={18} />
-                <span className="sm:inline">Добавить категорию</span>
+                <span className="sm:inline">Добавить юридическое лицо</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>
-                  {editingCategory ? 'Редактировать категорию' : 'Новая категория'}
+                  {editingEntity ? 'Редактировать юридическое лицо' : 'Новое юридическое лицо'}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingCategory 
-                    ? 'Измените данные категории' 
-                    : 'Добавьте новую категорию платежей'}
+                  {editingEntity 
+                    ? 'Измените данные юридического лица' 
+                    : 'Добавьте новое юридическое лицо'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Название</Label>
+                  <Label htmlFor="name">Название *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Название категории"
+                    placeholder="ООО &quot;Название&quot;"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="icon">Иконка</Label>
-                  <Select
-                    value={formData.icon}
-                    onValueChange={(value) => setFormData({ ...formData, icon: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableIcons.map((icon) => (
-                        <SelectItem key={icon} value={icon}>
-                          <div className="flex items-center gap-2">
-                            <Icon name={icon} size={16} />
-                            {icon}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="inn">ИНН</Label>
+                  <Input
+                    id="inn"
+                    value={formData.inn}
+                    onChange={(e) => setFormData({ ...formData, inn: e.target.value })}
+                    placeholder="1234567890"
+                    maxLength={12}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="kpp">КПП</Label>
+                  <Input
+                    id="kpp"
+                    value={formData.kpp}
+                    onChange={(e) => setFormData({ ...formData, kpp: e.target.value })}
+                    placeholder="123456789"
+                    maxLength={9}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Адрес</Label>
+                  <Textarea
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="Юридический адрес"
+                    rows={3}
+                  />
                 </div>
                 <Button type="submit" className="w-full">
-                  {editingCategory ? 'Сохранить' : 'Добавить'}
+                  {editingEntity ? 'Сохранить' : 'Добавить'}
                 </Button>
               </form>
             </DialogContent>
@@ -311,44 +316,50 @@ const Categories = () => {
           <CardContent className="p-6">
             {loading ? (
               <div className="text-center text-muted-foreground py-8">Загрузка...</div>
-            ) : categories.length === 0 ? (
+            ) : entities.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
-                Нет категорий. Добавьте первую категорию для начала работы.
+                Нет юридических лиц. Добавьте первое юридическое лицо для начала работы.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map((category) => (
+                {entities.map((entity) => (
                   <div
-                    key={category.id}
+                    key={entity.id}
                     className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                          <Icon name={category.icon} size={24} />
+                          <Icon name="Building2" size={24} />
                         </div>
                         <div>
-                          <h3 className="font-semibold">{category.name}</h3>
+                          <h3 className="font-semibold">{entity.name}</h3>
                         </div>
                       </div>
+                    </div>
+                    <div className="space-y-1 text-sm text-muted-foreground mb-4">
+                      {entity.inn && <div>ИНН: {entity.inn}</div>}
+                      {entity.kpp && <div>КПП: {entity.kpp}</div>}
+                      {entity.address && <div className="line-clamp-2">{entity.address}</div>}
                     </div>
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEdit(category)}
+                        onClick={() => handleEdit(entity)}
                         className="flex-1"
                       >
-                        <Icon name="Edit" size={14} className="mr-1" />
-                        Редактировать
+                        <Icon name="Pencil" size={16} />
+                        <span className="ml-2">Изменить</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDelete(category.id)}
-                        className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                        onClick={() => handleDelete(entity.id)}
+                        className="flex-1 text-red-400 hover:text-red-300"
                       >
-                        <Icon name="Trash2" size={14} />
+                        <Icon name="Trash2" size={16} />
+                        <span className="ml-2">Удалить</span>
                       </Button>
                     </div>
                   </div>
@@ -362,4 +373,4 @@ const Categories = () => {
   );
 };
 
-export default Categories;
+export default LegalEntities;

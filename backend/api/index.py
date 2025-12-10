@@ -11,12 +11,19 @@ class PaymentRequest(BaseModel):
     amount: float = Field(..., gt=0)
     description: str = Field(default='')
     payment_date: str = Field(default='')
+    legal_entity_id: int = Field(default=None)
     
 # Увеличим версию чтобы триггернуть деплой
 
 class CategoryRequest(BaseModel):
     name: str = Field(..., min_length=1)
     icon: str = Field(default='Tag')
+
+class LegalEntityRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    inn: str = Field(default='')
+    kpp: str = Field(default='')
+    address: str = Field(default='')
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
@@ -54,6 +61,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Статистика
         elif endpoint == 'stats':
             return handle_stats(method, conn)
+        
+        # Юридические лица
+        elif endpoint == 'legal-entities':
+            return handle_legal_entities(method, event, conn)
         
         return {
             'statusCode': 404,
@@ -168,9 +179,12 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     p.amount, 
                     p.description, 
                     p.payment_date,
-                    p.created_at
+                    p.created_at,
+                    p.legal_entity_id,
+                    le.name as legal_entity_name
                 FROM payments p
                 LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN legal_entities le ON p.legal_entity_id = le.id
                 ORDER BY p.payment_date DESC
             """)
             rows = cur.fetchall()
@@ -183,7 +197,9 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'amount': float(row[4]),
                     'description': row[5],
                     'payment_date': row[6].isoformat() if row[6] else None,
-                    'created_at': row[7].isoformat() if row[7] else None
+                    'created_at': row[7].isoformat() if row[7] else None,
+                    'legal_entity_id': row[8],
+                    'legal_entity_name': row[9] or ''
                 }
                 for row in rows
             ]
@@ -196,10 +212,10 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             payment_date = payment_req.payment_date if payment_req.payment_date else datetime.now().isoformat()
             
             cur.execute("""
-                INSERT INTO payments (category_id, amount, description, payment_date)
-                VALUES (%s, %s, %s, %s)
-                RETURNING id, category_id, amount, description, payment_date, created_at
-            """, (payment_req.category_id, payment_req.amount, payment_req.description, payment_date))
+                INSERT INTO payments (category_id, amount, description, payment_date, legal_entity_id)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id
+            """, (payment_req.category_id, payment_req.amount, payment_req.description, payment_date, payment_req.legal_entity_id))
             
             row = cur.fetchone()
             conn.commit()
@@ -263,6 +279,91 @@ def handle_stats(method: str, conn) -> Dict[str, Any]:
             'payment_count': payment_count,
             'categories': category_stats
         })
+    
+    finally:
+        cur.close()
+
+
+def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    '''Обработка запросов к юридическим лицам'''
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            cur.execute('SELECT id, name, inn, kpp, address, created_at FROM legal_entities ORDER BY name')
+            rows = cur.fetchall()
+            entities = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'inn': row[2] or '',
+                    'kpp': row[3] or '',
+                    'address': row[4] or '',
+                    'created_at': row[5].isoformat() if row[5] else None
+                }
+                for row in rows
+            ]
+            return response(200, entities)
+        
+        elif method == 'POST':
+            body_data = json.loads(event.get('body', '{}'))
+            entity_req = LegalEntityRequest(**body_data)
+            
+            cur.execute(
+                "INSERT INTO legal_entities (name, inn, kpp, address) VALUES (%s, %s, %s, %s) RETURNING id, name, inn, kpp, address, created_at",
+                (entity_req.name, entity_req.inn, entity_req.kpp, entity_req.address)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'inn': row[2] or '',
+                'kpp': row[3] or '',
+                'address': row[4] or '',
+                'created_at': row[5].isoformat() if row[5] else None
+            })
+        
+        elif method == 'PUT':
+            body_data = json.loads(event.get('body', '{}'))
+            entity_id = body_data.get('id')
+            entity_req = LegalEntityRequest(**body_data)
+            
+            cur.execute(
+                "UPDATE legal_entities SET name = %s, inn = %s, kpp = %s, address = %s WHERE id = %s RETURNING id, name, inn, kpp, address, created_at",
+                (entity_req.name, entity_req.inn, entity_req.kpp, entity_req.address, entity_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Legal entity not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'inn': row[2] or '',
+                'kpp': row[3] or '',
+                'address': row[4] or '',
+                'created_at': row[5].isoformat() if row[5] else None
+            })
+        
+        elif method == 'DELETE':
+            body_data = json.loads(event.get('body', '{}'))
+            entity_id = body_data.get('id')
+            
+            cur.execute("DELETE FROM legal_entities WHERE id = %s RETURNING id", (entity_id,))
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Legal entity not found'})
+            
+            conn.commit()
+            return response(200, {'message': 'Legal entity deleted'})
+        
+        return response(405, {'error': 'Method not allowed'})
     
     finally:
         cur.close()

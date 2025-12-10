@@ -28,6 +28,8 @@ interface Payment {
   description: string;
   amount: number;
   payment_date: string;
+  legal_entity_id?: number;
+  legal_entity_name?: string;
 }
 
 interface Category {
@@ -36,9 +38,18 @@ interface Category {
   icon: string;
 }
 
+interface LegalEntity {
+  id: number;
+  name: string;
+  inn: string;
+  kpp: string;
+  address: string;
+}
+
 const Payments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
@@ -63,6 +74,7 @@ const Payments = () => {
     category_id: '',
     description: '',
     amount: '',
+    legal_entity_id: '',
   });
 
   const loadPayments = () => {
@@ -84,6 +96,10 @@ const Payments = () => {
       .then(res => res.json())
       .then(setCategories)
       .catch(err => console.error('Failed to load categories:', err));
+    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities')
+      .then(res => res.json())
+      .then(setLegalEntities)
+      .catch(err => console.error('Failed to load legal entities:', err));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,12 +115,13 @@ const Payments = () => {
           category_id: parseInt(formData.category_id),
           description: formData.description,
           amount: parseFloat(formData.amount),
+          legal_entity_id: formData.legal_entity_id ? parseInt(formData.legal_entity_id) : null,
         }),
       });
 
       if (response.ok) {
         setDialogOpen(false);
-        setFormData({ category_id: '', description: '', amount: '' });
+        setFormData({ category_id: '', description: '', amount: '', legal_entity_id: '' });
         loadPayments();
       }
     } catch (err) {
@@ -157,12 +174,11 @@ const Payments = () => {
             {dictionariesOpen && (
               <div className="mt-1 space-y-1">
                 <a 
-                  href="#" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground/60 cursor-not-allowed"
-                  onClick={(e) => e.preventDefault()}
+                  href="/legal-entities" 
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                 >
                   <Icon name="Building2" size={18} />
-                  <span>Компании</span>
+                  <span>Юридические лица</span>
                 </a>
                 <a 
                   href="/categories" 
@@ -259,6 +275,25 @@ const Payments = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="legal_entity">Юридическое лицо</Label>
+                  <Select
+                    value={formData.legal_entity_id}
+                    onValueChange={(value) => setFormData({ ...formData, legal_entity_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Выберите юридическое лицо (опционально)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Не выбрано</SelectItem>
+                      {legalEntities.map((entity) => (
+                        <SelectItem key={entity.id} value={entity.id.toString()}>
+                          {entity.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="description">Назначение</Label>
                   <Input
                     id="description"
@@ -302,6 +337,7 @@ const Payments = () => {
                     <thead>
                       <tr className="border-b border-white/10">
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Категория</th>
+                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Юр. лицо</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Назначение</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Дата</th>
@@ -317,6 +353,9 @@ const Payments = () => {
                               </div>
                               <span className="font-medium">{payment.category_name}</span>
                             </div>
+                          </td>
+                          <td className="p-4 text-muted-foreground">
+                            {payment.legal_entity_name || <span className="text-muted-foreground/50">—</span>}
                           </td>
                           <td className="p-4 text-muted-foreground">{payment.description}</td>
                           <td className="p-4">
@@ -348,6 +387,12 @@ const Payments = () => {
                           </div>
                           <span className="font-bold text-lg">{payment.amount.toLocaleString('ru-RU')} ₽</span>
                         </div>
+                        {payment.legal_entity_name && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground/70">Юр. лицо: </span>
+                            <span className="text-muted-foreground">{payment.legal_entity_name}</span>
+                          </div>
+                        )}
                         <div className="text-sm text-muted-foreground">{payment.description}</div>
                         <div className="text-xs text-muted-foreground">
                           {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
