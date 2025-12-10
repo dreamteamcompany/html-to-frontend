@@ -216,6 +216,13 @@ const Payments = () => {
                   <Icon name="Settings" size={18} />
                   <span>Дополнительные поля</span>
                 </Link>
+                <Link 
+                  to="/custom-fields" 
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <Icon name="Settings" size={18} />
+                  <span>Дополнительные поля</span>
+                </Link>
               </div>
             )}
           </li>
@@ -349,25 +356,25 @@ const Payments = () => {
                     <h4 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h4>
                     {customFields.map((field) => (
                       <div key={field.id} className="space-y-2">
-                        <Label htmlFor={`custom_${field.id}`}>{field.name}</Label>
+                        <Label htmlFor={`custom_field_${field.id}`}>{field.name}</Label>
                         {field.field_type === 'text' && (
                           <Input
-                            id={`custom_${field.id}`}
-                            value={customFieldValues[field.id] || ''}
-                            onChange={(e) => setCustomFieldValues({...customFieldValues, [field.id]: e.target.value})}
+                            id={`custom_field_${field.id}`}
+                            value={formData[`custom_field_${field.id}`] || ''}
+                            onChange={(e) => setFormData({ ...formData, [`custom_field_${field.id}`]: e.target.value })}
                             placeholder={`Введите ${field.name.toLowerCase()}`}
                           />
                         )}
                         {field.field_type === 'select' && (
                           <Select
-                            value={customFieldValues[field.id] || ''}
-                            onValueChange={(value) => setCustomFieldValues({...customFieldValues, [field.id]: value})}
+                            value={formData[`custom_field_${field.id}`] || ''}
+                            onValueChange={(value) => setFormData({ ...formData, [`custom_field_${field.id}`]: value })}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Выберите значение" />
                             </SelectTrigger>
                             <SelectContent>
-                              {field.options.split('\n').filter(opt => opt.trim()).map((option, idx) => (
+                              {field.options.split(',').map((option, idx) => (
                                 <SelectItem key={idx} value={option.trim()}>
                                   {option.trim()}
                                 </SelectItem>
@@ -377,14 +384,14 @@ const Payments = () => {
                         )}
                         {field.field_type === 'toggle' && (
                           <Select
-                            value={customFieldValues[field.id] || ''}
-                            onValueChange={(value) => setCustomFieldValues({...customFieldValues, [field.id]: value})}
+                            value={formData[`custom_field_${field.id}`] || ''}
+                            onValueChange={(value) => setFormData({ ...formData, [`custom_field_${field.id}`]: value })}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Выберите значение" />
                             </SelectTrigger>
                             <SelectContent>
-                              {field.options.split('\n').filter(opt => opt.trim()).map((option, idx) => (
+                              {field.options.split(',').map((option, idx) => (
                                 <SelectItem key={idx} value={option.trim()}>
                                   {option.trim()}
                                 </SelectItem>
@@ -394,10 +401,10 @@ const Payments = () => {
                         )}
                         {field.field_type === 'file' && (
                           <Input
-                            id={`custom_${field.id}`}
+                            id={`custom_field_${field.id}`}
                             type="text"
-                            value={customFieldValues[field.id] || ''}
-                            onChange={(e) => setCustomFieldValues({...customFieldValues, [field.id]: e.target.value})}
+                            value={formData[`custom_field_${field.id}`] || ''}
+                            onChange={(e) => setFormData({ ...formData, [`custom_field_${field.id}`]: e.target.value })}
                             placeholder="URL файла"
                           />
                         )}
