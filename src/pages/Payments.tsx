@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -145,16 +146,16 @@ const Payments = () => {
         </a>
         <ul className="px-[15px] py-5 space-y-1">
           <li>
-            <a href="/" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+            <Link to="/" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
               <Icon name="Home" size={20} />
               <span>Дашборд</span>
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/payments" className="flex items-center gap-3 px-[15px] py-3 rounded-lg bg-primary text-white">
+            <Link to="/payments" className="flex items-center gap-3 px-[15px] py-3 rounded-lg bg-primary text-white">
               <Icon name="CreditCard" size={20} />
               <span>Платежи</span>
-            </a>
+            </Link>
           </li>
           <li>
             <button 
@@ -173,20 +174,20 @@ const Payments = () => {
             </button>
             {dictionariesOpen && (
               <div className="mt-1 space-y-1">
-                <a 
-                  href="/legal-entities" 
+                <Link 
+                  to="/legal-entities" 
                   className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                 >
                   <Icon name="Building2" size={18} />
                   <span>Юридические лица</span>
-                </a>
-                <a 
-                  href="/categories" 
+                </Link>
+                <Link 
+                  to="/categories" 
                   className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                 >
                   <Icon name="Tag" size={18} />
                   <span>Категории платежей</span>
-                </a>
+                </Link>
               </div>
             )}
           </li>
