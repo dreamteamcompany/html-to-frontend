@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
+import Logo from '@/components/ui/Logo';
 
 interface PaymentsSidebarProps {
   menuOpen: boolean;
@@ -60,10 +61,7 @@ const PaymentsSidebar = ({
       onTouchEnd={handleTouchEnd}
     >
       <a href="/" className="flex items-center gap-3 px-5 py-5 pb-[30px] border-b border-white/10">
-        <div className="w-8 h-8 bg-primary rounded-[10px] flex items-center justify-center font-bold text-white">
-          V
-        </div>
-        <span className="text-white font-semibold">Vision UI</span>
+        <Logo className="h-8 w-auto text-white" />
       </a>
       <ul className="px-[15px] py-5 space-y-1">
         <li>
