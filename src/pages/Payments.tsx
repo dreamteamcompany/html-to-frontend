@@ -45,6 +45,7 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
@@ -152,6 +153,8 @@ const Payments = () => {
         menuOpen={menuOpen}
         dictionariesOpen={dictionariesOpen}
         setDictionariesOpen={setDictionariesOpen}
+        settingsOpen={settingsOpen}
+        setSettingsOpen={setSettingsOpen}
         handleTouchStart={handleTouchStart}
         handleTouchMove={handleTouchMove}
         handleTouchEnd={handleTouchEnd}

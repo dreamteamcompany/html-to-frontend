@@ -5,6 +5,8 @@ interface PaymentsSidebarProps {
   menuOpen: boolean;
   dictionariesOpen: boolean;
   setDictionariesOpen: (open: boolean) => void;
+  settingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
   handleTouchStart: (e: React.TouchEvent) => void;
   handleTouchMove: (e: React.TouchEvent) => void;
   handleTouchEnd: () => void;
@@ -14,6 +16,8 @@ const PaymentsSidebar = ({
   menuOpen,
   dictionariesOpen,
   setDictionariesOpen,
+  settingsOpen,
+  setSettingsOpen,
   handleTouchStart,
   handleTouchMove,
   handleTouchEnd,
@@ -90,6 +94,47 @@ const PaymentsSidebar = ({
             <Icon name="Box" size={20} />
             <span>Сервисы</span>
           </a>
+        </li>
+        <li>
+          <button 
+            onClick={() => setSettingsOpen(!settingsOpen)}
+            className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Icon name="Settings" size={20} />
+              <span>Настройки</span>
+            </div>
+            <Icon 
+              name="ChevronDown" 
+              size={16} 
+              className={`transition-transform ${settingsOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {settingsOpen && (
+            <div className="mt-1 space-y-1">
+              <button
+                disabled
+                className="w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground/50 cursor-not-allowed"
+              >
+                <Icon name="Sliders" size={18} />
+                <span>Основные настройки</span>
+              </button>
+              <button
+                disabled
+                className="w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground/50 cursor-not-allowed"
+              >
+                <Icon name="Users" size={18} />
+                <span>Пользователи</span>
+              </button>
+              <button
+                disabled
+                className="w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground/50 cursor-not-allowed"
+              >
+                <Icon name="Shield" size={18} />
+                <span>Права доступа</span>
+              </button>
+            </div>
+          )}
         </li>
       </ul>
     </aside>
