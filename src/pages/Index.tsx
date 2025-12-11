@@ -53,7 +53,11 @@ const Index = () => {
     fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=stats')
       .then(res => res.json())
       .then(data => {
-        setStats(data);
+        setStats({
+          total: data?.total || 0,
+          payment_count: data?.payment_count || 0,
+          categories: Array.isArray(data?.categories) ? data.categories : []
+        });
         setLoading(false);
       })
       .catch(err => {
