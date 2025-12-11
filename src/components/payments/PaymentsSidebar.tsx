@@ -56,15 +56,16 @@ const PaymentsSidebar = ({
   return (
     <aside 
       style={{ backgroundColor: 'hsl(var(--sidebar-bg))' }}
-      className={`w-[250px] border-r border-white/10 dark:border-white/10 light:border-gray-200 fixed left-0 top-0 h-screen z-50 transition-all lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      className={`w-[250px] border-r border-white/10 dark:border-white/10 light:border-gray-200 fixed left-0 top-0 h-screen z-50 transition-all lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <a href="/" className="flex items-center gap-3 px-5 py-5 pb-[30px] border-b border-white/10 dark:border-white/10 light:border-gray-200">
+      <a href="/" className="flex items-center gap-3 px-5 py-5 pb-[30px] border-b border-white/10 dark:border-white/10 light:border-gray-200 flex-shrink-0">
         <Logo className="h-8 w-auto text-white dark:text-white light:text-gray-900" />
       </a>
-      <ul className="px-[15px] py-5 space-y-1">
+      <div className="flex-1 overflow-y-auto">
+        <ul className="px-[15px] py-5 space-y-1">
         <li>
           <Link to="/" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
             <Icon name="Home" size={20} />
@@ -178,8 +179,9 @@ const PaymentsSidebar = ({
           )}
         </li>
       </ul>
+      </div>
       
-      <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-4 space-y-3">
+      <div className="flex-shrink-0 border-t border-white/10 p-4 space-y-3">
         <button
           onClick={toggleTheme}
           className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
