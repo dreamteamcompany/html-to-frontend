@@ -154,16 +154,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(400, {'error': 'ID \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u0435\u043d'})
             
             body_data = json.loads(event.get('body', '{}'))
-            action = body_data.get('action')
             
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
-            if action == 'toggle_active':
+            if 'is_active' in body_data:
                 cur.execute("""
-                    UPDATE users SET is_active = NOT is_active 
+                    UPDATE users SET is_active = %s
                     WHERE id = %s
                     RETURNING id, username, email, full_name, is_active
-                """, (user_id,))
+                """, (body_data['is_active'], user_id))
                 
                 updated_user = cur.fetchone()
                 conn.commit()
@@ -171,19 +170,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 return response(200, dict(updated_user))
             
-            else:
-                username = body_data.get('username')
-                email = body_data.get('email')
-                full_name = body_data.get('full_name')
-                password = body_data.get('password')
-                role_ids = body_data.get('role_ids')
+            username = body_data.get('username', '').strip()
+            email = body_data.get('email', '').strip().lower()
+            full_name = body_data.get('full_name', '').strip()
+            password = body_data.get('password')
+            role_ids = body_data.get('role_ids')
+            
+            if not username or not email or not full_name:
+                return response(400, {'error': 'Логин, email и имя обязательны'})
+            
+            try:
+                cur.execute("""
+                    UPDATE users 
+                    SET username = %s, email = %s, full_name = %s
+                    WHERE id = %s
+                """, (username, email, full_name, user_id))
                 
-                if username:
-                    cur.execute("UPDATE users SET username = %s WHERE id = %s", (username, user_id))
-                if email:
-                    cur.execute("UPDATE users SET email = %s WHERE id = %s", (email.lower(), user_id))
-                if full_name:
-                    cur.execute("UPDATE users SET full_name = %s WHERE id = %s", (full_name, user_id))
                 if password and len(password) >= 4:
                     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                     cur.execute("UPDATE users SET password_hash = %s WHERE id = %s", (password_hash, user_id))
@@ -199,14 +201,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 conn.commit()
                 
                 cur.execute("""
-                    SELECT id, username, email, full_name, is_active, created_at
-                    FROM users WHERE id = %s
+                    SELECT 
+                        u.id, u.username, u.email, u.full_name, u.is_active, 
+                        u.created_at, u.last_login,
+                        array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL) as roles
+                    FROM users u
+                    LEFT JOIN user_roles ur ON u.id = ur.user_id
+                    LEFT JOIN roles r ON ur.role_id = r.id
+                    WHERE u.id = %s
+                    GROUP BY u.id
                 """, (user_id,))
                 
                 updated_user = cur.fetchone()
                 cur.close()
                 
                 return response(200, dict(updated_user))
+                
+            except psycopg2.IntegrityError as e:
+                conn.rollback()
+                cur.close()
+                if 'username' in str(e):
+                    return response(409, {'error': 'Пользователь с таким логином уже существует'})
+                return response(409, {'error': 'Пользователь с таким email уже существует'})
         
         return response(405, {'error': '\u041c\u0435\u0442\u043e\u0434 \u043d\u0435 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044f'})
     

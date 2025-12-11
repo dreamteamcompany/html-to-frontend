@@ -44,6 +44,7 @@ const Users = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -56,7 +57,7 @@ const Users = () => {
     email: '',
     password: '',
     full_name: '',
-    role_id: undefined as string | undefined,
+    role_ids: [] as number[],
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -130,38 +131,50 @@ const Users = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch('https://functions.poehali.dev/597de3a8-5db2-4e46-8835-5a37042b00f1?action=register', {
-        method: 'POST',
+      const url = editingUser 
+        ? `https://functions.poehali.dev/621b0a81-03f7-4d24-8532-81f40fb3bc2b?id=${editingUser.id}`
+        : 'https://functions.poehali.dev/621b0a81-03f7-4d24-8532-81f40fb3bc2b';
+      
+      const method = editingUser ? 'PUT' : 'POST';
+      
+      const body: any = {
+        username: formData.username,
+        email: formData.email,
+        full_name: formData.full_name,
+        role_ids: formData.role_ids,
+      };
+      
+      if (formData.password) {
+        body.password = formData.password;
+      }
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'X-Auth-Token': token || '',
         },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          full_name: formData.full_name,
-          role_id: formData.role_id ? parseInt(formData.role_id) : null,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
         setDialogOpen(false);
+        setEditingUser(null);
         setFormData({
           username: '',
           email: '',
           password: '',
           full_name: '',
-          role_id: undefined,
+          role_ids: [],
         });
         loadUsers();
       } else {
         const error = await response.json();
-        alert(error.error || 'Ошибка при создании пользователя');
+        alert(error.error || 'Ошибка при сохранении пользователя');
       }
     } catch (err) {
-      console.error('Failed to create user:', err);
-      alert('Ошибка при создании пользователя');
+      console.error('Failed to save user:', err);
+      alert('Ошибка при сохранении пользователя');
     }
   };
 
@@ -238,7 +251,19 @@ const Users = () => {
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Пользователи</h1>
             <p className="text-sm md:text-base text-muted-foreground">Управление пользователями системы</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+              setEditingUser(null);
+              setFormData({
+                username: '',
+                email: '',
+                password: '',
+                full_name: '',
+                role_ids: [],
+              });
+            }
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
                 <Icon name="UserPlus" size={18} />
@@ -247,9 +272,9 @@ const Users = () => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Новый пользователь</DialogTitle>
+                <DialogTitle>{editingUser ? 'Редактировать пользователя' : 'Новый пользователь'}</DialogTitle>
                 <DialogDescription>
-                  Создайте нового пользователя системы
+                  {editingUser ? 'Измените данные пользователя' : 'Создайте нового пользователя системы'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -285,37 +310,42 @@ const Users = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Пароль</Label>
+                  <Label htmlFor="password">{editingUser ? 'Новый пароль (оставьте пустым, чтобы не менять)' : 'Пароль'}</Label>
                   <Input
                     id="password"
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="••••••••"
-                    required
+                    required={!editingUser}
                     minLength={4}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="role">Роль</Label>
-                  <Select
-                    value={formData.role_id}
-                    onValueChange={(value) => setFormData({ ...formData, role_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите роль" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id.toString()}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Роли</Label>
+                  <div className="space-y-2">
+                    {roles.map((role) => (
+                      <div key={role.id} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`role-${role.id}`}
+                          checked={formData.role_ids.includes(role.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData({ ...formData, role_ids: [...formData.role_ids, role.id] });
+                            } else {
+                              setFormData({ ...formData, role_ids: formData.role_ids.filter(id => id !== role.id) });
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={`role-${role.id}`} className="cursor-pointer">{role.name}</Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <Button type="submit" className="w-full">
-                  Создать пользователя
+                  {editingUser ? 'Сохранить изменения' : 'Создать пользователя'}
                 </Button>
               </form>
             </DialogContent>
@@ -384,15 +414,35 @@ const Users = () => {
                             </span>
                           </td>
                           <td className="p-4">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleUserStatus(user.id, user.is_active)}
-                              className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600' : 'text-green-500 hover:text-green-600'}`}
-                            >
-                              <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
-                              {user.is_active ? 'Заблокировать' : 'Активировать'}
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingUser(user);
+                                  setFormData({
+                                    username: user.username,
+                                    email: user.email,
+                                    full_name: user.full_name,
+                                    password: '',
+                                    role_ids: user.roles.map(r => r.id),
+                                  });
+                                  setDialogOpen(true);
+                                }}
+                                className="gap-2 text-blue-500 hover:text-blue-600"
+                              >
+                                <Icon name="Pencil" size={16} />
+                                Редактировать
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleUserStatus(user.id, user.is_active)}
+                                className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600' : 'text-green-500 hover:text-green-600'}`}
+                              >
+                                <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -428,15 +478,35 @@ const Users = () => {
                             </span>
                           ))}
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleUserStatus(user.id, user.is_active)}
-                          className={`w-full gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600 border-yellow-500/50' : 'text-green-500 hover:text-green-600 border-green-500/50'}`}
-                        >
-                          <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
-                          {user.is_active ? 'Заблокировать' : 'Активировать'}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingUser(user);
+                              setFormData({
+                                username: user.username,
+                                email: user.email,
+                                full_name: user.full_name,
+                                password: '',
+                                role_ids: user.roles.map(r => r.id),
+                              });
+                              setDialogOpen(true);
+                            }}
+                            className="flex-1 gap-2 text-blue-500 hover:text-blue-600 border-blue-500/50"
+                          >
+                            <Icon name="Pencil" size={16} />
+                            Редактировать
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => toggleUserStatus(user.id, user.is_active)}
+                            className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600 border-yellow-500/50' : 'text-green-500 hover:text-green-600 border-green-500/50'}`}
+                          >
+                            <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
