@@ -17,6 +17,7 @@ import Roles from "./pages/Roles";
 import Contractors from "./pages/Contractors";
 import CustomerDepartments from "./pages/CustomerDepartments";
 import ApprovalsHistory from "./pages/ApprovalsHistory";
+import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
             <Route path="/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
             <Route path="/approvals-history" element={<ProtectedRoute><ApprovalsHistory /></ProtectedRoute>} />
+            <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -130,10 +130,13 @@ const PaymentsSidebar = ({
                 <Icon name="Building" size={18} />
                 <span>Отделы-заказчики</span>
               </Link>
-              <a href="#" className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+              <Link 
+                to="/services" 
+                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/services') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+              >
                 <Icon name="Box" size={18} />
                 <span>Сервисы</span>
-              </a>
+              </Link>
             </div>
           )}
         </li>

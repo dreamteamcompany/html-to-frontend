@@ -52,6 +52,14 @@ interface CustomField {
   options: string;
 }
 
+interface Service {
+  id: number;
+  name: string;
+  description: string;
+  intermediate_approver_id: number;
+  final_approver_id: number;
+}
+
 const Payments = () => {
   const { token } = useAuth();
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -60,6 +68,7 @@ const Payments = () => {
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [customerDepartments, setCustomerDepartments] = useState<CustomerDepartment[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
@@ -88,6 +97,7 @@ const Payments = () => {
     legal_entity_id: undefined,
     contractor_id: undefined,
     department_id: undefined,
+    service_id: undefined,
   });
 
   const loadPayments = () => {
@@ -198,6 +208,10 @@ const Payments = () => {
       .then(res => res.json())
       .then(setCustomerDepartments)
       .catch(err => console.error('Failed to load customer departments:', err));
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=services')
+      .then(res => res.json())
+      .then(data => setServices(data.services || []))
+      .catch(err => console.error('Failed to load services:', err));
     fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields')
       .then(res => res.json())
       .then((fields) => {
@@ -235,6 +249,7 @@ const Payments = () => {
           legal_entity_id: formData.legal_entity_id ? parseInt(formData.legal_entity_id) : null,
           contractor_id: formData.contractor_id ? parseInt(formData.contractor_id) : null,
           department_id: formData.department_id ? parseInt(formData.department_id) : null,
+          service_id: formData.service_id ? parseInt(formData.service_id) : null,
         }),
       });
 
@@ -247,6 +262,7 @@ const Payments = () => {
           legal_entity_id: undefined,
           contractor_id: undefined,
           department_id: undefined,
+          service_id: undefined,
         };
         customFields.forEach(field => {
           resetData[`custom_field_${field.id}`] = undefined;
@@ -292,6 +308,7 @@ const Payments = () => {
           contractors={contractors}
           customerDepartments={customerDepartments}
           customFields={customFields}
+          services={services}
           handleSubmit={handleSubmit}
         />
 

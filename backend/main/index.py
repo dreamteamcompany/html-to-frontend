@@ -19,6 +19,7 @@ class PaymentRequest(BaseModel):
     legal_entity_id: int = Field(default=None)
     contractor_id: int = Field(default=None)
     department_id: int = Field(default=None)
+    service_id: int = Field(default=None)
 
 class CategoryRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -70,6 +71,12 @@ class ApprovalActionRequest(BaseModel):
     payment_id: int = Field(..., gt=0)
     action: str = Field(..., pattern='^(approve|reject)$')
     comment: str = Field(default='')
+
+class ServiceRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    description: str = Field(default='')
+    intermediate_approver_id: int = Field(..., gt=0)
+    final_approver_id: int = Field(..., gt=0)
 
 # Utility functions
 def response(status_code: int, body: Any) -> Dict[str, Any]:
@@ -271,6 +278,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_permissions(method, event, conn)
         elif endpoint == 'approvals':
             return handle_approvals(method, event, conn)
+        elif endpoint == 'services':
+            return handle_services(method, event, conn)
         
         return response(404, {'error': 'Endpoint not found'})
     
@@ -743,11 +752,11 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             payment_date = pay_req.payment_date if pay_req.payment_date else datetime.now().isoformat()
             
             cur.execute(
-                f"""INSERT INTO {SCHEMA}.payments (category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, created_by, status) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
-                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, status, created_by""",
+                f"""INSERT INTO {SCHEMA}.payments (category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, created_by, status) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
+                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, status, created_by""",
                 (pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
-                 pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, payload['user_id'])
+                 pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, pay_req.service_id, payload['user_id'])
             )
             row = cur.fetchone()
             conn.commit()
@@ -762,8 +771,9 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 'legal_entity_id': row[6],
                 'contractor_id': row[7],
                 'department_id': row[8],
-                'status': row[9],
-                'created_by': row[10]
+                'service_id': row[9],
+                'status': row[10],
+                'created_by': row[11]
             })
         
         elif method == 'PUT':
@@ -1510,7 +1520,11 @@ def handle_approvals(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         cur.execute(f"""
-            SELECT status, created_by FROM {SCHEMA}.payments WHERE id = %s
+            SELECT p.status, p.created_by, p.service_id, 
+                   s.intermediate_approver_id, s.final_approver_id
+            FROM {SCHEMA}.payments p
+            LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+            WHERE p.id = %s
         """, (payment_id,))
         
         payment = cur.fetchone()
@@ -1521,6 +1535,10 @@ def handle_approvals(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]
         if payment['status'] != 'draft':
             cur.close()
             return response(400, {'error': 'Платеж уже отправлен на согласование'})
+        
+        if not payment['service_id']:
+            cur.close()
+            return response(400, {'error': 'Для отправки на согласование необходимо указать сервис'})
         
         cur.execute(f"""
             UPDATE {SCHEMA}.payments 
@@ -1548,7 +1566,11 @@ def handle_approvals(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         cur.execute(f"""
-            SELECT status FROM {SCHEMA}.payments WHERE id = %s
+            SELECT p.status, p.service_id, 
+                   s.intermediate_approver_id, s.final_approver_id
+            FROM {SCHEMA}.payments p
+            LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+            WHERE p.id = %s
         """, (req.payment_id,))
         
         payment = cur.fetchone()
@@ -1557,8 +1579,10 @@ def handle_approvals(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]
             return response(404, {'error': 'Платеж не найден'})
         
         current_status = payment['status']
+        intermediate_approver = payment.get('intermediate_approver_id')
+        final_approver = payment.get('final_approver_id')
         
-        if current_status == 'pending_tech_director' and user_role == 'tech_director':
+        if current_status == 'pending_tech_director' and user_id == intermediate_approver:
             if req.action == 'approve':
                 new_status = 'pending_ceo'
                 cur.execute(f"""
@@ -1574,7 +1598,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]
                     WHERE id = %s
                 """, (new_status, user_id, req.payment_id))
         
-        elif current_status == 'pending_ceo' and user_role == 'ceo':
+        elif current_status == 'pending_ceo' and user_id == final_approver:
             if req.action == 'approve':
                 new_status = 'approved'
                 cur.execute(f"""
@@ -1634,3 +1658,105 @@ def handle_approvals(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]
         return response(200, approvals)
     
     return response(405, {'error': 'Метод не поддерживается'})
+
+def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        if method == 'GET':
+            cur.execute(f"""
+                SELECT 
+                    s.id, s.name, s.description, 
+                    s.intermediate_approver_id, s.final_approver_id,
+                    s.created_at, s.updated_at,
+                    u1.full_name as intermediate_approver_name,
+                    u2.full_name as final_approver_name
+                FROM {SCHEMA}.services s
+                LEFT JOIN {SCHEMA}.users u1 ON s.intermediate_approver_id = u1.id
+                LEFT JOIN {SCHEMA}.users u2 ON s.final_approver_id = u2.id
+                ORDER BY s.created_at DESC
+            """)
+            rows = cur.fetchall()
+            services = [dict(row) for row in rows]
+            return response(200, {'services': services})
+        
+        elif method == 'POST':
+            body = json.loads(event.get('body', '{}'))
+            service_req = ServiceRequest(**body)
+            
+            cur.execute(
+                f"""INSERT INTO {SCHEMA}.services 
+                   (name, description, intermediate_approver_id, final_approver_id, created_at, updated_at) 
+                   VALUES (%s, %s, %s, %s, NOW(), NOW()) 
+                   RETURNING id, name, description, intermediate_approver_id, final_approver_id, created_at""",
+                (service_req.name, service_req.description, 
+                 service_req.intermediate_approver_id, service_req.final_approver_id)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row['id'],
+                'name': row['name'],
+                'description': row['description'],
+                'intermediate_approver_id': row['intermediate_approver_id'],
+                'final_approver_id': row['final_approver_id'],
+                'created_at': row['created_at'].isoformat() if row['created_at'] else None
+            })
+        
+        elif method == 'PUT':
+            params = event.get('queryStringParameters') or {}
+            service_id = params.get('id')
+            
+            if not service_id:
+                return response(400, {'error': 'ID is required'})
+            
+            body = json.loads(event.get('body', '{}'))
+            service_req = ServiceRequest(**body)
+            
+            cur.execute(
+                f"""UPDATE {SCHEMA}.services 
+                   SET name = %s, description = %s, 
+                       intermediate_approver_id = %s, final_approver_id = %s,
+                       updated_at = NOW()
+                   WHERE id = %s 
+                   RETURNING id, name, description, intermediate_approver_id, final_approver_id, updated_at""",
+                (service_req.name, service_req.description,
+                 service_req.intermediate_approver_id, service_req.final_approver_id, service_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Service not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row['id'],
+                'name': row['name'],
+                'description': row['description'],
+                'intermediate_approver_id': row['intermediate_approver_id'],
+                'final_approver_id': row['final_approver_id'],
+                'updated_at': row['updated_at'].isoformat() if row['updated_at'] else None
+            })
+        
+        elif method == 'DELETE':
+            params = event.get('queryStringParameters') or {}
+            service_id = params.get('id')
+            
+            if not service_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(f"DELETE FROM {SCHEMA}.services WHERE id = %s RETURNING id", (service_id,))
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Service not found'})
+            
+            conn.commit()
+            return response(200, {'message': 'Service deleted'})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
