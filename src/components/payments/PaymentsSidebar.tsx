@@ -1,5 +1,7 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
 interface PaymentsSidebarProps {
   menuOpen: boolean;
@@ -22,6 +24,13 @@ const PaymentsSidebar = ({
   handleTouchMove,
   handleTouchEnd,
 }: PaymentsSidebarProps) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
   return (
     <aside 
       className={`w-[250px] bg-[#1b254b] border-r border-white/10 fixed left-0 top-0 h-screen z-50 transition-transform lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}
@@ -137,6 +146,27 @@ const PaymentsSidebar = ({
           )}
         </li>
       </ul>
+      
+      <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-4 space-y-3">
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+            {user?.full_name?.charAt(0) || 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-white truncate">{user?.full_name}</div>
+            <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start gap-2 border-white/10 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20"
+          onClick={handleLogout}
+        >
+          <Icon name="LogOut" size={16} />
+          Выйти
+        </Button>
+      </div>
     </aside>
   );
 };
