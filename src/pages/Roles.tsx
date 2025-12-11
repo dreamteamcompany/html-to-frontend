@@ -66,11 +66,12 @@ const Roles = () => {
     fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=roles')
       .then(res => res.json())
       .then(data => {
-        setRoles(data);
+        setRoles(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {
         console.error('Failed to load roles:', err);
+        setRoles([]);
         setLoading(false);
       });
   };
@@ -78,8 +79,11 @@ const Roles = () => {
   const loadPermissions = () => {
     fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=permissions')
       .then(res => res.json())
-      .then(setPermissions)
-      .catch(err => console.error('Failed to load permissions:', err));
+      .then(data => setPermissions(Array.isArray(data) ? data : []))
+      .catch(err => {
+        console.error('Failed to load permissions:', err);
+        setPermissions([]);
+      });
   };
 
   useEffect(() => {

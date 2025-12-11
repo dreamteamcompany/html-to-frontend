@@ -564,7 +564,7 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 )
                 perm_rows = cur.fetchall()
                 
-                cur.execute(f'SELECT COUNT(*) FROM {SCHEMA}.users WHERE role_id = %s', (row[0],))
+                cur.execute(f'SELECT COUNT(*) FROM {SCHEMA}.user_roles WHERE role_id = %s', (row[0],))
                 user_count = cur.fetchone()[0]
                 
                 result.append({
