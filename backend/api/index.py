@@ -6,6 +6,8 @@ from typing import Dict, Any
 from datetime import datetime
 from pydantic import BaseModel, Field
 
+SCHEMA = 't_p61788166_html_to_frontend'
+
 class PaymentRequest(BaseModel):
     category_id: int = Field(..., gt=0)
     amount: float = Field(..., gt=0)
@@ -519,7 +521,7 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             if role_id:
                 cur.execute(
-                    'SELECT id, name, description, created_at FROM roles WHERE id = %s',
+                    f'SELECT id, name, description, created_at FROM {SCHEMA}.roles WHERE id = %s',
                     (role_id,)
                 )
                 row = cur.fetchone()
@@ -527,9 +529,9 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     return response(404, {'error': 'Role not found'})
                 
                 cur.execute(
-                    '''SELECT p.id, p.name, p.resource, p.action, p.description 
-                       FROM permissions p 
-                       JOIN role_permissions rp ON p.id = rp.permission_id 
+                    f'''SELECT p.id, p.name, p.resource, p.action, p.description 
+                       FROM {SCHEMA}.permissions p 
+                       JOIN {SCHEMA}.role_permissions rp ON p.id = rp.permission_id 
                        WHERE rp.role_id = %s''',
                     (role_id,)
                 )
@@ -549,20 +551,20 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     } for pr in perm_rows]
                 })
             
-            cur.execute('SELECT id, name, description, created_at FROM roles ORDER BY id')
+            cur.execute(f'SELECT id, name, description, created_at FROM {SCHEMA}.roles ORDER BY id')
             rows = cur.fetchall()
             result = []
             for row in rows:
                 cur.execute(
-                    '''SELECT p.id, p.name, p.resource, p.action, p.description 
-                       FROM permissions p 
-                       JOIN role_permissions rp ON p.id = rp.permission_id 
+                    f'''SELECT p.id, p.name, p.resource, p.action, p.description 
+                       FROM {SCHEMA}.permissions p 
+                       JOIN {SCHEMA}.role_permissions rp ON p.id = rp.permission_id 
                        WHERE rp.role_id = %s''',
                     (row[0],)
                 )
                 perm_rows = cur.fetchall()
                 
-                cur.execute('SELECT COUNT(*) FROM users WHERE role_id = %s', (row[0],))
+                cur.execute(f'SELECT COUNT(*) FROM {SCHEMA}.users WHERE role_id = %s', (row[0],))
                 user_count = cur.fetchone()[0]
                 
                 result.append({
@@ -586,7 +588,7 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             role_req = RoleRequest(**body)
             
             cur.execute(
-                "INSERT INTO roles (name, description) VALUES (%s, %s) RETURNING id, name, description, created_at",
+                f"INSERT INTO {SCHEMA}.roles (name, description) VALUES (%s, %s) RETURNING id, name, description, created_at",
                 (role_req.name, role_req.description)
             )
             row = cur.fetchone()
@@ -594,7 +596,7 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             for perm_id in role_req.permission_ids:
                 cur.execute(
-                    "INSERT INTO role_permissions (role_id, permission_id) VALUES (%s, %s)",
+                    f"INSERT INTO {SCHEMA}.role_permissions (role_id, permission_id) VALUES (%s, %s)",
                     (role_id, perm_id)
                 )
             
@@ -616,7 +618,7 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 return response(400, {'error': 'ID is required'})
             
             cur.execute(
-                "UPDATE roles SET name = %s, description = %s WHERE id = %s RETURNING id, name, description, created_at",
+                f"UPDATE {SCHEMA}.roles SET name = %s, description = %s WHERE id = %s RETURNING id, name, description, created_at",
                 (role_req.name, role_req.description, role_id)
             )
             row = cur.fetchone()
@@ -624,11 +626,11 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if not row:
                 return response(404, {'error': 'Role not found'})
             
-            cur.execute("DELETE FROM role_permissions WHERE role_id = %s", (role_id,))
+            cur.execute(f"DELETE FROM {SCHEMA}.role_permissions WHERE role_id = %s", (role_id,))
             
             for perm_id in role_req.permission_ids:
                 cur.execute(
-                    "INSERT INTO role_permissions (role_id, permission_id) VALUES (%s, %s)",
+                    f"INSERT INTO {SCHEMA}.role_permissions (role_id, permission_id) VALUES (%s, %s)",
                     (role_id, perm_id)
                 )
             
@@ -648,8 +650,8 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if not role_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute("DELETE FROM role_permissions WHERE role_id = %s", (role_id,))
-            cur.execute("DELETE FROM roles WHERE id = %s RETURNING id", (role_id,))
+            cur.execute(f"DELETE FROM {SCHEMA}.role_permissions WHERE role_id = %s", (role_id,))
+            cur.execute(f"DELETE FROM {SCHEMA}.roles WHERE id = %s RETURNING id", (role_id,))
             row = cur.fetchone()
             
             if not row:
@@ -670,7 +672,7 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
     
     try:
         if method == 'GET':
-            cur.execute('SELECT id, name, resource, action, description, created_at FROM permissions ORDER BY resource, action')
+            cur.execute(f'SELECT id, name, resource, action, description, created_at FROM {SCHEMA}.permissions ORDER BY resource, action')
             rows = cur.fetchall()
             permissions = [
                 {
@@ -690,7 +692,7 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             perm_req = PermissionRequest(**body)
             
             cur.execute(
-                "INSERT INTO permissions (name, resource, action, description) VALUES (%s, %s, %s, %s) RETURNING id, name, resource, action, description, created_at",
+                f"INSERT INTO {SCHEMA}.permissions (name, resource, action, description) VALUES (%s, %s, %s, %s) RETURNING id, name, resource, action, description, created_at",
                 (perm_req.name, perm_req.resource, perm_req.action, perm_req.description)
             )
             row = cur.fetchone()
@@ -714,7 +716,7 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
                 return response(400, {'error': 'ID is required'})
             
             cur.execute(
-                "UPDATE permissions SET name = %s, resource = %s, action = %s, description = %s WHERE id = %s RETURNING id, name, resource, action, description, created_at",
+                f"UPDATE {SCHEMA}.permissions SET name = %s, resource = %s, action = %s, description = %s WHERE id = %s RETURNING id, name, resource, action, description, created_at",
                 (perm_req.name, perm_req.resource, perm_req.action, perm_req.description, perm_id)
             )
             row = cur.fetchone()
@@ -740,8 +742,8 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             if not perm_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute("DELETE FROM role_permissions WHERE permission_id = %s", (perm_id,))
-            cur.execute("DELETE FROM permissions WHERE id = %s RETURNING id", (perm_id,))
+            cur.execute(f"DELETE FROM {SCHEMA}.role_permissions WHERE permission_id = %s", (perm_id,))
+            cur.execute(f"DELETE FROM {SCHEMA}.permissions WHERE id = %s RETURNING id", (perm_id,))
             row = cur.fetchone()
             
             if not row:
