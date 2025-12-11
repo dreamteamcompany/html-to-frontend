@@ -14,6 +14,7 @@ interface Role {
 
 interface User {
   id: number;
+  username: string;
   email: string;
   full_name: string;
   is_active: boolean;
@@ -26,7 +27,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   hasPermission: (resource: string, action: string) => boolean;
   checkAuth: () => Promise<void>;
@@ -88,13 +89,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     const response = await fetch('https://functions.poehali.dev/597de3a8-5db2-4e46-8835-5a37042b00f1?action=login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     });
 
     if (!response.ok) {

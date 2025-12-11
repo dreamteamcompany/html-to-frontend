@@ -57,7 +57,7 @@ def get_user_with_permissions(conn, user_id: int) -> Optional[Dict[str, Any]]:
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     cur.execute("""
-        SELECT u.id, u.email, u.full_name, u.is_active, u.last_login
+        SELECT u.id, u.username, u.email, u.full_name, u.is_active, u.last_login
         FROM users u
         WHERE u.id = %s AND u.is_active = true
     """, (user_id,))
@@ -90,6 +90,7 @@ def get_user_with_permissions(conn, user_id: int) -> Optional[Dict[str, Any]]:
     
     return {
         'id': user['id'],
+        'username': user['username'],
         'email': user['email'],
         'full_name': user['full_name'],
         'is_active': user['is_active'],
@@ -113,30 +114,30 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body_data = json.loads(event.get('body', '{}'))
             
             if action == 'login':
-                email = body_data.get('email', '').strip().lower()
+                username = body_data.get('username', '').strip()
                 password = body_data.get('password', '')
                 
-                if not email or not password:
-                    return response(400, {'error': 'Email и пароль обязательны'})
+                if not username or not password:
+                    return response(400, {'error': 'Логин и пароль обязательны'})
                 
                 cur = conn.cursor(cursor_factory=RealDictCursor)
                 cur.execute("""
-                    SELECT id, email, password_hash, full_name, is_active
+                    SELECT id, email, username, password_hash, full_name, is_active
                     FROM users
-                    WHERE email = %s
-                """, (email,))
+                    WHERE username = %s
+                """, (username,))
                 
                 user = cur.fetchone()
                 cur.close()
                 
                 if not user:
-                    return response(401, {'error': 'Неверный email или пароль'})
+                    return response(401, {'error': 'Неверный логин или пароль'})
                 
                 if not user['is_active']:
                     return response(403, {'error': 'Пользователь деактивирован'})
                 
                 if not bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
-                    return response(401, {'error': 'Неверный email или пароль'})
+                    return response(401, {'error': 'Неверный логин или пароль'})
                 
                 cur = conn.cursor()
                 cur.execute("""
@@ -170,16 +171,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if not has_permission:
                     return response(403, {'error': 'Недостаточно прав для создания пользователей'})
                 
+                username = body_data.get('username', '').strip()
                 email = body_data.get('email', '').strip().lower()
                 password = body_data.get('password', '')
                 full_name = body_data.get('full_name', '').strip()
                 role_id = body_data.get('role_id')
                 
-                if not email or not password or not full_name:
-                    return response(400, {'error': 'Email, пароль и имя обязательны'})
+                if not username or not email or not password or not full_name:
+                    return response(400, {'error': 'Логин, email, пароль и имя обязательны'})
                 
-                if len(password) < 6:
-                    return response(400, {'error': 'Пароль должен быть не менее 6 символов'})
+                if len(password) < 4:
+                    return response(400, {'error': 'Пароль должен быть не менее 4 символов'})
                 
                 password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                 
@@ -187,10 +189,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 try:
                     cur.execute("""
-                        INSERT INTO users (email, password_hash, full_name, is_active)
-                        VALUES (%s, %s, %s, true)
-                        RETURNING id, email, full_name, is_active, created_at
-                    """, (email, password_hash, full_name))
+                        INSERT INTO users (username, email, password_hash, full_name, is_active)
+                        VALUES (%s, %s, %s, %s, true)
+                        RETURNING id, username, email, full_name, is_active, created_at
+                    """, (username, email, password_hash, full_name))
                     
                     new_user = cur.fetchone()
                     
@@ -205,6 +207,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     
                     return response(201, {
                         'id': new_user['id'],
+                        'username': new_user['username'],
                         'email': new_user['email'],
                         'full_name': new_user['full_name'],
                         'is_active': new_user['is_active'],

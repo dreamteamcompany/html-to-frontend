@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Icon from '@/components/ui/icon';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(username, password);
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка входа');
@@ -52,15 +52,15 @@ const Login = () => {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Логин</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="admin@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="admin"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
-                autoComplete="email"
+                autoComplete="username"
               />
             </div>
 
@@ -98,7 +98,7 @@ const Login = () => {
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             <p>Тестовый доступ:</p>
-            <p className="text-xs mt-1">admin@example.com</p>
+            <p className="text-xs mt-1">Логин: <b>admin</b> / Пароль: <b>admin</b></p>
           </div>
         </CardContent>
       </Card>

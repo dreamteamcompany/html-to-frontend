@@ -5,7 +5,7 @@
       "method": "POST",
       "path": "/?action=login",
       "body": {
-        "email": "wrong@example.com",
+        "username": "wronguser",
         "password": "wrongpass"
       },
       "expectedStatus": 401,
