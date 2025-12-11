@@ -18,6 +18,7 @@ class PaymentRequest(BaseModel):
     payment_date: str = Field(default='')
     legal_entity_id: int = Field(default=None)
     contractor_id: int = Field(default=None)
+    department_id: int = Field(default=None)
 
 class CategoryRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -49,6 +50,10 @@ class ContractorRequest(BaseModel):
     bank_account: str = Field(default='')
     correspondent_account: str = Field(default='')
     notes: str = Field(default='')
+
+class CustomerDepartmentRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    description: str = Field(default='')
 
 class RoleRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -224,6 +229,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_custom_fields(method, event, conn)
         elif endpoint == 'contractors':
             return handle_contractors(method, event, conn)
+        elif endpoint == 'customer_departments':
+            return handle_customer_departments(method, event, conn)
         elif endpoint == 'roles':
             return handle_roles(method, event, conn)
         elif endpoint == 'permissions':
@@ -650,11 +657,14 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     p.legal_entity_id,
                     le.name as legal_entity_name,
                     p.contractor_id,
-                    ct.name as contractor_name
+                    ct.name as contractor_name,
+                    p.department_id,
+                    cd.name as department_name
                 FROM payments p
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN legal_entities le ON p.legal_entity_id = le.id
                 LEFT JOIN contractors ct ON p.contractor_id = ct.id
+                LEFT JOIN customer_departments cd ON p.department_id = cd.id
                 ORDER BY p.payment_date DESC
             """)
             rows = cur.fetchall()
@@ -671,7 +681,9 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'legal_entity_id': row[8],
                     'legal_entity_name': row[9],
                     'contractor_id': row[10],
-                    'contractor_name': row[11]
+                    'contractor_name': row[11],
+                    'department_id': row[12],
+                    'department_name': row[13]
                 }
                 for row in rows
             ]
@@ -684,11 +696,11 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             payment_date = pay_req.payment_date if pay_req.payment_date else datetime.now().isoformat()
             
             cur.execute(
-                """INSERT INTO payments (category_id, amount, description, payment_date, legal_entity_id, contractor_id) 
-                   VALUES (%s, %s, %s, %s, %s, %s) 
-                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id""",
+                """INSERT INTO payments (category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s) 
+                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id""",
                 (pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
-                 pay_req.legal_entity_id, pay_req.contractor_id)
+                 pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -701,7 +713,8 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 'payment_date': row[4].isoformat() if row[4] else None,
                 'created_at': row[5].isoformat() if row[5] else None,
                 'legal_entity_id': row[6],
-                'contractor_id': row[7]
+                'contractor_id': row[7],
+                'department_id': row[8]
             })
         
         elif method == 'PUT':
@@ -716,11 +729,11 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             cur.execute(
                 """UPDATE payments 
                    SET category_id = %s, amount = %s, description = %s, payment_date = %s, 
-                       legal_entity_id = %s, contractor_id = %s
+                       legal_entity_id = %s, contractor_id = %s, department_id = %s
                    WHERE id = %s 
-                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id""",
+                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id""",
                 (pay_req.category_id, pay_req.amount, pay_req.description, pay_req.payment_date,
-                 pay_req.legal_entity_id, pay_req.contractor_id, payment_id)
+                 pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, payment_id)
             )
             row = cur.fetchone()
             
@@ -737,7 +750,8 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 'payment_date': row[4].isoformat() if row[4] else None,
                 'created_at': row[5].isoformat() if row[5] else None,
                 'legal_entity_id': row[6],
-                'contractor_id': row[7]
+                'contractor_id': row[7],
+                'department_id': row[8]
             })
         
         elif method == 'DELETE':
@@ -1343,6 +1357,89 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             
             conn.commit()
             return response(200, {'message': 'Permission deleted'})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
+def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            cur.execute('SELECT id, name, description, is_active, created_at FROM customer_departments WHERE is_active = true ORDER BY name')
+            rows = cur.fetchall()
+            departments = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'description': row[2] or '',
+                    'is_active': row[3],
+                    'created_at': row[4].isoformat() if row[4] else None
+                }
+                for row in rows
+            ]
+            return response(200, departments)
+        
+        elif method == 'POST':
+            body = json.loads(event.get('body', '{}'))
+            dept_req = CustomerDepartmentRequest(**body)
+            
+            cur.execute(
+                "INSERT INTO customer_departments (name, description) VALUES (%s, %s) RETURNING id, name, description, is_active, created_at",
+                (dept_req.name, dept_req.description)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'description': row[2] or '',
+                'is_active': row[3],
+                'created_at': row[4].isoformat() if row[4] else None
+            })
+        
+        elif method == 'PUT':
+            body = json.loads(event.get('body', '{}'))
+            dept_id = body.get('id')
+            dept_req = CustomerDepartmentRequest(**body)
+            
+            if not dept_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(
+                "UPDATE customer_departments SET name = %s, description = %s WHERE id = %s RETURNING id, name, description, is_active, created_at",
+                (dept_req.name, dept_req.description, dept_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Department not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'description': row[2] or '',
+                'is_active': row[3],
+                'created_at': row[4].isoformat() if row[4] else None
+            })
+        
+        elif method == 'DELETE':
+            body_data = json.loads(event.get('body', '{}'))
+            dept_id = body_data.get('id')
+            
+            cur.execute("DELETE FROM customer_departments WHERE id = %s RETURNING id", (dept_id,))
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Department not found'})
+            
+            conn.commit()
+            return response(200, {'message': 'Department deleted'})
         
         return response(405, {'error': 'Method not allowed'})
     

@@ -15,6 +15,7 @@ import CustomFields from "./pages/CustomFields";
 import Users from "./pages/Users";
 import Roles from "./pages/Roles";
 import Contractors from "./pages/Contractors";
+import CustomerDepartments from "./pages/CustomerDepartments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/legal-entities" element={<ProtectedRoute><LegalEntities /></ProtectedRoute>} />
             <Route path="/custom-fields" element={<ProtectedRoute><CustomFields /></ProtectedRoute>} />
             <Route path="/contractors" element={<ProtectedRoute><Contractors /></ProtectedRoute>} />
+            <Route path="/customer-departments" element={<ProtectedRoute><CustomerDepartments /></ProtectedRoute>} />
             <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
             <Route path="/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

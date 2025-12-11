@@ -45,6 +45,12 @@ interface Contractor {
   inn: string;
 }
 
+interface CustomerDepartment {
+  id: number;
+  name: string;
+  description: string;
+}
+
 interface PaymentFormProps {
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
@@ -53,6 +59,7 @@ interface PaymentFormProps {
   categories: Category[];
   legalEntities: LegalEntity[];
   contractors: Contractor[];
+  customerDepartments: CustomerDepartment[];
   customFields: CustomField[];
   handleSubmit: (e: React.FormEvent) => void;
 }
@@ -65,6 +72,7 @@ const PaymentForm = ({
   categories,
   legalEntities,
   contractors,
+  customerDepartments,
   customFields,
   handleSubmit,
 }: PaymentFormProps) => {
@@ -141,6 +149,24 @@ const PaymentForm = ({
                   {contractors.map((contractor) => (
                     <SelectItem key={contractor.id} value={contractor.id.toString()}>
                       {contractor.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="department">Отдел-заказчик</Label>
+              <Select
+                value={formData.department_id}
+                onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите отдел (опционально)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customerDepartments.map((department) => (
+                    <SelectItem key={department.id} value={department.id.toString()}>
+                      {department.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
