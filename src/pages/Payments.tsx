@@ -335,9 +335,14 @@ const Payments = () => {
                   <Label htmlFor="amount">Сумма</Label>
                   <Input
                     id="amount"
-                    type="number"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    type="text"
+                    value={formData.amount ? formData.amount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : ''}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\s/g, '');
+                      if (/^\d*$/.test(value)) {
+                        setFormData({ ...formData, amount: value });
+                      }
+                    }}
                     placeholder="0"
                     required
                   />
@@ -359,7 +364,7 @@ const Payments = () => {
                         )}
                         {field.field_type === 'select' && (
                           <Select
-                            value={formData[`custom_field_${field.id}`] || ''}
+                            value={formData[`custom_field_${field.id}`] || undefined}
                             onValueChange={(value) => setFormData({ ...formData, [`custom_field_${field.id}`]: value })}
                           >
                             <SelectTrigger>
@@ -376,7 +381,7 @@ const Payments = () => {
                         )}
                         {field.field_type === 'toggle' && (
                           <Select
-                            value={formData[`custom_field_${field.id}`] || ''}
+                            value={formData[`custom_field_${field.id}`] || undefined}
                             onValueChange={(value) => setFormData({ ...formData, [`custom_field_${field.id}`]: value })}
                           >
                             <SelectTrigger>
