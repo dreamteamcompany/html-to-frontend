@@ -216,13 +216,6 @@ const Payments = () => {
                   <Icon name="Settings" size={18} />
                   <span>Дополнительные поля</span>
                 </Link>
-                <Link 
-                  to="/custom-fields" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                >
-                  <Icon name="Settings" size={18} />
-                  <span>Дополнительные поля</span>
-                </Link>
               </div>
             )}
           </li>
@@ -313,14 +306,13 @@ const Payments = () => {
                 <div className="space-y-2">
                   <Label htmlFor="legal_entity">Юридическое лицо</Label>
                   <Select
-                    value={formData.legal_entity_id}
+                    value={formData.legal_entity_id || undefined}
                     onValueChange={(value) => setFormData({ ...formData, legal_entity_id: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Выберите юридическое лицо (опционально)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Не выбрано</SelectItem>
                       {legalEntities.map((entity) => (
                         <SelectItem key={entity.id} value={entity.id.toString()}>
                           {entity.name}
