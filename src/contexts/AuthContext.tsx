@@ -54,6 +54,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Cache-busting fix for production deployment
+  
   const logout = useCallback(() => {
     if (refreshIntervalRef.current) {
       clearInterval(refreshIntervalRef.current);
