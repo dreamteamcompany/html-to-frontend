@@ -304,13 +304,11 @@ const Services = () => {
                       <SelectValue placeholder="Выберите пользователя" />
                     </SelectTrigger>
                     <SelectContent>
-                      {users
-                        .filter((u) => u.role === 'cto' || u.role === 'admin')
-                        .map((user) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            {user.full_name} ({user.role === 'cto' ? 'Техдир' : 'Админ'})
-                          </SelectItem>
-                        ))}
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.full_name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -327,13 +325,11 @@ const Services = () => {
                       <SelectValue placeholder="Выберите пользователя" />
                     </SelectTrigger>
                     <SelectContent>
-                      {users
-                        .filter((u) => u.role === 'ceo' || u.role === 'admin')
-                        .map((user) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            {user.full_name} ({user.role === 'ceo' ? 'CEO' : 'Админ'})
-                          </SelectItem>
-                        ))}
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.full_name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
