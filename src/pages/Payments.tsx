@@ -79,11 +79,11 @@ const Payments = () => {
       setMenuOpen(false);
     }
   };
-  const [formData, setFormData] = useState<Record<string, string>>({
-    category_id: '',
+  const [formData, setFormData] = useState<Record<string, string | undefined>>({
+    category_id: undefined,
     description: '',
     amount: '',
-    legal_entity_id: '',
+    legal_entity_id: undefined,
   });
 
   const loadPayments = () => {
@@ -113,14 +113,14 @@ const Payments = () => {
       .then(res => res.json())
       .then((fields) => {
         setCustomFields(fields);
-        const initialData: Record<string, string> = {
-          category_id: '',
+        const initialData: Record<string, string | undefined> = {
+          category_id: undefined,
           description: '',
           amount: '',
-          legal_entity_id: '',
+          legal_entity_id: undefined,
         };
         fields.forEach((field: CustomField) => {
-          initialData[`custom_field_${field.id}`] = '';
+          initialData[`custom_field_${field.id}`] = undefined;
         });
         setFormData(initialData);
       })
@@ -137,23 +137,23 @@ const Payments = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          category_id: parseInt(formData.category_id),
-          description: formData.description,
-          amount: parseFloat(formData.amount),
+          category_id: formData.category_id ? parseInt(formData.category_id) : 0,
+          description: formData.description || '',
+          amount: formData.amount ? parseFloat(formData.amount) : 0,
           legal_entity_id: formData.legal_entity_id ? parseInt(formData.legal_entity_id) : null,
         }),
       });
 
       if (response.ok) {
         setDialogOpen(false);
-        const resetData: Record<string, string> = {
-          category_id: '',
+        const resetData: Record<string, string | undefined> = {
+          category_id: undefined,
           description: '',
           amount: '',
-          legal_entity_id: '',
+          legal_entity_id: undefined,
         };
         customFields.forEach(field => {
-          resetData[`custom_field_${field.id}`] = '';
+          resetData[`custom_field_${field.id}`] = undefined;
         });
         setFormData(resetData);
         loadPayments();
@@ -318,7 +318,7 @@ const Payments = () => {
                 <div className="space-y-2">
                   <Label htmlFor="legal_entity">Юридическое лицо</Label>
                   <Select
-                    value={formData.legal_entity_id || undefined}
+                    value={formData.legal_entity_id}
                     onValueChange={(value) => setFormData({ ...formData, legal_entity_id: value })}
                   >
                     <SelectTrigger>
