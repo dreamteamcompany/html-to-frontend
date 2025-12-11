@@ -1,0 +1,222 @@
+import { Button } from '@/components/ui/button';
+import Icon from '@/components/ui/icon';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+interface Category {
+  id: number;
+  name: string;
+  icon: string;
+}
+
+interface LegalEntity {
+  id: number;
+  name: string;
+  inn: string;
+  kpp: string;
+  address: string;
+}
+
+interface CustomField {
+  id: number;
+  name: string;
+  field_type: string;
+  options: string;
+}
+
+interface PaymentFormProps {
+  dialogOpen: boolean;
+  setDialogOpen: (open: boolean) => void;
+  formData: Record<string, string | undefined>;
+  setFormData: (data: Record<string, string | undefined>) => void;
+  categories: Category[];
+  legalEntities: LegalEntity[];
+  customFields: CustomField[];
+  handleSubmit: (e: React.FormEvent) => void;
+}
+
+const PaymentForm = ({
+  dialogOpen,
+  setDialogOpen,
+  formData,
+  setFormData,
+  categories,
+  legalEntities,
+  customFields,
+  handleSubmit,
+}: PaymentFormProps) => {
+  return (
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">История платежей</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Все операции по IT расходам</p>
+      </div>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogTrigger asChild>
+          <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+            <Icon name="Plus" size={18} />
+            <span>Добавить платёж</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Новый платёж</DialogTitle>
+            <DialogDescription>
+              Добавьте информацию о новой операции
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="category">Категория</Label>
+              <Select
+                value={formData.category_id}
+                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите категорию" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <Icon name={cat.icon} size={16} />
+                        {cat.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="legal_entity">Юридическое лицо</Label>
+              <Select
+                value={formData.legal_entity_id}
+                onValueChange={(value) => setFormData({ ...formData, legal_entity_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите юридическое лицо (опционально)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {legalEntities.map((entity) => (
+                    <SelectItem key={entity.id} value={entity.id.toString()}>
+                      {entity.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Назначение</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Описание платежа"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="amount">Сумма</Label>
+              <Input
+                id="amount"
+                type="text"
+                value={formData.amount ? formData.amount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : ''}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\s/g, '');
+                  if (/^\d*$/.test(value)) {
+                    setFormData({ ...formData, amount: value });
+                  }
+                }}
+                placeholder="0"
+                required
+              />
+            </div>
+            
+            {customFields.length > 0 && (
+              <div className="border-t border-white/10 pt-4 space-y-4">
+                <h4 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h4>
+                {customFields.map((field) => (
+                  <div key={field.id} className="space-y-2">
+                    <Label htmlFor={`custom_field_${field.id}`}>{field.name}</Label>
+                    {field.field_type === 'text' && (
+                      <Input
+                        id={`custom_field_${field.id}`}
+                        value={formData[`custom_field_${field.id}`] || ''}
+                        onChange={(e) => setFormData({ ...formData, [`custom_field_${field.id}`]: e.target.value })}
+                        placeholder={`Введите ${field.name.toLowerCase()}`}
+                      />
+                    )}
+                    {field.field_type === 'select' && (
+                      <Select
+                        value={formData[`custom_field_${field.id}`]}
+                        onValueChange={(value) => setFormData({ ...formData, [`custom_field_${field.id}`]: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите значение" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {field.options.split(',').map((option, idx) => (
+                            <SelectItem key={idx} value={option.trim()}>
+                              {option.trim()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    {field.field_type === 'toggle' && (
+                      <Select
+                        value={formData[`custom_field_${field.id}`]}
+                        onValueChange={(value) => setFormData({ ...formData, [`custom_field_${field.id}`]: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите значение" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {field.options.split(',').map((option, idx) => (
+                            <SelectItem key={idx} value={option.trim()}>
+                              {option.trim()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    {field.field_type === 'file' && (
+                      <Input
+                        id={`custom_field_${field.id}`}
+                        type="text"
+                        value={formData[`custom_field_${field.id}`] || ''}
+                        onChange={(e) => setFormData({ ...formData, [`custom_field_${field.id}`]: e.target.value })}
+                        placeholder="URL файла"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <Button type="submit" className="w-full">
+              Добавить
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default PaymentForm;
