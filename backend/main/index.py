@@ -697,17 +697,21 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             return response(200, payments)
         
         elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'payments.create')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             pay_req = PaymentRequest(**body)
             
             payment_date = pay_req.payment_date if pay_req.payment_date else datetime.now().isoformat()
             
             cur.execute(
-                """INSERT INTO payments (category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s) 
-                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id""",
+                f"""INSERT INTO {SCHEMA}.payments (category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, created_by, status) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
+                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, status, created_by""",
                 (pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
-                 pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id)
+                 pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, payload['user_id'])
             )
             row = cur.fetchone()
             conn.commit()
@@ -721,7 +725,9 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 'created_at': row[5].isoformat() if row[5] else None,
                 'legal_entity_id': row[6],
                 'contractor_id': row[7],
-                'department_id': row[8]
+                'department_id': row[8],
+                'status': row[9],
+                'created_by': row[10]
             })
         
         elif method == 'PUT':
