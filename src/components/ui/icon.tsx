@@ -6,20 +6,18 @@ interface IconProps extends LucideProps {
   fallback?: string;
 }
 
-const Icon = ({ name, fallback = 'CircleAlert', ...props }: IconProps) => {
-  const icons = LucideIcons as Record<string, React.ComponentType<LucideProps>>;
-  const IconComponent = icons[name];
+const Icon: React.FC<IconProps> = ({ name, fallback = 'CircleAlert', ...props }) => {
+  const IconComponent = (LucideIcons as any)[name];
 
-  if (IconComponent && typeof IconComponent === 'function') {
-    return <IconComponent {...props} />;
-  }
-
-  const FallbackIcon = icons[fallback];
-  if (FallbackIcon && typeof FallbackIcon === 'function') {
+  if (!IconComponent) {
+    const FallbackIcon = (LucideIcons as any)[fallback];
+    if (!FallbackIcon) {
+      return <span>?</span>;
+    }
     return <FallbackIcon {...props} />;
   }
 
-  return null;
+  return <IconComponent {...props} />;
 };
 
 export default Icon;
