@@ -53,7 +53,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token'));
   const [loading, setLoading] = useState(true);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
+  
+  const logout = useCallback(() => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
+    }
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_token');
+    localStorage.removeItem('remember_me');
+  }, []);
+  
   const refreshToken = useCallback(async () => {
     const rememberMe = localStorage.getItem('remember_me') === 'true';
     const currentToken = rememberMe 
@@ -83,18 +95,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error('Token refresh failed:', error);
     }
-  }, []);
-
-  const logout = useCallback(() => {
-    if (refreshIntervalRef.current) {
-      clearInterval(refreshIntervalRef.current);
-      refreshIntervalRef.current = null;
-    }
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_token');
-    localStorage.removeItem('remember_me');
   }, []);
 
   const checkAuth = async () => {
