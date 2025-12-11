@@ -45,7 +45,7 @@ const ApprovalsHistory = () => {
   useEffect(() => {
     if (!token) return;
 
-    fetch('https://functions.poehali.dev/b51fbbb9-b5ea-4f49-b041-da86fd3397c8', {
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
       headers: {
         'X-Auth-Token': token,
       },

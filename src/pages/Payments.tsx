@@ -105,7 +105,7 @@ const Payments = () => {
 
   const handleSubmitForApproval = async (paymentId: number) => {
     try {
-      const response = await fetch('https://functions.poehali.dev/b51fbbb9-b5ea-4f49-b041-da86fd3397c8', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ const Payments = () => {
     const comment = prompt('Комментарий (необязательно):');
     
     try {
-      const response = await fetch('https://functions.poehali.dev/b51fbbb9-b5ea-4f49-b041-da86fd3397c8', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -159,7 +159,7 @@ const Payments = () => {
     }
     
     try {
-      const response = await fetch('https://functions.poehali.dev/b51fbbb9-b5ea-4f49-b041-da86fd3397c8', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
