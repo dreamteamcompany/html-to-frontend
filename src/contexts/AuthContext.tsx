@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 
 interface Permission {
   name: string;
@@ -31,6 +31,7 @@ interface AuthContextType {
   logout: () => void;
   hasPermission: (resource: string, action: string) => boolean;
   checkAuth: () => Promise<void>;
+  refreshToken: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,6 +52,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token'));
   const [loading, setLoading] = useState(true);
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const checkAuth = async () => {
     const rememberMe = localStorage.getItem('remember_me') === 'true';
@@ -97,6 +99,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    if (user && token) {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+      
+      refreshIntervalRef.current = setInterval(() => {
+        refreshToken();
+      }, 6 * 60 * 60 * 1000);
+    }
+
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
+      }
+    };
+  }, [user, token, refreshToken]);
+
   const login = async (username: string, password: string, rememberMe: boolean = false) => {
     const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=login', {
       method: 'POST',
@@ -124,13 +145,50 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const logout = () => {
+  const refreshToken = useCallback(async () => {
+    const rememberMe = localStorage.getItem('remember_me') === 'true';
+    const currentToken = rememberMe 
+      ? localStorage.getItem('auth_token')
+      : sessionStorage.getItem('auth_token');
+    
+    if (!currentToken) return;
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/597de3a8-5db2-4e46-8835-5a37042b00f1?action=refresh', {
+        headers: {
+          'X-Auth-Token': currentToken,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setToken(data.token);
+        setUser(data.user);
+        
+        if (rememberMe) {
+          localStorage.setItem('auth_token', data.token);
+        } else {
+          sessionStorage.setItem('auth_token', data.token);
+        }
+      } else {
+        logout();
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
+    }
     setToken(null);
     setUser(null);
     localStorage.removeItem('auth_token');
     sessionStorage.removeItem('auth_token');
     localStorage.removeItem('remember_me');
-  };
+  }, []);
 
   const hasPermission = (resource: string, action: string): boolean => {
     if (!user || !user.permissions) return false;
@@ -140,7 +198,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, hasPermission, checkAuth }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, hasPermission, checkAuth, refreshToken }}>
       {children}
     </AuthContext.Provider>
   );

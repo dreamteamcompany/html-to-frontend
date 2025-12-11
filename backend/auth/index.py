@@ -244,6 +244,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return response(404, {'error': 'Пользователь не найден'})
                 
                 return response(200, {'user': user_data})
+            
+            elif action == 'refresh':
+                token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+                if not token:
+                    return response(401, {'error': 'Требуется авторизация'})
+                
+                payload = verify_jwt_token(token)
+                if not payload:
+                    return response(401, {'error': 'Недействительный токен'})
+                
+                user_data = get_user_with_permissions(conn, payload['user_id'])
+                if not user_data:
+                    return response(404, {'error': 'Пользователь не найден'})
+                
+                new_token = create_jwt_token(user_data['id'], user_data['email'])
+                
+                return response(200, {
+                    'token': new_token,
+                    'user': user_data
+                })
         
         return response(405, {'error': 'Метод не поддерживается'})
     
