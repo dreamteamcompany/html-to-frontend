@@ -222,6 +222,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             query_params = event.get('queryStringParameters', {}) or {}
             action = query_params.get('action', 'me')
             
+            if action == 'generate-hash':
+                password = query_params.get('password', 'admin')
+                password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                return response(200, {
+                    'password': password,
+                    'hash': password_hash
+                })
+            
             if action == 'me':
                 token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
                 if not token:
