@@ -111,7 +111,19 @@ const Payments = () => {
       .catch(err => console.error('Failed to load legal entities:', err));
     fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=custom-fields')
       .then(res => res.json())
-      .then(setCustomFields)
+      .then((fields) => {
+        setCustomFields(fields);
+        const initialData: Record<string, string> = {
+          category_id: '',
+          description: '',
+          amount: '',
+          legal_entity_id: '',
+        };
+        fields.forEach((field: CustomField) => {
+          initialData[`custom_field_${field.id}`] = '';
+        });
+        setFormData(initialData);
+      })
       .catch(err => console.error('Failed to load custom fields:', err));
   }, []);
 
@@ -364,7 +376,7 @@ const Payments = () => {
                         )}
                         {field.field_type === 'select' && (
                           <Select
-                            value={formData[`custom_field_${field.id}`] || undefined}
+                            value={formData[`custom_field_${field.id}`]}
                             onValueChange={(value) => setFormData({ ...formData, [`custom_field_${field.id}`]: value })}
                           >
                             <SelectTrigger>
@@ -381,7 +393,7 @@ const Payments = () => {
                         )}
                         {field.field_type === 'toggle' && (
                           <Select
-                            value={formData[`custom_field_${field.id}`] || undefined}
+                            value={formData[`custom_field_${field.id}`]}
                             onValueChange={(value) => setFormData({ ...formData, [`custom_field_${field.id}`]: value })}
                           >
                             <SelectTrigger>
