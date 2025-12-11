@@ -55,13 +55,14 @@ const PaymentsSidebar = ({
   
   return (
     <aside 
-      className={`w-[250px] bg-[#1b254b] light:bg-white border-r border-white/10 light:border-gray-200 fixed left-0 top-0 h-screen z-50 transition-transform lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      style={{ backgroundColor: 'hsl(var(--sidebar-bg))' }}
+      className={`w-[250px] border-r border-white/10 dark:border-white/10 light:border-gray-200 fixed left-0 top-0 h-screen z-50 transition-all lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <a href="/" className="flex items-center gap-3 px-5 py-5 pb-[30px] border-b border-white/10 light:border-gray-200">
-        <Logo className="h-8 w-auto text-white light:text-gray-900" />
+      <a href="/" className="flex items-center gap-3 px-5 py-5 pb-[30px] border-b border-white/10 dark:border-white/10 light:border-gray-200">
+        <Logo className="h-8 w-auto text-white dark:text-white light:text-gray-900" />
       </a>
       <ul className="px-[15px] py-5 space-y-1">
         <li>

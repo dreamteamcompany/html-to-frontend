@@ -169,7 +169,7 @@ const Index = () => {
       )}
 
       <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-[30px] px-4 md:px-[25px] py-4 md:py-[18px] bg-card backdrop-blur-[20px] rounded-[15px] border border-white/10 light:border-gray-200">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-[30px] px-4 md:px-[25px] py-4 md:py-[18px] bg-card backdrop-blur-[20px] rounded-[15px] border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="lg:hidden p-2 text-white"

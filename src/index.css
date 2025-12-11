@@ -27,10 +27,11 @@
     --input: 0 0% 100% / 0.1;
     --ring: 262 67% 61%;
     --radius: 1rem;
+    --sidebar-bg: 227 51% 20%;
   }
 
   :root.light {
-    --background: 0 0% 98%;
+    --background: 0 0% 96%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
@@ -50,6 +51,7 @@
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 262 67% 61%;
+    --sidebar-bg: 0 0% 100%;
   }
 }
 
