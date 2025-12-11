@@ -226,6 +226,7 @@ const Payments = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
         },
         body: JSON.stringify({
           category_id: formData.category_id ? parseInt(formData.category_id) : 0,
