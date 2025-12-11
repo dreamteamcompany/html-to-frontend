@@ -12,6 +12,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -21,7 +22,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(username, password);
+      await login(username, password, rememberMe);
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка входа');
@@ -75,6 +76,19 @@ const Login = () => {
                 required
                 autoComplete="current-password"
               />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="remember"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0"
+              />
+              <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
+                Запомнить меня
+              </Label>
             </div>
 
             <Button

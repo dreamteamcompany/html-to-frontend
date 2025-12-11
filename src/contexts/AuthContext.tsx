@@ -27,7 +27,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => void;
   hasPermission: (resource: string, action: string) => boolean;
   checkAuth: () => Promise<void>;
@@ -53,7 +53,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   const checkAuth = async () => {
-    const savedToken = localStorage.getItem('auth_token');
+    const rememberMe = localStorage.getItem('remember_me') === 'true';
+    const savedToken = rememberMe 
+      ? localStorage.getItem('auth_token')
+      : sessionStorage.getItem('auth_token');
+    
     if (!savedToken) {
       setLoading(false);
       return;
@@ -72,12 +76,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setToken(savedToken);
       } else {
         localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        localStorage.removeItem('remember_me');
         setToken(null);
         setUser(null);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       localStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_token');
+      localStorage.removeItem('remember_me');
       setToken(null);
       setUser(null);
     } finally {
@@ -89,7 +97,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkAuth();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string, rememberMe: boolean = false) => {
     const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=login', {
       method: 'POST',
       headers: {
@@ -106,13 +114,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const data = await response.json();
     setToken(data.token);
     setUser(data.user);
-    localStorage.setItem('auth_token', data.token);
+    
+    if (rememberMe) {
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('remember_me', 'true');
+    } else {
+      sessionStorage.setItem('auth_token', data.token);
+      localStorage.removeItem('remember_me');
+    }
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_token');
+    localStorage.removeItem('remember_me');
   };
 
   const hasPermission = (resource: string, action: string): boolean => {
