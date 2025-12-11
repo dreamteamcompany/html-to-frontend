@@ -47,6 +47,17 @@ class ContractorRequest(BaseModel):
     correspondent_account: str = Field(default='')
     notes: str = Field(default='')
 
+class RoleRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    description: str = Field(default='')
+    permission_ids: list[int] = Field(default=[])
+
+class PermissionRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    resource: str = Field(..., min_length=1)
+    action: str = Field(..., min_length=1)
+    description: str = Field(default='')
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Универсальный API для работы с платежами, категориями и статистикой
@@ -95,6 +106,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Контрагенты
         elif endpoint == 'contractors':
             return handle_contractors(method, event, conn)
+        
+        # Роли
+        elif endpoint == 'roles':
+            return handle_roles(method, event, conn)
+        
+        # Права
+        elif endpoint == 'permissions':
+            return handle_permissions(method, event, conn)
         
         return {
             'statusCode': 404,
@@ -482,6 +501,254 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             
             conn.commit()
             return response(200, {'message': 'Custom field deleted'})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
+
+def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    '''Обработка запросов к ролям'''
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            params = event.get('queryStringParameters') or {}
+            role_id = params.get('id')
+            
+            if role_id:
+                cur.execute(
+                    'SELECT id, name, description, created_at FROM roles WHERE id = %s',
+                    (role_id,)
+                )
+                row = cur.fetchone()
+                if not row:
+                    return response(404, {'error': 'Role not found'})
+                
+                cur.execute(
+                    '''SELECT p.id, p.name, p.resource, p.action, p.description 
+                       FROM permissions p 
+                       JOIN role_permissions rp ON p.id = rp.permission_id 
+                       WHERE rp.role_id = %s''',
+                    (role_id,)
+                )
+                perm_rows = cur.fetchall()
+                
+                return response(200, {
+                    'id': row[0],
+                    'name': row[1],
+                    'description': row[2],
+                    'created_at': row[3].isoformat() if row[3] else None,
+                    'permissions': [{
+                        'id': pr[0],
+                        'name': pr[1],
+                        'resource': pr[2],
+                        'action': pr[3],
+                        'description': pr[4]
+                    } for pr in perm_rows]
+                })
+            
+            cur.execute('SELECT id, name, description, created_at FROM roles ORDER BY id')
+            rows = cur.fetchall()
+            result = []
+            for row in rows:
+                cur.execute(
+                    '''SELECT p.id, p.name, p.resource, p.action, p.description 
+                       FROM permissions p 
+                       JOIN role_permissions rp ON p.id = rp.permission_id 
+                       WHERE rp.role_id = %s''',
+                    (row[0],)
+                )
+                perm_rows = cur.fetchall()
+                
+                cur.execute('SELECT COUNT(*) FROM users WHERE role_id = %s', (row[0],))
+                user_count = cur.fetchone()[0]
+                
+                result.append({
+                    'id': row[0],
+                    'name': row[1],
+                    'description': row[2],
+                    'created_at': row[3].isoformat() if row[3] else None,
+                    'user_count': user_count,
+                    'permissions': [{
+                        'id': pr[0],
+                        'name': pr[1],
+                        'resource': pr[2],
+                        'action': pr[3],
+                        'description': pr[4]
+                    } for pr in perm_rows]
+                })
+            return response(200, result)
+        
+        elif method == 'POST':
+            body = json.loads(event.get('body', '{}'))
+            role_req = RoleRequest(**body)
+            
+            cur.execute(
+                "INSERT INTO roles (name, description) VALUES (%s, %s) RETURNING id, name, description, created_at",
+                (role_req.name, role_req.description)
+            )
+            row = cur.fetchone()
+            role_id = row[0]
+            
+            for perm_id in role_req.permission_ids:
+                cur.execute(
+                    "INSERT INTO role_permissions (role_id, permission_id) VALUES (%s, %s)",
+                    (role_id, perm_id)
+                )
+            
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'description': row[2],
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'PUT':
+            body = json.loads(event.get('body', '{}'))
+            role_id = body.get('id')
+            role_req = RoleRequest(**body)
+            
+            if not role_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(
+                "UPDATE roles SET name = %s, description = %s WHERE id = %s RETURNING id, name, description, created_at",
+                (role_req.name, role_req.description, role_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Role not found'})
+            
+            cur.execute("DELETE FROM role_permissions WHERE role_id = %s", (role_id,))
+            
+            for perm_id in role_req.permission_ids:
+                cur.execute(
+                    "INSERT INTO role_permissions (role_id, permission_id) VALUES (%s, %s)",
+                    (role_id, perm_id)
+                )
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'description': row[2],
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'DELETE':
+            params = event.get('queryStringParameters') or {}
+            role_id = params.get('id')
+            
+            if not role_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute("DELETE FROM role_permissions WHERE role_id = %s", (role_id,))
+            cur.execute("DELETE FROM roles WHERE id = %s RETURNING id", (role_id,))
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Role not found'})
+            
+            conn.commit()
+            return response(200, {'message': 'Role deleted'})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
+
+def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    '''Обработка запросов к правам доступа'''
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            cur.execute('SELECT id, name, resource, action, description, created_at FROM permissions ORDER BY resource, action')
+            rows = cur.fetchall()
+            permissions = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'resource': row[2],
+                    'action': row[3],
+                    'description': row[4],
+                    'created_at': row[5].isoformat() if row[5] else None
+                }
+                for row in rows
+            ]
+            return response(200, permissions)
+        
+        elif method == 'POST':
+            body = json.loads(event.get('body', '{}'))
+            perm_req = PermissionRequest(**body)
+            
+            cur.execute(
+                "INSERT INTO permissions (name, resource, action, description) VALUES (%s, %s, %s, %s) RETURNING id, name, resource, action, description, created_at",
+                (perm_req.name, perm_req.resource, perm_req.action, perm_req.description)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'resource': row[2],
+                'action': row[3],
+                'description': row[4],
+                'created_at': row[5].isoformat() if row[5] else None
+            })
+        
+        elif method == 'PUT':
+            body = json.loads(event.get('body', '{}'))
+            perm_id = body.get('id')
+            perm_req = PermissionRequest(**body)
+            
+            if not perm_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(
+                "UPDATE permissions SET name = %s, resource = %s, action = %s, description = %s WHERE id = %s RETURNING id, name, resource, action, description, created_at",
+                (perm_req.name, perm_req.resource, perm_req.action, perm_req.description, perm_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Permission not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'resource': row[2],
+                'action': row[3],
+                'description': row[4],
+                'created_at': row[5].isoformat() if row[5] else None
+            })
+        
+        elif method == 'DELETE':
+            params = event.get('queryStringParameters') or {}
+            perm_id = params.get('id')
+            
+            if not perm_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute("DELETE FROM role_permissions WHERE permission_id = %s", (perm_id,))
+            cur.execute("DELETE FROM permissions WHERE id = %s RETURNING id", (perm_id,))
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Permission not found'})
+            
+            conn.commit()
+            return response(200, {'message': 'Permission deleted'})
         
         return response(405, {'error': 'Method not allowed'})
     

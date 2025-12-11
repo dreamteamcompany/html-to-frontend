@@ -1,7 +1,18 @@
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 
 interface Permission {
@@ -22,12 +33,20 @@ interface Role {
 
 const Roles = () => {
   const [roles, setRoles] = useState<Role[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    permission_ids: [] as number[],
+  });
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -43,52 +62,99 @@ const Roles = () => {
     }
   };
 
+  const loadRoles = () => {
+    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=roles')
+      .then(res => res.json())
+      .then(data => {
+        setRoles(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load roles:', err);
+        setLoading(false);
+      });
+  };
+
+  const loadPermissions = () => {
+    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=permissions')
+      .then(res => res.json())
+      .then(setPermissions)
+      .catch(err => console.error('Failed to load permissions:', err));
+  };
+
   useEffect(() => {
-    setRoles([
-      {
-        id: 1,
-        name: 'Администратор',
-        description: 'Полный доступ ко всем функциям системы',
-        user_count: 1,
-        permissions: [
-          { id: 1, name: 'payments.view', resource: 'payments', action: 'view', description: 'Просмотр платежей' },
-          { id: 2, name: 'payments.create', resource: 'payments', action: 'create', description: 'Создание платежей' },
-          { id: 3, name: 'payments.edit', resource: 'payments', action: 'edit', description: 'Редактирование платежей' },
-          { id: 4, name: 'payments.delete', resource: 'payments', action: 'delete', description: 'Удаление платежей' },
-          { id: 5, name: 'users.view', resource: 'users', action: 'view', description: 'Просмотр пользователей' },
-          { id: 6, name: 'users.create', resource: 'users', action: 'create', description: 'Создание пользователей' },
-          { id: 7, name: 'users.edit', resource: 'users', action: 'edit', description: 'Редактирование пользователей' },
-          { id: 8, name: 'users.delete', resource: 'users', action: 'delete', description: 'Удаление пользователей' },
-          { id: 9, name: 'roles.view', resource: 'roles', action: 'view', description: 'Просмотр ролей' },
-          { id: 10, name: 'roles.edit', resource: 'roles', action: 'edit', description: 'Редактирование ролей' },
-        ],
-      },
-      {
-        id: 2,
-        name: 'Бухгалтер',
-        description: 'Управление платежами и справочниками',
-        user_count: 0,
-        permissions: [
-          { id: 1, name: 'payments.view', resource: 'payments', action: 'view', description: 'Просмотр платежей' },
-          { id: 2, name: 'payments.create', resource: 'payments', action: 'create', description: 'Создание платежей' },
-          { id: 3, name: 'payments.edit', resource: 'payments', action: 'edit', description: 'Редактирование платежей' },
-          { id: 11, name: 'categories.view', resource: 'categories', action: 'view', description: 'Просмотр категорий' },
-          { id: 12, name: 'categories.edit', resource: 'categories', action: 'edit', description: 'Редактирование категорий' },
-        ],
-      },
-      {
-        id: 3,
-        name: 'Просмотр',
-        description: 'Только просмотр данных без возможности изменения',
-        user_count: 0,
-        permissions: [
-          { id: 1, name: 'payments.view', resource: 'payments', action: 'view', description: 'Просмотр платежей' },
-          { id: 11, name: 'categories.view', resource: 'categories', action: 'view', description: 'Просмотр категорий' },
-        ],
-      },
-    ]);
-    setLoading(false);
+    loadRoles();
+    loadPermissions();
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const url = 'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=roles';
+      const method = editingRole ? 'PUT' : 'POST';
+      const body = editingRole 
+        ? { ...formData, id: editingRole.id }
+        : formData;
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (response.ok) {
+        setDialogOpen(false);
+        setEditingRole(null);
+        setFormData({
+          name: '',
+          description: '',
+          permission_ids: [],
+        });
+        loadRoles();
+      }
+    } catch (err) {
+      console.error('Failed to save role:', err);
+    }
+  };
+
+  const handleEdit = (role: Role) => {
+    setEditingRole(role);
+    setFormData({
+      name: role.name,
+      description: role.description,
+      permission_ids: role.permissions.map(p => p.id),
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Вы уверены, что хотите удалить эту роль?')) return;
+    
+    try {
+      const response = await fetch(
+        `https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=roles&id=${id}`,
+        { method: 'DELETE' }
+      );
+
+      if (response.ok) {
+        loadRoles();
+      }
+    } catch (err) {
+      console.error('Failed to delete role:', err);
+    }
+  };
+
+  const togglePermission = (permId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      permission_ids: prev.permission_ids.includes(permId)
+        ? prev.permission_ids.filter(id => id !== permId)
+        : [...prev.permission_ids, permId]
+    }));
+  };
 
   const getResourceIcon = (resource: string) => {
     switch (resource) {
@@ -119,6 +185,14 @@ const Roles = () => {
         return 'text-gray-500 bg-gray-500/10';
     }
   };
+
+  const groupedPermissions = permissions.reduce((acc, perm) => {
+    if (!acc[perm.resource]) {
+      acc[perm.resource] = [];
+    }
+    acc[perm.resource].push(perm);
+    return acc;
+  }, {} as Record<string, Permission[]>);
 
   return (
     <div className="flex min-h-screen">
@@ -167,9 +241,91 @@ const Roles = () => {
           </div>
         </header>
 
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">Права доступа</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Роли и разрешения в системе</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">Права доступа</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Управление ролями и разрешениями</p>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+              setEditingRole(null);
+              setFormData({
+                name: '',
+                description: '',
+                permission_ids: [],
+              });
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+                <Icon name="Plus" size={18} />
+                <span>Добавить роль</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingRole ? 'Редактировать роль' : 'Новая роль'}</DialogTitle>
+                <DialogDescription>
+                  {editingRole ? 'Измените настройки роли и права доступа' : 'Создайте новую роль и назначьте права доступа'}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Название роли *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Администратор"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="description">Описание</Label>
+                  <Input
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Полный доступ ко всем функциям"
+                  />
+                </div>
+
+                <div className="space-y-3 border-t border-white/10 pt-4">
+                  <h4 className="text-sm font-semibold">Права доступа</h4>
+                  {Object.entries(groupedPermissions).map(([resource, perms]) => (
+                    <div key={resource} className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${getResourceColor(resource)}`}>
+                          <Icon name={getResourceIcon(resource)} size={14} />
+                        </div>
+                        <h5 className="text-sm font-medium capitalize">{resource}</h5>
+                      </div>
+                      <div className="ml-8 space-y-2">
+                        {perms.map((perm) => (
+                          <div key={perm.id} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`perm-${perm.id}`}
+                              checked={formData.permission_ids.includes(perm.id)}
+                              onCheckedChange={() => togglePermission(perm.id)}
+                            />
+                            <Label htmlFor={`perm-${perm.id}`} className="text-sm cursor-pointer">
+                              {perm.description}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <Button type="submit" className="w-full">
+                  {editingRole ? 'Сохранить изменения' : 'Создать роль'}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {loading ? (
@@ -180,7 +336,7 @@ const Roles = () => {
               <Card key={role.id} className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-lg font-bold mb-1">{role.name}</h3>
                       <p className="text-sm text-muted-foreground">{role.description}</p>
                     </div>
@@ -196,26 +352,46 @@ const Roles = () => {
                     </span>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 mb-4">
                     <h4 className="text-sm font-semibold text-muted-foreground mb-3">
                       Разрешения ({role.permissions.length})
                     </h4>
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                      {role.permissions.map((permission) => (
+                    <div className="flex flex-wrap gap-2">
+                      {role.permissions.slice(0, 6).map((perm) => (
                         <div
-                          key={permission.id}
-                          className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                          key={perm.id}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs ${getResourceColor(perm.resource)}`}
                         >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${getResourceColor(permission.resource)}`}>
-                            <Icon name={getResourceIcon(permission.resource)} size={16} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium truncate">{permission.description}</div>
-                            <div className="text-xs text-muted-foreground truncate">{permission.name}</div>
-                          </div>
+                          <Icon name={getResourceIcon(perm.resource)} size={12} />
+                          <span>{perm.action}</span>
                         </div>
                       ))}
+                      {role.permissions.length > 6 && (
+                        <div className="inline-flex items-center px-2 py-1 rounded-lg text-xs bg-white/5 text-muted-foreground">
+                          +{role.permissions.length - 6}
+                        </div>
+                      )}
                     </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-4 border-t border-white/10">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(role)}
+                      className="flex-1 gap-2"
+                    >
+                      <Icon name="Pencil" size={16} />
+                      Редактировать
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(role.id)}
+                      className="gap-2 text-red-500 hover:text-red-600"
+                    >
+                      <Icon name="Trash2" size={16} />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

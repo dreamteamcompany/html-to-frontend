@@ -388,7 +388,7 @@ const Users = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => toggleUserStatus(user.id, user.is_active)}
-                              className="gap-2"
+                              className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600' : 'text-green-500 hover:text-green-600'}`}
                             >
                               <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
                               {user.is_active ? 'Заблокировать' : 'Активировать'}
@@ -432,7 +432,7 @@ const Users = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => toggleUserStatus(user.id, user.is_active)}
-                          className="w-full gap-2"
+                          className={`w-full gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600 border-yellow-500/50' : 'text-green-500 hover:text-green-600 border-green-500/50'}`}
                         >
                           <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
                           {user.is_active ? 'Заблокировать' : 'Активировать'}
