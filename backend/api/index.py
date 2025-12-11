@@ -12,6 +12,7 @@ class PaymentRequest(BaseModel):
     description: str = Field(default='')
     payment_date: str = Field(default='')
     legal_entity_id: int = Field(default=None)
+    contractor_id: int = Field(default=None)
     
 # Увеличим версию чтобы триггернуть деплой
 
@@ -30,10 +31,21 @@ class CustomFieldRequest(BaseModel):
     field_type: str = Field(..., pattern='^(text|select|file|toggle)$')
     options: str = Field(default='')
 
-class CustomFieldRequest(BaseModel):
+class ContractorRequest(BaseModel):
     name: str = Field(..., min_length=1)
-    field_type: str = Field(..., pattern='^(text|select|file|toggle)$')
-    options: str = Field(default='')
+    inn: str = Field(default='')
+    kpp: str = Field(default='')
+    ogrn: str = Field(default='')
+    legal_address: str = Field(default='')
+    actual_address: str = Field(default='')
+    phone: str = Field(default='')
+    email: str = Field(default='')
+    contact_person: str = Field(default='')
+    bank_name: str = Field(default='')
+    bank_bik: str = Field(default='')
+    bank_account: str = Field(default='')
+    correspondent_account: str = Field(default='')
+    notes: str = Field(default='')
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
@@ -79,6 +91,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Дополнительные поля
         elif endpoint == 'custom-fields':
             return handle_custom_fields(method, event, conn)
+        
+        # Контрагенты
+        elif endpoint == 'contractors':
+            return handle_contractors(method, event, conn)
         
         return {
             'statusCode': 404,
@@ -195,10 +211,13 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     p.payment_date,
                     p.created_at,
                     p.legal_entity_id,
-                    le.name as legal_entity_name
+                    le.name as legal_entity_name,
+                    p.contractor_id,
+                    ct.name as contractor_name
                 FROM payments p
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN legal_entities le ON p.legal_entity_id = le.id
+                LEFT JOIN contractors ct ON p.contractor_id = ct.id
                 ORDER BY p.payment_date DESC
             """)
             rows = cur.fetchall()
@@ -213,7 +232,9 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'payment_date': row[6].isoformat() if row[6] else None,
                     'created_at': row[7].isoformat() if row[7] else None,
                     'legal_entity_id': row[8],
-                    'legal_entity_name': row[9] or ''
+                    'legal_entity_name': row[9] or '',
+                    'contractor_id': row[10],
+                    'contractor_name': row[11] or ''
                 }
                 for row in rows
             ]
@@ -226,10 +247,10 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             payment_date = payment_req.payment_date if payment_req.payment_date else datetime.now().isoformat()
             
             cur.execute("""
-                INSERT INTO payments (category_id, amount, description, payment_date, legal_entity_id)
-                VALUES (%s, %s, %s, %s, %s)
-                RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id
-            """, (payment_req.category_id, payment_req.amount, payment_req.description, payment_date, payment_req.legal_entity_id))
+                INSERT INTO payments (category_id, amount, description, payment_date, legal_entity_id, contractor_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id
+            """, (payment_req.category_id, payment_req.amount, payment_req.description, payment_date, payment_req.legal_entity_id, payment_req.contractor_id))
             
             row = cur.fetchone()
             conn.commit()
@@ -538,6 +559,119 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             
             cur.execute('DELETE FROM payment_custom_values WHERE custom_field_id = %s', (field_id,))
             cur.execute('DELETE FROM custom_fields WHERE id = %s', (field_id,))
+            conn.commit()
+            
+            return response(200, {'success': True})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
+
+def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    '''Обработка запросов к контрагентам'''
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            cur.execute('''SELECT id, name, inn, kpp, ogrn, legal_address, actual_address,
+                          phone, email, contact_person, bank_name, bank_bik, bank_account,
+                          correspondent_account, notes, is_active, created_at, updated_at
+                          FROM contractors WHERE is_active = true ORDER BY name''')
+            rows = cur.fetchall()
+            contractors = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'inn': row[2] or '',
+                    'kpp': row[3] or '',
+                    'ogrn': row[4] or '',
+                    'legal_address': row[5] or '',
+                    'actual_address': row[6] or '',
+                    'phone': row[7] or '',
+                    'email': row[8] or '',
+                    'contact_person': row[9] or '',
+                    'bank_name': row[10] or '',
+                    'bank_bik': row[11] or '',
+                    'bank_account': row[12] or '',
+                    'correspondent_account': row[13] or '',
+                    'notes': row[14] or '',
+                    'is_active': row[15],
+                    'created_at': row[16].isoformat() if row[16] else None,
+                    'updated_at': row[17].isoformat() if row[17] else None
+                }
+                for row in rows
+            ]
+            return response(200, contractors)
+        
+        elif method == 'POST':
+            body = json.loads(event.get('body', '{}'))
+            contractor_req = ContractorRequest(**body)
+            
+            cur.execute('''
+                INSERT INTO contractors (name, inn, kpp, ogrn, legal_address, actual_address,
+                    phone, email, contact_person, bank_name, bank_bik, bank_account,
+                    correspondent_account, notes)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, name, inn, created_at
+            ''', (contractor_req.name, contractor_req.inn, contractor_req.kpp, contractor_req.ogrn,
+                  contractor_req.legal_address, contractor_req.actual_address, contractor_req.phone,
+                  contractor_req.email, contractor_req.contact_person, contractor_req.bank_name,
+                  contractor_req.bank_bik, contractor_req.bank_account, contractor_req.correspondent_account,
+                  contractor_req.notes))
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'inn': row[2] or '',
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'PUT':
+            body = json.loads(event.get('body', '{}'))
+            contractor_id = body.get('id')
+            contractor_req = ContractorRequest(**body)
+            
+            if not contractor_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute('''
+                UPDATE contractors SET name = %s, inn = %s, kpp = %s, ogrn = %s,
+                    legal_address = %s, actual_address = %s, phone = %s, email = %s,
+                    contact_person = %s, bank_name = %s, bank_bik = %s, bank_account = %s,
+                    correspondent_account = %s, notes = %s, updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+                RETURNING id, name, inn, updated_at
+            ''', (contractor_req.name, contractor_req.inn, contractor_req.kpp, contractor_req.ogrn,
+                  contractor_req.legal_address, contractor_req.actual_address, contractor_req.phone,
+                  contractor_req.email, contractor_req.contact_person, contractor_req.bank_name,
+                  contractor_req.bank_bik, contractor_req.bank_account, contractor_req.correspondent_account,
+                  contractor_req.notes, contractor_id))
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Contractor not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'inn': row[2] or '',
+                'updated_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'DELETE':
+            params = event.get('queryStringParameters', {})
+            contractor_id = params.get('id')
+            
+            if not contractor_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute('UPDATE contractors SET is_active = false WHERE id = %s', (contractor_id,))
             conn.commit()
             
             return response(200, {'success': True})

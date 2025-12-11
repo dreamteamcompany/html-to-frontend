@@ -39,6 +39,12 @@ interface CustomField {
   options: string;
 }
 
+interface Contractor {
+  id: number;
+  name: string;
+  inn: string;
+}
+
 interface PaymentFormProps {
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
@@ -46,6 +52,7 @@ interface PaymentFormProps {
   setFormData: (data: Record<string, string | undefined>) => void;
   categories: Category[];
   legalEntities: LegalEntity[];
+  contractors: Contractor[];
   customFields: CustomField[];
   handleSubmit: (e: React.FormEvent) => void;
 }
@@ -57,6 +64,7 @@ const PaymentForm = ({
   setFormData,
   categories,
   legalEntities,
+  contractors,
   customFields,
   handleSubmit,
 }: PaymentFormProps) => {
@@ -115,6 +123,24 @@ const PaymentForm = ({
                   {legalEntities.map((entity) => (
                     <SelectItem key={entity.id} value={entity.id.toString()}>
                       {entity.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contractor">Контрагент</Label>
+              <Select
+                value={formData.contractor_id}
+                onValueChange={(value) => setFormData({ ...formData, contractor_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите контрагента (опционально)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {contractors.map((contractor) => (
+                    <SelectItem key={contractor.id} value={contractor.id.toString()}>
+                      {contractor.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

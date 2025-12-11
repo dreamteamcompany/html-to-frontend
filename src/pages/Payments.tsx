@@ -30,6 +30,12 @@ interface LegalEntity {
   address: string;
 }
 
+interface Contractor {
+  id: number;
+  name: string;
+  inn: string;
+}
+
 interface CustomField {
   id: number;
   name: string;
@@ -41,6 +47,7 @@ const Payments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
+  const [contractors, setContractors] = useState<Contractor[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -68,6 +75,7 @@ const Payments = () => {
     description: '',
     amount: '',
     legal_entity_id: undefined,
+    contractor_id: undefined,
   });
 
   const loadPayments = () => {
@@ -93,6 +101,10 @@ const Payments = () => {
       .then(res => res.json())
       .then(setLegalEntities)
       .catch(err => console.error('Failed to load legal entities:', err));
+    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=contractors')
+      .then(res => res.json())
+      .then(setContractors)
+      .catch(err => console.error('Failed to load contractors:', err));
     fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=custom-fields')
       .then(res => res.json())
       .then((fields) => {
@@ -102,6 +114,7 @@ const Payments = () => {
           description: '',
           amount: '',
           legal_entity_id: undefined,
+          contractor_id: undefined,
         };
         fields.forEach((field: CustomField) => {
           initialData[`custom_field_${field.id}`] = undefined;
@@ -125,6 +138,7 @@ const Payments = () => {
           description: formData.description || '',
           amount: formData.amount ? parseFloat(formData.amount) : 0,
           legal_entity_id: formData.legal_entity_id ? parseInt(formData.legal_entity_id) : null,
+          contractor_id: formData.contractor_id ? parseInt(formData.contractor_id) : null,
         }),
       });
 
@@ -135,6 +149,7 @@ const Payments = () => {
           description: '',
           amount: '',
           legal_entity_id: undefined,
+          contractor_id: undefined,
         };
         customFields.forEach(field => {
           resetData[`custom_field_${field.id}`] = undefined;
@@ -177,6 +192,7 @@ const Payments = () => {
           setFormData={setFormData}
           categories={categories}
           legalEntities={legalEntities}
+          contractors={contractors}
           customFields={customFields}
           handleSubmit={handleSubmit}
         />
