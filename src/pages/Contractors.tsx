@@ -67,7 +67,7 @@ const Contractors = () => {
   };
 
   const loadContractors = () => {
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=contractors')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors')
       .then(res => res.json())
       .then(data => {
         setContractors(data);
@@ -87,7 +87,7 @@ const Contractors = () => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=contractors';
+      const url = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors';
       const method = editingContractor ? 'PUT' : 'POST';
       const body = editingContractor 
         ? { ...formData, id: editingContractor.id }
@@ -153,7 +153,7 @@ const Contractors = () => {
     
     try {
       const response = await fetch(
-        `https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=contractors&id=${id}`,
+        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors&id=${id}`,
         { method: 'DELETE' }
       );
 

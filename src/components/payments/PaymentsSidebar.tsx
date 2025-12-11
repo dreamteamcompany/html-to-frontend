@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
 
 interface PaymentsSidebarProps {
   menuOpen: boolean;
@@ -27,6 +28,22 @@ const PaymentsSidebar = ({
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle('light', savedTheme === 'light');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('light', newTheme === 'light');
+  };
 
   const handleLogout = () => {
     logout();
@@ -106,14 +123,12 @@ const PaymentsSidebar = ({
                 <Icon name="Briefcase" size={18} />
                 <span>Контрагенты</span>
               </Link>
+              <a href="#" className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+                <Icon name="Box" size={18} />
+                <span>Сервисы</span>
+              </a>
             </div>
           )}
-        </li>
-        <li>
-          <a href="#" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
-            <Icon name="Box" size={20} />
-            <span>Сервисы</span>
-          </a>
         </li>
         <li>
           <button 
@@ -159,6 +174,16 @@ const PaymentsSidebar = ({
       </ul>
       
       <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-4 space-y-3">
+        <button
+          onClick={toggleTheme}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Icon name={theme === 'dark' ? 'Moon' : 'Sun'} size={18} />
+            <span className="text-sm">{theme === 'dark' ? 'Темная тема' : 'Светлая тема'}</span>
+          </div>
+          <Icon name="ChevronRight" size={16} />
+        </button>
         <div className="flex items-center gap-3 px-2">
           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
             {user?.full_name?.charAt(0) || 'U'}

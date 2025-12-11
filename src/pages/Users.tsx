@@ -76,7 +76,7 @@ const Users = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/621b0a81-03f7-4d24-8532-81f40fb3bc2b', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users', {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -95,7 +95,7 @@ const Users = () => {
 
   const loadRoles = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/597de3a8-5db2-4e46-8835-5a37042b00f1?action=me', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?action=me', {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -196,6 +196,29 @@ const Users = () => {
       }
     } catch (err) {
       console.error('Failed to toggle user status:', err);
+    }
+  };
+
+  const handleDeleteUser = async (userId: number, userName: string) => {
+    if (!confirm(`Вы уверены, что хотите удалить пользователя "${userName}"?`)) return;
+    
+    try {
+      const response = await fetch(`https://functions.poehali.dev/621b0a81-03f7-4d24-8532-81f40fb3bc2b?id=${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Auth-Token': token || '',
+        },
+      });
+
+      if (response.ok) {
+        loadUsers();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Ошибка при удалении пользователя');
+      }
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+      alert('Ошибка при удалении пользователя');
     }
   };
 
@@ -432,7 +455,6 @@ const Users = () => {
                                 className="gap-2 text-blue-500 hover:text-blue-600"
                               >
                                 <Icon name="Pencil" size={16} />
-                                Редактировать
                               </Button>
                               <Button
                                 variant="ghost"
@@ -441,6 +463,14 @@ const Users = () => {
                                 className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600' : 'text-green-500 hover:text-green-600'}`}
                               >
                                 <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteUser(user.id, user.full_name)}
+                                className="gap-2 text-red-500 hover:text-red-600"
+                              >
+                                <Icon name="Trash2" size={16} />
                               </Button>
                             </div>
                           </td>
@@ -478,7 +508,7 @@ const Users = () => {
                             </span>
                           ))}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -493,10 +523,9 @@ const Users = () => {
                               });
                               setDialogOpen(true);
                             }}
-                            className="flex-1 gap-2 text-blue-500 hover:text-blue-600 border-blue-500/50"
+                            className="gap-2 text-blue-500 hover:text-blue-600 border-blue-500/50"
                           >
                             <Icon name="Pencil" size={16} />
-                            Редактировать
                           </Button>
                           <Button
                             variant="outline"
@@ -505,6 +534,14 @@ const Users = () => {
                             className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600 border-yellow-500/50' : 'text-green-500 hover:text-green-600 border-green-500/50'}`}
                           >
                             <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.id, user.full_name)}
+                            className="gap-2 text-red-500 hover:text-red-600 border-red-500/50"
+                          >
+                            <Icon name="Trash2" size={16} />
                           </Button>
                         </div>
                       </CardContent>

@@ -224,6 +224,37 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return response(409, {'error': 'Пользователь с таким логином уже существует'})
                 return response(409, {'error': 'Пользователь с таким email уже существует'})
         
+        elif method == 'DELETE':
+            user_payload, error = verify_token_and_permission(event, conn, 'users.delete')
+            if error:
+                return error
+            
+            query_params = event.get('queryStringParameters', {}) or {}
+            user_id = query_params.get('id')
+            
+            if not user_id:
+                return response(400, {'error': 'ID пользователя обязателен'})
+            
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            try:
+                cur.execute("DELETE FROM user_roles WHERE user_id = %s", (user_id,))
+                cur.execute("DELETE FROM users WHERE id = %s RETURNING id, username", (user_id,))
+                deleted_user = cur.fetchone()
+                
+                if not deleted_user:
+                    cur.close()
+                    return response(404, {'error': 'Пользователь не найден'})
+                
+                conn.commit()
+                cur.close()
+                
+                return response(200, {'message': 'Пользователь удалён', 'id': deleted_user['id']})
+            except Exception as e:
+                conn.rollback()
+                cur.close()
+                return response(500, {'error': f'Ошибка при удалении: {str(e)}'})
+        
         return response(405, {'error': '\u041c\u0435\u0442\u043e\u0434 \u043d\u0435 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044f'})
     
     finally:

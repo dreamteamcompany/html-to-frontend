@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     try {
-      const response = await fetch('https://functions.poehali.dev/597de3a8-5db2-4e46-8835-5a37042b00f1?action=me', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=me', {
         headers: {
           'X-Auth-Token': savedToken,
         },
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const login = async (username: string, password: string) => {
-    const response = await fetch('https://functions.poehali.dev/597de3a8-5db2-4e46-8835-5a37042b00f1?action=login', {
+    const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -55,7 +55,7 @@ const LegalEntities = () => {
   };
 
   const loadEntities = () => {
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities')
       .then(res => res.json())
       .then((data) => {
         setEntities(data);
@@ -75,7 +75,7 @@ const LegalEntities = () => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities';
+      const url = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities';
       const method = editingEntity ? 'PUT' : 'POST';
       const body = editingEntity 
         ? { id: editingEntity.id, ...formData }
@@ -111,7 +111,7 @@ const LegalEntities = () => {
 
     try {
       const response = await fetch(
-        'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities',
+        'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities',
         {
           method: 'DELETE',
           headers: {

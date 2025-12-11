@@ -79,7 +79,7 @@ const Payments = () => {
   });
 
   const loadPayments = () => {
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=payments')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments')
       .then(res => res.json())
       .then(data => {
         setPayments(data);
@@ -93,19 +93,19 @@ const Payments = () => {
 
   useEffect(() => {
     loadPayments();
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=categories')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories')
       .then(res => res.json())
       .then(setCategories)
       .catch(err => console.error('Failed to load categories:', err));
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=legal-entities')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities')
       .then(res => res.json())
       .then(setLegalEntities)
       .catch(err => console.error('Failed to load legal entities:', err));
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=contractors')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors')
       .then(res => res.json())
       .then(setContractors)
       .catch(err => console.error('Failed to load contractors:', err));
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=custom-fields')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields')
       .then(res => res.json())
       .then((fields) => {
         setCustomFields(fields);
@@ -128,7 +128,7 @@ const Payments = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=payments', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -62,7 +62,7 @@ const Categories = () => {
   };
 
   const loadCategories = () => {
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=categories')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories')
       .then(res => res.json())
       .then((data) => {
         setCategories(data);
@@ -82,7 +82,7 @@ const Categories = () => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=categories';
+      const url = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories';
       const method = editingCategory ? 'PUT' : 'POST';
       const body = editingCategory 
         ? { id: editingCategory.id, ...formData }
@@ -118,7 +118,7 @@ const Categories = () => {
 
     try {
       const response = await fetch(
-        `https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=categories&id=${id}`,
+        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories&id=${id}`,
         { method: 'DELETE' }
       );
 

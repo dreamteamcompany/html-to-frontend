@@ -63,7 +63,7 @@ const Roles = () => {
   };
 
   const loadRoles = () => {
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=roles')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles')
       .then(res => res.json())
       .then(data => {
         setRoles(Array.isArray(data) ? data : []);
@@ -77,7 +77,7 @@ const Roles = () => {
   };
 
   const loadPermissions = () => {
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=permissions')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=permissions')
       .then(res => res.json())
       .then(data => setPermissions(Array.isArray(data) ? data : []))
       .catch(err => {
@@ -95,7 +95,7 @@ const Roles = () => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=roles';
+      const url = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles';
       const method = editingRole ? 'PUT' : 'POST';
       const body = editingRole 
         ? { ...formData, id: editingRole.id }
@@ -139,7 +139,7 @@ const Roles = () => {
     
     try {
       const response = await fetch(
-        `https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=roles&id=${id}`,
+        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles&id=${id}`,
         { method: 'DELETE' }
       );
 

@@ -50,7 +50,7 @@ const Index = () => {
   };
 
   useEffect(() => {
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=stats')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=stats')
       .then(res => res.json())
       .then(data => {
         setStats(data);

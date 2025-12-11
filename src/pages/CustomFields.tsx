@@ -67,7 +67,7 @@ const CustomFields = () => {
   };
 
   const loadFields = () => {
-    fetch('https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=custom-fields')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields')
       .then(res => res.json())
       .then((data) => {
         setFields(data);
@@ -87,7 +87,7 @@ const CustomFields = () => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=custom-fields';
+      const url = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields';
       const method = editingField ? 'PUT' : 'POST';
       const body = editingField 
         ? { id: editingField.id, ...formData }
@@ -123,7 +123,7 @@ const CustomFields = () => {
 
     try {
       const response = await fetch(
-        'https://functions.poehali.dev/9b5d4fbf-1bb7-4ccf-9295-fed67458d202?endpoint=custom-fields',
+        'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields',
         {
           method: 'DELETE',
           headers: {
