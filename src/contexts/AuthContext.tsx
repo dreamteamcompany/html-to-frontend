@@ -150,8 +150,39 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         clearInterval(refreshIntervalRef.current);
       }
       
+      const doRefresh = async () => {
+        const rememberMe = localStorage.getItem('remember_me') === 'true';
+        const currentToken = rememberMe 
+          ? localStorage.getItem('auth_token')
+          : sessionStorage.getItem('auth_token');
+        
+        if (!currentToken) return;
+
+        try {
+          const response = await fetch('https://functions.poehali.dev/597de3a8-5db2-4e46-8835-5a37042b00f1?action=refresh', {
+            headers: {
+              'X-Auth-Token': currentToken,
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setToken(data.token);
+            setUser(data.user);
+            
+            if (rememberMe) {
+              localStorage.setItem('auth_token', data.token);
+            } else {
+              sessionStorage.setItem('auth_token', data.token);
+            }
+          }
+        } catch (error) {
+          console.error('Token refresh failed:', error);
+        }
+      };
+      
       refreshIntervalRef.current = setInterval(() => {
-        refreshToken();
+        doRefresh();
       }, 6 * 60 * 60 * 1000);
     }
 
@@ -161,7 +192,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         refreshIntervalRef.current = null;
       }
     };
-  }, [user, token, refreshToken]);
+  }, [user, token]);
 
   const login = async (username: string, password: string, rememberMe: boolean = false) => {
     const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=login', {
