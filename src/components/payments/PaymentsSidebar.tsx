@@ -64,8 +64,8 @@ const PaymentsSidebar = ({
       <a href="/" className="flex items-center gap-3 px-5 py-5 pb-[30px] border-b border-white/10 dark:border-white/10 light:border-gray-200 flex-shrink-0">
         <Logo className="h-8 w-auto text-white dark:text-white light:text-gray-900" />
       </a>
-      <div className="flex-1 overflow-y-auto">
-        <ul className="px-[15px] py-5 space-y-1">
+      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/5 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/10">
+        <ul className="px-[15px] py-5 space-y-1 pb-4">
         <li>
           <Link to="/" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
             <Icon name="Home" size={20} />
