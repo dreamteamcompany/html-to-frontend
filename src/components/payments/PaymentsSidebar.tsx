@@ -132,20 +132,20 @@ const PaymentsSidebar = ({
                 <Icon name="Sliders" size={18} />
                 <span>Основные настройки</span>
               </button>
-              <button
-                disabled
-                className="w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground/50 cursor-not-allowed"
+              <Link
+                to="/users"
+                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/users') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
               >
                 <Icon name="Users" size={18} />
                 <span>Пользователи</span>
-              </button>
-              <button
-                disabled
-                className="w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground/50 cursor-not-allowed"
+              </Link>
+              <Link
+                to="/roles"
+                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/roles') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
               >
                 <Icon name="Shield" size={18} />
                 <span>Права доступа</span>
-              </button>
+              </Link>
             </div>
           )}
         </li>

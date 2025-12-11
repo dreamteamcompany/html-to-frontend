@@ -12,6 +12,8 @@ import Payments from "./pages/Payments";
 import Categories from "./pages/Categories";
 import LegalEntities from "./pages/LegalEntities";
 import CustomFields from "./pages/CustomFields";
+import Users from "./pages/Users";
+import Roles from "./pages/Roles";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
             <Route path="/legal-entities" element={<ProtectedRoute><LegalEntities /></ProtectedRoute>} />
             <Route path="/custom-fields" element={<ProtectedRoute><CustomFields /></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+            <Route path="/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
