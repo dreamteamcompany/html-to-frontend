@@ -54,6 +54,49 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const refreshToken = useCallback(async () => {
+    const rememberMe = localStorage.getItem('remember_me') === 'true';
+    const currentToken = rememberMe 
+      ? localStorage.getItem('auth_token')
+      : sessionStorage.getItem('auth_token');
+    
+    if (!currentToken) return;
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/597de3a8-5db2-4e46-8835-5a37042b00f1?action=refresh', {
+        headers: {
+          'X-Auth-Token': currentToken,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setToken(data.token);
+        setUser(data.user);
+        
+        if (rememberMe) {
+          localStorage.setItem('auth_token', data.token);
+        } else {
+          sessionStorage.setItem('auth_token', data.token);
+        }
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
+    }
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_token');
+    localStorage.removeItem('remember_me');
+  }, []);
+
   const checkAuth = async () => {
     const rememberMe = localStorage.getItem('remember_me') === 'true';
     const savedToken = rememberMe 
@@ -144,51 +187,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       localStorage.removeItem('remember_me');
     }
   };
-
-  const refreshToken = useCallback(async () => {
-    const rememberMe = localStorage.getItem('remember_me') === 'true';
-    const currentToken = rememberMe 
-      ? localStorage.getItem('auth_token')
-      : sessionStorage.getItem('auth_token');
-    
-    if (!currentToken) return;
-
-    try {
-      const response = await fetch('https://functions.poehali.dev/597de3a8-5db2-4e46-8835-5a37042b00f1?action=refresh', {
-        headers: {
-          'X-Auth-Token': currentToken,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setToken(data.token);
-        setUser(data.user);
-        
-        if (rememberMe) {
-          localStorage.setItem('auth_token', data.token);
-        } else {
-          sessionStorage.setItem('auth_token', data.token);
-        }
-      } else {
-        logout();
-      }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-    }
-  }, []);
-
-  const logout = useCallback(() => {
-    if (refreshIntervalRef.current) {
-      clearInterval(refreshIntervalRef.current);
-      refreshIntervalRef.current = null;
-    }
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_token');
-    localStorage.removeItem('remember_me');
-  }, []);
 
   const hasPermission = (resource: string, action: string): boolean => {
     if (!user || !user.permissions) return false;
