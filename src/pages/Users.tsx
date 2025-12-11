@@ -1,26 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import Icon from '@/components/ui/icon';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import UsersHeader from '@/components/users/UsersHeader';
+import UserFormDialog from '@/components/users/UserFormDialog';
+import UsersTable from '@/components/users/UsersTable';
+import UsersMobileList from '@/components/users/UsersMobileList';
 
 interface User {
   id: number;
@@ -102,7 +87,7 @@ const Users = () => {
       });
       
       if (response.ok) {
-        const rolesResponse = await fetch('https://functions.poehali.dev/621b0a81-03f7-4d24-8532-81f40fb3bc2b', {
+        const rolesResponse = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users', {
           headers: {
             'X-Auth-Token': token || '',
           },
@@ -132,8 +117,8 @@ const Users = () => {
     
     try {
       const url = editingUser 
-        ? `https://functions.poehali.dev/621b0a81-03f7-4d24-8532-81f40fb3bc2b?id=${editingUser.id}`
-        : 'https://functions.poehali.dev/621b0a81-03f7-4d24-8532-81f40fb3bc2b';
+        ? `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users&id=${editingUser.id}`
+        : 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users';
       
       const method = editingUser ? 'PUT' : 'POST';
       
@@ -180,7 +165,7 @@ const Users = () => {
 
   const toggleUserStatus = async (userId: number, currentStatus: boolean) => {
     try {
-      const response = await fetch(`https://functions.poehali.dev/621b0a81-03f7-4d24-8532-81f40fb3bc2b?id=${userId}`, {
+      const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users&id=${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -203,7 +188,7 @@ const Users = () => {
     if (!confirm(`Вы уверены, что хотите удалить пользователя "${userName}"?`)) return;
     
     try {
-      const response = await fetch(`https://functions.poehali.dev/621b0a81-03f7-4d24-8532-81f40fb3bc2b?id=${userId}`, {
+      const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users&id=${userId}`, {
         method: 'DELETE',
         headers: {
           'X-Auth-Token': token || '',
@@ -220,6 +205,18 @@ const Users = () => {
       console.error('Failed to delete user:', err);
       alert('Ошибка при удалении пользователя');
     }
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setFormData({
+      username: user.username,
+      email: user.email,
+      full_name: user.full_name,
+      password: '',
+      role_ids: user.roles.map(r => r.id),
+    });
+    setDialogOpen(true);
   };
 
   return (
@@ -243,136 +240,23 @@ const Users = () => {
       )}
 
       <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-[30px] px-4 md:px-[25px] py-4 md:py-[18px] bg-[#1b254b]/50 backdrop-blur-[20px] rounded-[15px] border border-white/10">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="lg:hidden p-2 text-white"
-          >
-            <Icon name="Menu" size={24} />
-          </button>
-          <div className="flex items-center gap-3 bg-card border border-white/10 rounded-[15px] px-4 md:px-5 py-2 md:py-[10px] w-full sm:w-[300px] lg:w-[400px]">
-            <Icon name="Search" size={20} className="text-muted-foreground" />
-            <Input 
-              type="text" 
-              placeholder="Поиск пользователей..." 
-              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
-            />
-          </div>
-          <div className="flex items-center gap-2 md:gap-3 px-3 md:px-[15px] py-2 md:py-[10px] rounded-[12px] bg-white/5 border border-white/10">
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-[10px] bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold text-white text-sm md:text-base">
-              А
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-sm font-medium">Администратор</div>
-              <div className="text-xs text-muted-foreground">Администратор</div>
-            </div>
-          </div>
-        </header>
+        <UsersHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Пользователи</h1>
             <p className="text-sm md:text-base text-muted-foreground">Управление пользователями системы</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) {
-              setEditingUser(null);
-              setFormData({
-                username: '',
-                email: '',
-                password: '',
-                full_name: '',
-                role_ids: [],
-              });
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
-                <Icon name="UserPlus" size={18} />
-                <span>Добавить пользователя</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>{editingUser ? 'Редактировать пользователя' : 'Новый пользователь'}</DialogTitle>
-                <DialogDescription>
-                  {editingUser ? 'Измените данные пользователя' : 'Создайте нового пользователя системы'}
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username">Логин</Label>
-                  <Input
-                    id="username"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="username"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="user@example.com"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="full_name">Полное имя</Label>
-                  <Input
-                    id="full_name"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    placeholder="Иван Иванов"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">{editingUser ? 'Новый пароль (оставьте пустым, чтобы не менять)' : 'Пароль'}</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="••••••••"
-                    required={!editingUser}
-                    minLength={4}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Роли</Label>
-                  <div className="space-y-2">
-                    {roles.map((role) => (
-                      <div key={role.id} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id={`role-${role.id}`}
-                          checked={formData.role_ids.includes(role.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData({ ...formData, role_ids: [...formData.role_ids, role.id] });
-                            } else {
-                              setFormData({ ...formData, role_ids: formData.role_ids.filter(id => id !== role.id) });
-                            }
-                          }}
-                          className="rounded border-gray-300"
-                        />
-                        <Label htmlFor={`role-${role.id}`} className="cursor-pointer">{role.name}</Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <Button type="submit" className="w-full">
-                  {editingUser ? 'Сохранить изменения' : 'Создать пользователя'}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <UserFormDialog
+            dialogOpen={dialogOpen}
+            setDialogOpen={setDialogOpen}
+            editingUser={editingUser}
+            setEditingUser={setEditingUser}
+            formData={formData}
+            setFormData={setFormData}
+            roles={roles}
+            handleSubmit={handleSubmit}
+          />
         </div>
 
         <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
@@ -385,169 +269,18 @@ const Users = () => {
               </div>
             ) : (
               <>
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-white/10">
-                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Пользователь</th>
-                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Email</th>
-                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Роли</th>
-                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Последний вход</th>
-                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Статус</th>
-                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Действия</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((user) => (
-                        <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                {user.full_name.charAt(0)}
-                              </div>
-                              <div>
-                                <div className="font-medium">{user.full_name}</div>
-                                <div className="text-sm text-muted-foreground">@{user.username}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4 text-muted-foreground">{user.email}</td>
-                          <td className="p-4">
-                            <div className="flex flex-wrap gap-2">
-                              {user.roles.map((role) => (
-                                <span key={role.id} className="px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">
-                                  {role.name}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="p-4 text-muted-foreground text-sm">
-                            {user.last_login 
-                              ? new Date(user.last_login).toLocaleDateString('ru-RU')
-                              : 'Никогда'
-                            }
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              user.is_active 
-                                ? 'bg-green-500/10 text-green-500' 
-                                : 'bg-red-500/10 text-red-500'
-                            }`}>
-                              {user.is_active ? 'Активен' : 'Заблокирован'}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingUser(user);
-                                  setFormData({
-                                    username: user.username,
-                                    email: user.email,
-                                    full_name: user.full_name,
-                                    password: '',
-                                    role_ids: user.roles.map(r => r.id),
-                                  });
-                                  setDialogOpen(true);
-                                }}
-                                className="gap-2 text-blue-500 hover:text-blue-600"
-                              >
-                                <Icon name="Pencil" size={16} />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleUserStatus(user.id, user.is_active)}
-                                className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600' : 'text-green-500 hover:text-green-600'}`}
-                              >
-                                <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteUser(user.id, user.full_name)}
-                                className="gap-2 text-red-500 hover:text-red-600"
-                              >
-                                <Icon name="Trash2" size={16} />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                
-                <div className="md:hidden space-y-3 p-4">
-                  {users.map((user) => (
-                    <Card key={user.id} className="border-white/10 bg-white/5">
-                      <CardContent className="p-4 space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                            {user.full_name.charAt(0)}
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium">{user.full_name}</div>
-                            <div className="text-sm text-muted-foreground">@{user.username}</div>
-                          </div>
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            user.is_active 
-                              ? 'bg-green-500/10 text-green-500' 
-                              : 'bg-red-500/10 text-red-500'
-                          }`}>
-                            {user.is_active ? 'Активен' : 'Заблокирован'}
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
-                        <div className="flex flex-wrap gap-2">
-                          {user.roles.map((role) => (
-                            <span key={role.id} className="px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">
-                              {role.name}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditingUser(user);
-                              setFormData({
-                                username: user.username,
-                                email: user.email,
-                                full_name: user.full_name,
-                                password: '',
-                                role_ids: user.roles.map(r => r.id),
-                              });
-                              setDialogOpen(true);
-                            }}
-                            className="gap-2 text-blue-500 hover:text-blue-600 border-blue-500/50"
-                          >
-                            <Icon name="Pencil" size={16} />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleUserStatus(user.id, user.is_active)}
-                            className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600 border-yellow-500/50' : 'text-green-500 hover:text-green-600 border-green-500/50'}`}
-                          >
-                            <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteUser(user.id, user.full_name)}
-                            className="gap-2 text-red-500 hover:text-red-600 border-red-500/50"
-                          >
-                            <Icon name="Trash2" size={16} />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                <UsersTable
+                  users={users}
+                  onEdit={handleEditUser}
+                  onToggleStatus={toggleUserStatus}
+                  onDelete={handleDeleteUser}
+                />
+                <UsersMobileList
+                  users={users}
+                  onEdit={handleEditUser}
+                  onToggleStatus={toggleUserStatus}
+                  onDelete={handleDeleteUser}
+                />
               </>
             )}
           </CardContent>
