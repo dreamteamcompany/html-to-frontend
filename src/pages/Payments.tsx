@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import PaymentForm from '@/components/payments/PaymentForm';
@@ -14,6 +15,8 @@ interface Payment {
   payment_date: string;
   legal_entity_id?: number;
   legal_entity_name?: string;
+  status?: string;
+  created_by?: number;
 }
 
 interface Category {
@@ -50,6 +53,7 @@ interface CustomField {
 }
 
 const Payments = () => {
+  const { token } = useAuth();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
@@ -97,6 +101,83 @@ const Payments = () => {
         console.error('Failed to load payments:', err);
         setLoading(false);
       });
+  };
+
+  const handleSubmitForApproval = async (paymentId: number) => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/b51fbbb9-b5ea-4f49-b041-da86fd3397c8', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({ payment_id: paymentId }),
+      });
+
+      if (response.ok) {
+        loadPayments();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Ошибка при отправке на согласование');
+      }
+    } catch (err) {
+      console.error('Failed to submit for approval:', err);
+      alert('Ошибка сети');
+    }
+  };
+
+  const handleApprove = async (paymentId: number) => {
+    const comment = prompt('Комментарий (необязательно):');
+    
+    try {
+      const response = await fetch('https://functions.poehali.dev/b51fbbb9-b5ea-4f49-b041-da86fd3397c8', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({ payment_id: paymentId, action: 'approve', comment: comment || '' }),
+      });
+
+      if (response.ok) {
+        loadPayments();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Ошибка при одобрении');
+      }
+    } catch (err) {
+      console.error('Failed to approve:', err);
+      alert('Ошибка сети');
+    }
+  };
+
+  const handleReject = async (paymentId: number) => {
+    const comment = prompt('Укажите причину отклонения:');
+    if (!comment) {
+      alert('Комментарий обязателен при отклонении');
+      return;
+    }
+    
+    try {
+      const response = await fetch('https://functions.poehali.dev/b51fbbb9-b5ea-4f49-b041-da86fd3397c8', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({ payment_id: paymentId, action: 'reject', comment }),
+      });
+
+      if (response.ok) {
+        loadPayments();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Ошибка при отклонении');
+      }
+    } catch (err) {
+      console.error('Failed to reject:', err);
+      alert('Ошибка сети');
+    }
   };
 
   useEffect(() => {
@@ -213,7 +294,13 @@ const Payments = () => {
           handleSubmit={handleSubmit}
         />
 
-        <PaymentsList payments={payments} loading={loading} />
+        <PaymentsList 
+          payments={payments} 
+          loading={loading} 
+          onApprove={handleApprove}
+          onReject={handleReject}
+          onSubmitForApproval={handleSubmitForApproval}
+        />
       </main>
     </div>
   );

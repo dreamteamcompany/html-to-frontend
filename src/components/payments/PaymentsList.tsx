@@ -11,14 +11,39 @@ interface Payment {
   payment_date: string;
   legal_entity_id?: number;
   legal_entity_name?: string;
+  status?: string;
+  created_by?: number;
+  submitted_at?: string;
 }
 
 interface PaymentsListProps {
   payments: Payment[];
   loading: boolean;
+  onApprove?: (paymentId: number) => void;
+  onReject?: (paymentId: number) => void;
+  onSubmitForApproval?: (paymentId: number) => void;
 }
 
-const PaymentsList = ({ payments, loading }: PaymentsListProps) => {
+const getStatusBadge = (status?: string) => {
+  if (!status || status === 'draft') {
+    return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-gray-300">Черновик</span>;
+  }
+  if (status === 'pending_tech_director') {
+    return <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">Ожидает тех.директора</span>;
+  }
+  if (status === 'pending_ceo') {
+    return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300">Ожидает CEO</span>;
+  }
+  if (status === 'approved') {
+    return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300">Одобрен</span>;
+  }
+  if (status === 'rejected') {
+    return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-300">Отклонен</span>;
+  }
+  return null;
+};
+
+const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForApproval }: PaymentsListProps) => {
   return (
     <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
       <CardContent className="p-0">
@@ -38,7 +63,9 @@ const PaymentsList = ({ payments, loading }: PaymentsListProps) => {
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Юр. лицо</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Назначение</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
+                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Статус</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Дата</th>
+                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Действия</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -59,12 +86,43 @@ const PaymentsList = ({ payments, loading }: PaymentsListProps) => {
                       <td className="p-4">
                         <span className="font-bold text-lg">{payment.amount.toLocaleString('ru-RU')} ₽</span>
                       </td>
+                      <td className="p-4">
+                        {getStatusBadge(payment.status)}
+                      </td>
                       <td className="p-4 text-muted-foreground">
                         {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
                           day: '2-digit',
                           month: 'long',
                           year: 'numeric'
                         })}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex gap-2">
+                          {(!payment.status || payment.status === 'draft') && onSubmitForApproval && (
+                            <button
+                              onClick={() => onSubmitForApproval(payment.id)}
+                              className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                            >
+                              Отправить
+                            </button>
+                          )}
+                          {(payment.status === 'pending_tech_director' || payment.status === 'pending_ceo') && onApprove && onReject && (
+                            <>
+                              <button
+                                onClick={() => onApprove(payment.id)}
+                                className="px-3 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                              >
+                                Одобрить
+                              </button>
+                              <button
+                                onClick={() => onReject(payment.id)}
+                                className="px-3 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                              >
+                                Отклонить
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

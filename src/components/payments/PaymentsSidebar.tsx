@@ -175,6 +175,13 @@ const PaymentsSidebar = ({
                 <Icon name="Shield" size={18} />
                 <span>Права доступа</span>
               </Link>
+              <Link
+                to="/approvals-history"
+                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/approvals-history') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+              >
+                <Icon name="FileCheck" size={18} />
+                <span>История согласований</span>
+              </Link>
             </div>
           )}
         </li>

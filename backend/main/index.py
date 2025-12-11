@@ -644,7 +644,7 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     try:
         if method == 'GET':
-            cur.execute("""
+            cur.execute(f"""
                 SELECT 
                     p.id, 
                     p.category_id,
@@ -659,12 +659,19 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     p.contractor_id,
                     ct.name as contractor_name,
                     p.department_id,
-                    cd.name as department_name
-                FROM payments p
-                LEFT JOIN categories c ON p.category_id = c.id
-                LEFT JOIN legal_entities le ON p.legal_entity_id = le.id
-                LEFT JOIN contractors ct ON p.contractor_id = ct.id
-                LEFT JOIN customer_departments cd ON p.department_id = cd.id
+                    cd.name as department_name,
+                    p.status,
+                    p.created_by,
+                    p.submitted_at,
+                    p.tech_director_approved_at,
+                    p.tech_director_approved_by,
+                    p.ceo_approved_at,
+                    p.ceo_approved_by
+                FROM {SCHEMA}.payments p
+                LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
+                LEFT JOIN {SCHEMA}.legal_entities le ON p.legal_entity_id = le.id
+                LEFT JOIN {SCHEMA}.contractors ct ON p.contractor_id = ct.id
+                LEFT JOIN {SCHEMA}.customer_departments cd ON p.department_id = cd.id
                 ORDER BY p.payment_date DESC
             """)
             rows = cur.fetchall()
