@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -26,11 +26,15 @@ const PaymentsSidebar = ({
 }: PaymentsSidebarProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+  
+  const isActive = (path: string) => location.pathname === path;
+  
   return (
     <aside 
       className={`w-[250px] bg-[#1b254b] border-r border-white/10 fixed left-0 top-0 h-screen z-50 transition-transform lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}
@@ -46,13 +50,13 @@ const PaymentsSidebar = ({
       </a>
       <ul className="px-[15px] py-5 space-y-1">
         <li>
-          <Link to="/" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+          <Link to="/" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
             <Icon name="Home" size={20} />
             <span>Дашборд</span>
           </Link>
         </li>
         <li>
-          <Link to="/payments" className="flex items-center gap-3 px-[15px] py-3 rounded-lg bg-primary text-white">
+          <Link to="/payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
             <Icon name="CreditCard" size={20} />
             <span>Платежи</span>
           </Link>

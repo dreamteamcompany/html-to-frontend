@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Chart, registerables } from 'chart.js';
+import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 
 Chart.register(...registerables);
 
@@ -30,6 +30,7 @@ const Index = () => {
   });
   const [loading, setLoading] = useState(true);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
@@ -145,80 +146,16 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen">
-      <aside 
-        className={`w-[250px] bg-[#1b254b] border-r border-white/10 fixed left-0 top-0 h-screen z-50 transition-transform lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <a href="#" className="flex items-center gap-3 px-5 py-5 pb-[30px] border-b border-white/10">
-          <div className="w-8 h-8 bg-primary rounded-[10px] flex items-center justify-center font-bold text-white">
-            V
-          </div>
-          <span className="text-white font-semibold">Vision UI</span>
-        </a>
-        <ul className="px-[15px] py-5 space-y-1">
-          <li>
-            <Link to="/" className="flex items-center gap-3 px-[15px] py-3 rounded-lg bg-primary text-white">
-              <Icon name="Home" size={20} />
-              <span>Дашборд</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/payments" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
-              <Icon name="CreditCard" size={20} />
-              <span>Платежи</span>
-            </Link>
-          </li>
-          <li>
-            <button 
-              onClick={() => setDictionariesOpen(!dictionariesOpen)}
-              className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Icon name="BookOpen" size={20} />
-                <span>Справочники</span>
-              </div>
-              <Icon 
-                name="ChevronDown" 
-                size={16} 
-                className={`transition-transform ${dictionariesOpen ? 'rotate-180' : ''}`}
-              />
-            </button>
-            {dictionariesOpen && (
-              <div className="mt-1 space-y-1">
-                <Link 
-                  to="/legal-entities" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                >
-                  <Icon name="Building2" size={18} />
-                  <span>Юридические лица</span>
-                </Link>
-                <Link 
-                  to="/categories" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                >
-                  <Icon name="Tag" size={18} />
-                  <span>Категории платежей</span>
-                </Link>
-                <Link 
-                  to="/custom-fields" 
-                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                >
-                  <Icon name="Settings" size={18} />
-                  <span>Дополнительные поля</span>
-                </Link>
-              </div>
-            )}
-          </li>
-          <li>
-            <a href="#" className="flex items-center gap-3 px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
-              <Icon name="Box" size={20} />
-              <span>Сервисы</span>
-            </a>
-          </li>
-        </ul>
-      </aside>
+      <PaymentsSidebar
+        menuOpen={menuOpen}
+        dictionariesOpen={dictionariesOpen}
+        setDictionariesOpen={setDictionariesOpen}
+        settingsOpen={settingsOpen}
+        setSettingsOpen={setSettingsOpen}
+        handleTouchStart={handleTouchStart}
+        handleTouchMove={handleTouchMove}
+        handleTouchEnd={handleTouchEnd}
+      />
 
       {menuOpen && (
         <div 
@@ -320,7 +257,7 @@ const Index = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 mb-6 md:mb-[30px]">
           <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-[20px]">
             <CardContent className="p-[25px]">
               <h3 className="text-lg font-bold mb-5">Расходы по категориям</h3>
@@ -338,6 +275,95 @@ const Index = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-xl font-bold mb-4">Сервисы</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Card className="border-white/5 bg-card hover:bg-card/80 transition-colors cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                    <Icon name="Database" size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-2">База данных</h3>
+                    <p className="text-sm text-muted-foreground">Управление базами данных и миграциями</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-white/5 bg-card hover:bg-card/80 transition-colors cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 flex-shrink-0">
+                    <Icon name="Cloud" size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-2">Облачное хранилище</h3>
+                    <p className="text-sm text-muted-foreground">Хранение и управление файлами</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-white/5 bg-card hover:bg-card/80 transition-colors cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500 flex-shrink-0">
+                    <Icon name="Mail" size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-2">Email рассылка</h3>
+                    <p className="text-sm text-muted-foreground">Настройка уведомлений и рассылок</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-white/5 bg-card hover:bg-card/80 transition-colors cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-500 flex-shrink-0">
+                    <Icon name="BarChart" size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-2">Аналитика</h3>
+                    <p className="text-sm text-muted-foreground">Статистика и отчеты по расходам</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-white/5 bg-card hover:bg-card/80 transition-colors cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 flex-shrink-0">
+                    <Icon name="Shield" size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-2">Безопасность</h3>
+                    <p className="text-sm text-muted-foreground">Настройка прав доступа</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-white/5 bg-card hover:bg-card/80 transition-colors cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 flex-shrink-0">
+                    <Icon name="Zap" size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-2">API интеграции</h3>
+                    <p className="text-sm text-muted-foreground">Подключение внешних сервисов</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>
