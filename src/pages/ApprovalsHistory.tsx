@@ -52,12 +52,11 @@ const ApprovalsHistory = () => {
     })
       .then(res => res.json())
       .then(data => {
-        setApprovals(Array.isArray(data) ? data : []);
+        setApprovals(data);
         setLoading(false);
       })
       .catch(err => {
         console.error('Failed to load approvals:', err);
-        setApprovals([]);
         setLoading(false);
       });
   }, [token]);

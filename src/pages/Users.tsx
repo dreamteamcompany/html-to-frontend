@@ -208,7 +208,7 @@ const Users = () => {
       email: user.email,
       full_name: user.full_name,
       password: '',
-      role_ids: user.roles?.map(r => r.id).filter(id => id !== undefined) || [],
+      role_ids: user.roles?.map(r => r.id) || [],
     });
     setDialogOpen(true);
   };
