@@ -128,25 +128,35 @@ const UserFormDialog = ({
           </div>
           <div className="space-y-2">
             <Label>Роли</Label>
-            <div className="space-y-2">
-              {roles.map((role) => (
-                <div key={role.id} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id={`role-${role.id}`}
-                    checked={formData.role_ids.includes(role.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setFormData({ ...formData, role_ids: [...formData.role_ids, role.id] });
-                      } else {
-                        setFormData({ ...formData, role_ids: formData.role_ids.filter(id => id !== role.id) });
-                      }
-                    }}
-                    className="rounded border-gray-300"
-                  />
-                  <Label htmlFor={`role-${role.id}`} className="cursor-pointer">{role.name}</Label>
-                </div>
-              ))}
+            <div className="space-y-2 border border-white/10 rounded-md p-3 bg-white/5">
+              {roles.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Загрузка ролей...</p>
+              ) : (
+                roles.map((role) => (
+                  <div key={role.id} className="flex items-start gap-3 p-2 rounded hover:bg-white/5 transition-colors">
+                    <input
+                      type="checkbox"
+                      id={`role-${role.id}`}
+                      checked={formData.role_ids.includes(role.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, role_ids: [...formData.role_ids, role.id] });
+                        } else {
+                          setFormData({ ...formData, role_ids: formData.role_ids.filter(id => id !== role.id) });
+                        }
+                      }}
+                      className="mt-1 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <div className="flex-1 cursor-pointer" onClick={() => {
+                      const checkbox = document.getElementById(`role-${role.id}`) as HTMLInputElement;
+                      checkbox?.click();
+                    }}>
+                      <Label htmlFor={`role-${role.id}`} className="cursor-pointer font-medium">{role.name}</Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">{role.description}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
           <Button type="submit" className="w-full">
