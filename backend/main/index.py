@@ -802,35 +802,46 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if error:
                 return error
             
-            body = json.loads(event.get('body', '{}'))
-            pay_req = PaymentRequest(**body)
+            try:
+                body = json.loads(event.get('body', '{}'))
+                pay_req = PaymentRequest(**body)
+            except Exception as e:
+                return response(400, {'error': f'Validation error: {str(e)}'})
             
             payment_date = pay_req.payment_date if pay_req.payment_date else datetime.now().isoformat()
             
-            cur.execute(
-                f"""INSERT INTO {SCHEMA}.payments (category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, created_by, status) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
-                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, status, created_by""",
-                (pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
-                 pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, pay_req.service_id, payload['user_id'])
-            )
-            row = cur.fetchone()
-            conn.commit()
+            cur = conn.cursor(cursor_factory=RealDictCursor)
             
-            return response(201, {
-                'id': row[0],
-                'category_id': row[1],
-                'amount': float(row[2]),
-                'description': row[3],
-                'payment_date': row[4].isoformat() if row[4] else None,
-                'created_at': row[5].isoformat() if row[5] else None,
-                'legal_entity_id': row[6],
-                'contractor_id': row[7],
-                'department_id': row[8],
-                'service_id': row[9],
-                'status': row[10],
-                'created_by': row[11]
-            })
+            try:
+                cur.execute(
+                    f"""INSERT INTO {SCHEMA}.payments (category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, created_by, status) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
+                       RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, status, created_by""",
+                    (pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
+                     pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, pay_req.service_id, payload['user_id'])
+                )
+                row = cur.fetchone()
+                conn.commit()
+                cur.close()
+                
+                return response(201, {
+                    'id': row['id'],
+                    'category_id': row['category_id'],
+                    'amount': float(row['amount']),
+                    'description': row['description'],
+                    'payment_date': row['payment_date'].isoformat() if row['payment_date'] else None,
+                    'created_at': row['created_at'].isoformat() if row['created_at'] else None,
+                    'legal_entity_id': row['legal_entity_id'],
+                    'contractor_id': row['contractor_id'],
+                    'department_id': row['department_id'],
+                    'service_id': row['service_id'],
+                    'status': row['status'],
+                    'created_by': row['created_by']
+                })
+            except Exception as e:
+                conn.rollback()
+                cur.close()
+                return response(500, {'error': f'Database error: {str(e)}'})
         
         elif method == 'PUT':
             payload, error = verify_token_and_permission(event, conn, 'payments.update')
