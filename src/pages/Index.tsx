@@ -179,57 +179,43 @@ const Index = () => {
     const departmentLabels = stats.department_stats.map(d => d.name);
 
     const departmentChart = new Chart(departmentCtx, {
-      type: 'polarArea',
+      type: 'bar',
       data: {
         labels: departmentLabels,
         datasets: [{
           label: 'Расходы по отделам',
           data: departmentData,
           backgroundColor: [
-            'rgba(255, 99, 132, 0.7)',
-            'rgba(54, 162, 235, 0.7)',
-            'rgba(255, 206, 86, 0.7)',
-            'rgba(75, 192, 192, 0.7)',
-            'rgba(153, 102, 255, 0.7)',
-            'rgba(255, 159, 64, 0.7)',
-            'rgba(199, 199, 199, 0.7)',
-            'rgba(83, 102, 255, 0.7)'
+            'rgba(117, 81, 233, 0.8)',
+            'rgba(57, 101, 255, 0.8)',
+            'rgba(255, 181, 71, 0.8)',
+            'rgba(1, 181, 116, 0.8)',
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+            'rgba(255, 159, 64, 0.8)'
           ]
         }]
       },
       options: {
+        indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'right',
             labels: {
-              color: '#fff',
-              padding: 15,
-              font: {
-                size: 12
-              }
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.parsed || 0;
-                return label + ': ' + value.toLocaleString('ru-RU') + ' ₽';
-              }
+              color: '#fff'
             }
           }
         },
         scales: {
-          r: {
-            ticks: {
-              color: '#a3aed0',
-              backdropColor: 'transparent'
-            },
-            grid: {
-              color: 'rgba(255, 255, 255, 0.1)'
-            }
+          x: {
+            ticks: { color: '#a3aed0' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          },
+          y: {
+            ticks: { color: '#a3aed0' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
           }
         }
       }
