@@ -80,28 +80,11 @@ const Users = () => {
 
   const loadRoles = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?action=me', {
-        headers: {
-          'X-Auth-Token': token || '',
-        },
-      });
-      
-      if (response.ok) {
-        const rolesResponse = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users', {
-          headers: {
-            'X-Auth-Token': token || '',
-          },
-        });
-        
-        if (rolesResponse.ok) {
-          const data = await rolesResponse.json();
-          setRoles([
-            { id: 1, name: 'Администратор', description: 'Полный доступ' },
-            { id: 2, name: 'Бухгалтер', description: 'Управление платежами' },
-            { id: 3, name: 'Просмотр', description: 'Только чтение' },
-          ]);
-        }
-      }
+      setRoles([
+        { id: 1, name: 'Администратор', description: 'Полный доступ' },
+        { id: 2, name: 'Бухгалтер', description: 'Управление платежами' },
+        { id: 3, name: 'Просмотр', description: 'Только чтение' },
+      ]);
     } catch (err) {
       console.error('Failed to load roles:', err);
     }
