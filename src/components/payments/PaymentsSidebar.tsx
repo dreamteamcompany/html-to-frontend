@@ -26,7 +26,7 @@ const PaymentsSidebar = ({
   handleTouchMove,
   handleTouchEnd,
 }: PaymentsSidebarProps) => {
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
@@ -72,12 +72,14 @@ const PaymentsSidebar = ({
             <span>Дашборд</span>
           </Link>
         </li>
-        <li>
-          <Link to="/payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-            <Icon name="CreditCard" size={20} />
-            <span>Платежи</span>
-          </Link>
-        </li>
+        {hasPermission('payments', 'read') && (
+          <li>
+            <Link to="/payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+              <Icon name="CreditCard" size={20} />
+              <span>Платежи</span>
+            </Link>
+          </li>
+        )}
         <li>
           <button 
             onClick={() => setDictionariesOpen(!dictionariesOpen)}
@@ -95,48 +97,60 @@ const PaymentsSidebar = ({
           </button>
           {dictionariesOpen && (
             <div className="mt-1 space-y-1">
-              <Link 
-                to="/legal-entities" 
-                className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                <Icon name="Building2" size={18} />
-                <span>Юридические лица</span>
-              </Link>
-              <Link 
-                to="/categories" 
-                className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                <Icon name="Tag" size={18} />
-                <span>Категории платежей</span>
-              </Link>
-              <Link 
-                to="/custom-fields" 
-                className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                <Icon name="Settings" size={18} />
-                <span>Дополнительные поля</span>
-              </Link>
-              <Link 
-                to="/contractors" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/contractors') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Briefcase" size={18} />
-                <span>Контрагенты</span>
-              </Link>
-              <Link 
-                to="/customer-departments" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/customer-departments') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Building" size={18} />
-                <span>Отделы-заказчики</span>
-              </Link>
-              <Link 
-                to="/services" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/services') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Box" size={18} />
-                <span>Сервисы</span>
-              </Link>
+              {hasPermission('legal_entities', 'read') && (
+                <Link 
+                  to="/legal-entities" 
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <Icon name="Building2" size={18} />
+                  <span>Юридические лица</span>
+                </Link>
+              )}
+              {hasPermission('categories', 'read') && (
+                <Link 
+                  to="/categories" 
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <Icon name="Tag" size={18} />
+                  <span>Категории платежей</span>
+                </Link>
+              )}
+              {hasPermission('custom_fields', 'read') && (
+                <Link 
+                  to="/custom-fields" 
+                  className="flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <Icon name="Settings" size={18} />
+                  <span>Дополнительные поля</span>
+                </Link>
+              )}
+              {hasPermission('contractors', 'read') && (
+                <Link 
+                  to="/contractors" 
+                  className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/contractors') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                >
+                  <Icon name="Briefcase" size={18} />
+                  <span>Контрагенты</span>
+                </Link>
+              )}
+              {hasPermission('customer_departments', 'read') && (
+                <Link 
+                  to="/customer-departments" 
+                  className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/customer-departments') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                >
+                  <Icon name="Building" size={18} />
+                  <span>Отделы-заказчики</span>
+                </Link>
+              )}
+              {hasPermission('services', 'read') && (
+                <Link 
+                  to="/services" 
+                  className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/services') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                >
+                  <Icon name="Box" size={18} />
+                  <span>Сервисы</span>
+                </Link>
+              )}
             </div>
           )}
         </li>
@@ -164,27 +178,33 @@ const PaymentsSidebar = ({
                 <Icon name="Sliders" size={18} />
                 <span>Основные настройки</span>
               </button>
-              <Link
-                to="/users"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/users') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Users" size={18} />
-                <span>Пользователи</span>
-              </Link>
-              <Link
-                to="/roles"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/roles') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Shield" size={18} />
-                <span>Права доступа</span>
-              </Link>
-              <Link
-                to="/approvals-history"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/approvals-history') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="FileCheck" size={18} />
-                <span>История согласований</span>
-              </Link>
+              {hasPermission('users', 'read') && (
+                <Link
+                  to="/users"
+                  className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/users') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                >
+                  <Icon name="Users" size={18} />
+                  <span>Пользователи</span>
+                </Link>
+              )}
+              {hasPermission('roles', 'read') && (
+                <Link
+                  to="/roles"
+                  className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/roles') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                >
+                  <Icon name="Shield" size={18} />
+                  <span>Права доступа</span>
+                </Link>
+              )}
+              {hasPermission('payments', 'read') && (
+                <Link
+                  to="/approvals-history"
+                  className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/approvals-history') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                >
+                  <Icon name="FileCheck" size={18} />
+                  <span>История согласований</span>
+                </Link>
+              )}
             </div>
           )}
         </li>
