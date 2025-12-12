@@ -206,11 +206,33 @@ const Index = () => {
             labels: {
               color: '#fff'
             }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.parsed.x.toLocaleString('ru-RU') + ' ₽';
+              }
+            }
+          },
+          datalabels: {
+            anchor: 'end',
+            align: 'end',
+            color: '#fff',
+            font: {
+              weight: 'bold',
+              size: 12
+            },
+            formatter: (value: number) => value.toLocaleString('ru-RU') + ' ₽'
           }
         },
         scales: {
           x: {
-            ticks: { color: '#a3aed0' },
+            ticks: { 
+              color: '#a3aed0',
+              callback: function(value) {
+                return Number(value).toLocaleString('ru-RU') + ' ₽';
+              }
+            },
             grid: { color: 'rgba(255, 255, 255, 0.1)' }
           },
           y: {
