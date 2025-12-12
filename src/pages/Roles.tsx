@@ -28,7 +28,7 @@ interface Role {
   id: number;
   name: string;
   description: string;
-  permissions: Permission[];
+  permissions?: Permission[];
   user_count: number;
 }
 
@@ -130,7 +130,7 @@ const Roles = () => {
     setFormData({
       name: role.name,
       description: role.description,
-      permission_ids: role.permissions.map(p => p.id),
+      permission_ids: role.permissions?.map(p => p.id) || [],
     });
     setDialogOpen(true);
   };
@@ -359,10 +359,10 @@ const Roles = () => {
 
                   <div className="space-y-2 mb-4">
                     <h4 className="text-sm font-semibold text-muted-foreground mb-3">
-                      Разрешения ({role.permissions.length})
+                      Разрешения ({role.permissions?.length || 0})
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {role.permissions.slice(0, 6).map((perm) => (
+                      {role.permissions?.slice(0, 6).map((perm) => (
                         <div
                           key={perm.id}
                           className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs ${getResourceColor(perm.resource)}`}
@@ -371,9 +371,9 @@ const Roles = () => {
                           <span>{perm.action}</span>
                         </div>
                       ))}
-                      {role.permissions.length > 6 && (
+                      {(role.permissions?.length || 0) > 6 && (
                         <div className="inline-flex items-center px-2 py-1 rounded-lg text-xs bg-white/5 text-muted-foreground">
-                          +{role.permissions.length - 6}
+                          +{(role.permissions?.length || 0) - 6}
                         </div>
                       )}
                     </div>
