@@ -421,7 +421,10 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             SELECT 
                 u.id, u.username, u.email, u.full_name, u.is_active, 
                 u.created_at, u.last_login,
-                array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL) as roles
+                COALESCE(
+                    array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
+                    ARRAY[]::json[]
+                ) as roles
             FROM users u
             LEFT JOIN user_roles ur ON u.id = ur.user_id
             LEFT JOIN roles r ON ur.role_id = r.id
