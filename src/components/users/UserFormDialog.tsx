@@ -75,7 +75,7 @@ const UserFormDialog = ({
           <span>Добавить пользователя</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editingUser ? 'Редактировать пользователя' : 'Новый пользователь'}</DialogTitle>
           <DialogDescription>
@@ -83,7 +83,6 @@ const UserFormDialog = ({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* DEBUG: Roles count = {roles.length} */}
           <div className="space-y-2">
             <Label htmlFor="username">Логин</Label>
             <Input
@@ -128,10 +127,10 @@ const UserFormDialog = ({
             />
           </div>
           <div className="space-y-2">
-            <Label>Роли (найдено: {roles.length})</Label>
+            <Label>Роли</Label>
             <div className="space-y-2 border border-white/10 rounded-md p-3 bg-white/5">
               {!roles || roles.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Роли не загружены (roles={JSON.stringify(roles)})</p>
+                <p className="text-sm text-muted-foreground">Загрузка ролей...</p>
               ) : (
                 roles.map((role) => (
                   <div key={role.id} className="flex items-start gap-3 p-2 rounded hover:bg-white/5 transition-colors">
