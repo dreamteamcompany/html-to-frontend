@@ -32,14 +32,7 @@ const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) =
     );
 
     if (!hasPermission) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1729] to-[#1b254b] p-4">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-white mb-2">Доступ запрещён</h1>
-            <p className="text-muted-foreground">У вас нет прав для просмотра этой страницы</p>
-          </div>
-        </div>
-      );
+      return <Navigate to="/" replace />;
     }
   }
 
