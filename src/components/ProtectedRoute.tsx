@@ -27,12 +27,18 @@ const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) =
 
   if (requiredPermission) {
     const { resource, action } = requiredPermission;
-    const hasPermission = user.permissions?.some(
-      (p) => p.resource === resource && p.action === action
-    );
+    
+    // Если у пользователя есть роль "Администратор", даём полный доступ
+    const isAdmin = user.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin');
+    
+    if (!isAdmin) {
+      const hasPermission = user.permissions?.some(
+        (p) => p.resource === resource && p.action === action
+      );
 
-    if (!hasPermission) {
-      return <Navigate to="/" replace />;
+      if (!hasPermission) {
+        return <Navigate to="/" replace />;
+      }
     }
   }
 
