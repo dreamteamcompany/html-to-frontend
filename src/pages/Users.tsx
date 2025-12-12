@@ -69,10 +69,13 @@ const Users = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setUsers(data);
+        setUsers(Array.isArray(data) ? data : []);
+      } else {
+        setUsers([]);
       }
     } catch (err) {
       console.error('Failed to load users:', err);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
