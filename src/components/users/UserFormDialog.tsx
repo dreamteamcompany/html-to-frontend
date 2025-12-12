@@ -83,6 +83,7 @@ const UserFormDialog = ({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* DEBUG: Roles count = {roles.length} */}
           <div className="space-y-2">
             <Label htmlFor="username">Логин</Label>
             <Input
@@ -127,10 +128,10 @@ const UserFormDialog = ({
             />
           </div>
           <div className="space-y-2">
-            <Label>Роли</Label>
+            <Label>Роли (найдено: {roles.length})</Label>
             <div className="space-y-2 border border-white/10 rounded-md p-3 bg-white/5">
-              {roles.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Загрузка ролей...</p>
+              {!roles || roles.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Роли не загружены (roles={JSON.stringify(roles)})</p>
               ) : (
                 roles.map((role) => (
                   <div key={role.id} className="flex items-start gap-3 p-2 rounded hover:bg-white/5 transition-colors">
