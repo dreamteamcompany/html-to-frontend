@@ -8,15 +8,15 @@
       "expectedStatus": 200
     },
     {
-      "name": "Get Categories",
+      "name": "Unauthorized Access",
       "method": "GET",
-      "path": "/?endpoint=categories",
-      "expectedStatus": 200
+      "path": "/?endpoint=users",
+      "expectedStatus": 401
     },
     {
-      "name": "Get Stats",
-      "method": "GET",
-      "path": "/?endpoint=stats",
+      "name": "Check Health",
+      "method": "OPTIONS",
+      "path": "/",
       "expectedStatus": 200
     }
   ]

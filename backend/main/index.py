@@ -627,6 +627,10 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
     
     try:
         if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'categories.read')
+            if error:
+                return error
+            
             cur.execute('SELECT id, name, icon, created_at FROM categories ORDER BY name')
             rows = cur.fetchall()
             categories = [
@@ -641,6 +645,10 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
             return response(200, categories)
         
         elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'categories.create')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             cat_req = CategoryRequest(**body)
             
@@ -685,6 +693,10 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
             })
         
         elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'categories.delete')
+            if error:
+                return error
+            
             params = event.get('queryStringParameters', {})
             category_id = params.get('id')
             
@@ -712,6 +724,10 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     try:
         if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'payments.read')
+            if error:
+                return error
+            
             cur.execute(f"""
                 SELECT 
                     p.id, 
@@ -800,6 +816,10 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             })
         
         elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'payments.update')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             payment_id = body.get('id')
             
@@ -837,6 +857,10 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             })
         
         elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'payments.delete')
+            if error:
+                return error
+            
             params = event.get('queryStringParameters', {})
             payment_id = params.get('id')
             
@@ -899,6 +923,10 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
     
     try:
         if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'legal_entities.read')
+            if error:
+                return error
+            
             cur.execute('SELECT id, name, inn, kpp, address, created_at FROM legal_entities ORDER BY name')
             rows = cur.fetchall()
             entities = [
@@ -915,6 +943,10 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             return response(200, entities)
         
         elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'legal_entities.create')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             entity_req = LegalEntityRequest(**body)
             
@@ -935,6 +967,10 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             })
         
         elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'legal_entities.update')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             entity_id = body.get('id')
             entity_req = LegalEntityRequest(**body)
@@ -963,6 +999,10 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             })
         
         elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'legal_entities.delete')
+            if error:
+                return error
+            
             body_data = json.loads(event.get('body', '{}'))
             entity_id = body_data.get('id')
             
@@ -985,6 +1025,10 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
     
     try:
         if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'custom_fields.read')
+            if error:
+                return error
+            
             cur.execute('SELECT id, name, field_type, options, created_at FROM custom_fields ORDER BY created_at DESC')
             rows = cur.fetchall()
             fields = [
@@ -1000,6 +1044,10 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             return response(200, fields)
         
         elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'custom_fields.create')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             field_req = CustomFieldRequest(**body)
             
@@ -1019,6 +1067,10 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             })
         
         elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'custom_fields.update')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             field_id = body.get('id')
             field_req = CustomFieldRequest(**body)
@@ -1046,6 +1098,10 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             })
         
         elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'custom_fields.delete')
+            if error:
+                return error
+            
             body_data = json.loads(event.get('body', '{}'))
             field_id = body_data.get('id')
             
@@ -1068,6 +1124,10 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
     
     try:
         if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'contractors.read')
+            if error:
+                return error
+            
             cur.execute('''SELECT id, name, inn, kpp, ogrn, legal_address, actual_address, phone, email, 
                           contact_person, bank_name, bank_bik, bank_account, correspondent_account, notes, created_at 
                           FROM contractors ORDER BY name''')
@@ -1096,6 +1156,10 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             return response(200, contractors)
         
         elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'contractors.create')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             cont_req = ContractorRequest(**body)
             
@@ -1132,6 +1196,10 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             })
         
         elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'contractors.update')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             contractor_id = body.get('id')
             cont_req = ContractorRequest(**body)
@@ -1178,6 +1246,10 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             })
         
         elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'contractors.delete')
+            if error:
+                return error
+            
             body_data = json.loads(event.get('body', '{}'))
             contractor_id = body_data.get('id')
             
@@ -1200,6 +1272,10 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     try:
         if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'roles.read')
+            if error:
+                return error
+            
             params = event.get('queryStringParameters') or {}
             role_id = params.get('id')
             
@@ -1268,6 +1344,10 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             return response(200, result)
         
         elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'roles.create')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             role_req = RoleRequest(**body)
             
@@ -1294,6 +1374,10 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             })
         
         elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'roles.update')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             role_id = body.get('id')
             role_req = RoleRequest(**body)
@@ -1328,6 +1412,10 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             })
         
         elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'roles.delete')
+            if error:
+                return error
+            
             body_data = json.loads(event.get('body', '{}'))
             role_id = body_data.get('id')
             
@@ -1360,6 +1448,10 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
     
     try:
         if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'permissions.read')
+            if error:
+                return error
+            
             cur.execute(f'SELECT id, name, resource, action, description, created_at FROM {SCHEMA}.permissions ORDER BY resource, action')
             rows = cur.fetchall()
             permissions = [
@@ -1376,6 +1468,10 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             return response(200, permissions)
         
         elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'permissions.create')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             perm_req = PermissionRequest(**body)
             
@@ -1396,6 +1492,10 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             })
         
         elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'permissions.update')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             perm_id = body.get('id')
             perm_req = PermissionRequest(**body)
@@ -1424,6 +1524,10 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             })
         
         elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'permissions.delete')
+            if error:
+                return error
+            
             body_data = json.loads(event.get('body', '{}'))
             perm_id = body_data.get('id')
             
@@ -1450,6 +1554,10 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
     
     try:
         if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'customer_departments.read')
+            if error:
+                return error
+            
             cur.execute('SELECT id, name, description, is_active, created_at FROM customer_departments WHERE is_active = true ORDER BY name')
             rows = cur.fetchall()
             departments = [
@@ -1465,6 +1573,10 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             return response(200, departments)
         
         elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'customer_departments.create')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             dept_req = CustomerDepartmentRequest(**body)
             
@@ -1484,6 +1596,10 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             })
         
         elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'customer_departments.update')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             dept_id = body.get('id')
             dept_req = CustomerDepartmentRequest(**body)
@@ -1511,6 +1627,10 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             })
         
         elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'customer_departments.delete')
+            if error:
+                return error
+            
             body_data = json.loads(event.get('body', '{}'))
             dept_id = body_data.get('id')
             
@@ -1687,6 +1807,10 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     try:
         if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'services.read')
+            if error:
+                return error
+            
             cur.execute(f"""
                 SELECT 
                     s.id, s.name, s.description, 
@@ -1704,6 +1828,10 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             return response(200, {'services': services})
         
         elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'services.create')
+            if error:
+                return error
+            
             body = json.loads(event.get('body', '{}'))
             service_req = ServiceRequest(**body)
             
@@ -1728,6 +1856,10 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             })
         
         elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'services.update')
+            if error:
+                return error
+            
             params = event.get('queryStringParameters') or {}
             service_id = params.get('id')
             
@@ -1764,6 +1896,10 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             })
         
         elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'services.delete')
+            if error:
+                return error
+            
             params = event.get('queryStringParameters') or {}
             service_id = params.get('id')
             
