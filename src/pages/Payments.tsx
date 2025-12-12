@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import PaymentForm from '@/components/payments/PaymentForm';
@@ -63,6 +64,7 @@ interface Service {
 
 const Payments = () => {
   const { token } = useAuth();
+  const { toast } = useToast();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
@@ -237,6 +239,24 @@ const Payments = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.category_id) {
+      toast({
+        title: 'Ошибка',
+        description: 'Выберите категорию платежа',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+      toast({
+        title: 'Ошибка',
+        description: 'Укажите корректную сумму',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments', {
         method: 'POST',
@@ -256,6 +276,10 @@ const Payments = () => {
       });
 
       if (response.ok) {
+        toast({
+          title: 'Успешно',
+          description: 'Платёж добавлен',
+        });
         setDialogOpen(false);
         const resetData: Record<string, string | undefined> = {
           category_id: undefined,
@@ -271,9 +295,21 @@ const Payments = () => {
         });
         setFormData(resetData);
         loadPayments();
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Ошибка',
+          description: error.error || 'Не удалось добавить платёж',
+          variant: 'destructive',
+        });
       }
     } catch (err) {
       console.error('Failed to add payment:', err);
+      toast({
+        title: 'Ошибка сети',
+        description: 'Проверьте подключение к интернету',
+        variant: 'destructive',
+      });
     }
   };
 
