@@ -222,7 +222,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const hasPermission = (resource: string, action: string): boolean => {
-    if (!user || !user.permissions) return false;
+    if (!user) return false;
+    
+    // Если у пользователя есть роль "Администратор", даём полный доступ
+    if (user.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin')) {
+      return true;
+    }
+    
+    if (!user.permissions) return false;
     return user.permissions.some(
       (p) => p.resource === resource && p.action === action
     );
