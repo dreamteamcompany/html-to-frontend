@@ -280,7 +280,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif endpoint == 'categories':
             return handle_categories(method, event, conn)
         elif endpoint == 'stats':
-            return handle_stats(method, conn)
+            return handle_stats(event, conn)
         elif endpoint == 'legal-entities':
             return handle_legal_entities(method, event, conn)
         elif endpoint == 'custom-fields':
@@ -1936,3 +1936,88 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     finally:
         cur.close()
+
+def handle_stats(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    method = event.get('httpMethod', 'GET')
+    
+    if method != 'GET':
+        return response(405, {'error': 'Метод не разрешен'})
+    
+    payload = verify_token(event)
+    if not payload:
+        return response(401, {'error': 'Требуется авторизация'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        cur.execute(f"""
+            SELECT 
+                COUNT(*) as total_payments,
+                COALESCE(SUM(amount), 0) as total_amount,
+                COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
+                COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
+                COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_count
+            FROM {SCHEMA}.payments
+        """)
+        
+        stats_data = dict(cur.fetchone())
+        
+        cur.execute(f"""
+            SELECT 
+                c.id,
+                c.name,
+                c.icon,
+                COUNT(p.id) as payment_count,
+                COALESCE(SUM(p.amount), 0) as total_amount
+            FROM {SCHEMA}.categories c
+            LEFT JOIN {SCHEMA}.payments p ON c.id = p.category_id
+            GROUP BY c.id, c.name, c.icon
+            ORDER BY total_amount DESC
+        """)
+        
+        category_stats = [dict(row) for row in cur.fetchall()]
+        
+        cur.execute(f"""
+            SELECT 
+                d.id,
+                d.name,
+                d.description,
+                COUNT(p.id) as payment_count,
+                COALESCE(SUM(p.amount), 0) as total_amount
+            FROM {SCHEMA}.customer_departments d
+            LEFT JOIN {SCHEMA}.payments p ON d.id = p.department_id
+            GROUP BY d.id, d.name, d.description
+            ORDER BY total_amount DESC
+        """)
+        
+        department_stats = [dict(row) for row in cur.fetchall()]
+        
+        cur.close()
+        
+        return response(200, {
+            'stats': {
+                'total_payments': stats_data['total_payments'],
+                'total_amount': float(stats_data['total_amount']),
+                'pending_count': stats_data['pending_count'],
+                'approved_count': stats_data['approved_count'],
+                'rejected_count': stats_data['rejected_count']
+            },
+            'category_stats': [{
+                'id': c['id'],
+                'name': c['name'],
+                'icon': c['icon'],
+                'payment_count': c['payment_count'],
+                'total_amount': float(c['total_amount'])
+            } for c in category_stats],
+            'department_stats': [{
+                'id': d['id'],
+                'name': d['name'],
+                'description': d['description'],
+                'payment_count': d['payment_count'],
+                'total_amount': float(d['total_amount'])
+            } for d in department_stats]
+        })
+        
+    except Exception as e:
+        cur.close()
+        return response(500, {'error': str(e)})
