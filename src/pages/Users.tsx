@@ -26,7 +26,11 @@ interface Role {
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [roles, setRoles] = useState<Role[]>([
+    { id: 1, name: 'Администратор', description: 'Полный доступ' },
+    { id: 2, name: 'Бухгалтер', description: 'Управление платежами' },
+    { id: 3, name: 'Просмотр', description: 'Только чтение' },
+  ]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -81,21 +85,8 @@ const Users = () => {
     }
   };
 
-  const loadRoles = async () => {
-    try {
-      setRoles([
-        { id: 1, name: 'Администратор', description: 'Полный доступ' },
-        { id: 2, name: 'Бухгалтер', description: 'Управление платежами' },
-        { id: 3, name: 'Просмотр', description: 'Только чтение' },
-      ]);
-    } catch (err) {
-      console.error('Failed to load roles:', err);
-    }
-  };
-
   useEffect(() => {
     loadUsers();
-    loadRoles();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
