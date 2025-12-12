@@ -111,34 +111,34 @@ const PaymentsSidebar = ({
                 <Icon name="Tag" size={18} />
                 <span>Категории платежей</span>
               </Link>
-              <Link 
-                to="/custom-fields" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/custom-fields') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+              <button 
+                onClick={() => navigate('/custom-fields')}
+                className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/custom-fields') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
               >
                 <Icon name="Settings" size={18} />
                 <span>Дополнительные поля</span>
-              </Link>
-              <Link 
-                to="/contractors" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/contractors') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+              </button>
+              <button 
+                onClick={() => navigate('/contractors')}
+                className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/contractors') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
               >
                 <Icon name="Briefcase" size={18} />
                 <span>Контрагенты</span>
-              </Link>
-              <Link 
-                to="/customer-departments" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/customer-departments') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+              </button>
+              <button 
+                onClick={() => navigate('/customer-departments')}
+                className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/customer-departments') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
               >
                 <Icon name="Building" size={18} />
                 <span>Отделы-заказчики</span>
-              </Link>
-              <Link 
-                to="/services" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/services') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+              </button>
+              <button 
+                onClick={() => navigate('/services')}
+                className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/services') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
               >
                 <Icon name="Box" size={18} />
                 <span>Сервисы</span>
-              </Link>
+              </button>
             </div>
           )}
         </li>
