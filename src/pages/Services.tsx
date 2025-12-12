@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiFetch } from '@/utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,7 +59,7 @@ const Services = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(true);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const { toast } = useToast();
@@ -91,11 +92,12 @@ const Services = () => {
 
   const loadServices = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}?endpoint=services`);
+      const response = await apiFetch(`${BACKEND_URL}?endpoint=services`);
       const data = await response.json();
       setServices(data.services || []);
     } catch (error) {
       console.error('Failed to load services:', error);
+      setServices([]);
       toast({
         title: 'Ошибка',
         description: 'Не удалось загрузить сервисы',
@@ -108,11 +110,12 @@ const Services = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}?endpoint=users`);
+      const response = await apiFetch(`${BACKEND_URL}?endpoint=users`);
       const data = await response.json();
       setUsers(Array.isArray(data) ? data : data.users || []);
     } catch (error) {
       console.error('Failed to load users:', error);
+      setUsers([]);
     }
   };
 
@@ -133,7 +136,7 @@ const Services = () => {
         ? `${BACKEND_URL}?endpoint=services&id=${editingService.id}`
         : `${BACKEND_URL}?endpoint=services`;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: editingService ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -180,7 +183,7 @@ const Services = () => {
     if (!confirm('Удалить этот сервис?')) return;
 
     try {
-      const response = await fetch(`${BACKEND_URL}?endpoint=services&id=${id}`, {
+      const response = await apiFetch(`${BACKEND_URL}?endpoint=services&id=${id}`, {
         method: 'DELETE',
       });
 

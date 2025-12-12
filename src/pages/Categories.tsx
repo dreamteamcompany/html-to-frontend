@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/utils/api';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -63,14 +64,15 @@ const Categories = () => {
   };
 
   const loadCategories = () => {
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories')
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories')
       .then(res => res.json())
       .then((data) => {
-        setCategories(data);
+        setCategories(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {
         console.error('Failed to load categories:', err);
+        setCategories([]);
         setLoading(false);
       });
   };
@@ -89,7 +91,7 @@ const Categories = () => {
         ? { id: editingCategory.id, ...formData }
         : formData;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +120,7 @@ const Categories = () => {
     if (!confirm('Вы уверены, что хотите удалить эту категорию?')) return;
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories&id=${id}`,
         { method: 'DELETE' }
       );

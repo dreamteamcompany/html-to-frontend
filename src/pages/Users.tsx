@@ -30,7 +30,7 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [dictionariesOpen, setDictionariesOpen] = useState(false);
+  const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
@@ -208,7 +208,7 @@ const Users = () => {
       email: user.email,
       full_name: user.full_name,
       password: '',
-      role_ids: user.roles?.map(r => r.id) || [],
+      role_ids: user.roles?.map(r => r.id).filter(id => id !== undefined) || [],
     });
     setDialogOpen(true);
   };

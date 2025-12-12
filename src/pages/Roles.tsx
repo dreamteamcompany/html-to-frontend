@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/utils/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
@@ -27,7 +28,7 @@ interface Role {
   id: number;
   name: string;
   description: string;
-  permissions: Permission[];
+  permissions?: Permission[];
   user_count: number;
 }
 
@@ -35,7 +36,7 @@ const Roles = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dictionariesOpen, setDictionariesOpen] = useState(false);
+  const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
@@ -63,7 +64,7 @@ const Roles = () => {
   };
 
   const loadRoles = () => {
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles')
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles')
       .then(res => res.json())
       .then(data => {
         setRoles(Array.isArray(data) ? data : []);
@@ -77,7 +78,7 @@ const Roles = () => {
   };
 
   const loadPermissions = () => {
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=permissions')
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=permissions')
       .then(res => res.json())
       .then(data => setPermissions(Array.isArray(data) ? data : []))
       .catch(err => {
@@ -101,7 +102,7 @@ const Roles = () => {
         ? { ...formData, id: editingRole.id }
         : formData;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +130,7 @@ const Roles = () => {
     setFormData({
       name: role.name,
       description: role.description,
-      permission_ids: role.permissions.map(p => p.id),
+      permission_ids: role.permissions?.map(p => p.id) || [],
     });
     setDialogOpen(true);
   };
@@ -138,7 +139,7 @@ const Roles = () => {
     if (!confirm('Вы уверены, что хотите удалить эту роль?')) return;
     
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles&id=${id}`,
         { method: 'DELETE' }
       );
@@ -358,10 +359,10 @@ const Roles = () => {
 
                   <div className="space-y-2 mb-4">
                     <h4 className="text-sm font-semibold text-muted-foreground mb-3">
-                      Разрешения ({role.permissions.length})
+                      Разрешения ({role.permissions?.length || 0})
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {role.permissions.slice(0, 6).map((perm) => (
+                      {role.permissions?.slice(0, 6).map((perm) => (
                         <div
                           key={perm.id}
                           className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs ${getResourceColor(perm.resource)}`}
@@ -370,9 +371,9 @@ const Roles = () => {
                           <span>{perm.action}</span>
                         </div>
                       ))}
-                      {role.permissions.length > 6 && (
+                      {(role.permissions?.length || 0) > 6 && (
                         <div className="inline-flex items-center px-2 py-1 rounded-lg text-xs bg-white/5 text-muted-foreground">
-                          +{role.permissions.length - 6}
+                          +{(role.permissions?.length || 0) - 6}
                         </div>
                       )}
                     </div>

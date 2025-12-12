@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Chart, registerables } from 'chart.js';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
+import { apiFetch } from '@/utils/api';
 
 Chart.register(...registerables);
 
@@ -29,8 +30,8 @@ const Index = () => {
     categories: []
   });
   const [loading, setLoading] = useState(true);
-  const [dictionariesOpen, setDictionariesOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [dictionariesOpen, setDictionariesOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
@@ -50,7 +51,7 @@ const Index = () => {
   };
 
   useEffect(() => {
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=stats')
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=stats')
       .then(res => res.json())
       .then(data => {
         setStats({

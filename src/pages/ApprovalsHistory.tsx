@@ -22,8 +22,8 @@ const ApprovalsHistory = () => {
   const { token } = useAuth();
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dictionariesOpen, setDictionariesOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [dictionariesOpen, setDictionariesOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
@@ -52,11 +52,12 @@ const ApprovalsHistory = () => {
     })
       .then(res => res.json())
       .then(data => {
-        setApprovals(data);
+        setApprovals(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {
         console.error('Failed to load approvals:', err);
+        setApprovals([]);
         setLoading(false);
       });
   }, [token]);
