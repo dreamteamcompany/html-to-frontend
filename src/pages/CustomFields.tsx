@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
-import { apiFetch } from '@/utils/api';
 import {
   Dialog,
   DialogContent,
@@ -69,19 +68,14 @@ const CustomFields = () => {
   };
 
   const loadFields = () => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields')
       .then(res => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
-          setFields(data);
-        } else {
-          setFields([]);
-        }
+        setFields(data);
         setLoading(false);
       })
       .catch(err => {
         console.error('Failed to load custom fields:', err);
-        setFields([]);
         setLoading(false);
       });
   };
@@ -100,7 +94,7 @@ const CustomFields = () => {
         ? { id: editingField.id, ...formData }
         : formData;
 
-      const response = await apiFetch(url, {
+      const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +123,7 @@ const CustomFields = () => {
     if (!confirm('Вы уверены, что хотите удалить это дополнительное поле?')) return;
 
     try {
-      const response = await apiFetch(
+      const response = await fetch(
         'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields',
         {
           method: 'DELETE',

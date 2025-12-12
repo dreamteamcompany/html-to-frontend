@@ -3,7 +3,6 @@ import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import ContractorsHeader from '@/components/contractors/ContractorsHeader';
 import ContractorForm from '@/components/contractors/ContractorForm';
 import ContractorsList from '@/components/contractors/ContractorsList';
-import { apiFetch } from '@/utils/api';
 
 interface Contractor {
   id: number;
@@ -68,15 +67,14 @@ const Contractors = () => {
   };
 
   const loadContractors = () => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors')
       .then(res => res.json())
       .then(data => {
-        setContractors(Array.isArray(data) ? data : []);
+        setContractors(data);
         setLoading(false);
       })
       .catch(err => {
         console.error('Failed to load contractors:', err);
-        setContractors([]);
         setLoading(false);
       });
   };
@@ -95,7 +93,7 @@ const Contractors = () => {
         ? { ...formData, id: editingContractor.id }
         : formData;
 
-      const response = await apiFetch(url, {
+      const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +152,7 @@ const Contractors = () => {
     if (!confirm('Вы уверены, что хотите удалить этого контрагента?')) return;
     
     try {
-      const response = await apiFetch(
+      const response = await fetch(
         `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors&id=${id}`,
         { method: 'DELETE' }
       );

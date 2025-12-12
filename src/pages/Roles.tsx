@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { apiFetch } from '@/utils/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
@@ -64,7 +63,7 @@ const Roles = () => {
   };
 
   const loadRoles = () => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles')
       .then(res => res.json())
       .then(data => {
         setRoles(Array.isArray(data) ? data : []);
@@ -78,7 +77,7 @@ const Roles = () => {
   };
 
   const loadPermissions = () => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=permissions')
+    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=permissions')
       .then(res => res.json())
       .then(data => setPermissions(Array.isArray(data) ? data : []))
       .catch(err => {
@@ -102,7 +101,7 @@ const Roles = () => {
         ? { ...formData, id: editingRole.id }
         : formData;
 
-      const response = await apiFetch(url, {
+      const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +138,7 @@ const Roles = () => {
     if (!confirm('Вы уверены, что хотите удалить эту роль?')) return;
     
     try {
-      const response = await apiFetch(
+      const response = await fetch(
         `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles&id=${id}`,
         { method: 'DELETE' }
       );
