@@ -46,7 +46,7 @@ const CustomerDepartments = () => {
     description: '',
   });
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
