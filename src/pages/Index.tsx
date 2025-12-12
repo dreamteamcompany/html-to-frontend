@@ -8,26 +8,50 @@ import { apiFetch } from '@/utils/api';
 
 Chart.register(...registerables);
 
-interface Category {
+interface CategoryStat {
   id: number;
   name: string;
   icon: string;
-  total: number;
+  payment_count: number;
+  total_amount: number;
+}
+
+interface DepartmentStat {
+  id: number;
+  name: string;
+  description: string;
+  payment_count: number;
+  total_amount: number;
+}
+
+interface StatsData {
+  total_payments: number;
+  total_amount: number;
+  pending_count: number;
+  approved_count: number;
+  rejected_count: number;
 }
 
 interface Stats {
-  total: number;
-  payment_count: number;
-  categories: Category[];
+  stats: StatsData;
+  category_stats: CategoryStat[];
+  department_stats: DepartmentStat[];
 }
 
 const Index = () => {
   const barChartRef = useRef<HTMLCanvasElement>(null);
   const doughnutChartRef = useRef<HTMLCanvasElement>(null);
+  const departmentChartRef = useRef<HTMLCanvasElement>(null);
   const [stats, setStats] = useState<Stats>({
-    total: 0,
-    payment_count: 0,
-    categories: []
+    stats: {
+      total_payments: 0,
+      total_amount: 0,
+      pending_count: 0,
+      approved_count: 0,
+      rejected_count: 0
+    },
+    category_stats: [],
+    department_stats: []
   });
   const [loading, setLoading] = useState(true);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
@@ -55,9 +79,15 @@ const Index = () => {
       .then(res => res.json())
       .then(data => {
         setStats({
-          total: data?.total || 0,
-          payment_count: data?.payment_count || 0,
-          categories: Array.isArray(data?.categories) ? data.categories : []
+          stats: data?.stats || {
+            total_payments: 0,
+            total_amount: 0,
+            pending_count: 0,
+            approved_count: 0,
+            rejected_count: 0
+          },
+          category_stats: Array.isArray(data?.category_stats) ? data.category_stats : [],
+          department_stats: Array.isArray(data?.department_stats) ? data.department_stats : []
         });
         setLoading(false);
       })
@@ -68,15 +98,17 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    if (!barChartRef.current || !doughnutChartRef.current || loading || stats.categories.length === 0) return;
+    if (!barChartRef.current || !doughnutChartRef.current || !departmentChartRef.current || loading) return;
+    if (stats.category_stats.length === 0 && stats.department_stats.length === 0) return;
 
     const barCtx = barChartRef.current.getContext('2d');
     const doughnutCtx = doughnutChartRef.current.getContext('2d');
+    const departmentCtx = departmentChartRef.current.getContext('2d');
 
-    if (!barCtx || !doughnutCtx) return;
+    if (!barCtx || !doughnutCtx || !departmentCtx) return;
 
-    const categoryData = stats.categories.map(c => c.total);
-    const categoryLabels = stats.categories.map(c => c.name);
+    const categoryData = stats.category_stats.map(c => c.total_amount);
+    const categoryLabels = stats.category_stats.map(c => c.name);
 
     const barChart = new Chart(barCtx, {
       type: 'bar',
@@ -143,9 +175,70 @@ const Index = () => {
       }
     });
 
+    const departmentData = stats.department_stats.map(d => d.total_amount);
+    const departmentLabels = stats.department_stats.map(d => d.name);
+
+    const departmentChart = new Chart(departmentCtx, {
+      type: 'polarArea',
+      data: {
+        labels: departmentLabels,
+        datasets: [{
+          label: 'Расходы по отделам',
+          data: departmentData,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(199, 199, 199, 0.7)',
+            'rgba(83, 102, 255, 0.7)'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              color: '#fff',
+              padding: 15,
+              font: {
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                return label + ': ' + value.toLocaleString('ru-RU') + ' ₽';
+              }
+            }
+          }
+        },
+        scales: {
+          r: {
+            ticks: {
+              color: '#a3aed0',
+              backdropColor: 'transparent'
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          }
+        }
+      }
+    });
+
     return () => {
       barChart.destroy();
       doughnutChart.destroy();
+      departmentChart.destroy();
     };
   }, [stats, loading]);
 
@@ -208,8 +301,8 @@ const Index = () => {
                   <Icon name="Server" size={20} />
                 </div>
               </div>
-              <div className="text-[32px] font-extrabold mb-2">{stats.total.toLocaleString('ru-RU')} ₽</div>
-              <p className="text-sm text-muted-foreground">{stats.payment_count > 0 ? `${stats.payment_count} платежей` : 'Начните добавлять платежи'}</p>
+              <div className="text-[32px] font-extrabold mb-2">{stats.stats.total_amount.toLocaleString('ru-RU')} ₽</div>
+              <p className="text-sm text-muted-foreground">{stats.stats.total_payments > 0 ? `${stats.stats.total_payments} платежей` : 'Начните добавлять платежи'}</p>
             </CardContent>
           </Card>
 
@@ -224,7 +317,7 @@ const Index = () => {
                   <Icon name="Box" size={20} />
                 </div>
               </div>
-              <div className="text-[34px] font-extrabold mb-[5px] leading-[42px]">{stats.payment_count}</div>
+              <div className="text-[34px] font-extrabold mb-[5px] leading-[42px]">{stats.stats.total_payments}</div>
               <p className="text-sm text-muted-foreground">платежей за все время</p>
             </CardContent>
           </Card>
@@ -240,21 +333,21 @@ const Index = () => {
                   <Icon name="Tag" size={20} />
                 </div>
               </div>
-              <div className="text-[34px] font-extrabold mb-[5px] leading-[42px]">{stats.categories.length}</div>
+              <div className="text-[34px] font-extrabold mb-[5px] leading-[42px]">{stats.category_stats.length}</div>
               <p className="text-sm text-muted-foreground">категорий расходов</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-6 md:mb-[30px]">
-          {stats.categories.map((category) => (
+          {stats.category_stats.map((category) => (
             <Card key={category.id} className="border-white/5 bg-card rounded-[20px]">
               <CardContent className="p-[20px] flex items-center gap-[15px]">
                 <div className="w-[56px] h-[56px] rounded-[15px] bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">
                   {category.icon}
                 </div>
                 <div>
-                  <div className="text-2xl font-bold mb-[2px] leading-[32px]">{category.total.toLocaleString('ru-RU')} ₽</div>
+                  <div className="text-2xl font-bold mb-[2px] leading-[32px]">{category.total_amount.toLocaleString('ru-RU')} ₽</div>
                   <p className="text-sm text-muted-foreground">{category.name}</p>
                 </div>
               </CardContent>
@@ -262,7 +355,7 @@ const Index = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 mb-6 md:mb-[30px]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5 mb-6 md:mb-[30px]">
           <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-[20px]">
             <CardContent className="p-[25px]">
               <h3 className="text-lg font-bold mb-5">Расходы по категориям</h3>
@@ -277,6 +370,15 @@ const Index = () => {
               <h3 className="text-lg font-bold mb-5">Распределение бюджета</h3>
               <div className="h-[300px]">
                 <canvas ref={doughnutChartRef}></canvas>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] rounded-[20px]">
+            <CardContent className="p-[25px]">
+              <h3 className="text-lg font-bold mb-5">Расходы по отделам-заказчикам</h3>
+              <div className="h-[300px]">
+                <canvas ref={departmentChartRef}></canvas>
               </div>
             </CardContent>
           </Card>
