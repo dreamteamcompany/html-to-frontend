@@ -188,6 +188,23 @@ def verify_token_and_permission(event: Dict[str, Any], conn, required_permission
         return None, response(401, {'error': 'Недействительный токен'})
     
     cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # Проверяем, является ли пользователь администратором
+    cur.execute("""
+        SELECT r.name
+        FROM roles r
+        JOIN user_roles ur ON r.id = ur.role_id
+        WHERE ur.user_id = %s
+    """, (payload['user_id'],))
+    
+    roles = [row['name'] for row in cur.fetchall()]
+    
+    # Если у пользователя роль администратора - даём полный доступ
+    if 'Администратор' in roles or 'Admin' in roles:
+        cur.close()
+        return payload, None
+    
+    # Иначе проверяем конкретное разрешение
     cur.execute("""
         SELECT DISTINCT p.name
         FROM permissions p
