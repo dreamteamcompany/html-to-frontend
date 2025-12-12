@@ -26,11 +26,7 @@ interface Role {
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [roles, setRoles] = useState<Role[]>([
-    { id: 1, name: 'Администратор', description: 'Полный доступ' },
-    { id: 2, name: 'Бухгалтер', description: 'Управление платежами' },
-    { id: 3, name: 'Просмотр', description: 'Только чтение' },
-  ]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -85,8 +81,29 @@ const Users = () => {
     }
   };
 
+  const loadRoles = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles', {
+        headers: {
+          'X-Auth-Token': token || '',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setRoles(Array.isArray(data) ? data : []);
+      } else {
+        setRoles([]);
+      }
+    } catch (err) {
+      console.error('Failed to load roles:', err);
+      setRoles([]);
+    }
+  };
+
   useEffect(() => {
     loadUsers();
+    loadRoles();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
