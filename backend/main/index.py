@@ -850,9 +850,13 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'created_by': row['created_by']
                 })
             except Exception as e:
+                import traceback
+                error_details = traceback.format_exc()
+                print(f"Payment creation error: {str(e)}")
+                print(f"Full traceback: {error_details}")
                 conn.rollback()
                 cur.close()
-                return response(500, {'error': f'Database error: {str(e)}'})
+                return response(500, {'error': f'Database error: {str(e)}', 'details': error_details})
         
         elif method == 'PUT':
             payload, error = verify_token_and_permission(event, conn, 'payments.update')
