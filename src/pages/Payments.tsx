@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
@@ -101,14 +102,15 @@ const Payments = () => {
   });
 
   const loadPayments = () => {
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments')
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments')
       .then(res => res.json())
       .then(data => {
-        setPayments(data);
+        setPayments(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {
         console.error('Failed to load payments:', err);
+        setPayments([]);
         setLoading(false);
       });
   };
@@ -192,30 +194,30 @@ const Payments = () => {
 
   useEffect(() => {
     loadPayments();
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories')
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories')
       .then(res => res.json())
-      .then(setCategories)
-      .catch(err => console.error('Failed to load categories:', err));
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities')
+      .then(data => setCategories(Array.isArray(data) ? data : []))
+      .catch(err => { console.error('Failed to load categories:', err); setCategories([]); });
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities')
       .then(res => res.json())
-      .then(setLegalEntities)
-      .catch(err => console.error('Failed to load legal entities:', err));
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors')
+      .then(data => setLegalEntities(Array.isArray(data) ? data : []))
+      .catch(err => { console.error('Failed to load legal entities:', err); setLegalEntities([]); });
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors')
       .then(res => res.json())
-      .then(setContractors)
-      .catch(err => console.error('Failed to load contractors:', err));
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=customer_departments')
+      .then(data => setContractors(Array.isArray(data) ? data : []))
+      .catch(err => { console.error('Failed to load contractors:', err); setContractors([]); });
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=customer_departments')
       .then(res => res.json())
-      .then(setCustomerDepartments)
-      .catch(err => console.error('Failed to load customer departments:', err));
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=services')
+      .then(data => setCustomerDepartments(Array.isArray(data) ? data : []))
+      .catch(err => { console.error('Failed to load customer departments:', err); setCustomerDepartments([]); });
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=services')
       .then(res => res.json())
       .then(data => setServices(data.services || []))
-      .catch(err => console.error('Failed to load services:', err));
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields')
+      .catch(err => { console.error('Failed to load services:', err); setServices([]); });
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields')
       .then(res => res.json())
       .then((fields) => {
-        setCustomFields(fields);
+        setCustomFields(Array.isArray(fields) ? fields : []);
         const initialData: Record<string, string | undefined> = {
           category_id: undefined,
           description: '',
@@ -224,12 +226,12 @@ const Payments = () => {
           contractor_id: undefined,
           department_id: undefined,
         };
-        fields.forEach((field: CustomField) => {
+        (Array.isArray(fields) ? fields : []).forEach((field: CustomField) => {
           initialData[`custom_field_${field.id}`] = undefined;
         });
         setFormData(initialData);
       })
-      .catch(err => console.error('Failed to load custom fields:', err));
+      .catch(err => { console.error('Failed to load custom fields:', err); setCustomFields([]); });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

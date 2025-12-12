@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
+import { apiFetch } from '@/utils/api';
 import {
   Dialog,
   DialogContent,
@@ -56,7 +57,7 @@ const LegalEntities = () => {
   };
 
   const loadEntities = () => {
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities')
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities')
       .then(res => res.json())
       .then((data) => {
         setEntities(Array.isArray(data) ? data : []);
@@ -83,7 +84,7 @@ const LegalEntities = () => {
         ? { id: editingEntity.id, ...formData }
         : formData;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +113,7 @@ const LegalEntities = () => {
     if (!confirm('Вы уверены, что хотите удалить это юридическое лицо?')) return;
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities',
         {
           method: 'DELETE',
