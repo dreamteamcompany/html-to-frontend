@@ -110,7 +110,7 @@ const Services = () => {
     try {
       const response = await fetch(`${BACKEND_URL}?endpoint=users`);
       const data = await response.json();
-      setUsers(data.users || []);
+      setUsers(Array.isArray(data) ? data : data.users || []);
     } catch (error) {
       console.error('Failed to load users:', error);
     }
