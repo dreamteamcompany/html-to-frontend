@@ -59,11 +59,12 @@ const LegalEntities = () => {
     fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities')
       .then(res => res.json())
       .then((data) => {
-        setEntities(data);
+        setEntities(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {
         console.error('Failed to load legal entities:', err);
+        setEntities([]);
         setLoading(false);
       });
   };
