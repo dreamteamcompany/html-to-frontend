@@ -42,7 +42,7 @@ const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps
                     {user.full_name.charAt(0)}
                   </div>
                   <div>
-                    <div className="font-medium">{user.full_name}</div>
+                    <div className="font-medium">{user.full_name || 'Без имени'}</div>
                     <div className="text-sm text-muted-foreground">@{user.username}</div>
                   </div>
                 </div>
@@ -50,11 +50,11 @@ const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps
               <td className="p-4 text-muted-foreground">{user.email}</td>
               <td className="p-4">
                 <div className="flex flex-wrap gap-2">
-                  {user.roles.map((role) => (
+                  {user.roles?.map((role) => (
                     <span key={role.id} className="px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">
                       {role.name}
                     </span>
-                  ))}
+                  )) || <span className="text-muted-foreground text-xs">Нет ролей</span>}
                 </div>
               </td>
               <td className="p-4 text-muted-foreground text-sm">

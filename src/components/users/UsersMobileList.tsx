@@ -31,7 +31,7 @@ const UsersMobileList = ({ users, onEdit, onToggleStatus, onDelete }: UsersMobil
                 {user.full_name.charAt(0)}
               </div>
               <div className="flex-1">
-                <div className="font-medium">{user.full_name}</div>
+                <div className="font-medium">{user.full_name || 'Без имени'}</div>
                 <div className="text-sm text-muted-foreground">@{user.username}</div>
               </div>
               <span className={`px-2 py-1 rounded-full text-xs ${
@@ -44,11 +44,11 @@ const UsersMobileList = ({ users, onEdit, onToggleStatus, onDelete }: UsersMobil
             </div>
             <div className="text-sm text-muted-foreground">{user.email}</div>
             <div className="flex flex-wrap gap-2">
-              {user.roles.map((role) => (
+              {user.roles?.map((role) => (
                 <span key={role.id} className="px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">
                   {role.name}
                 </span>
-              ))}
+              )) || <span className="text-muted-foreground text-xs">Нет ролей</span>}
             </div>
             <div className="grid grid-cols-3 gap-2">
               <Button
