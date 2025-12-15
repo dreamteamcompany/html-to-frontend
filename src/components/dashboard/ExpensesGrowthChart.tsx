@@ -24,9 +24,9 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
           Динамика роста затрат
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
-        <div className="relative flex items-center justify-center" style={{ height: '210px' }}>
-          <svg viewBox="0 0 800 400" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
+      <CardContent className="p-4" style={{ overflow: 'hidden' }}>
+        <div className="relative flex items-center justify-center" style={{ height: '210px', overflow: 'auto' }}>
+          <svg viewBox="0 0 800 400" style={{ width: '100%', height: '210px', minHeight: '210px' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxMonthAmount = Math.max(...monthlyData.map(m => m.amount));
               const spacing = 130;
