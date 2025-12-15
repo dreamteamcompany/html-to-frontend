@@ -88,18 +88,33 @@ const Dashboard = () => {
 
   const maxMonthly = Math.max(...monthlyData.map(d => d.amount));
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-      <PaymentsSidebar menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+  const [dictionariesOpen, setDictionariesOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-      <div
-        className={`transition-all duration-300 ${menuOpen ? 'lg:ml-64' : 'lg:ml-0'}`}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
+  return (
+    <div className="flex min-h-screen">
+      <PaymentsSidebar
+        menuOpen={menuOpen}
+        dictionariesOpen={dictionariesOpen}
+        setDictionariesOpen={setDictionariesOpen}
+        settingsOpen={settingsOpen}
+        setSettingsOpen={setSettingsOpen}
+        handleTouchStart={handleTouchStart}
+        handleTouchMove={handleTouchMove}
+        handleTouchEnd={handleTouchEnd}
+      />
+
+      {menuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1">
+        <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+
+        <div className="max-w-7xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
               Дашборд
@@ -357,7 +372,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
