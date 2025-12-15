@@ -26,7 +26,7 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
       </CardHeader>
       <CardContent className="p-4">
         <div className="relative" style={{ height: '300px' }}>
-          <svg viewBox="0 0 600 350" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+          <svg viewBox="0 0 600 350" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxMonthAmount = Math.max(...monthlyData.map(m => m.amount));
               const spacing = 100;
