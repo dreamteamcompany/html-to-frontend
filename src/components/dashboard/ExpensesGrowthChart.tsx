@@ -46,9 +46,17 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                 return { x, y };
               });
               
-              const linePath = points.map((p, i) => 
-                `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
-              ).join(' ');
+              const smoothLinePath = points.reduce((path, point, i) => {
+                if (i === 0) {
+                  return `M ${point.x} ${point.y}`;
+                }
+                const prevPoint = points[i - 1];
+                const controlX1 = prevPoint.x + (point.x - prevPoint.x) / 2;
+                const controlY1 = prevPoint.y;
+                const controlX2 = prevPoint.x + (point.x - prevPoint.x) / 2;
+                const controlY2 = point.y;
+                return `${path} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${point.x} ${point.y}`;
+              }, '');
               
               return (
                 <>
@@ -100,7 +108,7 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                     </linearGradient>
                   </defs>
                   <path
-                    d={`M ${points[0].x} ${startY} ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L ${points[points.length - 1].x} ${startY} Z`}
+                    d={`${smoothLinePath} L ${points[points.length - 1].x} ${startY} L ${points[0].x} ${startY} Z`}
                     fill="url(#areaGradient)"
                   />
                   
@@ -111,31 +119,13 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                     </linearGradient>
                   </defs>
                   <path
-                    d={linePath}
+                    d={smoothLinePath}
                     stroke="url(#lineGradientGrowth)"
                     strokeWidth="3"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                  
-                  {points.map((point, index) => (
-                    <g key={index}>
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        r="6"
-                        fill="#01B574"
-                        opacity="0.3"
-                      />
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        r="4"
-                        fill="#fff"
-                      />
-                    </g>
-                  ))}
                 </>
               );
             })()}
