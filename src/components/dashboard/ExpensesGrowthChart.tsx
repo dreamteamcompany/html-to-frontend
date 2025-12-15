@@ -12,11 +12,15 @@ interface ExpensesGrowthChartProps {
 
 const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
   return (
-    <Card className="relative overflow-hidden" style={{
+    <Card className="relative" style={{
       background: '#111c44',
       backdropFilter: 'blur(60px)',
       border: 'none',
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
+      width: '600px',
+      maxWidth: '100%',
+      height: '350px',
+      overflow: 'hidden',
     }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2" style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>

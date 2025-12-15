@@ -15,7 +15,12 @@ interface ExpensesByCategoryChartProps {
 
 const ExpensesByCategoryChart = ({ categoriesData, totalAmount }: ExpensesByCategoryChartProps) => {
   return (
-    <Card className="hover:shadow-lg transition-shadow border-none">
+    <Card className="hover:shadow-lg transition-shadow border-none" style={{
+      width: '600px',
+      maxWidth: '100%',
+      height: '400px',
+      overflow: 'hidden',
+    }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Icon name="PieChart" className="text-blue-600" />

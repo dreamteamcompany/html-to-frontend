@@ -29,7 +29,12 @@ const ContractorsAndDepartments = ({ contractorsData, departmentsData, indexData
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <Card className="hover:shadow-lg transition-shadow border-none">
+        <Card className="hover:shadow-lg transition-shadow border-none" style={{
+          width: '600px',
+          maxWidth: '100%',
+          height: '450px',
+          overflow: 'auto',
+        }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Icon name="Users" className="text-green-600" />
@@ -56,7 +61,12 @@ const ContractorsAndDepartments = ({ contractorsData, departmentsData, indexData
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow border-none">
+        <Card className="hover:shadow-lg transition-shadow border-none" style={{
+          width: '600px',
+          maxWidth: '100%',
+          height: '450px',
+          overflow: 'auto',
+        }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Icon name="Building2" className="text-orange-600" />
@@ -84,7 +94,12 @@ const ContractorsAndDepartments = ({ contractorsData, departmentsData, indexData
         </Card>
       </div>
 
-      <Card className="hover:shadow-lg transition-shadow border-none">
+      <Card className="hover:shadow-lg transition-shadow border-none" style={{
+        width: '100%',
+        maxWidth: '1240px',
+        height: '300px',
+        overflow: 'hidden',
+      }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon name="TrendingUp" className="text-purple-600" />
