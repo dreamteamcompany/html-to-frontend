@@ -23,6 +23,7 @@ interface LegalEntity {
   inn: string;
   kpp: string;
   address: string;
+  city?: string;
   created_at?: string;
 }
 
@@ -36,6 +37,7 @@ const LegalEntities = () => {
     inn: '',
     kpp: '',
     address: '',
+    city: '',
   });
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -95,7 +97,7 @@ const LegalEntities = () => {
       if (response.ok) {
         setDialogOpen(false);
         setEditingEntity(null);
-        setFormData({ name: '', inn: '', kpp: '', address: '' });
+        setFormData({ name: '', inn: '', kpp: '', address: '', city: '' });
         loadEntities();
       }
     } catch (err) {
@@ -105,7 +107,7 @@ const LegalEntities = () => {
 
   const handleEdit = (entity: LegalEntity) => {
     setEditingEntity(entity);
-    setFormData({ name: entity.name, inn: entity.inn, kpp: entity.kpp, address: entity.address });
+    setFormData({ name: entity.name, inn: entity.inn, kpp: entity.kpp, address: entity.address, city: entity.city || '' });
     setDialogOpen(true);
   };
 
@@ -136,7 +138,7 @@ const LegalEntities = () => {
     setDialogOpen(open);
     if (!open) {
       setEditingEntity(null);
-      setFormData({ name: '', inn: '', kpp: '', address: '' });
+      setFormData({ name: '', inn: '', kpp: '', address: '', city: '' });
     }
   };
 
@@ -239,6 +241,15 @@ const LegalEntities = () => {
                     onChange={(e) => setFormData({ ...formData, kpp: e.target.value })}
                     placeholder="123456789"
                     maxLength={9}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">Город</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    placeholder="Москва"
                   />
                 </div>
                 <div className="space-y-2">
