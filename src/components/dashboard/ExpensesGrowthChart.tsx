@@ -25,7 +25,7 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative" style={{ height: '500px' }}>
+        <div className="relative h-96">
           <svg viewBox="0 0 950 500" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxMonthAmount = Math.max(...monthlyData.map(m => m.amount));
