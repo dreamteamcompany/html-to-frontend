@@ -192,9 +192,8 @@ const Dashboard = () => {
               totalAmount={totalExpenses.month}
             />
             <ServicesDynamicsChart servicesData={servicesData} />
+            <ExpensesGrowthChart monthlyData={monthlyData} />
           </div>
-
-          <ExpensesGrowthChart monthlyData={monthlyData} />
 
           <ContractorsAndDepartments 
             contractorsData={contractorsData}

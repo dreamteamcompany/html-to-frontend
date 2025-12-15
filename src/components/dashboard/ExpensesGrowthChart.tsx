@@ -12,7 +12,7 @@ interface ExpensesGrowthChartProps {
 
 const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
   return (
-    <Card className="mb-6 relative overflow-hidden" style={{
+    <Card className="relative overflow-hidden" style={{
       background: '#111c44',
       backdropFilter: 'blur(60px)',
       border: '2px solid rgba(86, 87, 122, 0.6)',
