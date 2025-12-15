@@ -25,9 +25,9 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
           Динамика расходов по сервисам
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="relative h-96">
-          <svg viewBox="0 0 600 350" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+      <CardContent className="p-4">
+        <div className="relative flex items-center justify-center" style={{ height: '270px' }}>
+          <svg viewBox="0 0 600 350" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxAmount = Math.max(...servicesData.map(s => s.amount));
               const barWidth = 60;

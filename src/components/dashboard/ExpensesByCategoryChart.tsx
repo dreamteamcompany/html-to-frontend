@@ -22,10 +22,10 @@ const ExpensesByCategoryChart = ({ categoriesData, totalAmount }: ExpensesByCate
           Расходы по категориям
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4">
         <div className="flex items-center justify-center gap-8">
-          <div className="relative w-64 h-64">
-            <svg viewBox="0 0 200 200" className="transform -rotate-90">
+          <div className="relative" style={{ width: '256px', height: '256px' }}>
+            <svg viewBox="0 0 200 200" style={{ width: '100%', height: 'auto' }} className="transform -rotate-90">
               {categoriesData.reduce((acc, cat, index) => {
                 const colors = [
                   '#7f00ff',
