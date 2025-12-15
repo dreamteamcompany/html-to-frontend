@@ -197,9 +197,7 @@ const Dashboard = () => {
           </Tabs>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div style={{ maxWidth: 'calc(100% - 40px)' }}>
-              <ExpensesGrowthChart monthlyData={monthlyData} />
-            </div>
+            <ExpensesGrowthChart monthlyData={monthlyData} />
             <ServicesDynamicsChart servicesData={servicesData} />
             <ExpensesByCategoryChart 
               categoriesData={categoriesData} 
