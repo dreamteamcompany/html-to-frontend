@@ -26,13 +26,13 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
       </CardHeader>
       <CardContent>
         <div className="relative h-96">
-          <svg viewBox="0 0 950 500" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+          <svg viewBox="0 0 600 350" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxMonthAmount = Math.max(...monthlyData.map(m => m.amount));
-              const spacing = 180;
-              const maxHeight = 450;
-              const startY = 480;
-              const startX = 100;
+              const spacing = 100;
+              const maxHeight = 250;
+              const startY = 290;
+              const startX = 60;
               
               const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
                 y: startY - ratio * maxHeight,
@@ -63,20 +63,20 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                   {gridLines.map((line, idx) => (
                     <g key={idx}>
                       <line
-                        x1="90"
+                        x1="50"
                         y1={line.y}
-                        x2="940"
+                        x2="590"
                         y2={line.y}
                         stroke="#56577A"
                         strokeWidth="1"
                         strokeDasharray="5 5"
                       />
                       <text
-                        x="75"
-                        y={line.y + 5}
+                        x="35"
+                        y={line.y + 4}
                         textAnchor="end"
                         fill="#c8cfca"
-                        style={{ fontSize: '16px', fontWeight: '500' }}
+                        style={{ fontSize: '12px', fontWeight: '500' }}
                       >
                         {line.value}М
                       </text>
@@ -90,10 +90,10 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                       <g key={data.month}>
                         <text
                           x={x}
-                          y={495}
+                          y={315}
                           textAnchor="middle"
                           fill="#c8cfca"
-                          style={{ fontSize: '16px' }}
+                          style={{ fontSize: '12px' }}
                         >
                           {data.month}
                         </text>
@@ -121,7 +121,7 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                   <path
                     d={smoothLinePath}
                     stroke="url(#lineGradientGrowth)"
-                    strokeWidth="4"
+                    strokeWidth="3"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
