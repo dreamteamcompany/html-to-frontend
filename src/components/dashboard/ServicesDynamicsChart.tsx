@@ -20,7 +20,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
       width: '850px',
       maxWidth: '100%',
-      height: '300px',
+      height: '380px',
       overflow: 'hidden',
     }}>
       <CardHeader>
