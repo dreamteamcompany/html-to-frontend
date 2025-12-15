@@ -18,10 +18,9 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
       backdropFilter: 'blur(60px)',
       border: 'none',
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
-      width: '600px',
+      width: '850px',
       maxWidth: '100%',
-      height: '650px',
-      minHeight: '650px',
+      height: '300px',
       overflow: 'hidden',
     }}>
       <CardHeader>
