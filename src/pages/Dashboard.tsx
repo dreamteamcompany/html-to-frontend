@@ -267,21 +267,21 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow relative overflow-hidden" style={{
+            <Card className="relative overflow-hidden" style={{
               background: 'linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)',
-              border: '2px solid',
-              borderImage: 'linear-gradient(135deg, rgba(127, 0, 255, 0.5), rgba(4, 0, 255, 0.5)) 1',
-              boxShadow: '0 0 20px rgba(127, 0, 255, 0.2)',
+              backdropFilter: 'blur(60px)',
+              border: '2px solid rgba(86, 87, 122, 0.6)',
+              boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
             }}>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="Activity" className="text-purple-400" />
+                <CardTitle className="flex items-center gap-2" style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                  <Icon name="Activity" style={{ color: '#2CD9FF' }} />
                   Динамика расходов по сервисам
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="relative h-80 px-2">
-                  <svg viewBox="0 0 500 300" className="w-full h-full" style={{ filter: 'drop-shadow(0 0 10px rgba(127, 0, 255, 0.3))' }}>
+                <div className="relative h-80">
+                  <svg viewBox="0 0 500 300" className="w-full h-full">
                     {(() => {
                       const maxAmount = Math.max(...servicesData.map(s => s.amount));
                       const barWidth = 50;
@@ -314,16 +314,16 @@ const Dashboard = () => {
                                 y1={line.y}
                                 x2="490"
                                 y2={line.y}
-                                stroke="rgba(127, 0, 255, 0.2)"
+                                stroke="#56577A"
                                 strokeWidth="1"
-                                strokeDasharray="4 4"
+                                strokeDasharray="5 5"
                               />
                               <text
                                 x="25"
                                 y={line.y + 4}
                                 textAnchor="end"
-                                fill="rgba(255, 255, 255, 0.5)"
-                                style={{ fontSize: '10px' }}
+                                fill="#c8cfca"
+                                style={{ fontSize: '11px', fontWeight: '500' }}
                               >
                                 {line.value}k
                               </text>
@@ -333,53 +333,29 @@ const Dashboard = () => {
                           {servicesData.map((service, index) => {
                             const x = 50 + index * spacing;
                             const barHeight = (service.amount / maxAmount) * maxHeight;
-                            const colors = ['#7f00ff', '#0400ff', '#fa0', '#00ff09', '#d0f'];
-                            const color = colors[index % colors.length];
                             
                             return (
                               <g key={service.name}>
                                 <defs>
-                                  <linearGradient id={`gradient-${index}`} x1="0%" y1="100%" x2="0%" y2="0%">
-                                    <stop offset="0%" stopColor={color} stopOpacity="0.1" />
-                                    <stop offset="100%" stopColor={color} stopOpacity="0.9" />
+                                  <linearGradient id={`visionBar-${index}`} x1="0%" y1="100%" x2="0%" y2="0%">
+                                    <stop offset="0%" stopColor="#0075FF" stopOpacity="0.0" />
+                                    <stop offset="100%" stopColor="#0075FF" stopOpacity="1" />
                                   </linearGradient>
-                                  <filter id={`glow-${index}`}>
-                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                                    <feMerge>
-                                      <feMergeNode in="coloredBlur"/>
-                                      <feMergeNode in="SourceGraphic"/>
-                                    </feMerge>
-                                  </filter>
                                 </defs>
                                 <rect
                                   x={x}
                                   y={startY - barHeight}
                                   width={barWidth}
                                   height={barHeight}
-                                  fill={`url(#gradient-${index})`}
-                                  rx="6"
-                                  className="transition-all"
-                                  filter={`url(#glow-${index})`}
-                                  style={{ filter: `drop-shadow(0 0 10px ${color})` }}
-                                />
-                                <rect
-                                  x={x}
-                                  y={startY - barHeight}
-                                  width={barWidth}
-                                  height={barHeight}
-                                  fill="none"
-                                  stroke={color}
-                                  strokeWidth="2"
-                                  rx="6"
-                                  opacity="0.6"
+                                  fill={`url(#visionBar-${index})`}
+                                  rx="8"
                                 />
                                 <text
                                   x={x + barWidth / 2}
-                                  y={startY - barHeight - 10}
+                                  y={startY - barHeight - 8}
                                   textAnchor="middle"
-                                  className="font-bold"
-                                  fill={color}
-                                  style={{ fontSize: '12px', filter: `drop-shadow(0 0 5px ${color})` }}
+                                  fill="#fff"
+                                  style={{ fontSize: '12px', fontWeight: '600' }}
                                 >
                                   {(service.amount / 1000).toFixed(0)}k
                                 </text>
@@ -387,8 +363,8 @@ const Dashboard = () => {
                                   x={x + barWidth / 2}
                                   y={250}
                                   textAnchor="middle"
-                                  fill="rgba(255, 255, 255, 0.6)"
-                                  style={{ fontSize: '10px' }}
+                                  fill="#c8cfca"
+                                  style={{ fontSize: '11px' }}
                                 >
                                   {service.name.length > 10 ? service.name.slice(0, 10) + '...' : service.name}
                                 </text>
@@ -396,24 +372,21 @@ const Dashboard = () => {
                                   <g>
                                     <rect
                                       x={x + barWidth / 2 - 14}
-                                      y={startY - barHeight - 30}
+                                      y={startY - barHeight - 28}
                                       width="28"
                                       height="16"
-                                      rx="8"
-                                      fill={service.trend > 0 ? 'rgba(0, 255, 9, 0.2)' : 'rgba(255, 0, 0, 0.2)'}
-                                      stroke={service.trend > 0 ? '#00ff09' : '#f00'}
-                                      strokeWidth="1.5"
-                                      style={{ filter: `drop-shadow(0 0 8px ${service.trend > 0 ? '#00ff09' : '#f00'})` }}
+                                      rx="4"
+                                      fill={service.trend > 0 ? '#01B574' : '#E31A1A'}
+                                      opacity="0.9"
                                     />
                                     <text
                                       x={x + barWidth / 2}
-                                      y={startY - barHeight - 19}
+                                      y={startY - barHeight - 17}
                                       textAnchor="middle"
-                                      className="font-bold"
-                                      fill={service.trend > 0 ? '#00ff09' : '#f00'}
-                                      style={{ fontSize: '9px' }}
+                                      fill="#fff"
+                                      style={{ fontSize: '10px', fontWeight: 'bold' }}
                                     >
-                                      {service.trend > 0 ? '↑' : '↓'}{Math.abs(service.trend)}%
+                                      {service.trend > 0 ? '+' : ''}{service.trend}%
                                     </text>
                                   </g>
                                 )}
@@ -421,53 +394,36 @@ const Dashboard = () => {
                             );
                           })}
                           <defs>
-                            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#7f00ff" />
-                              <stop offset="25%" stopColor="#0400ff" />
-                              <stop offset="50%" stopColor="#d0f" />
-                              <stop offset="75%" stopColor="#fa0" />
-                              <stop offset="100%" stopColor="#00ff09" />
+                            <linearGradient id="visionLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#2CD9FF" />
+                              <stop offset="100%" stopColor="#0075FF" />
                             </linearGradient>
                           </defs>
                           <path
                             d={linePath}
-                            stroke="url(#lineGradient)"
-                            strokeWidth="4"
+                            stroke="url(#visionLineGradient)"
+                            strokeWidth="3"
                             fill="none"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            style={{ filter: 'drop-shadow(0 0 10px rgba(213, 0, 255, 0.8))' }}
                           />
-                          {points.map((point, index) => {
-                            const colors = ['#7f00ff', '#0400ff', '#fa0', '#00ff09', '#d0f'];
-                            const color = colors[index % colors.length];
-                            return (
-                              <g key={index}>
-                                <circle
-                                  cx={point.x}
-                                  cy={point.y}
-                                  r="8"
-                                  fill={color}
-                                  opacity="0.3"
-                                  style={{ filter: `drop-shadow(0 0 8px ${color})` }}
-                                />
-                                <circle
-                                  cx={point.x}
-                                  cy={point.y}
-                                  r="5"
-                                  fill={color}
-                                  stroke="rgba(255, 255, 255, 0.3)"
-                                  strokeWidth="2"
-                                />
-                                <circle
-                                  cx={point.x}
-                                  cy={point.y}
-                                  r="2"
-                                  fill="#fff"
-                                />
-                              </g>
-                            );
-                          })}
+                          {points.map((point, index) => (
+                            <g key={index}>
+                              <circle
+                                cx={point.x}
+                                cy={point.y}
+                                r="6"
+                                fill="#2CD9FF"
+                                opacity="0.3"
+                              />
+                              <circle
+                                cx={point.x}
+                                cy={point.y}
+                                r="4"
+                                fill="#fff"
+                              />
+                            </g>
+                          ))}
                         </>
                       );
                     })()}
