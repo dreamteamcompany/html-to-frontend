@@ -275,17 +275,22 @@ const Dashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="relative h-80">
-                  <svg viewBox="0 0 400 280" className="w-full h-full">
+                <div className="relative h-80 px-2">
+                  <svg viewBox="0 0 500 300" className="w-full h-full">
                     {(() => {
                       const maxAmount = Math.max(...servicesData.map(s => s.amount));
-                      const barWidth = 60;
-                      const spacing = 80;
-                      const maxHeight = 200;
-                      const startY = 240;
+                      const barWidth = 50;
+                      const spacing = 100;
+                      const maxHeight = 180;
+                      const startY = 230;
+                      
+                      const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
+                        y: startY - ratio * maxHeight,
+                        value: (ratio * maxAmount / 1000).toFixed(0)
+                      }));
                       
                       const points = servicesData.map((service, index) => {
-                        const x = 40 + index * spacing;
+                        const x = 50 + index * spacing;
                         const barHeight = (service.amount / maxAmount) * maxHeight;
                         const y = startY - barHeight;
                         return { x: x + barWidth / 2, y };
@@ -297,97 +302,141 @@ const Dashboard = () => {
                       
                       return (
                         <>
+                          {gridLines.map((line, idx) => (
+                            <g key={idx}>
+                              <line
+                                x1="40"
+                                y1={line.y}
+                                x2="490"
+                                y2={line.y}
+                                stroke="hsl(var(--border))"
+                                strokeWidth="1"
+                                strokeDasharray="4 4"
+                                opacity="0.3"
+                              />
+                              <text
+                                x="25"
+                                y={line.y + 4}
+                                textAnchor="end"
+                                className="fill-muted-foreground"
+                                style={{ fontSize: '10px' }}
+                              >
+                                {line.value}k
+                              </text>
+                            </g>
+                          ))}
+                          
+                          <line
+                            x1="40"
+                            y1={startY}
+                            x2="490"
+                            y2={startY}
+                            stroke="hsl(var(--border))"
+                            strokeWidth="2"
+                          />
+                          <line
+                            x1="40"
+                            y1="40"
+                            x2="40"
+                            y2={startY}
+                            stroke="hsl(var(--border))"
+                            strokeWidth="2"
+                          />
+                          
                           {servicesData.map((service, index) => {
-                            const x = 40 + index * spacing;
+                            const x = 50 + index * spacing;
                             const barHeight = (service.amount / maxAmount) * maxHeight;
                             const colors = ['#7f00ff', '#0400ff', '#fa0', '#00ff09', '#d0f'];
                             
                             return (
                               <g key={service.name}>
+                                <defs>
+                                  <linearGradient id={`gradient-${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stopColor={colors[index % colors.length]} stopOpacity="0.9" />
+                                    <stop offset="100%" stopColor={colors[index % colors.length]} stopOpacity="0.6" />
+                                  </linearGradient>
+                                </defs>
                                 <rect
                                   x={x}
                                   y={startY - barHeight}
                                   width={barWidth}
                                   height={barHeight}
-                                  fill={colors[index % colors.length]}
-                                  rx="4"
+                                  fill={`url(#gradient-${index})`}
+                                  stroke={colors[index % colors.length]}
+                                  strokeWidth="2"
+                                  rx="3"
                                   className="transition-all hover:opacity-80"
                                 />
                                 <text
                                   x={x + barWidth / 2}
-                                  y={startY - barHeight - 5}
+                                  y={startY - barHeight - 8}
                                   textAnchor="middle"
-                                  className="text-xs font-semibold fill-current"
-                                  style={{ fontSize: '10px' }}
+                                  className="font-semibold fill-current"
+                                  style={{ fontSize: '11px' }}
                                 >
                                   {(service.amount / 1000).toFixed(0)}k
                                 </text>
                                 <text
                                   x={x + barWidth / 2}
-                                  y={260}
+                                  y={250}
                                   textAnchor="middle"
-                                  className="text-xs fill-muted-foreground"
-                                  style={{ fontSize: '9px' }}
+                                  className="fill-muted-foreground"
+                                  style={{ fontSize: '10px' }}
                                 >
-                                  {service.name.length > 8 ? service.name.slice(0, 8) + '...' : service.name}
+                                  {service.name.length > 10 ? service.name.slice(0, 10) + '...' : service.name}
                                 </text>
-                                <g>
-                                  {service.trend !== 0 && (
-                                    <>
-                                      <circle
-                                        cx={x + barWidth / 2}
-                                        cy={startY - barHeight - 20}
-                                        r="10"
-                                        fill={service.trend > 0 ? '#00ff09' : '#f00'}
-                                        opacity="0.2"
-                                      />
-                                      {service.trend > 0 ? (
-                                        <path
-                                          d={`M ${x + barWidth / 2} ${startY - barHeight - 23} l -3 4 l 6 0 Z`}
-                                          fill={service.trend > 0 ? '#00ff09' : '#f00'}
-                                        />
-                                      ) : (
-                                        <path
-                                          d={`M ${x + barWidth / 2} ${startY - barHeight - 17} l -3 -4 l 6 0 Z`}
-                                          fill="#f00"
-                                        />
-                                      )}
-                                      <text
-                                        x={x + barWidth / 2}
-                                        y={startY - barHeight - 27}
-                                        textAnchor="middle"
-                                        className="text-xs font-bold"
-                                        fill={service.trend > 0 ? '#00ff09' : '#f00'}
-                                        style={{ fontSize: '9px' }}
-                                      >
-                                        {Math.abs(service.trend)}%
-                                      </text>
-                                    </>
-                                  )}
-                                </g>
+                                {service.trend !== 0 && (
+                                  <g>
+                                    <rect
+                                      x={x + barWidth - 20}
+                                      y={startY - barHeight - 28}
+                                      width="28"
+                                      height="16"
+                                      rx="8"
+                                      fill={service.trend > 0 ? '#00ff09' : '#f00'}
+                                      opacity="0.9"
+                                    />
+                                    <text
+                                      x={x + barWidth - 6}
+                                      y={startY - barHeight - 17}
+                                      textAnchor="middle"
+                                      className="font-bold"
+                                      fill="#000"
+                                      style={{ fontSize: '9px' }}
+                                    >
+                                      {service.trend > 0 ? '↑' : '↓'}{Math.abs(service.trend)}%
+                                    </text>
+                                  </g>
+                                )}
                               </g>
                             );
                           })}
                           <path
                             d={linePath}
                             stroke="#d0f"
-                            strokeWidth="2.5"
+                            strokeWidth="3"
                             fill="none"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            className="drop-shadow-lg"
+                            opacity="0.8"
                           />
                           {points.map((point, index) => (
-                            <circle
-                              key={index}
-                              cx={point.x}
-                              cy={point.y}
-                              r="4"
-                              fill="#d0f"
-                              stroke="hsl(var(--card))"
-                              strokeWidth="2"
-                              className="transition-all hover:r-6"
-                            />
+                            <g key={index}>
+                              <circle
+                                cx={point.x}
+                                cy={point.y}
+                                r="6"
+                                fill="#d0f"
+                                stroke="hsl(var(--card))"
+                                strokeWidth="2.5"
+                              />
+                              <circle
+                                cx={point.x}
+                                cy={point.y}
+                                r="3"
+                                fill="hsl(var(--card))"
+                              />
+                            </g>
                           ))}
                         </>
                       );
