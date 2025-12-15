@@ -52,9 +52,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(() => {
     const rememberMe = localStorage.getItem('remember_me') === 'true';
-    return rememberMe 
+    const token = rememberMe 
       ? localStorage.getItem('auth_token')
       : sessionStorage.getItem('auth_token');
+    console.log('[Auth Init] rememberMe:', rememberMe, 'token:', token ? 'exists' : 'null');
+    return token;
   });
   const [loading, setLoading] = useState(true);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -110,12 +112,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       ? localStorage.getItem('auth_token')
       : sessionStorage.getItem('auth_token');
     
+    console.log('[checkAuth] rememberMe:', rememberMe, 'savedToken:', savedToken ? 'exists' : 'null');
+    
     if (!savedToken) {
+      console.log('[checkAuth] No token found, skipping auth check');
       setLoading(false);
       return;
     }
 
     try {
+      console.log('[checkAuth] Verifying token with backend...');
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=me', {
         headers: {
           'X-Auth-Token': savedToken,
@@ -124,9 +130,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('[checkAuth] Token valid, user:', data.user.username);
         setUser(data.user);
         setToken(savedToken);
       } else {
+        console.log('[checkAuth] Token invalid, status:', response.status);
         localStorage.removeItem('auth_token');
         sessionStorage.removeItem('auth_token');
         localStorage.removeItem('remember_me');
@@ -134,7 +142,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(null);
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error('[checkAuth] Auth check failed:', error);
       localStorage.removeItem('auth_token');
       sessionStorage.removeItem('auth_token');
       localStorage.removeItem('remember_me');
