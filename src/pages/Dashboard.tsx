@@ -57,6 +57,16 @@ const Dashboard = () => {
     { name: 'Аналитика', amount: 65000, trend: 8 },
     { name: 'Хостинг', amount: 45000, trend: 0 },
     { name: 'Email-рассылки', amount: 35000, trend: 15 },
+    { name: 'Видеоконференции', amount: 55000, trend: 10 },
+    { name: 'Бухгалтерия', amount: 72000, trend: -3 },
+    { name: 'Антивирус', amount: 28000, trend: 5 },
+    { name: 'VPN-сервисы', amount: 42000, trend: 18 },
+    { name: 'Мониторинг', amount: 38000, trend: 7 },
+    { name: 'Резервное копирование', amount: 51000, trend: -2 },
+    { name: 'Телефония', amount: 67000, trend: 4 },
+    { name: 'Системы безопасности', amount: 89000, trend: 11 },
+    { name: 'Дизайн-инструменты', amount: 44000, trend: 9 },
+    { name: 'Тестирование', amount: 33000, trend: -7 },
   ];
 
   const monthlyData = [
@@ -188,7 +198,9 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <ExpensesGrowthChart monthlyData={monthlyData} />
-            <ServicesDynamicsChart servicesData={servicesData} />
+            <div className="md:col-span-2">
+              <ServicesDynamicsChart servicesData={servicesData} />
+            </div>
             <ExpensesByCategoryChart 
               categoriesData={categoriesData} 
               totalAmount={totalExpenses.month}
