@@ -275,29 +275,124 @@ const Dashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {servicesData.map((service) => (
-                    <div key={service.name} className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="flex-1">
-                        <p className="font-medium">{service.name}</p>
-                        <p className="text-sm text-muted-foreground">{service.amount.toLocaleString('ru-RU')} ₽</p>
-                      </div>
-                      <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                        service.trend > 0 ? 'bg-green-100 text-green-700' :
-                        service.trend < 0 ? 'bg-red-100 text-red-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {service.trend > 0 ? (
-                          <Icon name="TrendingUp" size={16} />
-                        ) : service.trend < 0 ? (
-                          <Icon name="TrendingDown" size={16} />
-                        ) : (
-                          <Icon name="Minus" size={16} />
-                        )}
-                        {Math.abs(service.trend)}%
-                      </div>
-                    </div>
-                  ))}
+                <div className="relative h-80">
+                  <svg viewBox="0 0 400 280" className="w-full h-full">
+                    {(() => {
+                      const maxAmount = Math.max(...servicesData.map(s => s.amount));
+                      const barWidth = 60;
+                      const spacing = 80;
+                      const maxHeight = 200;
+                      const startY = 240;
+                      
+                      const points = servicesData.map((service, index) => {
+                        const x = 40 + index * spacing;
+                        const barHeight = (service.amount / maxAmount) * maxHeight;
+                        const y = startY - barHeight;
+                        return { x: x + barWidth / 2, y };
+                      });
+                      
+                      const linePath = points.map((p, i) => 
+                        `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
+                      ).join(' ');
+                      
+                      return (
+                        <>
+                          {servicesData.map((service, index) => {
+                            const x = 40 + index * spacing;
+                            const barHeight = (service.amount / maxAmount) * maxHeight;
+                            const colors = ['#7f00ff', '#0400ff', '#fa0', '#00ff09', '#d0f'];
+                            
+                            return (
+                              <g key={service.name}>
+                                <rect
+                                  x={x}
+                                  y={startY - barHeight}
+                                  width={barWidth}
+                                  height={barHeight}
+                                  fill={colors[index % colors.length]}
+                                  rx="4"
+                                  className="transition-all hover:opacity-80"
+                                />
+                                <text
+                                  x={x + barWidth / 2}
+                                  y={startY - barHeight - 5}
+                                  textAnchor="middle"
+                                  className="text-xs font-semibold fill-current"
+                                  style={{ fontSize: '10px' }}
+                                >
+                                  {(service.amount / 1000).toFixed(0)}k
+                                </text>
+                                <text
+                                  x={x + barWidth / 2}
+                                  y={260}
+                                  textAnchor="middle"
+                                  className="text-xs fill-muted-foreground"
+                                  style={{ fontSize: '9px' }}
+                                >
+                                  {service.name.length > 8 ? service.name.slice(0, 8) + '...' : service.name}
+                                </text>
+                                <g>
+                                  {service.trend !== 0 && (
+                                    <>
+                                      <circle
+                                        cx={x + barWidth / 2}
+                                        cy={startY - barHeight - 20}
+                                        r="10"
+                                        fill={service.trend > 0 ? '#00ff09' : '#f00'}
+                                        opacity="0.2"
+                                      />
+                                      {service.trend > 0 ? (
+                                        <path
+                                          d={`M ${x + barWidth / 2} ${startY - barHeight - 23} l -3 4 l 6 0 Z`}
+                                          fill={service.trend > 0 ? '#00ff09' : '#f00'}
+                                        />
+                                      ) : (
+                                        <path
+                                          d={`M ${x + barWidth / 2} ${startY - barHeight - 17} l -3 -4 l 6 0 Z`}
+                                          fill="#f00"
+                                        />
+                                      )}
+                                      <text
+                                        x={x + barWidth / 2}
+                                        y={startY - barHeight - 27}
+                                        textAnchor="middle"
+                                        className="text-xs font-bold"
+                                        fill={service.trend > 0 ? '#00ff09' : '#f00'}
+                                        style={{ fontSize: '9px' }}
+                                      >
+                                        {Math.abs(service.trend)}%
+                                      </text>
+                                    </>
+                                  )}
+                                </g>
+                              </g>
+                            );
+                          })}
+                          <path
+                            d={linePath}
+                            stroke="#d0f"
+                            strokeWidth="2.5"
+                            fill="none"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="drop-shadow-lg"
+                          />
+                          {points.map((point, index) => (
+                            <circle
+                              key={index}
+                              cx={point.x}
+                              cy={point.y}
+                              r="4"
+                              fill="#d0f"
+                              stroke="hsl(var(--card))"
+                              strokeWidth="2"
+                              className="transition-all hover:r-6"
+                            />
+                          ))}
+                        </>
+                      );
+                    })()}
+                  </svg>
                 </div>
               </CardContent>
             </Card>
