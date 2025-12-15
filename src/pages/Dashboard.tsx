@@ -280,14 +280,15 @@ const Dashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="relative h-80">
-                  <svg viewBox="0 0 500 300" className="w-full h-full">
+                <div className="relative h-96">
+                  <svg viewBox="0 0 600 350" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
                     {(() => {
                       const maxAmount = Math.max(...servicesData.map(s => s.amount));
-                      const barWidth = 50;
-                      const spacing = 100;
-                      const maxHeight = 180;
-                      const startY = 230;
+                      const barWidth = 60;
+                      const spacing = 120;
+                      const maxHeight = 220;
+                      const startY = 280;
+                      const barColors = ['#0075FF', '#2CD9FF', '#01B574', '#7B61FF', '#FF6B6B'];
                       
                       const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
                         y: startY - ratio * maxHeight,
@@ -295,7 +296,7 @@ const Dashboard = () => {
                       }));
                       
                       const points = servicesData.map((service, index) => {
-                        const x = 50 + index * spacing;
+                        const x = 60 + index * spacing;
                         const barHeight = (service.amount / maxAmount) * maxHeight;
                         const y = startY - barHeight;
                         return { x: x + barWidth / 2, y };
@@ -310,20 +311,20 @@ const Dashboard = () => {
                           {gridLines.map((line, idx) => (
                             <g key={idx}>
                               <line
-                                x1="40"
+                                x1="50"
                                 y1={line.y}
-                                x2="490"
+                                x2="590"
                                 y2={line.y}
                                 stroke="#56577A"
                                 strokeWidth="1"
                                 strokeDasharray="5 5"
                               />
                               <text
-                                x="25"
+                                x="35"
                                 y={line.y + 4}
                                 textAnchor="end"
                                 fill="#c8cfca"
-                                style={{ fontSize: '11px', fontWeight: '500' }}
+                                style={{ fontSize: '12px', fontWeight: '500' }}
                               >
                                 {line.value}k
                               </text>
@@ -331,15 +332,16 @@ const Dashboard = () => {
                           ))}
                           
                           {servicesData.map((service, index) => {
-                            const x = 50 + index * spacing;
+                            const x = 60 + index * spacing;
                             const barHeight = (service.amount / maxAmount) * maxHeight;
+                            const color = barColors[index % barColors.length];
                             
                             return (
                               <g key={service.name}>
                                 <defs>
                                   <linearGradient id={`visionBar-${index}`} x1="0%" y1="100%" x2="0%" y2="0%">
-                                    <stop offset="0%" stopColor="#0075FF" stopOpacity="0.0" />
-                                    <stop offset="100%" stopColor="#0075FF" stopOpacity="1" />
+                                    <stop offset="0%" stopColor={color} stopOpacity="0.0" />
+                                    <stop offset="100%" stopColor={color} stopOpacity="1" />
                                   </linearGradient>
                                 </defs>
                                 <rect
@@ -352,39 +354,39 @@ const Dashboard = () => {
                                 />
                                 <text
                                   x={x + barWidth / 2}
-                                  y={startY - barHeight - 8}
+                                  y={startY - barHeight - 10}
                                   textAnchor="middle"
                                   fill="#fff"
-                                  style={{ fontSize: '12px', fontWeight: '600' }}
+                                  style={{ fontSize: '13px', fontWeight: '600' }}
                                 >
                                   {(service.amount / 1000).toFixed(0)}k
                                 </text>
                                 <text
                                   x={x + barWidth / 2}
-                                  y={250}
+                                  y={305}
                                   textAnchor="middle"
                                   fill="#c8cfca"
-                                  style={{ fontSize: '11px' }}
+                                  style={{ fontSize: '12px' }}
                                 >
-                                  {service.name.length > 10 ? service.name.slice(0, 10) + '...' : service.name}
+                                  {service.name.length > 12 ? service.name.slice(0, 12) + '...' : service.name}
                                 </text>
                                 {service.trend !== 0 && (
                                   <g>
                                     <rect
-                                      x={x + barWidth / 2 - 14}
-                                      y={startY - barHeight - 28}
-                                      width="28"
-                                      height="16"
+                                      x={x + barWidth / 2 - 16}
+                                      y={startY - barHeight - 32}
+                                      width="32"
+                                      height="18"
                                       rx="4"
                                       fill={service.trend > 0 ? '#01B574' : '#E31A1A'}
                                       opacity="0.9"
                                     />
                                     <text
                                       x={x + barWidth / 2}
-                                      y={startY - barHeight - 17}
+                                      y={startY - barHeight - 19}
                                       textAnchor="middle"
                                       fill="#fff"
-                                      style={{ fontSize: '10px', fontWeight: 'bold' }}
+                                      style={{ fontSize: '11px', fontWeight: 'bold' }}
                                     >
                                       {service.trend > 0 ? '+' : ''}{service.trend}%
                                     </text>
