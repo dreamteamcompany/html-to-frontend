@@ -435,29 +435,162 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          <Card className="mb-6 hover:shadow-lg transition-shadow">
+          <Card className="mb-6 relative overflow-hidden" style={{
+            background: '#111c44',
+            backdropFilter: 'blur(60px)',
+            border: '2px solid rgba(86, 87, 122, 0.6)',
+            boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
+          }}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Icon name="BarChart3" className="text-blue-600" />
-                Динамика расходов по месяцам
+              <CardTitle className="flex items-center gap-2" style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                <Icon name="BarChart3" style={{ color: '#2CD9FF' }} />
+                Динамика роста затрат
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64 flex items-end justify-between gap-4">
-                {monthlyData.map((data) => (
-                  <div key={data.month} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="relative w-full">
-                      <div
-                        className="w-full bg-gradient-to-t from-blue-500 to-purple-500 rounded-t-lg transition-all hover:opacity-80 cursor-pointer"
-                        style={{ height: `${(data.amount / maxMonthly) * 200}px` }}
-                      />
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-semibold whitespace-nowrap">
-                        {(data.amount / 1000000).toFixed(1)}М
-                      </div>
-                    </div>
-                    <span className="text-sm font-medium text-muted-foreground">{data.month}</span>
-                  </div>
-                ))}
+              <div className="relative h-96">
+                <svg viewBox="0 0 700 350" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+                  {(() => {
+                    const maxMonthAmount = Math.max(...monthlyData.map(m => m.amount));
+                    const barWidth = 40;
+                    const spacing = 116;
+                    const maxHeight = 220;
+                    const startY = 280;
+                    const startX = 60;
+                    
+                    const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
+                      y: startY - ratio * maxHeight,
+                      value: (ratio * maxMonthAmount / 1000000).toFixed(1)
+                    }));
+                    
+                    const barGradients = [
+                      { id: 'bar1', color1: '#0075FF', color2: '#2CD9FF' },
+                      { id: 'bar2', color1: '#0075FF', color2: '#01B574' },
+                      { id: 'bar3', color1: '#7B61FF', color2: '#2CD9FF' },
+                      { id: 'bar4', color1: '#0075FF', color2: '#2CD9FF' },
+                      { id: 'bar5', color1: '#01B574', color2: '#2CD9FF' },
+                      { id: 'bar6', color1: '#0075FF', color2: '#7B61FF' },
+                    ];
+                    
+                    const points = monthlyData.map((data, index) => {
+                      const x = startX + index * spacing + barWidth / 2;
+                      const barHeight = (data.amount / maxMonthAmount) * maxHeight;
+                      const y = startY - barHeight;
+                      return { x, y };
+                    });
+                    
+                    const areaPath = `M ${startX + barWidth / 2} ${startY} ${points.map((p, i) => `L ${p.x} ${p.y}`).join(' ')} L ${points[points.length - 1].x} ${startY} Z`;
+                    
+                    const linePath = points.map((p, i) => 
+                      `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
+                    ).join(' ');
+                    
+                    return (
+                      <>
+                        {gridLines.map((line, idx) => (
+                          <g key={idx}>
+                            <line
+                              x1="50"
+                              y1={line.y}
+                              x2="690"
+                              y2={line.y}
+                              stroke="#56577A"
+                              strokeWidth="1"
+                              strokeDasharray="5 5"
+                            />
+                            <text
+                              x="35"
+                              y={line.y + 4}
+                              textAnchor="end"
+                              fill="#c8cfca"
+                              style={{ fontSize: '12px', fontWeight: '500' }}
+                            >
+                              {line.value}М
+                            </text>
+                          </g>
+                        ))}
+                        
+                        {monthlyData.map((data, index) => {
+                          const x = startX + index * spacing;
+                          const barHeight = (data.amount / maxMonthAmount) * maxHeight;
+                          const gradient = barGradients[index % barGradients.length];
+                          
+                          return (
+                            <g key={data.month}>
+                              <defs>
+                                <linearGradient id={gradient.id} x1="0%" y1="100%" x2="0%" y2="0%">
+                                  <stop offset="0%" stopColor={gradient.color1} stopOpacity="0.3" />
+                                  <stop offset="100%" stopColor={gradient.color2} stopOpacity="1" />
+                                </linearGradient>
+                              </defs>
+                              <rect
+                                x={x}
+                                y={startY - barHeight}
+                                width={barWidth}
+                                height={barHeight}
+                                fill={`url(#${gradient.id})`}
+                                rx="6"
+                              />
+                              <text
+                                x={x + barWidth / 2}
+                                y={305}
+                                textAnchor="middle"
+                                fill="#c8cfca"
+                                style={{ fontSize: '12px' }}
+                              >
+                                {data.month}
+                              </text>
+                            </g>
+                          );
+                        })}
+                        
+                        <defs>
+                          <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#01B574" stopOpacity="0.4" />
+                            <stop offset="100%" stopColor="#01B574" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d={areaPath}
+                          fill="url(#areaGradient)"
+                        />
+                        
+                        <defs>
+                          <linearGradient id="lineGradientGrowth" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#01B574" />
+                            <stop offset="100%" stopColor="#2CD9FF" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d={linePath}
+                          stroke="url(#lineGradientGrowth)"
+                          strokeWidth="3"
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        
+                        {points.map((point, index) => (
+                          <g key={index}>
+                            <circle
+                              cx={point.x}
+                              cy={point.y}
+                              r="6"
+                              fill="#01B574"
+                              opacity="0.3"
+                            />
+                            <circle
+                              cx={point.x}
+                              cy={point.y}
+                              r="4"
+                              fill="#fff"
+                            />
+                          </g>
+                        ))}
+                      </>
+                    );
+                  })()}
+                </svg>
               </div>
             </CardContent>
           </Card>
