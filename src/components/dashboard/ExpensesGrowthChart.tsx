@@ -75,6 +75,35 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                     </g>
                   ))}
                   
+                  {monthlyData.map((data, index) => {
+                    const x = startX + index * spacing;
+                    
+                    return (
+                      <g key={data.month}>
+                        <text
+                          x={x}
+                          y={305}
+                          textAnchor="middle"
+                          fill="#c8cfca"
+                          style={{ fontSize: '12px' }}
+                        >
+                          {data.month}
+                        </text>
+                      </g>
+                    );
+                  })}
+                  
+                  <defs>
+                    <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#01B574" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#01B574" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d={`M ${points[0].x} ${startY} ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L ${points[points.length - 1].x} ${startY} Z`}
+                    fill="url(#areaGradient)"
+                  />
+                  
                   <defs>
                     <linearGradient id="lineGradientGrowth" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#01B574" />
@@ -107,24 +136,6 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                       />
                     </g>
                   ))}
-                  
-                  {monthlyData.map((data, index) => {
-                    const x = startX + index * spacing;
-                    
-                    return (
-                      <g key={data.month}>
-                        <text
-                          x={x}
-                          y={305}
-                          textAnchor="middle"
-                          fill="#c8cfca"
-                          style={{ fontSize: '12px' }}
-                        >
-                          {data.month}
-                        </text>
-                      </g>
-                    );
-                  })}
                 </>
               );
             })()}
