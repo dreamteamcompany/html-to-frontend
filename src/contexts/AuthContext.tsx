@@ -50,7 +50,12 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token'));
+  const [token, setToken] = useState<string | null>(() => {
+    const rememberMe = localStorage.getItem('remember_me') === 'true';
+    return rememberMe 
+      ? localStorage.getItem('auth_token')
+      : sessionStorage.getItem('auth_token');
+  });
   const [loading, setLoading] = useState(true);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
