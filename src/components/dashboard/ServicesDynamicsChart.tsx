@@ -18,6 +18,10 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
       backdropFilter: 'blur(60px)',
       border: 'none',
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
+      width: '100%',
+      maxWidth: '100%',
+      height: 'auto',
+      minHeight: '400px',
     }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2" style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
