@@ -29,9 +29,9 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
           Динамика расходов по сервисам
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4" style={{ overflow: 'hidden' }}>
-        <div className="relative flex items-center justify-center" style={{ height: '540px', overflow: 'auto' }}>
-          <svg viewBox="0 0 2000 450" style={{ width: '100%', height: '540px', minHeight: '540px' }} preserveAspectRatio="xMidYMid meet">
+      <CardContent className="p-4" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100% - 70px)' }}>
+        <div className="relative flex items-center justify-center" style={{ width: '100%', height: '100%' }}>
+          <svg viewBox="0 0 2000 450" style={{ width: '100%', height: '100%', maxHeight: '280px' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxAmount = Math.max(...servicesData.map(s => s.amount));
               const barWidth = 80;
@@ -74,7 +74,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                         y={line.y + 4}
                         textAnchor="end"
                         fill="#c8cfca"
-                        style={{ fontSize: '15px', fontWeight: '500' }}
+                        style={{ fontSize: '18px', fontWeight: '500' }}
                       >
                         {line.value}k
                       </text>
@@ -107,7 +107,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                           y={startY - barHeight - 12}
                           textAnchor="middle"
                           fill="#fff"
-                          style={{ fontSize: '16px', fontWeight: '600' }}
+                          style={{ fontSize: '20px', fontWeight: '600' }}
                         >
                           {(service.amount / 1000).toFixed(0)}k
                         </text>
@@ -116,7 +116,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                           y={410}
                           textAnchor="middle"
                           fill="#c8cfca"
-                          style={{ fontSize: '14px' }}
+                          style={{ fontSize: '18px' }}
                         >
                           {service.name.length > 12 ? service.name.slice(0, 12) + '...' : service.name}
                         </text>
@@ -136,7 +136,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                               y={startY - barHeight - 22}
                               textAnchor="middle"
                               fill="#fff"
-                              style={{ fontSize: '13px', fontWeight: 'bold' }}
+                              style={{ fontSize: '16px', fontWeight: 'bold' }}
                             >
                               {service.trend > 0 ? '+' : ''}{service.trend}%
                             </text>
