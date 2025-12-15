@@ -198,11 +198,12 @@ const Dashboard = () => {
                     <svg viewBox="0 0 200 200" className="transform -rotate-90">
                       {categoriesData.reduce((acc, cat, index) => {
                         const colors = [
-                          'stroke-blue-500',
-                          'stroke-purple-500',
-                          'stroke-pink-500',
-                          'stroke-orange-500',
-                          'stroke-green-500',
+                          '#7f00ff',
+                          '#0400ff',
+                          '#fa0',
+                          '#00ff09',
+                          '#d0f',
+                          '#f00',
                         ];
                         const total = categoriesData.reduce((sum, c) => sum + c.percentage, 0);
                         const percentage = (cat.percentage / total) * 100;
@@ -217,7 +218,7 @@ const Dashboard = () => {
                             cy="100"
                             r="80"
                             fill="none"
-                            className={colors[index % colors.length]}
+                            stroke={colors[index % colors.length]}
                             strokeWidth="40"
                             strokeDasharray={strokeDasharray}
                             strokeDashoffset={-offset}
@@ -239,15 +240,16 @@ const Dashboard = () => {
                   <div className="space-y-3">
                     {categoriesData.map((cat, index) => {
                       const colors = [
-                        'bg-blue-500',
-                        'bg-purple-500',
-                        'bg-pink-500',
-                        'bg-orange-500',
-                        'bg-green-500',
+                        '#7f00ff',
+                        '#0400ff',
+                        '#fa0',
+                        '#00ff09',
+                        '#d0f',
+                        '#f00',
                       ];
                       return (
                         <div key={cat.name} className="flex items-center gap-3">
-                          <div className={`w-4 h-4 rounded-full ${colors[index % colors.length]}`} />
+                          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className="text-lg">{cat.icon}</span>
