@@ -29,10 +29,10 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
           <svg viewBox="0 0 950 500" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxMonthAmount = Math.max(...monthlyData.map(m => m.amount));
-              const spacing = 157;
-              const maxHeight = 315;
-              const startY = 400;
-              const startX = 80;
+              const spacing = 180;
+              const maxHeight = 420;
+              const startY = 460;
+              const startX = 100;
               
               const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
                 y: startY - ratio * maxHeight,
@@ -63,16 +63,16 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                   {gridLines.map((line, idx) => (
                     <g key={idx}>
                       <line
-                        x1="70"
+                        x1="90"
                         y1={line.y}
-                        x2="930"
+                        x2="940"
                         y2={line.y}
                         stroke="#56577A"
                         strokeWidth="1"
                         strokeDasharray="5 5"
                       />
                       <text
-                        x="55"
+                        x="75"
                         y={line.y + 5}
                         textAnchor="end"
                         fill="#c8cfca"
@@ -90,7 +90,7 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                       <g key={data.month}>
                         <text
                           x={x}
-                          y={435}
+                          y={485}
                           textAnchor="middle"
                           fill="#c8cfca"
                           style={{ fontSize: '16px' }}
