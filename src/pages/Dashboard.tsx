@@ -187,12 +187,12 @@ const Dashboard = () => {
           </Tabs>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <ServicesDynamicsChart servicesData={servicesData} />
+            <ExpensesGrowthChart monthlyData={monthlyData} />
             <ExpensesByCategoryChart 
               categoriesData={categoriesData} 
               totalAmount={totalExpenses.month}
             />
-            <ServicesDynamicsChart servicesData={servicesData} />
-            <ExpensesGrowthChart monthlyData={monthlyData} />
           </div>
 
           <ContractorsAndDepartments 
