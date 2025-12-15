@@ -26,12 +26,12 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
       </CardHeader>
       <CardContent className="p-4">
         <div className="relative" style={{ height: '300px' }}>
-          <svg viewBox="0 0 600 300" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+          <svg viewBox="0 0 600 350" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxMonthAmount = Math.max(...monthlyData.map(m => m.amount));
               const spacing = 100;
-              const maxHeight = 200;
-              const startY = 240;
+              const maxHeight = 250;
+              const startY = 290;
               const startX = 60;
               
               const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
@@ -90,7 +90,7 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                       <g key={data.month}>
                         <text
                           x={x}
-                          y={265}
+                          y={315}
                           textAnchor="middle"
                           fill="#c8cfca"
                           style={{ fontSize: '12px' }}
