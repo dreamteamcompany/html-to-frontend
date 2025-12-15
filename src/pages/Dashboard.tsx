@@ -196,9 +196,12 @@ const Dashboard = () => {
             </TabsContent>
           </Tabs>
 
+          <div className="mb-6">
+            <ServicesDynamicsChart servicesData={servicesData} />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <ExpensesGrowthChart monthlyData={monthlyData} />
-            <ServicesDynamicsChart servicesData={servicesData} />
             <ExpensesByCategoryChart 
               categoriesData={categoriesData} 
               totalAmount={totalExpenses.month}
