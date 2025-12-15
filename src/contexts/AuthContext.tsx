@@ -129,21 +129,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        console.log('[checkAuth] Response data:', data);
-        
-        if (data.user) {
-          console.log('[checkAuth] Token valid, user:', data.user.username);
-          setUser(data.user);
-          setToken(savedToken);
-        } else {
-          console.error('[checkAuth] No user in response, clearing auth');
-          localStorage.removeItem('auth_token');
-          sessionStorage.removeItem('auth_token');
-          localStorage.removeItem('remember_me');
-          setToken(null);
-          setUser(null);
-        }
+        const userData = await response.json();
+        console.log('[checkAuth] Token valid, user:', userData.username);
+        setUser(userData);
+        setToken(savedToken);
       } else {
         console.log('[checkAuth] Token invalid, status:', response.status);
         localStorage.removeItem('auth_token');
