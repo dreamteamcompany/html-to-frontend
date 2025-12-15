@@ -26,7 +26,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
-        <div className="relative flex items-center justify-center" style={{ height: '270px' }}>
+        <div className="relative flex items-center justify-center" style={{ height: '540px' }}>
           <svg viewBox="0 0 2000 450" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxAmount = Math.max(...servicesData.map(s => s.amount));
