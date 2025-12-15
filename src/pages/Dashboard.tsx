@@ -268,7 +268,7 @@ const Dashboard = () => {
             </Card>
 
             <Card className="relative overflow-hidden" style={{
-              background: 'linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)',
+              background: '#111c44',
               backdropFilter: 'blur(60px)',
               border: '2px solid rgba(86, 87, 122, 0.6)',
               boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
