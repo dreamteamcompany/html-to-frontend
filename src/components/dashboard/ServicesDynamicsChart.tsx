@@ -27,13 +27,13 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
       </CardHeader>
       <CardContent className="p-4">
         <div className="relative flex items-center justify-center" style={{ height: '270px' }}>
-          <svg viewBox="0 0 600 350" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
+          <svg viewBox="0 0 2000 400" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxAmount = Math.max(...servicesData.map(s => s.amount));
-              const barWidth = 60;
-              const spacing = 120;
-              const maxHeight = 220;
-              const startY = 280;
+              const barWidth = 80;
+              const spacing = 130;
+              const maxHeight = 280;
+              const startY = 330;
               const barColors = ['#0075FF', '#2CD9FF', '#01B574', '#7B61FF', '#FF6B6B'];
               
               const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
@@ -42,7 +42,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
               }));
               
               const points = servicesData.map((service, index) => {
-                const x = 60 + index * spacing;
+                const x = 80 + index * spacing;
                 const barHeight = (service.amount / maxAmount) * maxHeight;
                 const y = startY - barHeight;
                 return { x: x + barWidth / 2, y };
@@ -57,20 +57,20 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                   {gridLines.map((line, idx) => (
                     <g key={idx}>
                       <line
-                        x1="50"
+                        x1="70"
                         y1={line.y}
-                        x2="590"
+                        x2="1980"
                         y2={line.y}
                         stroke="#56577A"
                         strokeWidth="1"
                         strokeDasharray="5 5"
                       />
                       <text
-                        x="35"
+                        x="50"
                         y={line.y + 4}
                         textAnchor="end"
                         fill="#c8cfca"
-                        style={{ fontSize: '12px', fontWeight: '500' }}
+                        style={{ fontSize: '14px', fontWeight: '500' }}
                       >
                         {line.value}k
                       </text>
@@ -78,7 +78,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                   ))}
                   
                   {servicesData.map((service, index) => {
-                    const x = 60 + index * spacing;
+                    const x = 80 + index * spacing;
                     const barHeight = (service.amount / maxAmount) * maxHeight;
                     const color = barColors[index % barColors.length];
                     
@@ -100,39 +100,39 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                         />
                         <text
                           x={x + barWidth / 2}
-                          y={startY - barHeight - 10}
+                          y={startY - barHeight - 12}
                           textAnchor="middle"
                           fill="#fff"
-                          style={{ fontSize: '13px', fontWeight: '600' }}
+                          style={{ fontSize: '15px', fontWeight: '600' }}
                         >
                           {(service.amount / 1000).toFixed(0)}k
                         </text>
                         <text
                           x={x + barWidth / 2}
-                          y={305}
+                          y={360}
                           textAnchor="middle"
                           fill="#c8cfca"
-                          style={{ fontSize: '12px' }}
+                          style={{ fontSize: '13px' }}
                         >
                           {service.name.length > 12 ? service.name.slice(0, 12) + '...' : service.name}
                         </text>
                         {service.trend !== 0 && (
                           <g>
                             <rect
-                              x={x + barWidth / 2 - 16}
-                              y={startY - barHeight - 32}
-                              width="32"
-                              height="18"
+                              x={x + barWidth / 2 - 20}
+                              y={startY - barHeight - 38}
+                              width="40"
+                              height="22"
                               rx="4"
                               fill={service.trend > 0 ? '#01B574' : '#E31A1A'}
                               opacity="0.9"
                             />
                             <text
                               x={x + barWidth / 2}
-                              y={startY - barHeight - 19}
+                              y={startY - barHeight - 22}
                               textAnchor="middle"
                               fill="#fff"
-                              style={{ fontSize: '11px', fontWeight: 'bold' }}
+                              style={{ fontSize: '13px', fontWeight: 'bold' }}
                             >
                               {service.trend > 0 ? '+' : ''}{service.trend}%
                             </text>
@@ -160,14 +160,14 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                       <circle
                         cx={point.x}
                         cy={point.y}
-                        r="6"
+                        r="8"
                         fill="#2CD9FF"
                         opacity="0.3"
                       />
                       <circle
                         cx={point.x}
                         cy={point.y}
-                        r="4"
+                        r="5"
                         fill="#fff"
                       />
                     </g>
