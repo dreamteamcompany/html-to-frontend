@@ -27,13 +27,13 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
       </CardHeader>
       <CardContent className="p-4">
         <div className="relative flex items-center justify-center" style={{ height: '270px' }}>
-          <svg viewBox="0 0 2000 400" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
+          <svg viewBox="0 0 2000 450" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxAmount = Math.max(...servicesData.map(s => s.amount));
               const barWidth = 80;
               const spacing = 130;
-              const maxHeight = 280;
-              const startY = 330;
+              const maxHeight = 350;
+              const startY = 390;
               const barColors = ['#0075FF', '#2CD9FF', '#01B574', '#7B61FF', '#FF6B6B'];
               
               const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
@@ -70,7 +70,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                         y={line.y + 4}
                         textAnchor="end"
                         fill="#c8cfca"
-                        style={{ fontSize: '14px', fontWeight: '500' }}
+                        style={{ fontSize: '15px', fontWeight: '500' }}
                       >
                         {line.value}k
                       </text>
@@ -103,16 +103,16 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                           y={startY - barHeight - 12}
                           textAnchor="middle"
                           fill="#fff"
-                          style={{ fontSize: '15px', fontWeight: '600' }}
+                          style={{ fontSize: '16px', fontWeight: '600' }}
                         >
                           {(service.amount / 1000).toFixed(0)}k
                         </text>
                         <text
                           x={x + barWidth / 2}
-                          y={360}
+                          y={410}
                           textAnchor="middle"
                           fill="#c8cfca"
-                          style={{ fontSize: '13px' }}
+                          style={{ fontSize: '14px' }}
                         >
                           {service.name.length > 12 ? service.name.slice(0, 12) + '...' : service.name}
                         </text>
