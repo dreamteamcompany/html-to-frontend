@@ -15,7 +15,7 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
     <Card className="relative overflow-hidden" style={{
       background: '#111c44',
       backdropFilter: 'blur(60px)',
-      border: '2px solid rgba(86, 87, 122, 0.6)',
+      border: 'none',
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
     }}>
       <CardHeader>
