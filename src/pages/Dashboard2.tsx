@@ -3,6 +3,27 @@ import { Card, CardContent } from '@/components/ui/card';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import Icon from '@/components/ui/icon';
+import { Bar, Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 const Dashboard2 = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -172,6 +193,160 @@ const Dashboard2 = () => {
                 <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>платежей за все время</div>
                 <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#e31a1a' }}>
                   <Icon name="ArrowUp" size={14} /> +3 за месяц
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '30px' }}>
+            {/* IT Расходы по Категориям */}
+            <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <CardContent className="p-6">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>IT Расходы по Категориям</h3>
+                  <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '10px' }}>
+                    <button style={{ background: '#7551e9', border: 'none', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', boxShadow: '0 2px 8px rgba(117, 81, 233, 0.3)' }}>Месяц</button>
+                    <button style={{ background: 'transparent', border: 'none', color: '#a3aed0', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>Квартал</button>
+                    <button style={{ background: 'transparent', border: 'none', color: '#a3aed0', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>Год</button>
+                  </div>
+                </div>
+                <div style={{ height: '350px', position: 'relative' }}>
+                  <Bar
+                    data={{
+                      labels: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн'],
+                      datasets: [{
+                        label: 'Серверы',
+                        data: [45000, 47000, 52000, 48000, 51000, 54000],
+                        backgroundColor: 'rgba(117, 81, 233, 0.8)',
+                        borderRadius: 8
+                      }, {
+                        label: 'Коммуникации',
+                        data: [22000, 24000, 26000, 23000, 25000, 27000],
+                        backgroundColor: 'rgba(57, 101, 255, 0.8)',
+                        borderRadius: 8
+                      }, {
+                        label: 'Веб-сайты',
+                        data: [8000, 8500, 9000, 8200, 8800, 9500],
+                        backgroundColor: 'rgba(255, 181, 71, 0.8)',
+                        borderRadius: 8
+                      }, {
+                        label: 'Безопасность',
+                        data: [3000, 3500, 4000, 3200, 3800, 4200],
+                        backgroundColor: 'rgba(1, 181, 116, 0.8)',
+                        borderRadius: 8
+                      }]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                          labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            color: '#a3aed0',
+                            font: {
+                              family: 'Plus Jakarta Sans, sans-serif',
+                              size: 13
+                            }
+                          }
+                        },
+                        tooltip: {
+                          callbacks: {
+                            label: function(context) {
+                              return `${context.dataset.label}: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`;
+                            }
+                          }
+                        }
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          ticks: {
+                            color: '#a3aed0',
+                            callback: function(value) {
+                              return new Intl.NumberFormat('ru-RU').format(value as number) + ' ₽';
+                            }
+                          },
+                          grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                          }
+                        },
+                        x: {
+                          ticks: {
+                            color: '#a3aed0'
+                          },
+                          grid: {
+                            display: false
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Распределение Затрат */}
+            <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <CardContent className="p-6">
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Распределение Затрат</h3>
+                </div>
+                <div style={{ height: '350px', position: 'relative' }}>
+                  <Doughnut
+                    data={{
+                      labels: ['Серверы', 'Коммуникации', 'Веб-сайты', 'Безопасность'],
+                      datasets: [{
+                        data: [98500, 45300, 25000, 15400],
+                        backgroundColor: [
+                          'rgba(117, 81, 233, 0.8)',
+                          'rgba(57, 101, 255, 0.8)',
+                          'rgba(255, 181, 71, 0.8)',
+                          'rgba(1, 181, 116, 0.8)'
+                        ],
+                        borderColor: [
+                          'rgb(117, 81, 233)',
+                          'rgb(57, 101, 255)',
+                          'rgb(255, 181, 71)',
+                          'rgb(1, 181, 116)'
+                        ],
+                        borderWidth: 2
+                      }]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      cutout: '70%',
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                          labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            color: '#a3aed0',
+                            font: {
+                              family: 'Plus Jakarta Sans, sans-serif',
+                              size: 13
+                            }
+                          }
+                        },
+                        tooltip: {
+                          callbacks: {
+                            label: function(context) {
+                              const label = context.label || '';
+                              const value = context.raw as number;
+                              const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
+                              const percentage = Math.round((value / total) * 100);
+                              return `${label}: ${new Intl.NumberFormat('ru-RU').format(value)} ₽ (${percentage}%)`;
+                            }
+                          }
+                        }
+                      }
+                    }}
+                  />
                 </div>
               </CardContent>
             </Card>
