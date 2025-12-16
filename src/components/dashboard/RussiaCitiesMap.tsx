@@ -57,7 +57,7 @@ const RussiaCitiesMap = ({ citiesData }: RussiaCitiesMapProps) => {
       </CardHeader>
       <CardContent className="p-3 pt-0">
         <div className="relative w-full h-[300px]">
-          <svg viewBox="0 0 600 300" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+          <svg viewBox="0 0 900 350" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
             <defs>
               <filter id="glow">
                 <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
@@ -68,27 +68,62 @@ const RussiaCitiesMap = ({ citiesData }: RussiaCitiesMapProps) => {
               </filter>
             </defs>
 
-            {/* Фоновая сетка сот */}
-            {Array.from({ length: 8 }).map((_, row) =>
-              Array.from({ length: 12 }).map((_, col) => {
-                const offsetX = row % 2 === 0 ? 0 : 25;
-                const x = 50 + col * 50 + offsetX;
-                const y = 40 + row * 43;
-                
-                if (x > 550 || y > 280) return null;
-                
-                return (
-                  <path
-                    key={`hex-${row}-${col}`}
-                    d={getHexagonPath(x, y, 18)}
-                    fill="none"
-                    stroke="#2C3E5D"
-                    strokeWidth="1"
-                    opacity="0.3"
-                  />
-                );
-              })
-            )}
+            {/* Карта России из сот */}
+            <g opacity="0.25">
+              {/* Западная часть */}
+              {Array.from({ length: 6 }).map((_, row) =>
+                Array.from({ length: 4 }).map((_, col) => {
+                  const offsetX = row % 2 === 0 ? 0 : 18;
+                  const x = 80 + col * 36 + offsetX;
+                  const y = 80 + row * 31;
+                  return (
+                    <path
+                      key={`hex-w-${row}-${col}`}
+                      d={getHexagonPath(x, y, 15)}
+                      fill="none"
+                      stroke="#3B4F6D"
+                      strokeWidth="1.5"
+                    />
+                  );
+                })
+              )}
+              
+              {/* Центральная часть */}
+              {Array.from({ length: 7 }).map((_, row) =>
+                Array.from({ length: 8 }).map((_, col) => {
+                  const offsetX = row % 2 === 0 ? 0 : 18;
+                  const x = 220 + col * 36 + offsetX;
+                  const y = 60 + row * 31;
+                  return (
+                    <path
+                      key={`hex-c-${row}-${col}`}
+                      d={getHexagonPath(x, y, 15)}
+                      fill="none"
+                      stroke="#3B4F6D"
+                      strokeWidth="1.5"
+                    />
+                  );
+                })
+              )}
+              
+              {/* Восточная часть */}
+              {Array.from({ length: 8 }).map((_, row) =>
+                Array.from({ length: 10 }).map((_, col) => {
+                  const offsetX = row % 2 === 0 ? 0 : 18;
+                  const x = 510 + col * 36 + offsetX;
+                  const y = 50 + row * 31;
+                  return (
+                    <path
+                      key={`hex-e-${row}-${col}`}
+                      d={getHexagonPath(x, y, 15)}
+                      fill="none"
+                      stroke="#3B4F6D"
+                      strokeWidth="1.5"
+                    />
+                  );
+                })
+              )}
+            </g>
 
             {/* Города с данными */}
             {citiesData.map((city, index) => {

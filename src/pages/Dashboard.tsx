@@ -13,6 +13,7 @@ import ExpensesByCategoryChart from '@/components/dashboard/ExpensesByCategoryCh
 import ServicesDynamicsChart from '@/components/dashboard/ServicesDynamicsChart';
 import ExpensesGrowthChart from '@/components/dashboard/ExpensesGrowthChart';
 import ContractorsAndDepartments from '@/components/dashboard/ContractorsAndDepartments';
+import RussiaCitiesMap from '@/components/dashboard/RussiaCitiesMap';
 
 const Dashboard = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -99,6 +100,12 @@ const Dashboard = () => {
     averageCheck: 12083,
     transactionsCount: 120,
   };
+
+  const citiesData = [
+    { name: 'Пермь', amount: 320000, x: 350, y: 150 },
+    { name: 'Краснодар', amount: 180000, x: 250, y: 220 },
+    { name: 'Омск', amount: 450000, x: 550, y: 140 },
+  ];
 
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -196,8 +203,9 @@ const Dashboard = () => {
             </TabsContent>
           </Tabs>
 
-          <div className="mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <ServicesDynamicsChart servicesData={servicesData} />
+            <RussiaCitiesMap citiesData={citiesData} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
