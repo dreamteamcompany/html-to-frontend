@@ -785,6 +785,564 @@ const Dashboard2Charts = () => {
       </Card>
     </div>
 
+    {/* Еще больше крутых блоков */}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '30px' }}>
+      {/* Тепловая карта расходов по дням недели */}
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+        border: '1px solid rgba(57, 101, 255, 0.3)',
+        boxShadow: '0 0 30px rgba(57, 101, 255, 0.15), inset 0 0 20px rgba(57, 101, 255, 0.05)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          width: '100%',
+          height: '100%',
+          background: 'radial-gradient(circle at 20% 50%, rgba(57, 101, 255, 0.15) 0%, transparent 50%)',
+          pointerEvents: 'none'
+        }} />
+        <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #3965ff 0%, #2d50cc 100%)',
+              padding: '12px',
+              borderRadius: '12px',
+              boxShadow: '0 0 20px rgba(57, 101, 255, 0.5)'
+            }}>
+              <Icon name="Calendar" size={24} style={{ color: '#fff' }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Активность по дням</h3>
+              <p style={{ fontSize: '13px', color: '#a3aed0', marginTop: '2px' }}>Последние 4 недели</p>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+            {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day, idx) => (
+              <div key={idx} style={{ 
+                textAlign: 'center', 
+                color: '#a3aed0', 
+                fontSize: '12px', 
+                fontWeight: '600',
+                marginBottom: '4px'
+              }}>
+                {day}
+              </div>
+            ))}
+            {Array.from({ length: 28 }).map((_, idx) => {
+              const intensity = Math.random();
+              const colors = [
+                { bg: 'rgba(57, 101, 255, 0.1)', border: 'rgba(57, 101, 255, 0.2)', shadow: 'none' },
+                { bg: 'rgba(57, 101, 255, 0.3)', border: 'rgba(57, 101, 255, 0.4)', shadow: '0 0 10px rgba(57, 101, 255, 0.3)' },
+                { bg: 'rgba(57, 101, 255, 0.5)', border: 'rgba(57, 101, 255, 0.6)', shadow: '0 0 15px rgba(57, 101, 255, 0.5)' },
+                { bg: 'rgba(57, 101, 255, 0.8)', border: 'rgba(57, 101, 255, 0.9)', shadow: '0 0 20px rgba(57, 101, 255, 0.7)' }
+              ];
+              const colorIdx = Math.floor(intensity * colors.length);
+              const color = colors[colorIdx];
+              return (
+                <div key={idx} style={{ 
+                  aspectRatio: '1',
+                  background: color.bg,
+                  border: `1px solid ${color.border}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: color.shadow
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                  e.currentTarget.style.boxShadow = '0 0 25px rgba(57, 101, 255, 0.8)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = color.shadow;
+                }}
+                title={`${Math.floor(intensity * 50)} платежей`}
+                />
+              );
+            })}
+          </div>
+          <div style={{ 
+            marginTop: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            borderRadius: '10px'
+          }}>
+            <span style={{ color: '#a3aed0', fontSize: '12px' }}>Меньше</span>
+            {[0.1, 0.3, 0.5, 0.8].map((intensity, idx) => (
+              <div key={idx} style={{
+                width: '20px',
+                height: '20px',
+                background: `rgba(57, 101, 255, ${intensity})`,
+                border: `1px solid rgba(57, 101, 255, ${intensity + 0.2})`,
+                borderRadius: '4px'
+              }} />
+            ))}
+            <span style={{ color: '#a3aed0', fontSize: '12px' }}>Больше</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Прогноз расходов с AI */}
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+        border: '1px solid rgba(255, 181, 71, 0.3)',
+        boxShadow: '0 0 30px rgba(255, 181, 71, 0.15), inset 0 0 20px rgba(255, 181, 71, 0.05)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute',
+          bottom: '0',
+          right: '0',
+          width: '100%',
+          height: '100%',
+          background: 'radial-gradient(circle at 80% 80%, rgba(255, 181, 71, 0.15) 0%, transparent 50%)',
+          pointerEvents: 'none'
+        }} />
+        <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)',
+              padding: '12px',
+              borderRadius: '12px',
+              boxShadow: '0 0 20px rgba(255, 181, 71, 0.5)',
+              animation: 'glow 3s infinite'
+            }}>
+              <Icon name="Sparkles" size={24} style={{ color: '#fff' }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>AI Прогноз</h3>
+              <p style={{ fontSize: '13px', color: '#a3aed0', marginTop: '2px' }}>На следующий месяц</p>
+            </div>
+          </div>
+          <div style={{ 
+            background: 'rgba(255, 181, 71, 0.1)',
+            padding: '24px',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 181, 71, 0.2)',
+            textAlign: 'center',
+            marginBottom: '20px'
+          }}>
+            <div style={{ color: '#ffb547', fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>
+              Ожидаемые расходы
+            </div>
+            <div style={{ 
+              color: '#fff', 
+              fontSize: '48px', 
+              fontWeight: '900',
+              textShadow: '0 0 30px rgba(255, 181, 71, 0.6)',
+              marginBottom: '8px'
+            }}>
+              ₽1.2М
+            </div>
+            <div style={{ 
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(1, 181, 116, 0.2)',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              border: '1px solid rgba(1, 181, 116, 0.3)'
+            }}>
+              <Icon name="TrendingDown" size={16} style={{ color: '#01b574' }} />
+              <span style={{ color: '#01b574', fontSize: '14px', fontWeight: '600' }}>-8% от текущего</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[
+              { label: 'Оптимизация', value: '₽120K', trend: 'down', color: '#01b574' },
+              { label: 'Новые подписки', value: '₽45K', trend: 'up', color: '#ff6b6b' },
+              { label: 'Экономия лицензий', value: '₽78K', trend: 'down', color: '#01b574' }
+            ].map((item, idx) => (
+              <div key={idx} style={{ 
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.borderColor = item.color;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+              }}>
+                <span style={{ color: '#a3aed0', fontSize: '14px' }}>{item.label}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Icon name={item.trend === 'up' ? 'ArrowUp' : 'ArrowDown'} size={16} style={{ color: item.color }} />
+                  <span style={{ color: item.color, fontSize: '14px', fontWeight: '700' }}>{item.value}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    {/* Широкий блок - Детальная разбивка IT бюджета */}
+    <Card style={{ 
+      background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+      border: '1px solid rgba(117, 81, 233, 0.3)',
+      boxShadow: '0 0 40px rgba(117, 81, 233, 0.2), inset 0 0 30px rgba(117, 81, 233, 0.08)',
+      position: 'relative',
+      overflow: 'hidden',
+      marginBottom: '30px'
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '0',
+        width: '100%',
+        height: '2px',
+        background: 'linear-gradient(90deg, transparent 0%, rgba(117, 81, 233, 0.5) 50%, transparent 100%)',
+        pointerEvents: 'none',
+        animation: 'slide 3s infinite'
+      }} />
+      <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
+              padding: '14px',
+              borderRadius: '14px',
+              boxShadow: '0 0 25px rgba(117, 81, 233, 0.6)'
+            }}>
+              <Icon name="PieChart" size={28} style={{ color: '#fff' }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#fff' }}>Детальная Разбивка IT Бюджета</h3>
+              <p style={{ fontSize: '14px', color: '#a3aed0', marginTop: '4px' }}>Полный анализ всех категорий расходов</p>
+            </div>
+          </div>
+          <div style={{ 
+            background: 'rgba(117, 81, 233, 0.15)',
+            padding: '12px 24px',
+            borderRadius: '12px',
+            border: '1px solid rgba(117, 81, 233, 0.3)'
+          }}>
+            <span style={{ color: '#7551e9', fontSize: '16px', fontWeight: '700' }}>Общий бюджет: ₽1.8М</span>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+          {[
+            { icon: 'Server', name: 'Серверы & Хостинг', amount: 540000, percent: 30, color: '#7551e9', details: ['AWS: ₽320K', 'Azure: ₽150K', 'DigitalOcean: ₽70K'] },
+            { icon: 'Cloud', name: 'SaaS Подписки', amount: 360000, percent: 20, color: '#3965ff', details: ['Microsoft 365: ₽140K', 'Slack: ₽120K', 'Adobe: ₽100K'] },
+            { icon: 'Shield', name: 'Безопасность', amount: 324000, percent: 18, color: '#01b574', details: ['Антивирус: ₽150K', 'VPN: ₽100K', 'Firewall: ₽74K'] },
+            { icon: 'Cpu', name: 'Оборудование', amount: 288000, percent: 16, color: '#ffb547', details: ['Ноутбуки: ₽180K', 'Мониторы: ₽68K', 'Сеть: ₽40K'] },
+            { icon: 'Code', name: 'Dev Tools', amount: 180000, percent: 10, color: '#ff6b6b', details: ['GitHub: ₽80K', 'JetBrains: ₽60K', 'Postman: ₽40K'] },
+            { icon: 'Database', name: 'Базы Данных', amount: 108000, percent: 6, color: '#a855f7', details: ['PostgreSQL: ₽50K', 'MongoDB: ₽38K', 'Redis: ₽20K'] }
+          ].map((category, idx) => (
+            <div key={idx} style={{ 
+              background: `linear-gradient(135deg, ${category.color}15 0%, ${category.color}08 100%)`,
+              padding: '20px',
+              borderRadius: '16px',
+              border: `1px solid ${category.color}30`,
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              cursor: 'pointer',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+              e.currentTarget.style.boxShadow = `0 20px 40px ${category.color}40, 0 0 30px ${category.color}30`;
+              e.currentTarget.style.borderColor = category.color;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0) scale(1)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = `${category.color}30`;
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: '-50%',
+                right: '-50%',
+                width: '150%',
+                height: '150%',
+                background: `radial-gradient(circle, ${category.color}20 0%, transparent 70%)`,
+                pointerEvents: 'none',
+                opacity: 0,
+                transition: 'opacity 0.4s ease'
+              }} className="hover-glow" />
+              <div style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px',
+                position: 'relative',
+                zIndex: 1
+              }}>
+                <div style={{ 
+                  background: `linear-gradient(135deg, ${category.color} 0%, ${category.color}cc 100%)`,
+                  padding: '10px',
+                  borderRadius: '10px',
+                  boxShadow: `0 0 20px ${category.color}60`
+                }}>
+                  <Icon name={category.icon} size={20} style={{ color: '#fff' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
+                    {category.name}
+                  </div>
+                  <div style={{ color: '#a3aed0', fontSize: '12px' }}>{category.percent}% бюджета</div>
+                </div>
+              </div>
+              <div style={{ 
+                color: category.color, 
+                fontSize: '24px', 
+                fontWeight: '800',
+                marginBottom: '12px',
+                textShadow: `0 0 20px ${category.color}60`
+              }}>
+                {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(category.amount)}
+              </div>
+              <div style={{ 
+                width: '100%', 
+                height: '8px', 
+                background: 'rgba(255, 255, 255, 0.08)', 
+                borderRadius: '10px',
+                overflow: 'hidden',
+                marginBottom: '12px'
+              }}>
+                <div style={{ 
+                  width: `${category.percent * 3.33}%`, 
+                  height: '100%', 
+                  background: `linear-gradient(90deg, ${category.color} 0%, ${category.color}aa 100%)`,
+                  borderRadius: '10px',
+                  boxShadow: `0 0 15px ${category.color}`,
+                  transition: 'width 1s ease'
+                }} />
+              </div>
+              <div style={{ fontSize: '12px', color: '#a3aed0', lineHeight: '1.6' }}>
+                {category.details.map((detail, i) => (
+                  <div key={i} style={{ marginBottom: '4px' }}>• {detail}</div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* Еще один ряд крутых блоков */}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '30px' }}>
+      {/* Экономия за год */}
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+        border: '1px solid rgba(1, 181, 116, 0.3)',
+        boxShadow: '0 0 30px rgba(1, 181, 116, 0.15)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute',
+          width: '300px',
+          height: '300px',
+          background: 'radial-gradient(circle, rgba(1, 181, 116, 0.2) 0%, transparent 70%)',
+          top: '-150px',
+          left: '-150px',
+          animation: 'rotate 20s linear infinite'
+        }} />
+        <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #01b574 0%, #018c5a 100%)',
+            padding: '12px',
+            borderRadius: '12px',
+            boxShadow: '0 0 20px rgba(1, 181, 116, 0.5)',
+            display: 'inline-flex',
+            marginBottom: '20px'
+          }}>
+            <Icon name="PiggyBank" size={24} style={{ color: '#fff' }} />
+          </div>
+          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', marginBottom: '16px' }}>
+            Годовая Экономия
+          </h3>
+          <div style={{ 
+            color: '#01b574', 
+            fontSize: '42px', 
+            fontWeight: '900',
+            textShadow: '0 0 30px rgba(1, 181, 116, 0.6)',
+            marginBottom: '12px'
+          }}>
+            ₽480K
+          </div>
+          <div style={{ color: '#a3aed0', fontSize: '14px', marginBottom: '20px' }}>
+            За счет оптимизации подписок
+          </div>
+          <div style={{ 
+            background: 'rgba(1, 181, 116, 0.1)',
+            padding: '12px',
+            borderRadius: '10px',
+            border: '1px solid rgba(1, 181, 116, 0.2)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ color: '#a3aed0', fontSize: '13px' }}>Прогресс цели</span>
+              <span style={{ color: '#01b574', fontSize: '13px', fontWeight: '700' }}>73%</span>
+            </div>
+            <div style={{ 
+              width: '100%', 
+              height: '8px', 
+              background: 'rgba(255, 255, 255, 0.05)', 
+              borderRadius: '10px',
+              overflow: 'hidden'
+            }}>
+              <div style={{ 
+                width: '73%', 
+                height: '100%', 
+                background: 'linear-gradient(90deg, #01b574 0%, #01b574aa 100%)',
+                borderRadius: '10px',
+                boxShadow: '0 0 15px #01b574',
+                animation: 'progress 2s ease-out'
+              }} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Скорость обработки */}
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+        border: '1px solid rgba(168, 85, 247, 0.3)',
+        boxShadow: '0 0 30px rgba(168, 85, 247, 0.15)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute',
+          width: '200px',
+          height: '200px',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
+          bottom: '-100px',
+          right: '-100px',
+          animation: 'pulse 3s infinite'
+        }} />
+        <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
+            padding: '12px',
+            borderRadius: '12px',
+            boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)',
+            display: 'inline-flex',
+            marginBottom: '20px'
+          }}>
+            <Icon name="Zap" size={24} style={{ color: '#fff' }} />
+          </div>
+          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', marginBottom: '16px' }}>
+            Средняя Скорость
+          </h3>
+          <div style={{ 
+            color: '#a855f7', 
+            fontSize: '42px', 
+            fontWeight: '900',
+            textShadow: '0 0 30px rgba(168, 85, 247, 0.6)',
+            marginBottom: '12px'
+          }}>
+            1.8ч
+          </div>
+          <div style={{ color: '#a3aed0', fontSize: '14px', marginBottom: '20px' }}>
+            Обработка платежного запроса
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ 
+              flex: 1,
+              background: 'rgba(1, 181, 116, 0.15)',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(1, 181, 116, 0.3)',
+              textAlign: 'center'
+            }}>
+              <div style={{ color: '#01b574', fontSize: '20px', fontWeight: '700' }}>-24%</div>
+              <div style={{ color: '#a3aed0', fontSize: '11px', marginTop: '4px' }}>vs месяц назад</div>
+            </div>
+            <div style={{ 
+              flex: 1,
+              background: 'rgba(117, 81, 233, 0.15)',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(117, 81, 233, 0.3)',
+              textAlign: 'center'
+            }}>
+              <div style={{ color: '#7551e9', fontSize: '20px', fontWeight: '700' }}>94%</div>
+              <div style={{ color: '#a3aed0', fontSize: '11px', marginTop: '4px' }}>Автоматизация</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Команда */}
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+        border: '1px solid rgba(117, 81, 233, 0.3)',
+        boxShadow: '0 0 30px rgba(117, 81, 233, 0.15)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute',
+          width: '250px',
+          height: '250px',
+          background: 'radial-gradient(circle, rgba(117, 81, 233, 0.12) 0%, transparent 70%)',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          animation: 'breathe 4s infinite'
+        }} />
+        <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
+            padding: '12px',
+            borderRadius: '12px',
+            boxShadow: '0 0 20px rgba(117, 81, 233, 0.5)',
+            display: 'inline-flex',
+            marginBottom: '20px'
+          }}>
+            <Icon name="Users" size={24} style={{ color: '#fff' }} />
+          </div>
+          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', marginBottom: '16px' }}>
+            Активные Пользователи
+          </h3>
+          <div style={{ 
+            color: '#7551e9', 
+            fontSize: '42px', 
+            fontWeight: '900',
+            textShadow: '0 0 30px rgba(117, 81, 233, 0.6)',
+            marginBottom: '12px'
+          }}>
+            47
+          </div>
+          <div style={{ color: '#a3aed0', fontSize: '14px', marginBottom: '20px' }}>
+            Работают с системой сейчас
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {['Финансы', 'IT', 'HR', 'Продажи', 'Маркетинг'].map((dept, idx) => (
+              <div key={idx} style={{ 
+                background: 'rgba(117, 81, 233, 0.15)',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                border: '1px solid rgba(117, 81, 233, 0.3)',
+                fontSize: '12px',
+                color: '#7551e9',
+                fontWeight: '600'
+              }}>
+                {dept}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
     <style>{`
       @keyframes pulse {
         0%, 100% {
@@ -792,6 +1350,45 @@ const Dashboard2Charts = () => {
         }
         50% {
           opacity: 0.7;
+        }
+      }
+      @keyframes glow {
+        0%, 100% {
+          box-shadow: 0 0 20px rgba(255, 181, 71, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 40px rgba(255, 181, 71, 0.8);
+        }
+      }
+      @keyframes slide {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+      @keyframes rotate {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes breathe {
+        0%, 100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.1);
+          opacity: 0.8;
+        }
+      }
+      @keyframes progress {
+        from {
+          width: 0;
         }
       }
     `}</style>
