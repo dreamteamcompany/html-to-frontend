@@ -12,6 +12,8 @@ interface ServicesDynamicsChartProps {
 }
 
 const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => {
+  const sortedData = [...servicesData].sort((a, b) => b.amount - a.amount);
+  
   return (
     <Card className="relative" style={{
       background: '#111c44',
@@ -30,10 +32,10 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4" style={{ overflow: 'auto' }}>
-        <div className="relative" style={{ width: '100%', minHeight: `${servicesData.length * 60 + 40}px` }}>
-          <svg viewBox={`0 0 1000 ${servicesData.length * 60 + 40}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
+        <div className="relative" style={{ width: '100%', minHeight: `${sortedData.length * 60 + 40}px` }}>
+          <svg viewBox={`0 0 1000 ${sortedData.length * 60 + 40}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
-              const maxAmount = Math.max(...servicesData.map(s => s.amount));
+              const maxAmount = Math.max(...sortedData.map(s => s.amount));
               const barHeight = 40;
               const spacing = 60;
               const maxWidth = 800;
@@ -45,7 +47,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                 value: (ratio * maxAmount / 1000).toFixed(0)
               }));
               
-              const points = servicesData.map((service, index) => {
+              const points = sortedData.map((service, index) => {
                 const y = 30 + index * spacing;
                 const barWidth = (service.amount / maxAmount) * maxWidth;
                 const x = startX + barWidth;
@@ -63,7 +65,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                       <stop offset="0%" stopColor="#2CD9FF" />
                       <stop offset="100%" stopColor="#0075FF" />
                     </linearGradient>
-                    {servicesData.map((_, index) => {
+                    {sortedData.map((_, index) => {
                       const color = barColors[index % barColors.length];
                       return (
                         <linearGradient key={`gradient-${index}`} id={`visionBar-${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -80,7 +82,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                         x1={line.x}
                         y1="20"
                         x2={line.x}
-                        y2={servicesData.length * spacing + 20}
+                        y2={sortedData.length * spacing + 20}
                         stroke="#56577A"
                         strokeWidth="1"
                         strokeDasharray="5 5"
@@ -97,7 +99,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                     </g>
                   ))}
                   
-                  {servicesData.map((service, index) => {
+                  {sortedData.map((service, index) => {
                     const y = 30 + index * spacing;
                     const barWidth = (service.amount / maxAmount) * maxWidth;
                     
