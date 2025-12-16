@@ -14,6 +14,10 @@ interface ServicesDynamicsChartProps {
 const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => {
   const sortedData = [...servicesData].sort((a, b) => b.amount - a.amount);
   
+  const formatAmount = (amount: number) => {
+    return amount.toLocaleString('ru-RU') + ' ₽';
+  };
+  
   return (
     <Card className="relative" style={{
       background: '#111c44',
@@ -44,7 +48,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
               
               const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
                 x: startX + ratio * maxWidth,
-                value: (ratio * maxAmount / 1000).toFixed(0)
+                value: formatAmount(Math.round(ratio * maxAmount))
               }));
               
               const points = sortedData.map((service, index) => {
@@ -92,9 +96,9 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                         y="15"
                         textAnchor="middle"
                         fill="#c8cfca"
-                        style={{ fontSize: '14px', fontWeight: '500' }}
+                        style={{ fontSize: '12px', fontWeight: '500' }}
                       >
-                        {line.value}k
+                        {line.value}
                       </text>
                     </g>
                   ))}
@@ -129,7 +133,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                           fill="#fff"
                           style={{ fontSize: '16px', fontWeight: '600' }}
                         >
-                          {(service.amount / 1000).toFixed(0)}k
+                          {formatAmount(service.amount)}
                         </text>
                         {service.trend !== 0 && (
                           <g>
