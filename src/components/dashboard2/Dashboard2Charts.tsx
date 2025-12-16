@@ -1699,6 +1699,424 @@ const Dashboard2Charts = () => {
       </Card>
     </div>
 
+    {/* Географическая карта России */}
+    <Card style={{ 
+      background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+      border: '1px solid rgba(117, 81, 233, 0.3)',
+      boxShadow: '0 0 40px rgba(117, 81, 233, 0.2), inset 0 0 30px rgba(117, 81, 233, 0.08)',
+      position: 'relative',
+      overflow: 'hidden',
+      marginBottom: '30px'
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '80%',
+        height: '80%',
+        background: 'radial-gradient(circle, rgba(117, 81, 233, 0.1) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        animation: 'breathe 6s infinite'
+      }} />
+      <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
+              padding: '14px',
+              borderRadius: '14px',
+              boxShadow: '0 0 25px rgba(117, 81, 233, 0.6)',
+              animation: 'glow 3s infinite'
+            }}>
+              <Icon name="Globe" size={28} style={{ color: '#fff' }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>Географическая Карта Расходов</h3>
+              <p style={{ fontSize: '14px', color: '#a3aed0', marginTop: '4px' }}>Интерактивная тепловая карта по регионам России</p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#a3aed0', fontSize: '13px', fontWeight: '600' }}>Легенда:</span>
+              {[
+                { label: '< 50K', color: '#4682b4' },
+                { label: '50K-100K', color: '#87ceeb' },
+                { label: '100K-200K', color: '#ffd700' },
+                { label: '200K-400K', color: '#ff8c42' },
+                { label: '> 400K', color: '#ff0000' }
+              ].map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{
+                    width: '12px',
+                    height: '12px',
+                    background: item.color,
+                    borderRadius: '3px',
+                    border: `1px solid ${item.color}`,
+                    boxShadow: `0 0 8px ${item.color}60`
+                  }} />
+                  <span style={{ color: '#a3aed0', fontSize: '11px' }}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ 
+          background: 'rgba(0, 0, 0, 0.3)',
+          borderRadius: '20px',
+          padding: '40px',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          position: 'relative'
+        }}>
+          <svg viewBox="0 0 1000 600" style={{ width: '100%', height: 'auto', filter: 'drop-shadow(0 0 20px rgba(117, 81, 233, 0.3))' }}>
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+              <linearGradient id="heatGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style={{ stopColor: '#4682b4', stopOpacity: 1 }} />
+                <stop offset="25%" style={{ stopColor: '#87ceeb', stopOpacity: 1 }} />
+                <stop offset="50%" style={{ stopColor: '#ffd700', stopOpacity: 1 }} />
+                <stop offset="75%" style={{ stopColor: '#ff8c42', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#ff0000', stopOpacity: 1 }} />
+              </linearGradient>
+            </defs>
+
+            {/* Москва - Центр */}
+            <g className="region-moscow" style={{ cursor: 'pointer' }}>
+              <circle cx="380" cy="280" r="45" 
+                fill="#ff0000" 
+                fillOpacity="0.4"
+                stroke="#ff0000" 
+                strokeWidth="3"
+                filter="url(#glow)"
+                style={{ transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.setAttribute('r', '55');
+                  e.currentTarget.setAttribute('fill-opacity', '0.7');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.setAttribute('r', '45');
+                  e.currentTarget.setAttribute('fill-opacity', '0.4');
+                }}
+              />
+              <text x="380" y="285" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="700" style={{ pointerEvents: 'none' }}>
+                Москва
+              </text>
+              <text x="380" y="305" textAnchor="middle" fill="#fff" fontSize="12" fontWeight="600" style={{ pointerEvents: 'none' }}>
+                ₽650K
+              </text>
+            </g>
+
+            {/* Санкт-Петербург - Северо-Запад */}
+            <g className="region-spb">
+              <circle cx="330" cy="180" r="38" 
+                fill="#ff5733" 
+                fillOpacity="0.4"
+                stroke="#ff5733" 
+                strokeWidth="3"
+                filter="url(#glow)"
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.setAttribute('r', '48');
+                  e.currentTarget.setAttribute('fill-opacity', '0.7');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.setAttribute('r', '38');
+                  e.currentTarget.setAttribute('fill-opacity', '0.4');
+                }}
+              />
+              <text x="330" y="183" textAnchor="middle" fill="#fff" fontSize="13" fontWeight="700" style={{ pointerEvents: 'none' }}>
+                СПб
+              </text>
+              <text x="330" y="200" textAnchor="middle" fill="#fff" fontSize="11" fontWeight="600" style={{ pointerEvents: 'none' }}>
+                ₽420K
+              </text>
+            </g>
+
+            {/* Казань - Поволжье */}
+            <g className="region-kazan">
+              <circle cx="500" cy="260" r="30" 
+                fill="#ff8c42" 
+                fillOpacity="0.4"
+                stroke="#ff8c42" 
+                strokeWidth="2.5"
+                filter="url(#glow)"
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.setAttribute('r', '38');
+                  e.currentTarget.setAttribute('fill-opacity', '0.7');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.setAttribute('r', '30');
+                  e.currentTarget.setAttribute('fill-opacity', '0.4');
+                }}
+              />
+              <text x="500" y="263" textAnchor="middle" fill="#fff" fontSize="12" fontWeight="700" style={{ pointerEvents: 'none' }}>
+                Казань
+              </text>
+              <text x="500" y="278" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="600" style={{ pointerEvents: 'none' }}>
+                ₽180K
+              </text>
+            </g>
+
+            {/* Екатеринбург - Урал */}
+            <g className="region-ekb">
+              <circle cx="600" cy="240" r="28" 
+                fill="#ffb347" 
+                fillOpacity="0.4"
+                stroke="#ffb347" 
+                strokeWidth="2.5"
+                filter="url(#glow)"
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.setAttribute('r', '36');
+                  e.currentTarget.setAttribute('fill-opacity', '0.7');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.setAttribute('r', '28');
+                  e.currentTarget.setAttribute('fill-opacity', '0.4');
+                }}
+              />
+              <text x="600" y="242" textAnchor="middle" fill="#fff" fontSize="11" fontWeight="700" style={{ pointerEvents: 'none' }}>
+                Екатеринбург
+              </text>
+              <text x="600" y="256" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="600" style={{ pointerEvents: 'none' }}>
+                ₽150K
+              </text>
+            </g>
+
+            {/* Новосибирск - Сибирь */}
+            <g className="region-nsk">
+              <circle cx="720" cy="260" r="26" 
+                fill="#ffd700" 
+                fillOpacity="0.4"
+                stroke="#ffd700" 
+                strokeWidth="2.5"
+                filter="url(#glow)"
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.setAttribute('r', '34');
+                  e.currentTarget.setAttribute('fill-opacity', '0.7');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.setAttribute('r', '26');
+                  e.currentTarget.setAttribute('fill-opacity', '0.4');
+                }}
+              />
+              <text x="720" y="262" textAnchor="middle" fill="#fff" fontSize="11" fontWeight="700" style={{ pointerEvents: 'none' }}>
+                Новосибирск
+              </text>
+              <text x="720" y="276" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="600" style={{ pointerEvents: 'none' }}>
+                ₽120K
+              </text>
+            </g>
+
+            {/* Краснодар - Юг */}
+            <g className="region-krd">
+              <circle cx="420" cy="380" r="24" 
+                fill="#90ee90" 
+                fillOpacity="0.4"
+                stroke="#90ee90" 
+                strokeWidth="2"
+                filter="url(#glow)"
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.setAttribute('r', '32');
+                  e.currentTarget.setAttribute('fill-opacity', '0.7');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.setAttribute('r', '24');
+                  e.currentTarget.setAttribute('fill-opacity', '0.4');
+                }}
+              />
+              <text x="420" y="383" textAnchor="middle" fill="#fff" fontSize="11" fontWeight="700" style={{ pointerEvents: 'none' }}>
+                Краснодар
+              </text>
+              <text x="420" y="396" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="600" style={{ pointerEvents: 'none' }}>
+                ₽95K
+              </text>
+            </g>
+
+            {/* Нижний Новгород */}
+            <g className="region-nnov">
+              <circle cx="450" cy="240" r="22" 
+                fill="#87ceeb" 
+                fillOpacity="0.4"
+                stroke="#87ceeb" 
+                strokeWidth="2"
+                filter="url(#glow)"
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.setAttribute('r', '30');
+                  e.currentTarget.setAttribute('fill-opacity', '0.7');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.setAttribute('r', '22');
+                  e.currentTarget.setAttribute('fill-opacity', '0.4');
+                }}
+              />
+              <text x="450" y="242" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" style={{ pointerEvents: 'none' }}>
+                Н.Новгород
+              </text>
+              <text x="450" y="255" textAnchor="middle" fill="#fff" fontSize="9" fontWeight="600" style={{ pointerEvents: 'none' }}>
+                ₽75K
+              </text>
+            </g>
+
+            {/* Красноярск */}
+            <g className="region-krsk">
+              <circle cx="800" cy="230" r="20" 
+                fill="#6495ed" 
+                fillOpacity="0.4"
+                stroke="#6495ed" 
+                strokeWidth="2"
+                filter="url(#glow)"
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.setAttribute('r', '28');
+                  e.currentTarget.setAttribute('fill-opacity', '0.7');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.setAttribute('r', '20');
+                  e.currentTarget.setAttribute('fill-opacity', '0.4');
+                }}
+              />
+              <text x="800" y="232" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" style={{ pointerEvents: 'none' }}>
+                Красноярск
+              </text>
+              <text x="800" y="245" textAnchor="middle" fill="#fff" fontSize="9" fontWeight="600" style={{ pointerEvents: 'none' }}>
+                ₽58K
+              </text>
+            </g>
+
+            {/* Владивосток - Дальний Восток */}
+            <g className="region-vld">
+              <circle cx="920" cy="330" r="19" 
+                fill="#4682b4" 
+                fillOpacity="0.4"
+                stroke="#4682b4" 
+                strokeWidth="2"
+                filter="url(#glow)"
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.setAttribute('r', '27');
+                  e.currentTarget.setAttribute('fill-opacity', '0.7');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.setAttribute('r', '19');
+                  e.currentTarget.setAttribute('fill-opacity', '0.4');
+                }}
+              />
+              <text x="920" y="332" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" style={{ pointerEvents: 'none' }}>
+                Владивосток
+              </text>
+              <text x="920" y="345" textAnchor="middle" fill="#fff" fontSize="9" fontWeight="600" style={{ pointerEvents: 'none' }}>
+                ₽52K
+              </text>
+            </g>
+
+            {/* Соединительные линии (тепловые потоки) */}
+            <line x1="380" y1="280" x2="330" y2="180" stroke="url(#heatGradient)" strokeWidth="2" opacity="0.3" strokeDasharray="5,5">
+              <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+            </line>
+            <line x1="380" y1="280" x2="500" y2="260" stroke="url(#heatGradient)" strokeWidth="2" opacity="0.3" strokeDasharray="5,5">
+              <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+            </line>
+            <line x1="500" y1="260" x2="600" y2="240" stroke="url(#heatGradient)" strokeWidth="2" opacity="0.3" strokeDasharray="5,5">
+              <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+            </line>
+            <line x1="600" y1="240" x2="720" y2="260" stroke="url(#heatGradient)" strokeWidth="2" opacity="0.3" strokeDasharray="5,5">
+              <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+            </line>
+            <line x1="720" y1="260" x2="800" y2="230" stroke="url(#heatGradient)" strokeWidth="2" opacity="0.3" strokeDasharray="5,5">
+              <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+            </line>
+            <line x1="800" y1="230" x2="920" y2="330" stroke="url(#heatGradient)" strokeWidth="2" opacity="0.3" strokeDasharray="5,5">
+              <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+            </line>
+
+            {/* Фоновая сетка для эффекта */}
+            <rect x="0" y="0" width="1000" height="600" fill="none" stroke="rgba(117, 81, 233, 0.1)" strokeWidth="1" strokeDasharray="20,20" opacity="0.3"/>
+          </svg>
+
+          {/* Tooltip placeholder */}
+          <div style={{
+            position: 'absolute',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0, 0, 0, 0.8)',
+            padding: '12px 20px',
+            borderRadius: '10px',
+            border: '1px solid rgba(117, 81, 233, 0.5)',
+            boxShadow: '0 0 20px rgba(117, 81, 233, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <Icon name="Info" size={16} style={{ color: '#7551e9' }} />
+            <span style={{ color: '#fff', fontSize: '13px', fontWeight: '600' }}>
+              Наведите на регион для подробной информации
+            </span>
+          </div>
+        </div>
+
+        {/* Статистика под картой */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(5, 1fr)', 
+          gap: '16px',
+          marginTop: '30px'
+        }}>
+          {[
+            { icon: 'MapPin', label: 'Всего регионов', value: '9', color: '#7551e9' },
+            { icon: 'TrendingUp', label: 'Средний рост', value: '+11%', color: '#01b574' },
+            { icon: 'Target', label: 'Топ регион', value: 'Москва', color: '#ff0000' },
+            { icon: 'DollarSign', label: 'Общий объем', value: '₽1.8М', color: '#ffb547' },
+            { icon: 'Activity', label: 'Активность', value: 'Высокая', color: '#3965ff' }
+          ].map((stat, idx) => (
+            <div key={idx} style={{ 
+              background: `linear-gradient(135deg, ${stat.color}15 0%, ${stat.color}08 100%)`,
+              padding: '16px',
+              borderRadius: '12px',
+              border: `1px solid ${stat.color}30`,
+              textAlign: 'center',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = `0 10px 30px ${stat.color}40`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <Icon name={stat.icon} size={20} style={{ color: stat.color, marginBottom: '8px' }} />
+              <div style={{ 
+                color: stat.color, 
+                fontSize: '20px', 
+                fontWeight: '800',
+                marginBottom: '4px',
+                textShadow: `0 0 15px ${stat.color}60`
+              }}>
+                {stat.value}
+              </div>
+              <div style={{ color: '#a3aed0', fontSize: '11px', fontWeight: '600' }}>
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+
     {/* Еще дополнительные блоки */}
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '30px' }}>
       {/* Средняя сумма платежа */}
