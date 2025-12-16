@@ -385,6 +385,95 @@ const Dashboard2 = () => {
               </CardContent>
             </Card>
 
+            {/* Сравнение по Контрагентам */}
+            <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <CardContent className="p-6">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Сравнение по Контрагентам</h3>
+                  <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '10px' }}>
+                    <button style={{ background: '#7551e9', border: 'none', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', boxShadow: '0 2px 8px rgba(117, 81, 233, 0.3)' }}>Топ-10</button>
+                    <button style={{ background: 'transparent', border: 'none', color: '#a3aed0', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>Все</button>
+                  </div>
+                </div>
+                <div style={{ height: '350px', position: 'relative' }}>
+                  <Bar
+                    data={{
+                      labels: ['AWS', 'DigitalOcean', 'Google Cloud', 'Slack Pro', 'Zoom Business', 'Telegram API', 'Figma Org', 'Хостинг', 'GitHub Team', 'SSL'],
+                      datasets: [{
+                        label: 'Расходы',
+                        data: [45000, 24000, 29500, 12000, 18300, 15000, 14400, 8500, 4800, 4500],
+                        backgroundColor: [
+                          'rgb(117, 81, 233)',
+                          'rgb(57, 101, 255)',
+                          'rgb(44, 217, 255)',
+                          'rgb(255, 181, 71)',
+                          'rgb(1, 181, 116)',
+                          'rgb(255, 107, 107)',
+                          'rgb(123, 97, 255)',
+                          'rgb(255, 140, 0)',
+                          'rgb(0, 181, 180)',
+                          'rgb(255, 99, 132)'
+                        ],
+                        borderRadius: 8,
+                        barThickness: 25
+                      }]
+                    }}
+                    options={{
+                      indexAxis: 'y' as const,
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      interaction: {
+                        mode: 'index' as const,
+                        intersect: false
+                      },
+                      elements: {
+                        bar: {
+                          hoverBackgroundColor: undefined
+                        }
+                      },
+                      plugins: {
+                        legend: {
+                          display: false
+                        },
+                        tooltip: {
+                          callbacks: {
+                            label: function(context) {
+                              return `Расходы: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`;
+                            }
+                          }
+                        }
+                      },
+                      scales: {
+                        x: {
+                          beginAtZero: true,
+                          ticks: {
+                            color: '#a3aed0',
+                            callback: function(value) {
+                              return new Intl.NumberFormat('ru-RU').format(value as number) + ' ₽';
+                            }
+                          },
+                          grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                          }
+                        },
+                        y: {
+                          ticks: {
+                            color: '#a3aed0',
+                            font: {
+                              size: 12
+                            }
+                          },
+                          grid: {
+                            display: false
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Распределение Затрат */}
             <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
               <CardContent className="p-6">
