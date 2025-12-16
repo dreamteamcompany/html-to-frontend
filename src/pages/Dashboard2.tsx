@@ -240,6 +240,15 @@ const Dashboard2 = () => {
                     options={{
                       responsive: true,
                       maintainAspectRatio: false,
+                      interaction: {
+                        mode: 'index' as const,
+                        intersect: false
+                      },
+                      elements: {
+                        bar: {
+                          hoverBackgroundColor: undefined
+                        }
+                      },
                       plugins: {
                         legend: {
                           position: 'bottom',
@@ -320,6 +329,16 @@ const Dashboard2 = () => {
                       responsive: true,
                       maintainAspectRatio: false,
                       cutout: '70%',
+                      interaction: {
+                        mode: 'point' as const
+                      },
+                      elements: {
+                        arc: {
+                          hoverBackgroundColor: undefined,
+                          hoverBorderColor: undefined,
+                          hoverBorderWidth: 2
+                        }
+                      },
                       plugins: {
                         legend: {
                           position: 'bottom',
