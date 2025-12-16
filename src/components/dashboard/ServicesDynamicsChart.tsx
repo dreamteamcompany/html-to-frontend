@@ -58,8 +58,24 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
               
               return (
                 <>
+                  <defs>
+                    <linearGradient id="visionLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#2CD9FF" />
+                      <stop offset="100%" stopColor="#0075FF" />
+                    </linearGradient>
+                    {servicesData.map((_, index) => {
+                      const color = barColors[index % barColors.length];
+                      return (
+                        <linearGradient key={`gradient-${index}`} id={`visionBar-${index}`} x1="0%" y1="100%" x2="0%" y2="0%">
+                          <stop offset="0%" stopColor={color} stopOpacity="0.0" />
+                          <stop offset="100%" stopColor={color} stopOpacity="1" />
+                        </linearGradient>
+                      );
+                    })}
+                  </defs>
+                  
                   {gridLines.map((line, idx) => (
-                    <g key={idx}>
+                    <g key={`grid-${idx}`}>
                       <line
                         x1="70"
                         y1={line.y}
@@ -84,16 +100,9 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                   {servicesData.map((service, index) => {
                     const x = 80 + index * spacing;
                     const barHeight = (service.amount / maxAmount) * maxHeight;
-                    const color = barColors[index % barColors.length];
                     
                     return (
-                      <g key={service.name}>
-                        <defs>
-                          <linearGradient id={`visionBar-${index}`} x1="0%" y1="100%" x2="0%" y2="0%">
-                            <stop offset="0%" stopColor={color} stopOpacity="0.0" />
-                            <stop offset="100%" stopColor={color} stopOpacity="1" />
-                          </linearGradient>
-                        </defs>
+                      <g key={`bar-${service.name}-${index}`}>
                         <rect
                           x={x}
                           y={startY - barHeight}
@@ -145,12 +154,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                       </g>
                     );
                   })}
-                  <defs>
-                    <linearGradient id="visionLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#2CD9FF" />
-                      <stop offset="100%" stopColor="#0075FF" />
-                    </linearGradient>
-                  </defs>
+                  
                   <path
                     d={linePath}
                     stroke="url(#visionLineGradient)"
@@ -159,8 +163,9 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
+                  
                   {points.map((point, index) => (
-                    <g key={index}>
+                    <g key={`point-${index}`}>
                       <circle
                         cx={point.x}
                         cy={point.y}
