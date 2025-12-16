@@ -3,6 +3,7 @@ import Dashboard2KPIRow from './Dashboard2KPIRow';
 import Dashboard2PaymentCalendar from './Dashboard2PaymentCalendar';
 import Dashboard2UpcomingPayments from './Dashboard2UpcomingPayments';
 import Dashboard2ExpenseGrowth from './Dashboard2ExpenseGrowth';
+import Dashboard2TeamPerformance from './Dashboard2TeamPerformance';
 
 const Dashboard2NeonCards = () => {
   return (
@@ -12,6 +13,7 @@ const Dashboard2NeonCards = () => {
       <Dashboard2PaymentCalendar />
       <Dashboard2UpcomingPayments />
       <Dashboard2ExpenseGrowth />
+      <Dashboard2TeamPerformance />
     </>
   );
 };
