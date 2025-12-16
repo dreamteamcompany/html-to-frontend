@@ -25,7 +25,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
       border: 'none',
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
       width: '100%',
-      maxWidth: '900px',
+      maxWidth: '750px',
       minHeight: '300px',
       overflow: 'hidden',
     }}>
@@ -37,13 +37,13 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
       </CardHeader>
       <CardContent className="p-3 pt-0" style={{ overflow: 'auto' }}>
         <div className="relative" style={{ width: '100%', minHeight: `${sortedData.length * 45 + 30}px` }}>
-          <svg viewBox={`0 0 900 ${sortedData.length * 45 + 30}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
+          <svg viewBox={`0 0 750 ${sortedData.length * 45 + 30}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxAmount = Math.max(...sortedData.map(s => s.amount));
               const barHeight = 32;
               const spacing = 45;
-              const maxWidth = 650;
-              const startX = 200;
+              const maxWidth = 500;
+              const startX = 180;
               const barColors = ['#0075FF', '#2CD9FF', '#01B574', '#7B61FF', '#FF6B6B'];
               
               const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
