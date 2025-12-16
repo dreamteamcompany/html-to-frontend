@@ -218,22 +218,22 @@ const Dashboard2 = () => {
                       datasets: [{
                         label: 'Серверы',
                         data: [45000, 47000, 52000, 48000, 51000, 54000],
-                        backgroundColor: 'rgba(117, 81, 233, 0.8)',
+                        backgroundColor: 'rgb(117, 81, 233)',
                         borderRadius: 8
                       }, {
                         label: 'Коммуникации',
                         data: [22000, 24000, 26000, 23000, 25000, 27000],
-                        backgroundColor: 'rgba(57, 101, 255, 0.8)',
+                        backgroundColor: 'rgb(57, 101, 255)',
                         borderRadius: 8
                       }, {
                         label: 'Веб-сайты',
                         data: [8000, 8500, 9000, 8200, 8800, 9500],
-                        backgroundColor: 'rgba(255, 181, 71, 0.8)',
+                        backgroundColor: 'rgb(255, 181, 71)',
                         borderRadius: 8
                       }, {
                         label: 'Безопасность',
                         data: [3000, 3500, 4000, 3200, 3800, 4200],
-                        backgroundColor: 'rgba(1, 181, 116, 0.8)',
+                        backgroundColor: 'rgb(1, 181, 116)',
                         borderRadius: 8
                       }]
                     }}
@@ -311,10 +311,10 @@ const Dashboard2 = () => {
                       datasets: [{
                         data: [98500, 45300, 25000, 15400],
                         backgroundColor: [
-                          'rgba(117, 81, 233, 0.8)',
-                          'rgba(57, 101, 255, 0.8)',
-                          'rgba(255, 181, 71, 0.8)',
-                          'rgba(1, 181, 116, 0.8)'
+                          'rgb(117, 81, 233)',
+                          'rgb(57, 101, 255)',
+                          'rgb(255, 181, 71)',
+                          'rgb(1, 181, 116)'
                         ],
                         borderColor: [
                           'rgb(117, 81, 233)',
