@@ -1,7 +1,48 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import { useState } from 'react';
 
 const Dashboard2ExpenseGrowth = () => {
+  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+
+  const data = [
+    { month: 'Янв', value: 340000, color: '#7551e9', trend: '+5%' },
+    { month: 'Фев', value: 355000, color: '#7551e9', trend: '+4%' },
+    { month: 'Мар', value: 380000, color: '#3965ff', trend: '+7%' },
+    { month: 'Апр', value: 370000, color: '#3965ff', trend: '-3%' },
+    { month: 'Май', value: 395000, color: '#3965ff', trend: '+7%' },
+    { month: 'Июн', value: 410000, color: '#ffb547', trend: '+4%' },
+    { month: 'Июл', value: 425000, color: '#ffb547', trend: '+4%' },
+    { month: 'Авг', value: 405000, color: '#01b574', trend: '-5%' },
+    { month: 'Сен', value: 390000, color: '#01b574', trend: '-4%' },
+    { month: 'Окт', value: 360000, color: '#01b574', trend: '-8%' },
+    { month: 'Ноя', value: 345000, color: '#01b574', trend: '-4%' },
+    { month: 'Дек', value: 330000, color: '#01b574', trend: '-4%' }
+  ];
+
+  const maxValue = Math.max(...data.map(d => d.value));
+  const minValue = Math.min(...data.map(d => d.value));
+  const chartHeight = 260;
+  const chartWidth = 100;
+
+  const getY = (value: number) => {
+    const normalizedValue = (value - minValue) / (maxValue - minValue);
+    return chartHeight - (normalizedValue * (chartHeight - 40)) - 20;
+  };
+
+  const points = data.map((item, idx) => ({
+    x: (idx / (data.length - 1)) * chartWidth,
+    y: getY(item.value),
+    ...item
+  }));
+
+  const pathData = points.map((p, idx) => 
+    `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
+  ).join(' ');
+
+  const gradientId = 'lineGradient';
+  const areaPath = `${pathData} L ${chartWidth} ${chartHeight} L 0 ${chartHeight} Z`;
+
   return (
     <Card style={{ 
       background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
@@ -63,133 +104,215 @@ const Dashboard2ExpenseGrowth = () => {
           </div>
         </div>
 
-        {/* Chart visualization */}
+        {/* Line Chart */}
         <div style={{ 
           background: 'rgba(255, 255, 255, 0.02)',
           borderRadius: '16px',
-          padding: '24px',
+          padding: '32px 24px 24px 24px',
           border: '1px solid rgba(255, 255, 255, 0.05)',
-          marginBottom: '24px'
+          marginBottom: '24px',
+          position: 'relative'
         }}>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', height: '260px' }}>
-            {[
-              { month: 'Янв', value: 340000, percent: 68, color: '#7551e9', trend: '+5%' },
-              { month: 'Фев', value: 355000, percent: 71, color: '#7551e9', trend: '+4%' },
-              { month: 'Мар', value: 380000, percent: 76, color: '#3965ff', trend: '+7%' },
-              { month: 'Апр', value: 370000, percent: 74, color: '#3965ff', trend: '-3%' },
-              { month: 'Май', value: 395000, percent: 79, color: '#3965ff', trend: '+7%' },
-              { month: 'Июн', value: 410000, percent: 82, color: '#ffb547', trend: '+4%' },
-              { month: 'Июл', value: 425000, percent: 85, color: '#ffb547', trend: '+4%' },
-              { month: 'Авг', value: 405000, percent: 81, color: '#01b574', trend: '-5%' },
-              { month: 'Сен', value: 390000, percent: 78, color: '#01b574', trend: '-4%' },
-              { month: 'Окт', value: 360000, percent: 72, color: '#01b574', trend: '-8%' },
-              { month: 'Ноя', value: 345000, percent: 69, color: '#01b574', trend: '-4%' },
-              { month: 'Дек', value: 330000, percent: 66, color: '#01b574', trend: '-4%' }
-            ].map((item, idx) => {
-              const isPositiveTrend = item.trend.startsWith('+');
-              const isHighlight = idx === 11;
-              
+          <svg 
+            viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
+            style={{ width: '100%', height: '280px' }}
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#3965ff" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#7551e9" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#01b574" stopOpacity="0.05" />
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Grid lines */}
+            {[0, 25, 50, 75, 100].map((percent) => {
+              const y = (chartHeight * percent) / 100;
               return (
-                <div 
-                  key={idx} 
-                  style={{ 
-                    flex: 1, 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '12px',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    const bar = e.currentTarget.querySelector('[data-bar]') as HTMLElement;
-                    if (bar) {
-                      bar.style.transform = 'scaleY(1.1)';
-                      bar.style.boxShadow = `0 0 30px ${item.color}, 0 -10px 40px ${item.color}80`;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    const bar = e.currentTarget.querySelector('[data-bar]') as HTMLElement;
-                    if (bar) {
-                      bar.style.transform = 'scaleY(1)';
-                      bar.style.boxShadow = `0 0 20px ${item.color}80`;
-                    }
-                  }}
-                >
-                  {/* Trend badge */}
-                  <div style={{
-                    background: isPositiveTrend 
-                      ? 'rgba(255, 107, 107, 0.15)' 
-                      : 'rgba(1, 181, 116, 0.15)',
-                    border: isPositiveTrend 
-                      ? '1px solid rgba(255, 107, 107, 0.3)' 
-                      : '1px solid rgba(1, 181, 116, 0.3)',
-                    borderRadius: '6px',
-                    padding: '3px 6px',
-                    fontSize: '10px',
-                    fontWeight: '700',
-                    color: isPositiveTrend ? '#ff6b6b' : '#01b574',
-                    minWidth: '35px',
-                    textAlign: 'center'
-                  }}>
-                    {item.trend}
-                  </div>
-
-                  {/* Value on hover */}
-                  <div style={{
-                    opacity: 0,
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    color: item.color,
-                    transition: 'opacity 0.3s ease',
-                    minHeight: '16px'
-                  }}
-                  className="bar-value">
-                    ₽{Math.round(item.value / 1000)}K
-                  </div>
-
-                  {/* Bar */}
-                  <div
-                    data-bar
-                    style={{
-                      width: '100%',
-                      height: `${item.percent}%`,
-                      background: `linear-gradient(180deg, ${item.color} 0%, ${item.color}cc 100%)`,
-                      borderRadius: '8px 8px 4px 4px',
-                      boxShadow: `0 0 20px ${item.color}80`,
-                      position: 'relative',
-                      transition: 'all 0.3s ease',
-                      border: isHighlight ? `2px solid ${item.color}` : 'none',
-                      animation: isHighlight ? 'pulse 2s infinite' : 'none'
-                    }}
-                  >
-                    {/* Glow effect on top */}
-                    <div style={{
-                      position: 'absolute',
-                      top: '-6px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '80%',
-                      height: '6px',
-                      background: `radial-gradient(circle, ${item.color} 0%, transparent 70%)`,
-                      borderRadius: '50%',
-                      opacity: 0.8
-                    }} />
-                  </div>
-
-                  {/* Month label */}
-                  <div style={{
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    color: isHighlight ? item.color : '#a3aed0',
-                    textAlign: 'center'
-                  }}>
-                    {item.month}
-                  </div>
-                </div>
+                <line
+                  key={percent}
+                  x1="0"
+                  y1={y}
+                  x2={chartWidth}
+                  y2={y}
+                  stroke="rgba(255, 255, 255, 0.05)"
+                  strokeWidth="0.5"
+                />
               );
             })}
+
+            {/* Area under line */}
+            <path
+              d={areaPath}
+              fill={`url(#${gradientId})`}
+              opacity="0.6"
+            />
+
+            {/* Main line */}
+            <path
+              d={pathData}
+              fill="none"
+              stroke="url(#lineGradient)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#glow)"
+              style={{
+                transition: 'all 0.3s ease'
+              }}
+            />
+
+            {/* Highlight line on hover */}
+            <path
+              d={pathData}
+              fill="none"
+              stroke="#3965ff"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={hoveredPoint !== null ? "0.3" : "0"}
+              style={{
+                transition: 'opacity 0.3s ease'
+              }}
+            />
+
+            {/* Data points */}
+            {points.map((point, idx) => {
+              const isHovered = hoveredPoint === idx;
+              const isLast = idx === points.length - 1;
+              
+              return (
+                <g key={idx}>
+                  {/* Outer glow circle */}
+                  {isHovered && (
+                    <circle
+                      cx={point.x}
+                      cy={point.y}
+                      r="3"
+                      fill={point.color}
+                      opacity="0.3"
+                      style={{
+                        animation: 'pulse 1.5s infinite'
+                      }}
+                    />
+                  )}
+                  
+                  {/* Main point */}
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r={isHovered ? "1.5" : isLast ? "1.2" : "0.8"}
+                    fill={point.color}
+                    stroke="#fff"
+                    strokeWidth={isHovered ? "0.5" : isLast ? "0.4" : "0.3"}
+                    filter="url(#glow)"
+                    style={{
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: isLast ? `0 0 20px ${point.color}` : 'none'
+                    }}
+                    onMouseEnter={() => setHoveredPoint(idx)}
+                    onMouseLeave={() => setHoveredPoint(null)}
+                  />
+                  
+                  {/* Larger invisible hitbox for better hover */}
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r="3"
+                    fill="transparent"
+                    style={{ cursor: 'pointer' }}
+                    onMouseEnter={() => setHoveredPoint(idx)}
+                    onMouseLeave={() => setHoveredPoint(null)}
+                  />
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* Month labels */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            marginTop: '16px',
+            paddingLeft: '8px',
+            paddingRight: '8px'
+          }}>
+            {data.map((item, idx) => (
+              <div 
+                key={idx}
+                style={{ 
+                  fontSize: '12px', 
+                  fontWeight: '600',
+                  color: hoveredPoint === idx ? item.color : idx === data.length - 1 ? item.color : '#a3aed0',
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  textShadow: hoveredPoint === idx ? `0 0 10px ${item.color}` : 'none'
+                }}
+                onMouseEnter={() => setHoveredPoint(idx)}
+                onMouseLeave={() => setHoveredPoint(null)}
+              >
+                {item.month}
+              </div>
+            ))}
           </div>
+
+          {/* Hover tooltip */}
+          {hoveredPoint !== null && (
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'linear-gradient(135deg, rgba(26, 31, 55, 0.98) 0%, rgba(17, 28, 68, 0.98) 100%)',
+              border: `2px solid ${data[hoveredPoint].color}`,
+              borderRadius: '12px',
+              padding: '16px 20px',
+              boxShadow: `0 0 40px ${data[hoveredPoint].color}60`,
+              pointerEvents: 'none',
+              zIndex: 10
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ color: '#a3aed0', fontSize: '12px', marginBottom: '6px' }}>
+                  {data[hoveredPoint].month} 2024
+                </div>
+                <div style={{ 
+                  color: data[hoveredPoint].color, 
+                  fontSize: '24px', 
+                  fontWeight: '900',
+                  textShadow: `0 0 20px ${data[hoveredPoint].color}`,
+                  marginBottom: '4px'
+                }}>
+                  ₽{Math.round(data[hoveredPoint].value / 1000)}K
+                </div>
+                <div style={{
+                  display: 'inline-block',
+                  background: data[hoveredPoint].trend.startsWith('+') 
+                    ? 'rgba(255, 107, 107, 0.2)' 
+                    : 'rgba(1, 181, 116, 0.2)',
+                  border: data[hoveredPoint].trend.startsWith('+')
+                    ? '1px solid rgba(255, 107, 107, 0.4)' 
+                    : '1px solid rgba(1, 181, 116, 0.4)',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  color: data[hoveredPoint].trend.startsWith('+') ? '#ff6b6b' : '#01b574'
+                }}>
+                  {data[hoveredPoint].trend}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Statistics grid */}
@@ -330,12 +453,6 @@ const Dashboard2ExpenseGrowth = () => {
           </div>
         </div>
       </CardContent>
-
-      <style>{`
-        [data-bar]:hover ~ .bar-value {
-          opacity: 1 !important;
-        }
-      `}</style>
     </Card>
   );
 };
