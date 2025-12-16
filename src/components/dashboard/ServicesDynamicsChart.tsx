@@ -24,26 +24,26 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
       backdropFilter: 'blur(60px)',
       border: 'none',
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
-      width: '1000px',
-      maxWidth: '100%',
-      minHeight: '380px',
+      width: '100%',
+      maxWidth: '900px',
+      minHeight: '300px',
       overflow: 'hidden',
     }}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2" style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
-          <Icon name="Activity" style={{ color: '#2CD9FF' }} />
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2" style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold' }}>
+          <Icon name="Activity" size={18} style={{ color: '#2CD9FF' }} />
           Динамика расходов по сервисам
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4" style={{ overflow: 'auto' }}>
-        <div className="relative" style={{ width: '100%', minHeight: `${sortedData.length * 60 + 40}px` }}>
-          <svg viewBox={`0 0 1000 ${sortedData.length * 60 + 40}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
+      <CardContent className="p-3 pt-0" style={{ overflow: 'auto' }}>
+        <div className="relative" style={{ width: '100%', minHeight: `${sortedData.length * 45 + 30}px` }}>
+          <svg viewBox={`0 0 900 ${sortedData.length * 45 + 30}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxAmount = Math.max(...sortedData.map(s => s.amount));
-              const barHeight = 40;
-              const spacing = 60;
-              const maxWidth = 800;
-              const startX = 250;
+              const barHeight = 32;
+              const spacing = 45;
+              const maxWidth = 650;
+              const startX = 200;
               const barColors = ['#0075FF', '#2CD9FF', '#01B574', '#7B61FF', '#FF6B6B'];
               
               const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => ({
@@ -52,7 +52,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
               }));
               
               const points = sortedData.map((service, index) => {
-                const y = 30 + index * spacing;
+                const y = 25 + index * spacing;
                 const barWidth = (service.amount / maxAmount) * maxWidth;
                 const x = startX + barWidth;
                 return { x, y: y + barHeight / 2 };
@@ -84,19 +84,19 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                     <g key={`grid-${idx}`}>
                       <line
                         x1={line.x}
-                        y1="20"
+                        y1="15"
                         x2={line.x}
-                        y2={sortedData.length * spacing + 20}
+                        y2={sortedData.length * spacing + 15}
                         stroke="#56577A"
                         strokeWidth="1"
                         strokeDasharray="5 5"
                       />
                       <text
                         x={line.x}
-                        y="15"
+                        y="12"
                         textAnchor="middle"
                         fill="#c8cfca"
-                        style={{ fontSize: '12px', fontWeight: '500' }}
+                        style={{ fontSize: '11px', fontWeight: '500' }}
                       >
                         {line.value}
                       </text>
@@ -104,7 +104,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                   ))}
                   
                   {sortedData.map((service, index) => {
-                    const y = 30 + index * spacing;
+                    const y = 25 + index * spacing;
                     const barWidth = (service.amount / maxAmount) * maxWidth;
                     
                     return (
@@ -118,40 +118,40 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                           rx="8"
                         />
                         <text
-                          x="20"
-                          y={y + barHeight / 2 + 5}
+                          x="15"
+                          y={y + barHeight / 2 + 4}
                           textAnchor="start"
                           fill="#c8cfca"
-                          style={{ fontSize: '16px' }}
+                          style={{ fontSize: '14px' }}
                         >
                           {service.name}
                         </text>
                         <text
-                          x={startX + barWidth + 12}
-                          y={y + barHeight / 2 + 5}
+                          x={startX + barWidth + 10}
+                          y={y + barHeight / 2 + 4}
                           textAnchor="start"
                           fill="#fff"
-                          style={{ fontSize: '16px', fontWeight: '600' }}
+                          style={{ fontSize: '14px', fontWeight: '600' }}
                         >
                           {formatAmount(service.amount)}
                         </text>
                         {service.trend !== 0 && (
                           <g>
                             <rect
-                              x={startX + barWidth + 60}
-                              y={y + barHeight / 2 - 11}
-                              width="50"
-                              height="22"
-                              rx="4"
+                              x={startX + barWidth + 95}
+                              y={y + barHeight / 2 - 9}
+                              width="45"
+                              height="18"
+                              rx="3"
                               fill={service.trend > 0 ? '#01B574' : '#E31A1A'}
                               opacity="0.9"
                             />
                             <text
-                              x={startX + barWidth + 85}
-                              y={y + barHeight / 2 + 5}
+                              x={startX + barWidth + 117}
+                              y={y + barHeight / 2 + 4}
                               textAnchor="middle"
                               fill="#fff"
-                              style={{ fontSize: '14px', fontWeight: 'bold' }}
+                              style={{ fontSize: '12px', fontWeight: 'bold' }}
                             >
                               {service.trend > 0 ? '+' : ''}{service.trend}%
                             </text>
@@ -164,7 +164,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                   <path
                     d={linePath}
                     stroke="url(#visionLineGradient)"
-                    strokeWidth="3"
+                    strokeWidth="2.5"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -175,14 +175,14 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
                       <circle
                         cx={point.x}
                         cy={point.y}
-                        r="8"
+                        r="6"
                         fill="#2CD9FF"
                         opacity="0.3"
                       />
                       <circle
                         cx={point.x}
                         cy={point.y}
-                        r="5"
+                        r="4"
                         fill="#fff"
                       />
                     </g>
