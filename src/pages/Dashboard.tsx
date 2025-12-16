@@ -14,6 +14,9 @@ import ServicesDynamicsChart from '@/components/dashboard/ServicesDynamicsChart'
 import ExpensesGrowthChart from '@/components/dashboard/ExpensesGrowthChart';
 import ContractorsAndDepartments from '@/components/dashboard/ContractorsAndDepartments';
 import RussiaCitiesMap from '@/components/dashboard/RussiaCitiesMap';
+import TeamPerformanceChart from '@/components/dashboard/TeamPerformanceChart';
+import CashFlowChart from '@/components/dashboard/CashFlowChart';
+import ProjectsStatusChart from '@/components/dashboard/ProjectsStatusChart';
 
 const Dashboard = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -105,6 +108,35 @@ const Dashboard = () => {
     { name: 'Пермь', amount: 320000, x: 350, y: 150 },
     { name: 'Краснодар', amount: 180000, x: 250, y: 220 },
     { name: 'Омск', amount: 450000, x: 550, y: 140 },
+  ];
+
+  const teamData = [
+    { name: 'Иван', tasks: 45, efficiency: 92 },
+    { name: 'Мария', tasks: 38, efficiency: 88 },
+    { name: 'Петр', tasks: 52, efficiency: 95 },
+    { name: 'Анна', tasks: 41, efficiency: 85 },
+    { name: 'Сергей', tasks: 36, efficiency: 78 },
+  ];
+
+  const cashFlowData = [
+    { month: 'Янв', income: 2200000, expense: 1200000 },
+    { month: 'Фев', income: 2400000, expense: 1350000 },
+    { month: 'Мар', income: 2100000, expense: 1280000 },
+    { month: 'Апр', income: 2600000, expense: 1420000 },
+    { month: 'Май', income: 2500000, expense: 1380000 },
+    { month: 'Июн', income: 2800000, expense: 1450000 },
+  ];
+
+  const projectsData = [
+    { name: 'Проект А', status: 'completed' as const, progress: 100 },
+    { name: 'Проект Б', status: 'completed' as const, progress: 100 },
+    { name: 'Проект В', status: 'completed' as const, progress: 100 },
+    { name: 'Проект Г', status: 'in_progress' as const, progress: 65 },
+    { name: 'Проект Д', status: 'in_progress' as const, progress: 45 },
+    { name: 'Проект Е', status: 'in_progress' as const, progress: 30 },
+    { name: 'Проект Ж', status: 'in_progress' as const, progress: 80 },
+    { name: 'Проект З', status: 'pending' as const, progress: 0 },
+    { name: 'Проект И', status: 'pending' as const, progress: 0 },
   ];
 
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
@@ -216,11 +248,19 @@ const Dashboard = () => {
             />
           </div>
 
-          <ContractorsAndDepartments 
-            contractorsData={contractorsData}
-            departmentsData={departmentsData}
-            indexData={indexData}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <CashFlowChart monthlyData={cashFlowData} />
+            <TeamPerformanceChart teamData={teamData} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <ProjectsStatusChart projects={projectsData} />
+            <ContractorsAndDepartments 
+              contractorsData={contractorsData}
+              departmentsData={departmentsData}
+              indexData={indexData}
+            />
+          </div>
         </div>
       </main>
     </div>
