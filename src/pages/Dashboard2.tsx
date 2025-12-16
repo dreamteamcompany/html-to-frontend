@@ -16,6 +16,8 @@ import {
   LineElement,
   PointElement,
   Filler,
+  RadarController,
+  RadialLinearScale,
 } from 'chart.js';
 
 ChartJS.register(
@@ -28,7 +30,9 @@ ChartJS.register(
   ArcElement,
   LineElement,
   PointElement,
-  Filler
+  Filler,
+  RadarController,
+  RadialLinearScale
 );
 
 const Dashboard2 = () => {
