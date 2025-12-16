@@ -236,12 +236,12 @@ const Dashboard = () => {
           </Tabs>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <ServicesDynamicsChart servicesData={servicesData} />
-            <RussiaCitiesMap citiesData={citiesData} />
+            <CashFlowChart monthlyData={cashFlowData} />
+            <ExpensesGrowthChart monthlyData={monthlyData} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <ExpensesGrowthChart monthlyData={monthlyData} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <ServicesDynamicsChart servicesData={servicesData} />
             <ExpensesByCategoryChart 
               categoriesData={categoriesData} 
               totalAmount={totalExpenses.month}
@@ -249,7 +249,7 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <CashFlowChart monthlyData={cashFlowData} />
+            <RussiaCitiesMap citiesData={citiesData} />
             <TeamPerformanceChart teamData={teamData} />
           </div>
 
