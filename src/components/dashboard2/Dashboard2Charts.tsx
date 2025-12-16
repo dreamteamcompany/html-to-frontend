@@ -2117,6 +2117,382 @@ const Dashboard2Charts = () => {
       </CardContent>
     </Card>
 
+    {/* Гексагональная карта мира */}
+    <Card style={{ 
+      background: 'linear-gradient(135deg, #0a0e1a 0%, #0d1117 100%)', 
+      border: '1px solid rgba(117, 81, 233, 0.3)',
+      boxShadow: '0 0 40px rgba(117, 81, 233, 0.2)',
+      position: 'relative',
+      overflow: 'hidden',
+      marginBottom: '30px'
+    }}>
+      <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
+              padding: '14px',
+              borderRadius: '14px',
+              boxShadow: '0 0 25px rgba(117, 81, 233, 0.6)'
+            }}>
+              <Icon name="Globe2" size={28} style={{ color: '#fff' }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>Глобальная География Расходов</h3>
+              <p style={{ fontSize: '14px', color: '#a3aed0', marginTop: '4px' }}>Распределение пользователей по миру</p>
+            </div>
+          </div>
+          <div style={{ 
+            background: 'rgba(255, 255, 255, 0.05)',
+            padding: '12px 24px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
+          }}>
+            <span style={{ color: '#a3aed0', fontSize: '13px', marginRight: '8px' }}>Всего пользователей:</span>
+            <span style={{ color: '#7551e9', fontSize: '18px', fontWeight: '700' }}>22,650</span>
+          </div>
+        </div>
+
+        <div style={{ 
+          background: '#0a0e1a',
+          borderRadius: '20px',
+          padding: '40px 20px',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          position: 'relative',
+          minHeight: '500px'
+        }}>
+          <svg viewBox="0 0 1200 500" style={{ width: '100%', height: 'auto' }}>
+            <defs>
+              <pattern id="hexPattern" patternUnits="userSpaceOnUse" width="12" height="10.4">
+                <polygon points="6,0 11.2,3 11.2,7.4 6,10.4 0.8,7.4 0.8,3" 
+                  fill="none" 
+                  stroke="rgba(100, 120, 200, 0.15)" 
+                  strokeWidth="0.5"/>
+              </pattern>
+              <filter id="dotGlow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Гексагональная сетка континентов */}
+            {/* Северная Америка */}
+            <path d="M 80,120 L 150,80 L 250,90 L 280,140 L 260,200 L 200,230 L 150,220 L 100,180 Z" 
+              fill="url(#hexPattern)" 
+              stroke="rgba(100, 120, 200, 0.3)" 
+              strokeWidth="1"
+              opacity="0.6"/>
+            
+            {/* Южная Америка */}
+            <path d="M 180,240 L 240,230 L 270,280 L 260,360 L 220,400 L 180,380 L 170,320 Z" 
+              fill="url(#hexPattern)" 
+              stroke="rgba(100, 120, 200, 0.3)" 
+              strokeWidth="1"
+              opacity="0.6"/>
+            
+            {/* Европа */}
+            <path d="M 480,100 L 560,90 L 620,120 L 630,170 L 600,210 L 520,220 L 470,180 Z" 
+              fill="url(#hexPattern)" 
+              stroke="rgba(100, 120, 200, 0.3)" 
+              strokeWidth="1"
+              opacity="0.6"/>
+            
+            {/* Африка */}
+            <path d="M 500,230 L 580,220 L 650,250 L 670,320 L 650,390 L 580,420 L 520,400 L 490,330 Z" 
+              fill="url(#hexPattern)" 
+              stroke="rgba(100, 120, 200, 0.3)" 
+              strokeWidth="1"
+              opacity="0.6"/>
+            
+            {/* Азия */}
+            <path d="M 650,80 L 850,70 L 980,100 L 1020,180 L 980,250 L 880,270 L 720,250 L 660,180 Z" 
+              fill="url(#hexPattern)" 
+              stroke="rgba(100, 120, 200, 0.3)" 
+              strokeWidth="1"
+              opacity="0.6"/>
+            
+            {/* Австралия */}
+            <path d="M 900,340 L 1000,330 L 1050,380 L 1040,430 L 980,460 L 910,450 L 880,400 Z" 
+              fill="url(#hexPattern)" 
+              stroke="rgba(100, 120, 200, 0.3)" 
+              strokeWidth="1"
+              opacity="0.6"/>
+
+            {/* Точки пользователей - Европа (синие) */}
+            {Array.from({ length: 40 }).map((_, i) => {
+              const angle = (i / 40) * Math.PI * 2;
+              const radius = 30 + Math.random() * 60;
+              const cx = 550 + Math.cos(angle) * radius;
+              const cy = 150 + Math.sin(angle) * radius;
+              return (
+                <circle key={`eu-${i}`} cx={cx} cy={cy} r="2.5" 
+                  fill="#3b82f6" 
+                  opacity={0.7 + Math.random() * 0.3}
+                  filter="url(#dotGlow)">
+                  <animate attributeName="opacity" 
+                    values="0.7;1;0.7" 
+                    dur={`${2 + Math.random() * 2}s`} 
+                    repeatCount="indefinite"/>
+                </circle>
+              );
+            })}
+
+            {/* Точки пользователей - Северная Америка (оранжевые) */}
+            {Array.from({ length: 35 }).map((_, i) => {
+              const angle = (i / 35) * Math.PI * 2;
+              const radius = 30 + Math.random() * 50;
+              const cx = 180 + Math.cos(angle) * radius;
+              const cy = 150 + Math.sin(angle) * radius;
+              return (
+                <circle key={`na-${i}`} cx={cx} cy={cy} r="2.5" 
+                  fill="#f59e0b" 
+                  opacity={0.7 + Math.random() * 0.3}
+                  filter="url(#dotGlow)">
+                  <animate attributeName="opacity" 
+                    values="0.7;1;0.7" 
+                    dur={`${2 + Math.random() * 2}s`} 
+                    repeatCount="indefinite"/>
+                </circle>
+              );
+            })}
+
+            {/* Точки пользователей - Азия (красные и синие) */}
+            {Array.from({ length: 80 }).map((_, i) => {
+              const angle = (i / 80) * Math.PI * 2;
+              const radius = 40 + Math.random() * 100;
+              const cx = 850 + Math.cos(angle) * radius;
+              const cy = 170 + Math.sin(angle) * radius;
+              const isRed = i < 50;
+              return (
+                <circle key={`as-${i}`} cx={cx} cy={cy} r="2.5" 
+                  fill={isRed ? "#ef4444" : "#3b82f6"} 
+                  opacity={0.7 + Math.random() * 0.3}
+                  filter="url(#dotGlow)">
+                  <animate attributeName="opacity" 
+                    values="0.7;1;0.7" 
+                    dur={`${2 + Math.random() * 2}s`} 
+                    repeatCount="indefinite"/>
+                </circle>
+              );
+            })}
+
+            {/* Точки пользователей - Африка (красные) */}
+            {Array.from({ length: 30 }).map((_, i) => {
+              const angle = (i / 30) * Math.PI * 2;
+              const radius = 30 + Math.random() * 60;
+              const cx = 580 + Math.cos(angle) * radius;
+              const cy = 320 + Math.sin(angle) * radius;
+              return (
+                <circle key={`af-${i}`} cx={cx} cy={cy} r="2.5" 
+                  fill="#ef4444" 
+                  opacity={0.7 + Math.random() * 0.3}
+                  filter="url(#dotGlow)">
+                  <animate attributeName="opacity" 
+                    values="0.7;1;0.7" 
+                    dur={`${2 + Math.random() * 2}s`} 
+                    repeatCount="indefinite"/>
+                </circle>
+              );
+            })}
+
+            {/* Точки пользователей - Южная Америка (фиолетовые) */}
+            {Array.from({ length: 25 }).map((_, i) => {
+              const angle = (i / 25) * Math.PI * 2;
+              const radius = 25 + Math.random() * 45;
+              const cx = 220 + Math.cos(angle) * radius;
+              const cy = 310 + Math.sin(angle) * radius;
+              return (
+                <circle key={`sa-${i}`} cx={cx} cy={cy} r="2.5" 
+                  fill="#a855f7" 
+                  opacity={0.7 + Math.random() * 0.3}
+                  filter="url(#dotGlow)">
+                  <animate attributeName="opacity" 
+                    values="0.7;1;0.7" 
+                    dur={`${2 + Math.random() * 2}s`} 
+                    repeatCount="indefinite"/>
+                </circle>
+              );
+            })}
+
+            {/* Точки пользователей - Австралия (зеленые) */}
+            {Array.from({ length: 20 }).map((_, i) => {
+              const angle = (i / 20) * Math.PI * 2;
+              const radius = 20 + Math.random() * 40;
+              const cx = 970 + Math.cos(angle) * radius;
+              const cy = 390 + Math.sin(angle) * radius;
+              return (
+                <circle key={`au-${i}`} cx={cx} cy={cy} r="2.5" 
+                  fill="#10b981" 
+                  opacity={0.7 + Math.random() * 0.3}
+                  filter="url(#dotGlow)">
+                  <animate attributeName="opacity" 
+                    values="0.7;1;0.7" 
+                    dur={`${2 + Math.random() * 2}s`} 
+                    repeatCount="indefinite"/>
+                </circle>
+              );
+            })}
+
+            {/* Метки с данными - Северная Америка */}
+            <g>
+              <rect x="130" y="100" width="120" height="50" rx="8" 
+                fill="rgba(245, 158, 11, 0.15)" 
+                stroke="#f59e0b" 
+                strokeWidth="2"
+                filter="url(#dotGlow)"/>
+              <text x="145" y="120" fill="#f59e0b" fontSize="11" fontWeight="600">USA</text>
+              <text x="145" y="138" fill="#fff" fontSize="16" fontWeight="800">12,328,300</text>
+            </g>
+
+            {/* Метки с данными - Европа */}
+            <g>
+              <rect x="510" y="60" width="120" height="50" rx="8" 
+                fill="rgba(59, 130, 246, 0.15)" 
+                stroke="#3b82f6" 
+                strokeWidth="2"
+                filter="url(#dotGlow)"/>
+              <text x="525" y="80" fill="#3b82f6" fontSize="11" fontWeight="600">Europe</text>
+              <text x="525" y="98" fill="#fff" fontSize="16" fontWeight="800">76,541,106</text>
+            </g>
+
+            {/* Метки с данными - Азия */}
+            <g>
+              <rect x="910" y="100" width="130" height="50" rx="8" 
+                fill="rgba(239, 68, 68, 0.15)" 
+                stroke="#ef4444" 
+                strokeWidth="2"
+                filter="url(#dotGlow)"/>
+              <text x="925" y="120" fill="#ef4444" fontSize="11" fontWeight="600">Asia</text>
+              <text x="925" y="138" fill="#fff" fontSize="16" fontWeight="800">239,570,110</text>
+            </g>
+
+            {/* Метки с данными - Африка */}
+            <g>
+              <rect x="540" y="270" width="120" height="50" rx="8" 
+                fill="rgba(239, 68, 68, 0.15)" 
+                stroke="#ef4444" 
+                strokeWidth="2"
+                filter="url(#dotGlow)"/>
+              <text x="555" y="290" fill="#ef4444" fontSize="11" fontWeight="600">Africa</text>
+              <text x="555" y="308" fill="#fff" fontSize="16" fontWeight="800">10,547,380</text>
+            </g>
+
+            {/* Метки с данными - Южная Америка */}
+            <g>
+              <rect x="160" y="260" width="120" height="50" rx="8" 
+                fill="rgba(168, 85, 247, 0.15)" 
+                stroke="#a855f7" 
+                strokeWidth="2"
+                filter="url(#dotGlow)"/>
+              <text x="175" y="280" fill="#a855f7" fontSize="11" fontWeight="600">S. America</text>
+              <text x="175" y="298" fill="#fff" fontSize="16" fontWeight="800">9,320,300</text>
+            </g>
+
+            {/* Метки с данными - Австралия */}
+            <g>
+              <rect x="930" y="360" width="120" height="50" rx="8" 
+                fill="rgba(16, 185, 129, 0.15)" 
+                stroke="#10b981" 
+                strokeWidth="2"
+                filter="url(#dotGlow)"/>
+              <text x="945" y="380" fill="#10b981" fontSize="11" fontWeight="600">Oceania</text>
+              <text x="945" y="398" fill="#fff" fontSize="16" fontWeight="800">6,097,321</text>
+            </g>
+          </svg>
+
+          {/* Легенда внизу слева */}
+          <div style={{
+            position: 'absolute',
+            bottom: '20px',
+            left: '20px',
+            background: 'rgba(0, 0, 0, 0.7)',
+            padding: '12px 16px',
+            borderRadius: '10px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div style={{ color: '#a3aed0', fontSize: '11px', fontWeight: '600', marginBottom: '8px' }}>
+              Новых пользователей
+            </div>
+            <div style={{ color: '#fff', fontSize: '20px', fontWeight: '800' }}>
+              22,650
+            </div>
+          </div>
+        </div>
+
+        {/* Статистика по регионам */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(6, 1fr)', 
+          gap: '16px',
+          marginTop: '24px'
+        }}>
+          {[
+            { region: 'Азия', users: '239M', color: '#ef4444', growth: '+18%' },
+            { region: 'Европа', users: '76M', color: '#3b82f6', growth: '+12%' },
+            { region: 'США', users: '12M', color: '#f59e0b', growth: '+8%' },
+            { region: 'Африка', users: '10M', color: '#ef4444', growth: '+25%' },
+            { region: 'Ю. Америка', users: '9M', color: '#a855f7', growth: '+15%' },
+            { region: 'Океания', users: '6M', color: '#10b981', growth: '+10%' }
+          ].map((stat, idx) => (
+            <div key={idx} style={{ 
+              background: `linear-gradient(135deg, ${stat.color}15 0%, ${stat.color}08 100%)`,
+              padding: '16px',
+              borderRadius: '12px',
+              border: `1px solid ${stat.color}30`,
+              textAlign: 'center',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = `0 10px 30px ${stat.color}40`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ 
+                width: '8px',
+                height: '8px',
+                background: stat.color,
+                borderRadius: '50%',
+                margin: '0 auto 8px',
+                boxShadow: `0 0 12px ${stat.color}`
+              }} />
+              <div style={{ color: '#a3aed0', fontSize: '12px', marginBottom: '4px' }}>
+                {stat.region}
+              </div>
+              <div style={{ 
+                color: stat.color, 
+                fontSize: '18px', 
+                fontWeight: '800',
+                marginBottom: '4px',
+                textShadow: `0 0 15px ${stat.color}60`
+              }}>
+                {stat.users}
+              </div>
+              <div style={{ 
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: 'rgba(16, 185, 129, 0.2)',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                fontSize: '11px'
+              }}>
+                <Icon name="TrendingUp" size={10} style={{ color: '#10b981' }} />
+                <span style={{ color: '#10b981', fontWeight: '700' }}>{stat.growth}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+
     {/* Еще дополнительные блоки */}
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '30px' }}>
       {/* Средняя сумма платежа */}
