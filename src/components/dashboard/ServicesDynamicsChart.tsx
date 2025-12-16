@@ -18,6 +18,8 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
     return amount.toLocaleString('ru-RU') + ' ₽';
   };
   
+  const dynamicHeight = Math.max(300, sortedData.length * 45 + 90);
+  
   return (
     <Card className="relative" style={{
       background: '#111c44',
@@ -26,7 +28,7 @@ const ServicesDynamicsChart = ({ servicesData }: ServicesDynamicsChartProps) => 
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
       width: '100%',
       maxWidth: '650px',
-      minHeight: '300px',
+      height: `${dynamicHeight}px`,
       overflow: 'hidden',
     }}>
       <CardHeader className="pb-3">
