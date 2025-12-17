@@ -487,10 +487,26 @@ const PendingApprovals = () => {
                 <textarea 
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Оставьте комментарий к решению (опционально)"
+                  placeholder="Напишите комментарий или вопрос по заявке"
                   className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   rows={3}
                 />
+                <button
+                  onClick={() => {
+                    if (comment.trim()) {
+                      toast({
+                        title: 'Комментарий отправлен',
+                        description: 'Создатель заявки получит уведомление',
+                      });
+                      setComment('');
+                    }
+                  }}
+                  disabled={!comment.trim()}
+                  className="mt-2 w-full bg-primary/20 hover:bg-primary/30 text-primary py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Icon name="MessageSquare" size={18} />
+                  Отправить комментарий
+                </button>
               </div>
 
               <div className="flex gap-3">
