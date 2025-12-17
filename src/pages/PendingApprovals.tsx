@@ -99,11 +99,17 @@ const PendingApprovals = () => {
         
         console.log('[PendingApprovals] Current user ID:', user.id);
         console.log('[PendingApprovals] All payments:', allPayments.length);
+        console.log('[PendingApprovals] All payments data:', allPayments);
         console.log('[PendingApprovals] Services:', servicesData);
         
         const myPendingPayments = allPayments.filter((payment: Payment) => {
           if (!payment.status || !payment.service_id) {
-            console.log('[Filter] Skipping payment (no status/service):', payment.id);
+            console.log('[Filter] Skipping payment:', {
+              id: payment.id,
+              status: payment.status,
+              service_id: payment.service_id,
+              description: payment.description
+            });
             return false;
           }
           
