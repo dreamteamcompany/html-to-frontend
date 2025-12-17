@@ -97,23 +97,46 @@ const PendingApprovals = () => {
         
         const allPayments = Array.isArray(paymentsData) ? paymentsData : [];
         
+        console.log('[PendingApprovals] Current user ID:', user.id);
+        console.log('[PendingApprovals] All payments:', allPayments.length);
+        console.log('[PendingApprovals] Services:', servicesData);
+        
         const myPendingPayments = allPayments.filter((payment: Payment) => {
-          if (!payment.status || !payment.service_id) return false;
+          if (!payment.status || !payment.service_id) {
+            console.log('[Filter] Skipping payment (no status/service):', payment.id);
+            return false;
+          }
           
           const service = servicesData.find((s: Service) => s.id === payment.service_id);
-          if (!service) return false;
+          if (!service) {
+            console.log('[Filter] Service not found for payment:', payment.id, 'service_id:', payment.service_id);
+            return false;
+          }
+
+          console.log('[Filter] Checking payment:', {
+            id: payment.id,
+            status: payment.status,
+            service_id: payment.service_id,
+            intermediate_approver_id: service.intermediate_approver_id,
+            final_approver_id: service.final_approver_id,
+            user_id: user.id
+          });
 
           if (payment.status === 'pending_tech_director' && service.intermediate_approver_id === user.id) {
+            console.log('[Filter] ✅ Match: pending_tech_director');
             return true;
           }
           
           if (payment.status === 'pending_ceo' && service.final_approver_id === user.id) {
+            console.log('[Filter] ✅ Match: pending_ceo');
             return true;
           }
           
+          console.log('[Filter] ❌ No match');
           return false;
         });
 
+        console.log('[PendingApprovals] Filtered payments:', myPendingPayments.length);
         setPayments(myPendingPayments);
       } catch (err) {
         console.error('Failed to load data:', err);
