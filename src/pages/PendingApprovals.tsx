@@ -48,6 +48,12 @@ const PendingApprovals = () => {
   const [touchEnd, setTouchEnd] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [selectedService, setSelectedService] = useState<string>('all');
+  const [amountFrom, setAmountFrom] = useState<string>('');
+  const [amountTo, setAmountTo] = useState<string>('');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if ('Notification' in window) {
@@ -219,16 +225,56 @@ const PendingApprovals = () => {
   };
 
   const filteredPayments = payments.filter(payment => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      payment.description.toLowerCase().includes(query) ||
-      payment.category_name.toLowerCase().includes(query) ||
-      payment.amount.toString().includes(query) ||
-      payment.service_name?.toLowerCase().includes(query) ||
-      payment.contractor_name?.toLowerCase().includes(query)
-    );
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = (
+        payment.description.toLowerCase().includes(query) ||
+        payment.category_name.toLowerCase().includes(query) ||
+        payment.amount.toString().includes(query) ||
+        payment.service_name?.toLowerCase().includes(query) ||
+        payment.contractor_name?.toLowerCase().includes(query)
+      );
+      if (!matchesSearch) return false;
+    }
+
+    if (selectedService !== 'all' && payment.service_id?.toString() !== selectedService) {
+      return false;
+    }
+
+    if (amountFrom && payment.amount < parseFloat(amountFrom)) {
+      return false;
+    }
+
+    if (amountTo && payment.amount > parseFloat(amountTo)) {
+      return false;
+    }
+
+    if (dateFrom && new Date(payment.payment_date) < new Date(dateFrom)) {
+      return false;
+    }
+
+    if (dateTo && new Date(payment.payment_date) > new Date(dateTo)) {
+      return false;
+    }
+
+    return true;
   });
+
+  const activeFiltersCount = [
+    selectedService !== 'all',
+    amountFrom !== '',
+    amountTo !== '',
+    dateFrom !== '',
+    dateTo !== '',
+  ].filter(Boolean).length;
+
+  const clearFilters = () => {
+    setSelectedService('all');
+    setAmountFrom('');
+    setAmountTo('');
+    setDateFrom('');
+    setDateTo('');
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -282,33 +328,137 @@ const PendingApprovals = () => {
         <div className="mb-6">
           <div className="flex items-center justify-between gap-4 mb-2">
             <h1 className="text-2xl md:text-3xl font-bold">На согласовании</h1>
-            {notificationPermission === 'default' && (
+            <div className="flex items-center gap-2">
+              {notificationPermission === 'default' && (
+                <Button
+                  onClick={async () => {
+                    await requestNotificationPermission();
+                    if ('Notification' in window) {
+                      setNotificationPermission(Notification.permission);
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Icon name="Bell" size={16} />
+                  <span className="hidden sm:inline">Включить уведомления</span>
+                </Button>
+              )}
+              {notificationPermission === 'granted' && (
+                <div className="flex items-center gap-2 text-sm text-green-400">
+                  <Icon name="BellRing" size={16} />
+                  <span className="hidden sm:inline">Уведомления включены</span>
+                </div>
+              )}
               <Button
-                onClick={async () => {
-                  await requestNotificationPermission();
-                  if ('Notification' in window) {
-                    setNotificationPermission(Notification.permission);
-                  }
-                }}
+                onClick={() => setShowFilters(!showFilters)}
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-2 relative"
               >
-                <Icon name="Bell" size={16} />
-                Включить уведомления
+                <Icon name="Filter" size={16} />
+                <span className="hidden sm:inline">Фильтры</span>
+                {activeFiltersCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
               </Button>
-            )}
-            {notificationPermission === 'granted' && (
-              <div className="flex items-center gap-2 text-sm text-green-400">
-                <Icon name="BellRing" size={16} />
-                <span className="hidden sm:inline">Уведомления включены</span>
-              </div>
-            )}
+            </div>
           </div>
           <p className="text-sm md:text-base text-muted-foreground">
             Платежи, ожидающие вашего решения
           </p>
         </div>
+
+        {showFilters && (
+          <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] mb-6">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Icon name="SlidersHorizontal" size={20} />
+                  Фильтры
+                </h3>
+                {activeFiltersCount > 0 && (
+                  <Button
+                    onClick={clearFilters}
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-primary"
+                  >
+                    <Icon name="X" size={16} className="mr-1" />
+                    Сбросить
+                  </Button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Сервис</label>
+                  <select
+                    value={selectedService}
+                    onChange={(e) => setSelectedService(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="all">Все сервисы</option>
+                    {services.map((service) => (
+                      <option key={service.id} value={service.id.toString()}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Сумма от</label>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={amountFrom}
+                    onChange={(e) => setAmountFrom(e.target.value)}
+                    className="bg-white/5 border-white/10"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Сумма до</label>
+                  <Input
+                    type="number"
+                    placeholder="∞"
+                    value={amountTo}
+                    onChange={(e) => setAmountTo(e.target.value)}
+                    className="bg-white/5 border-white/10"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Дата от</label>
+                  <Input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    className="bg-white/5 border-white/10"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Дата до</label>
+                  <Input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    className="bg-white/5 border-white/10"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <div className="text-sm text-muted-foreground">
+                    {filteredPayments.length === payments.length ? (
+                      <>Показано: <span className="font-semibold text-white">{payments.length}</span> платежей</>
+                    ) : (
+                      <>Найдено: <span className="font-semibold text-primary">{filteredPayments.length}</span> из {payments.length}</>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {loading ? (
           <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
