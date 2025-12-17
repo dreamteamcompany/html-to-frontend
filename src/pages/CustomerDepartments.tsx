@@ -188,13 +188,12 @@ const CustomerDepartments = () => {
               <p className="text-muted-foreground mt-1">Управление отделами-заказчиками</p>
             </div>
           </div>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Icon name="Plus" size={18} />
+            Добавить отдел
+          </Button>
+          
           <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-            <DialogTrigger asChild>
-              <Button>
-                <Icon name="Plus" size={18} />
-                Добавить отдел
-              </Button>
-            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
