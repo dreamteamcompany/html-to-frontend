@@ -99,7 +99,7 @@ const PaymentForm = ({
             <span>Добавить платёж</span>
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Новый платёж</DialogTitle>
             <DialogDescription>
@@ -107,98 +107,134 @@ const PaymentForm = ({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Категория</Label>
-              <Select
-                value={formData.category_id}
-                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите категорию" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <Icon name={cat.icon} size={16} />
-                        {cat.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="legal_entity">Юридическое лицо</Label>
-              <Select
-                value={formData.legal_entity_id}
-                onValueChange={(value) => setFormData({ ...formData, legal_entity_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите юридическое лицо (опционально)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {legalEntities.map((entity) => (
-                    <SelectItem key={entity.id} value={entity.id.toString()}>
-                      {entity.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contractor">Контрагент</Label>
-              <Select
-                value={formData.contractor_id}
-                onValueChange={(value) => setFormData({ ...formData, contractor_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите контрагента (опционально)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {contractors.map((contractor) => (
-                    <SelectItem key={contractor.id} value={contractor.id.toString()}>
-                      {contractor.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="department">Отдел-заказчик</Label>
-              <Select
-                value={formData.department_id}
-                onValueChange={(value) => setFormData({ ...formData, department_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите отдел (опционально)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customerDepartments.map((department) => (
-                    <SelectItem key={department.id} value={department.id.toString()}>
-                      {department.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="service">Сервис</Label>
-              <Select
-                value={formData.service_id}
-                onValueChange={(value) => setFormData({ ...formData, service_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите сервис (опционально)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id.toString()}>
-                      {service.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Категория</Label>
+                <Select
+                  value={formData.category_id}
+                  onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите категорию" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
+                        <div className="flex items-center gap-2">
+                          <Icon name={cat.icon} size={16} />
+                          {cat.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="legal_entity">Юридическое лицо</Label>
+                <Select
+                  value={formData.legal_entity_id}
+                  onValueChange={(value) => setFormData({ ...formData, legal_entity_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите юр. лицо" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {legalEntities.map((entity) => (
+                      <SelectItem key={entity.id} value={entity.id.toString()}>
+                        {entity.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contractor">Контрагент</Label>
+                <Select
+                  value={formData.contractor_id}
+                  onValueChange={(value) => setFormData({ ...formData, contractor_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите контрагента" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contractors.map((contractor) => (
+                      <SelectItem key={contractor.id} value={contractor.id.toString()}>
+                        {contractor.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="department">Отдел-заказчик</Label>
+                <Select
+                  value={formData.department_id}
+                  onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите отдел" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customerDepartments.map((department) => (
+                      <SelectItem key={department.id} value={department.id.toString()}>
+                        {department.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="service">Сервис</Label>
+                <Select
+                  value={formData.service_id}
+                  onValueChange={(value) => setFormData({ ...formData, service_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите сервис" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.map((service) => (
+                      <SelectItem key={service.id} value={service.id.toString()}>
+                        {service.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="amount">Сумма</Label>
+                <Input
+                  id="amount"
+                  type="text"
+                  value={formData.amount ? formData.amount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : ''}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\s/g, '');
+                    if (/^\d*$/.test(value)) {
+                      setFormData({ ...formData, amount: value });
+                    }
+                  }}
+                  placeholder="0"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invoice_number">Номер счёта</Label>
+                <Input
+                  id="invoice_number"
+                  value={formData.invoice_number || ''}
+                  onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
+                  placeholder="Введите номер счёта"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invoice_date">Дата счёта</Label>
+                <Input
+                  id="invoice_date"
+                  type="date"
+                  value={formData.invoice_date || ''}
+                  onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Назначение</Label>
@@ -208,40 +244,6 @@ const PaymentForm = ({
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Описание платежа"
                 required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="amount">Сумма</Label>
-              <Input
-                id="amount"
-                type="text"
-                value={formData.amount ? formData.amount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : ''}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\s/g, '');
-                  if (/^\d*$/.test(value)) {
-                    setFormData({ ...formData, amount: value });
-                  }
-                }}
-                placeholder="0"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="invoice_number">Номер счёта</Label>
-              <Input
-                id="invoice_number"
-                value={formData.invoice_number || ''}
-                onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
-                placeholder="Введите номер счёта"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="invoice_date">Дата счёта</Label>
-              <Input
-                id="invoice_date"
-                type="date"
-                value={formData.invoice_date || ''}
-                onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
               />
             </div>
             
