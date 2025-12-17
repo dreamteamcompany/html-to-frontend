@@ -1,7 +1,7 @@
 import Dashboard2ChartsSection from './Dashboard2ChartsSection';
 import Dashboard2NeonCards from './Dashboard2NeonCards';
 import Dashboard2BudgetBreakdown from './Dashboard2BudgetBreakdown';
-import Dashboard2GeographyMaps from './Dashboard2GeographyMaps';
+
 
 const Dashboard2Charts = () => {
   return (
@@ -9,7 +9,7 @@ const Dashboard2Charts = () => {
       <Dashboard2ChartsSection />
       <Dashboard2NeonCards />
       <Dashboard2BudgetBreakdown />
-      <Dashboard2GeographyMaps />
+
 
       <style>{`
         @keyframes pulse {
