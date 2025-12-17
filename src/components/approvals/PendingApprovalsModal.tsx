@@ -1,6 +1,7 @@
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import PaymentComments from './PaymentComments';
 
 interface Payment {
   id: number;
@@ -35,20 +36,9 @@ interface PendingApprovalsModalProps {
 }
 
 const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: PendingApprovalsModalProps) => {
-  const { toast } = useToast();
   const [comment, setComment] = useState('');
 
   if (!payment) return null;
-
-  const handleSendComment = () => {
-    if (comment.trim()) {
-      toast({
-        title: 'Комментарий отправлен',
-        description: 'Создатель заявки получит уведомление',
-      });
-      setComment('');
-    }
-  };
 
   const handleApprove = () => {
     onApprove(payment.id, comment);
@@ -165,26 +155,27 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
             )}
           </div>
 
-          <div className="mb-6">
-            <label className="text-sm text-muted-foreground mb-2 block">Комментарий</label>
+          <div className="border-t border-white/10 pt-6 mb-6">
+            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+              <Icon name="MessageSquare" size={20} />
+              Обсуждение заявки
+            </h3>
+            <PaymentComments paymentId={payment.id} />
+          </div>
+
+          <div className="border-t border-white/10 pt-6 mb-6">
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">Решение по заявке</h3>
+            <label className="text-sm text-muted-foreground mb-2 block">Комментарий к решению (опционально)</label>
             <textarea 
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Напишите комментарий или вопрос по заявке"
+              placeholder="Укажите причину согласования или отклонения"
               className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-              rows={3}
+              rows={2}
             />
-            <button
-              onClick={handleSendComment}
-              disabled={!comment.trim()}
-              className="mt-2 w-full bg-primary/20 hover:bg-primary/30 text-primary py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Icon name="MessageSquare" size={18} />
-              Отправить комментарий
-            </button>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 sticky bottom-0 bg-card py-4 border-t border-white/10">
             <button
               onClick={handleApprove}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"

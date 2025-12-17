@@ -299,6 +299,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_approvals(method, event, conn)
         elif endpoint == 'services':
             return handle_services(method, event, conn)
+        elif endpoint == 'comments':
+            return handle_comments(method, event, conn, current_user)
+        elif endpoint == 'comment-likes':
+            return handle_comment_likes(method, event, conn, current_user)
         
         return response(404, {'error': 'Endpoint not found'})
     
@@ -2071,3 +2075,127 @@ def handle_stats(event: Dict[str, Any], conn) -> Dict[str, Any]:
     except Exception as e:
         cur.close()
         return response(500, {'error': str(e)})
+
+# Comments handlers
+def handle_comments(method: str, event: Dict[str, Any], conn, current_user: Dict[str, Any]) -> Dict[str, Any]:
+    if method == 'GET':
+        payment_id = event.get('queryStringParameters', {}).get('payment_id')
+        if not payment_id:
+            return response(400, {'error': 'payment_id is required'})
+        
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            cur.execute(f"""
+                SELECT 
+                    c.id,
+                    c.payment_id,
+                    c.user_id,
+                    u.username,
+                    u.full_name,
+                    c.parent_comment_id,
+                    c.comment_text,
+                    c.created_at,
+                    c.updated_at,
+                    (SELECT COUNT(*) FROM {SCHEMA}.comment_likes WHERE comment_id = c.id) as likes_count,
+                    EXISTS(SELECT 1 FROM {SCHEMA}.comment_likes WHERE comment_id = c.id AND user_id = %s) as user_liked
+                FROM {SCHEMA}.payment_comments c
+                JOIN {SCHEMA}.users u ON c.user_id = u.id
+                WHERE c.payment_id = %s
+                ORDER BY c.created_at ASC
+            """, (current_user['id'], int(payment_id)))
+            
+            comments = cur.fetchall()
+            cur.close()
+            
+            return response(200, [dict(c) for c in comments])
+        except Exception as e:
+            if cur:
+                cur.close()
+            return response(500, {'error': str(e)})
+    
+    elif method == 'POST':
+        try:
+            body = json.loads(event.get('body', '{}'))
+            payment_id = body.get('payment_id')
+            comment_text = body.get('comment_text', '').strip()
+            parent_comment_id = body.get('parent_comment_id')
+            
+            if not payment_id or not comment_text:
+                return response(400, {'error': 'payment_id and comment_text are required'})
+            
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            cur.execute(f"""
+                INSERT INTO {SCHEMA}.payment_comments 
+                (payment_id, user_id, parent_comment_id, comment_text)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id, payment_id, user_id, parent_comment_id, comment_text, created_at
+            """, (payment_id, current_user['id'], parent_comment_id, comment_text))
+            
+            new_comment = cur.fetchone()
+            conn.commit()
+            cur.close()
+            
+            return response(201, dict(new_comment))
+        except Exception as e:
+            conn.rollback()
+            if cur:
+                cur.close()
+            return response(500, {'error': str(e)})
+    
+    return response(405, {'error': 'Method not allowed'})
+
+def handle_comment_likes(method: str, event: Dict[str, Any], conn, current_user: Dict[str, Any]) -> Dict[str, Any]:
+    if method == 'POST':
+        try:
+            body = json.loads(event.get('body', '{}'))
+            comment_id = body.get('comment_id')
+            
+            if not comment_id:
+                return response(400, {'error': 'comment_id is required'})
+            
+            cur = conn.cursor()
+            
+            cur.execute(f"""
+                INSERT INTO {SCHEMA}.comment_likes (comment_id, user_id)
+                VALUES (%s, %s)
+                ON CONFLICT (comment_id, user_id) DO NOTHING
+            """, (comment_id, current_user['id']))
+            
+            conn.commit()
+            cur.close()
+            
+            return response(200, {'success': True})
+        except Exception as e:
+            conn.rollback()
+            if cur:
+                cur.close()
+            return response(500, {'error': str(e)})
+    
+    elif method == 'DELETE':
+        try:
+            body = json.loads(event.get('body', '{}'))
+            comment_id = body.get('comment_id')
+            
+            if not comment_id:
+                return response(400, {'error': 'comment_id is required'})
+            
+            cur = conn.cursor()
+            
+            cur.execute(f"""
+                DELETE FROM {SCHEMA}.comment_likes
+                WHERE comment_id = %s AND user_id = %s
+            """, (comment_id, current_user['id']))
+            
+            conn.commit()
+            cur.close()
+            
+            return response(200, {'success': True})
+        except Exception as e:
+            conn.rollback()
+            if cur:
+                cur.close()
+            return response(500, {'error': str(e)})
+    
+    return response(405, {'error': 'Method not allowed'})
