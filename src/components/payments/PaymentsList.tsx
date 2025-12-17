@@ -150,12 +150,41 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       </div>
                     )}
                     <div className="text-sm text-muted-foreground">{payment.description}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric'
-                      })}
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </div>
+                      {getStatusBadge(payment.status)}
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {(!payment.status || payment.status === 'draft') && onSubmitForApproval && (
+                        <button
+                          onClick={() => onSubmitForApproval(payment.id)}
+                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium"
+                        >
+                          Отправить на согласование
+                        </button>
+                      )}
+                      {(payment.status === 'pending_tech_director' || payment.status === 'pending_ceo') && onApprove && onReject && (
+                        <>
+                          <button
+                            onClick={() => onApprove(payment.id)}
+                            className="flex-1 px-3 py-2 text-sm rounded bg-green-500/20 text-green-300 hover:bg-green-500/30 font-medium"
+                          >
+                            Одобрить
+                          </button>
+                          <button
+                            onClick={() => onReject(payment.id)}
+                            className="flex-1 px-3 py-2 text-sm rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium"
+                          >
+                            Отклонить
+                          </button>
+                        </>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

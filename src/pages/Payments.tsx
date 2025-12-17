@@ -131,14 +131,26 @@ const Payments = () => {
       });
 
       if (response.ok) {
+        toast({
+          title: 'Успешно',
+          description: 'Платёж отправлен на согласование',
+        });
         loadPayments();
       } else {
         const error = await response.json();
-        alert(error.error || 'Ошибка при отправке на согласование');
+        toast({
+          title: 'Ошибка',
+          description: error.error || 'Не удалось отправить на согласование',
+          variant: 'destructive',
+        });
       }
     } catch (err) {
       console.error('Failed to submit for approval:', err);
-      alert('Ошибка сети');
+      toast({
+        title: 'Ошибка сети',
+        description: 'Проверьте подключение к интернету',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -156,21 +168,37 @@ const Payments = () => {
       });
 
       if (response.ok) {
+        toast({
+          title: 'Успешно',
+          description: 'Платёж одобрен',
+        });
         loadPayments();
       } else {
         const error = await response.json();
-        alert(error.error || 'Ошибка при одобрении');
+        toast({
+          title: 'Ошибка',
+          description: error.error || 'Не удалось одобрить платёж',
+          variant: 'destructive',
+        });
       }
     } catch (err) {
       console.error('Failed to approve:', err);
-      alert('Ошибка сети');
+      toast({
+        title: 'Ошибка сети',
+        description: 'Проверьте подключение к интернету',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleReject = async (paymentId: number) => {
     const comment = prompt('Укажите причину отклонения:');
     if (!comment) {
-      alert('Комментарий обязателен при отклонении');
+      toast({
+        title: 'Ошибка',
+        description: 'Комментарий обязателен при отклонении',
+        variant: 'destructive',
+      });
       return;
     }
     
@@ -185,14 +213,26 @@ const Payments = () => {
       });
 
       if (response.ok) {
+        toast({
+          title: 'Успешно',
+          description: 'Платёж отклонён',
+        });
         loadPayments();
       } else {
         const error = await response.json();
-        alert(error.error || 'Ошибка при отклонении');
+        toast({
+          title: 'Ошибка',
+          description: error.error || 'Не удалось отклонить платёж',
+          variant: 'destructive',
+        });
       }
     } catch (err) {
       console.error('Failed to reject:', err);
-      alert('Ошибка сети');
+      toast({
+        title: 'Ошибка сети',
+        description: 'Проверьте подключение к интернету',
+        variant: 'destructive',
+      });
     }
   };
 
