@@ -357,6 +357,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not current_user:
                 return response(401, {'error': 'User not found'})
             return handle_comment_likes(method, event, conn, current_user)
+        elif endpoint == 'audit-logs':
+            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+            if not token:
+                return response(401, {'error': 'Authentication required'})
+            payload = verify_jwt_token(token)
+            if not payload:
+                return response(401, {'error': 'Invalid token'})
+            return handle_audit_logs(method, event, conn, payload)
         
         return response(404, {'error': 'Endpoint not found'})
     
