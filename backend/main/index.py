@@ -2437,6 +2437,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             conn.close()
             return response(401, {'error': 'Unauthorized'})
         
+        if endpoint == 'me':
+            user_data = get_user_with_permissions(conn, payload['user_id'])
+            conn.close()
+            if not user_data:
+                return response(404, {'error': 'User not found'})
+            return response(200, user_data)
+        
         if endpoint == 'payments':
             result = handle_payments(method, event, conn)
         elif endpoint == 'categories':
