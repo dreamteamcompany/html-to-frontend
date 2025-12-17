@@ -60,8 +60,8 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-          <div className="w-full lg:w-1/2 lg:border-r border-white/10 flex flex-col">
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <div className="w-full lg:w-1/2 lg:border-r border-white/10 flex flex-col overflow-y-auto lg:overflow-hidden">
+            <div className="lg:flex-1 lg:overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div className="flex items-start gap-3 sm:gap-4">
                 <div className="bg-primary/20 p-2 sm:p-3 rounded-lg">
                   <span className="text-xl sm:text-2xl">{payment.category_icon}</span>
@@ -142,41 +142,39 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
             </div>
           </div>
 
-          <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10">
+          <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10 lg:overflow-hidden min-h-[400px]">
             <div className="p-4 sm:p-6 border-b border-white/10">
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Дата платежа</p>
-                  <p className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</p>
+              <h3 className="text-base sm:text-lg font-medium flex items-center gap-2 mb-3">
+                <Icon name="MessageSquare" size={18} />
+                Обсуждение заявки
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Дата платежа:</span>
+                  <span className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</span>
                 </div>
                 {payment.submitted_at && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Дата отправки</p>
-                    <p className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</p>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Дата отправки:</span>
+                    <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
                   </div>
                 )}
                 {payment.invoice_date && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Дата счёта</p>
-                    <p className="font-medium">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</p>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Дата счёта:</span>
+                    <span className="font-medium">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
                   </div>
                 )}
                 {payment.created_at && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Дата создания</p>
-                    <p className="font-medium">{new Date(payment.created_at).toLocaleString('ru-RU')}</p>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Создана:</span>
+                    <span className="font-medium">{new Date(payment.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="p-4 sm:p-6 border-b border-white/10">
-                <h3 className="text-base sm:text-lg font-medium flex items-center gap-2">
-                  <Icon name="MessageSquare" size={18} />
-                  Обсуждение заявки
-                </h3>
-              </div>
               <PaymentComments paymentId={payment.id} />
             </div>
           </div>
