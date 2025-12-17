@@ -1839,7 +1839,7 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             })
         
         elif method == 'DELETE':
-            payload, error = verify_token_and_permission(event, conn, 'customer_departments.delete')
+            payload, error = verify_token_and_permission(event, conn, 'customer_departments.remove')
             if error:
                 return error
             
