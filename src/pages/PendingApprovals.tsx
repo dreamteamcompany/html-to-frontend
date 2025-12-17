@@ -93,14 +93,15 @@ const PendingApprovals = () => {
         const paymentsData = await paymentsRes.json();
         const servicesData = await servicesRes.json();
 
-        setServices(Array.isArray(servicesData) ? servicesData : []);
+        const servicesList = Array.isArray(servicesData) ? servicesData : (servicesData.services || []);
+        setServices(servicesList);
         
         const allPayments = Array.isArray(paymentsData) ? paymentsData : [];
         
         console.log('[PendingApprovals] Current user ID:', user.id);
         console.log('[PendingApprovals] All payments:', allPayments.length);
         console.log('[PendingApprovals] All payments data:', allPayments);
-        console.log('[PendingApprovals] Services:', servicesData);
+        console.log('[PendingApprovals] Services:', servicesList);
         
         const myPendingPayments = allPayments.filter((payment: Payment) => {
           if (!payment.status || !payment.service_id) {
@@ -113,7 +114,7 @@ const PendingApprovals = () => {
             return false;
           }
           
-          const service = servicesData.find((s: Service) => s.id === payment.service_id);
+          const service = servicesList.find((s: Service) => s.id === payment.service_id);
           if (!service) {
             console.log('[Filter] Service not found for payment:', payment.id, 'service_id:', payment.service_id);
             return false;
