@@ -109,6 +109,7 @@ export const usePendingApprovalsData = () => {
   }, [token, user, toast]);
 
   const handleApprove = async (paymentId: number, approveComment?: string) => {
+    console.log('[handleApprove] Called with paymentId:', paymentId, 'comment:', approveComment);
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
         method: 'PUT',
@@ -128,7 +129,7 @@ export const usePendingApprovalsData = () => {
           title: 'Успешно',
           description: 'Платёж согласован',
         });
-        setPayments(payments.filter(p => p.id !== paymentId));
+        setPayments(prevPayments => prevPayments.filter(p => p.id !== paymentId));
       } else {
         const errorData = await response.json();
         toast({
@@ -148,6 +149,7 @@ export const usePendingApprovalsData = () => {
   };
 
   const handleReject = async (paymentId: number, rejectComment?: string) => {
+    console.log('[handleReject] Called with paymentId:', paymentId, 'comment:', rejectComment);
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
         method: 'PUT',
@@ -167,7 +169,7 @@ export const usePendingApprovalsData = () => {
           title: 'Успешно',
           description: 'Платёж отклонён',
         });
-        setPayments(payments.filter(p => p.id !== paymentId));
+        setPayments(prevPayments => prevPayments.filter(p => p.id !== paymentId));
       } else {
         const errorData = await response.json();
         toast({

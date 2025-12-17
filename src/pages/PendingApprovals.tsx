@@ -107,13 +107,25 @@ const PendingApprovals = () => {
   };
 
   const handleModalApprove = (paymentId: number, comment?: string) => {
-    handleApprove(paymentId, comment);
-    setSelectedPayment(null);
+    console.log('[handleModalApprove] Called with paymentId:', paymentId, 'comment:', comment);
+    console.log('[handleModalApprove] handleApprove type:', typeof handleApprove);
+    if (typeof handleApprove === 'function') {
+      handleApprove(paymentId, comment);
+      setSelectedPayment(null);
+    } else {
+      console.error('[handleModalApprove] handleApprove is not a function!', handleApprove);
+    }
   };
 
   const handleModalReject = (paymentId: number, comment?: string) => {
-    handleReject(paymentId, comment);
-    setSelectedPayment(null);
+    console.log('[handleModalReject] Called with paymentId:', paymentId, 'comment:', comment);
+    console.log('[handleModalReject] handleReject type:', typeof handleReject);
+    if (typeof handleReject === 'function') {
+      handleReject(paymentId, comment);
+      setSelectedPayment(null);
+    } else {
+      console.error('[handleModalReject] handleReject is not a function!', handleReject);
+    }
   };
 
   return (
