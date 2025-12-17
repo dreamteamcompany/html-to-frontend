@@ -33,10 +33,10 @@ const Dashboard2ServicesDynamics = () => {
     return amount.toLocaleString('ru-RU') + ' ₽';
   };
 
-  const barHeight = 24;
-  const spacing = 32;
-  const maxWidth = 320;
-  const startX = 140;
+  const barHeight = 12;
+  const spacing = 16;
+  const maxWidth = 180;
+  const startX = 80;
   const barColors = ['#3965ff', '#2CD9FF', '#01B574', '#7551e9', '#ffb547'];
 
   return (
@@ -46,7 +46,7 @@ const Dashboard2ServicesDynamics = () => {
       boxShadow: '0 0 40px rgba(57, 101, 255, 0.2), inset 0 0 30px rgba(57, 101, 255, 0.08)',
       position: 'relative',
       overflow: 'hidden',
-      marginBottom: '30px'
+      marginBottom: '20px'
     }}>
       <div style={{
         position: 'absolute',
@@ -59,44 +59,44 @@ const Dashboard2ServicesDynamics = () => {
         pointerEvents: 'none',
         animation: 'rotate 30s linear infinite'
       }} />
-      <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <CardContent className="p-3" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ 
               background: 'linear-gradient(135deg, #3965ff 0%, #2948cc 100%)',
-              padding: '10px',
-              borderRadius: '10px',
-              boxShadow: '0 0 20px rgba(57, 101, 255, 0.6)',
+              padding: '5px',
+              borderRadius: '6px',
+              boxShadow: '0 0 15px rgba(57, 101, 255, 0.6)',
               animation: 'pulse 3s infinite'
             }}>
-              <Icon name="Activity" size={20} style={{ color: '#fff' }} />
+              <Icon name="Activity" size={12} style={{ color: '#fff' }} />
             </div>
             <div>
-              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff' }}>Динамика Расходов по Сервисам</h3>
-              <p style={{ fontSize: '12px', color: '#a3aed0', marginTop: '2px' }}>Топ-10 сервисов • Тренды за месяц</p>
+              <h3 style={{ fontSize: '11px', fontWeight: '800', color: '#fff' }}>Динамика Расходов по Сервисам</h3>
+              <p style={{ fontSize: '8px', color: '#a3aed0', marginTop: '1px' }}>Топ-10 сервисов • Тренды за месяц</p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '4px' }}>
             <div style={{ 
               background: 'rgba(57, 101, 255, 0.15)',
-              padding: '6px 12px',
-              borderRadius: '8px',
+              padding: '3px 6px',
+              borderRadius: '4px',
               border: '1px solid rgba(57, 101, 255, 0.3)'
             }}>
-              <span style={{ color: '#3965ff', fontSize: '12px', fontWeight: '700' }}>{formatAmount(totalAmount)} общий</span>
+              <span style={{ color: '#3965ff', fontSize: '8px', fontWeight: '700' }}>{formatAmount(totalAmount)}</span>
             </div>
             <div style={{ 
               background: avgTrend >= 0 ? 'rgba(1, 181, 116, 0.15)' : 'rgba(255, 107, 107, 0.15)',
-              padding: '6px 12px',
-              borderRadius: '8px',
+              padding: '3px 6px',
+              borderRadius: '4px',
               border: avgTrend >= 0 ? '1px solid rgba(1, 181, 116, 0.3)' : '1px solid rgba(255, 107, 107, 0.3)',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '3px'
             }}>
-              <Icon name={avgTrend >= 0 ? "TrendingUp" : "TrendingDown"} size={14} style={{ color: avgTrend >= 0 ? '#01b574' : '#ff6b6b' }} />
-              <span style={{ color: avgTrend >= 0 ? '#01b574' : '#ff6b6b', fontSize: '12px', fontWeight: '700' }}>
-                {avgTrend >= 0 ? '+' : ''}{avgTrend}% средний тренд
+              <Icon name={avgTrend >= 0 ? "TrendingUp" : "TrendingDown"} size={8} style={{ color: avgTrend >= 0 ? '#01b574' : '#ff6b6b' }} />
+              <span style={{ color: avgTrend >= 0 ? '#01b574' : '#ff6b6b', fontSize: '8px', fontWeight: '700' }}>
+                {avgTrend >= 0 ? '+' : ''}{avgTrend}%
               </span>
             </div>
           </div>
@@ -104,14 +104,14 @@ const Dashboard2ServicesDynamics = () => {
 
         <div style={{ 
           background: 'rgba(255, 255, 255, 0.02)',
-          borderRadius: '12px',
-          padding: '20px 16px 16px 16px',
+          borderRadius: '8px',
+          padding: '10px 8px 8px 8px',
           border: '1px solid rgba(255, 255, 255, 0.05)',
-          marginBottom: '16px',
+          marginBottom: '8px',
           position: 'relative',
-          minHeight: `${sortedData.length * spacing + 40}px`
+          minHeight: `${sortedData.length * spacing + 20}px`
         }}>
-          <svg viewBox={`0 0 500 ${sortedData.length * spacing + 30}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
+          <svg viewBox={`0 0 300 ${sortedData.length * spacing + 15}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               {sortedData.map((_, index) => {
                 const color = barColors[index % barColors.length];
@@ -138,19 +138,19 @@ const Dashboard2ServicesDynamics = () => {
                 <g key={`grid-${idx}`}>
                   <line
                     x1={x}
-                    y1="10"
+                    y1="5"
                     x2={x}
-                    y2={sortedData.length * spacing + 10}
+                    y2={sortedData.length * spacing + 5}
                     stroke="rgba(255, 255, 255, 0.08)"
-                    strokeWidth="1"
-                    strokeDasharray="4 4"
+                    strokeWidth="0.5"
+                    strokeDasharray="2 2"
                   />
                   <text
                     x={x}
-                    y="8"
+                    y="4"
                     textAnchor="middle"
                     fill="#a3aed0"
-                    style={{ fontSize: '9px', fontWeight: '600' }}
+                    style={{ fontSize: '6px', fontWeight: '600' }}
                   >
                     {value}
                   </text>
@@ -159,7 +159,7 @@ const Dashboard2ServicesDynamics = () => {
             })}
 
             {sortedData.map((service, index) => {
-              const y = 20 + index * spacing;
+              const y = 10 + index * spacing;
               const barWidth = (service.amount / maxAmount) * maxWidth;
               const isHovered = hoveredService === index;
               const color = barColors[index % barColors.length];
@@ -172,12 +172,12 @@ const Dashboard2ServicesDynamics = () => {
                   style={{ cursor: 'pointer' }}
                 >
                   <text
-                    x="10"
-                    y={y + barHeight / 2 + 4}
+                    x="5"
+                    y={y + barHeight / 2 + 2}
                     textAnchor="start"
                     fill={isHovered ? color : '#a3aed0'}
                     style={{ 
-                      fontSize: '11px', 
+                      fontSize: '7px', 
                       fontWeight: isHovered ? '700' : '600',
                       transition: 'all 0.3s ease'
                     }}
@@ -191,7 +191,7 @@ const Dashboard2ServicesDynamics = () => {
                     width={barWidth}
                     height={barHeight}
                     fill={`url(#d2Bar-${index})`}
-                    rx="6"
+                    rx="3"
                     filter={isHovered ? 'url(#d2Glow)' : 'none'}
                     style={{
                       transition: 'all 0.3s ease',
@@ -200,12 +200,12 @@ const Dashboard2ServicesDynamics = () => {
                   />
 
                   <text
-                    x={startX + barWidth + 8}
-                    y={y + barHeight / 2 + 4}
+                    x={startX + barWidth + 4}
+                    y={y + barHeight / 2 + 2}
                     textAnchor="start"
                     fill={color}
                     style={{ 
-                      fontSize: '11px', 
+                      fontSize: '7px', 
                       fontWeight: '700',
                       opacity: isHovered ? 1 : 0.9
                     }}
@@ -216,17 +216,17 @@ const Dashboard2ServicesDynamics = () => {
                   {service.trend !== 0 && (
                     <g>
                       <circle
-                        cx={startX + barWidth + 90}
+                        cx={startX + barWidth + 50}
                         cy={y + barHeight / 2}
-                        r="10"
+                        r="5"
                         fill={service.trend > 0 ? 'rgba(1, 181, 116, 0.15)' : 'rgba(255, 107, 107, 0.15)'}
                       />
                       <text
-                        x={startX + barWidth + 90}
-                        y={y + barHeight / 2 + 4}
+                        x={startX + barWidth + 50}
+                        y={y + barHeight / 2 + 2}
                         textAnchor="middle"
                         fill={service.trend > 0 ? '#01b574' : '#ff6b6b'}
-                        style={{ fontSize: '10px', fontWeight: '700' }}
+                        style={{ fontSize: '6px', fontWeight: '700' }}
                       >
                         {service.trend > 0 ? '+' : ''}{service.trend}%
                       </text>
@@ -241,7 +241,7 @@ const Dashboard2ServicesDynamics = () => {
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(3, 1fr)', 
-          gap: '12px'
+          gap: '6px'
         }}>
           {[
             { 
@@ -268,30 +268,30 @@ const Dashboard2ServicesDynamics = () => {
           ].map((stat, idx) => (
             <div key={idx} style={{ 
               background: `linear-gradient(135deg, ${stat.bgGradient} 0%, ${stat.bgGradient}80 100%)`,
-              padding: '12px',
-              borderRadius: '10px',
+              padding: '6px',
+              borderRadius: '6px',
               border: `1px solid ${stat.color}30`,
               transition: 'all 0.3s ease',
               cursor: 'pointer'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
               e.currentTarget.style.borderColor = stat.color;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.borderColor = `${stat.color}30`;
             }}>
-              <Icon name={stat.icon} size={16} style={{ color: stat.color, marginBottom: '6px' }} />
+              <Icon name={stat.icon} size={10} style={{ color: stat.color, marginBottom: '3px' }} />
               <div style={{ 
                 color: stat.color, 
-                fontSize: '18px', 
+                fontSize: '12px', 
                 fontWeight: '900',
-                marginBottom: '4px'
+                marginBottom: '2px'
               }}>
                 {stat.value}
               </div>
-              <div style={{ color: '#a3aed0', fontSize: '11px', fontWeight: '600' }}>
+              <div style={{ color: '#a3aed0', fontSize: '7px', fontWeight: '600' }}>
                 {stat.label}
               </div>
             </div>
