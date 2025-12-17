@@ -33,8 +33,8 @@ const Dashboard2ServicesDynamics = () => {
     return amount.toLocaleString('ru-RU') + ' ₽';
   };
 
-  const barHeight = 4;
-  const spacing = 5.5;
+  const barHeight = 1.3;
+  const spacing = 1.8;
   const maxWidth = 60;
   const startX = 27;
   const barColors = ['#3965ff', '#2CD9FF', '#01B574', '#7551e9', '#ffb547'];
@@ -108,10 +108,9 @@ const Dashboard2ServicesDynamics = () => {
           padding: '10px 8px 8px 8px',
           border: '1px solid rgba(255, 255, 255, 0.05)',
           marginBottom: '8px',
-          position: 'relative',
-          minHeight: `${(sortedData.length * spacing + 20) / 3}px`
+          position: 'relative'
         }}>
-          <svg viewBox={`0 0 100 ${sortedData.length * spacing + 5}`} style={{ width: '100%', height: `${100 / 9}%` }} preserveAspectRatio="xMidYMid meet">
+          <svg viewBox={`0 0 100 ${sortedData.length * spacing + 5}`} style={{ width: '100%', height: 'auto', maxHeight: '80px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               {sortedData.map((_, index) => {
                 const color = barColors[index % barColors.length];
