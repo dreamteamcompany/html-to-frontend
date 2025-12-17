@@ -4,18 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import Logo from '@/components/ui/Logo';
-
-interface Payment {
-  id: number;
-  status?: string;
-  service_id?: number;
-}
-
-interface Service {
-  id: number;
-  intermediate_approver_id: number;
-  final_approver_id: number;
-}
+import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 
 interface PaymentsSidebarProps {
   menuOpen: boolean;
@@ -38,11 +27,11 @@ const PaymentsSidebar = ({
   handleTouchMove,
   handleTouchEnd,
 }: PaymentsSidebarProps) => {
-  const { user, logout, hasPermission, token } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [pendingCount, setPendingCount] = useState(0);
+  const { pendingCount } = usePendingApprovals();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -51,55 +40,6 @@ const PaymentsSidebar = ({
       document.documentElement.classList.toggle('light', savedTheme === 'light');
     }
   }, []);
-
-  useEffect(() => {
-    if (!token || !user) return;
-
-    const loadPendingCount = async () => {
-      try {
-        const [paymentsRes, servicesRes] = await Promise.all([
-          fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments', {
-            headers: { 'X-Auth-Token': token },
-          }),
-          fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=services', {
-            headers: { 'X-Auth-Token': token },
-          }),
-        ]);
-
-        const paymentsData = await paymentsRes.json();
-        const servicesData = await servicesRes.json();
-
-        const allPayments = Array.isArray(paymentsData) ? paymentsData : [];
-        const services = Array.isArray(servicesData) ? servicesData : [];
-
-        const count = allPayments.filter((payment: Payment) => {
-          if (!payment.status || !payment.service_id) return false;
-
-          const service = services.find((s: Service) => s.id === payment.service_id);
-          if (!service) return false;
-
-          if (payment.status === 'pending_tech_director' && service.intermediate_approver_id === user.id) {
-            return true;
-          }
-
-          if (payment.status === 'pending_ceo' && service.final_approver_id === user.id) {
-            return true;
-          }
-
-          return false;
-        }).length;
-
-        setPendingCount(count);
-      } catch (err) {
-        console.error('Failed to load pending count:', err);
-      }
-    };
-
-    loadPendingCount();
-    const interval = setInterval(loadPendingCount, 60000);
-
-    return () => clearInterval(interval);
-  }, [token, user]);
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';

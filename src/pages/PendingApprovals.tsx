@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { usePendingApprovals } from '@/hooks/usePendingApprovals';
+import { Button } from '@/components/ui/button';
 
 interface Payment {
   id: number;
@@ -35,6 +37,7 @@ interface Service {
 const PendingApprovals = () => {
   const { token, user } = useAuth();
   const { toast } = useToast();
+  const { requestNotificationPermission } = usePendingApprovals();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +47,13 @@ const PendingApprovals = () => {
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -270,7 +280,31 @@ const PendingApprovals = () => {
         </header>
 
         <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">На согласовании</h1>
+          <div className="flex items-center justify-between gap-4 mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold">На согласовании</h1>
+            {notificationPermission === 'default' && (
+              <Button
+                onClick={async () => {
+                  await requestNotificationPermission();
+                  if ('Notification' in window) {
+                    setNotificationPermission(Notification.permission);
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <Icon name="Bell" size={16} />
+                Включить уведомления
+              </Button>
+            )}
+            {notificationPermission === 'granted' && (
+              <div className="flex items-center gap-2 text-sm text-green-400">
+                <Icon name="BellRing" size={16} />
+                <span className="hidden sm:inline">Уведомления включены</span>
+              </div>
+            )}
+          </div>
           <p className="text-sm md:text-base text-muted-foreground">
             Платежи, ожидающие вашего решения
           </p>
