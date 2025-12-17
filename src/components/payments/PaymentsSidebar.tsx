@@ -210,6 +210,13 @@ const PaymentsSidebar = ({
                 <Icon name="FileCheck" size={18} />
                 <span>История согласований</span>
               </Link>
+              <Link
+                to="/audit-logs"
+                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/audit-logs') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+              >
+                <Icon name="History" size={18} />
+                <span>История изменений</span>
+              </Link>
             </div>
           )}
         </li>

@@ -2,6 +2,8 @@ import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import PaymentComments from './PaymentComments';
+import PaymentAuditLog from './PaymentAuditLog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CustomField {
   id: number;
@@ -164,10 +166,6 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
 
           <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10 lg:overflow-hidden min-h-[400px]">
             <div className="p-4 sm:p-6 border-b border-white/10">
-              <h3 className="text-base sm:text-lg font-medium flex items-center gap-2 mb-3">
-                <Icon name="MessageSquare" size={18} />
-                Обсуждение заявки
-              </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Дата платежа:</span>
@@ -195,7 +193,24 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
             </div>
 
             <div className="flex-1 flex flex-col overflow-hidden">
-              <PaymentComments paymentId={payment.id} />
+              <Tabs defaultValue="comments" className="flex-1 flex flex-col">
+                <TabsList className="mx-4 mt-2">
+                  <TabsTrigger value="comments" className="flex items-center gap-2">
+                    <Icon name="MessageSquare" size={16} />
+                    Обсуждение
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="flex items-center gap-2">
+                    <Icon name="History" size={16} />
+                    История
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="comments" className="flex-1 overflow-hidden mt-0">
+                  <PaymentComments paymentId={payment.id} />
+                </TabsContent>
+                <TabsContent value="history" className="flex-1 overflow-hidden p-4">
+                  <PaymentAuditLog paymentId={payment.id} />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>

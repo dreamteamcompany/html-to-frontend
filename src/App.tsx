@@ -21,6 +21,7 @@ import CustomerDepartments from "./pages/CustomerDepartments";
 import ApprovalsHistory from "./pages/ApprovalsHistory";
 import PendingApprovals from "./pages/PendingApprovals";
 import Services from "./pages/Services";
+import AuditLogs from "./pages/AuditLogs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/approvals-history" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><ApprovalsHistory /></ProtectedRoute>} />
             <Route path="/pending-approvals" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><PendingApprovals /></ProtectedRoute>} />
             <Route path="/services" element={<ProtectedRoute requiredPermission={{ resource: 'services', action: 'read' }}><Services /></ProtectedRoute>} />
+            <Route path="/audit-logs" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><AuditLogs /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

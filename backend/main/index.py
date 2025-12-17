@@ -223,6 +223,42 @@ def verify_token_and_permission(event: Dict[str, Any], conn, required_permission
     
     return payload, None
 
+def create_audit_log(
+    conn,
+    entity_type: str,
+    entity_id: int,
+    action: str,
+    user_id: int,
+    username: str,
+    changed_fields: Optional[Dict] = None,
+    old_values: Optional[Dict] = None,
+    new_values: Optional[Dict] = None,
+    metadata: Optional[Dict] = None
+):
+    """Создание записи в audit log"""
+    cur = conn.cursor()
+    try:
+        cur.execute(f"""
+            INSERT INTO {SCHEMA}.audit_logs 
+            (entity_type, entity_id, action, user_id, username, changed_fields, old_values, new_values, metadata)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            entity_type,
+            entity_id,
+            action,
+            user_id,
+            username,
+            json.dumps(changed_fields) if changed_fields else None,
+            json.dumps(old_values) if old_values else None,
+            json.dumps(new_values) if new_values else None,
+            json.dumps(metadata) if metadata else None
+        ))
+        conn.commit()
+    except Exception as e:
+        print(f"Failed to create audit log: {e}")
+    finally:
+        cur.close()
+
 def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
     if not token:
@@ -897,9 +933,13 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 )
                 row = cur.fetchone()
                 conn.commit()
-                cur.close()
                 
-                return response(201, {
+                # Audit log
+                cur.execute(f"SELECT username FROM {SCHEMA}.users WHERE id = %s", (payload['user_id'],))
+                username_row = cur.fetchone()
+                username = username_row['username'] if username_row else 'Unknown'
+                
+                payment_data = {
                     'id': row['id'],
                     'category_id': row['category_id'],
                     'amount': float(row['amount']),
@@ -914,7 +954,20 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'invoice_date': row['invoice_date'].isoformat() if row['invoice_date'] else None,
                     'status': row['status'],
                     'created_by': row['created_by']
-                })
+                }
+                
+                create_audit_log(
+                    conn,
+                    'payment',
+                    row['id'],
+                    'created',
+                    payload['user_id'],
+                    username,
+                    new_values=payment_data
+                )
+                
+                cur.close()
+                return response(201, payment_data)
             except Exception as e:
                 import traceback
                 error_details = traceback.format_exc()
@@ -937,8 +990,18 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             pay_req = PaymentRequest(**body)
             
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # Получаем старое состояние
+            cur.execute(f"SELECT * FROM {SCHEMA}.payments WHERE id = %s", (payment_id,))
+            old_payment = cur.fetchone()
+            
+            if not old_payment:
+                cur.close()
+                return response(404, {'error': 'Payment not found'})
+            
             cur.execute(
-                """UPDATE payments 
+                f"""UPDATE {SCHEMA}.payments 
                    SET category_id = %s, amount = %s, description = %s, payment_date = %s, 
                        legal_entity_id = %s, contractor_id = %s, department_id = %s
                    WHERE id = %s 
@@ -947,23 +1010,55 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                  pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, payment_id)
             )
             row = cur.fetchone()
-            
-            if not row:
-                return response(404, {'error': 'Payment not found'})
-            
             conn.commit()
             
-            return response(200, {
-                'id': row[0],
-                'category_id': row[1],
-                'amount': float(row[2]),
-                'description': row[3],
-                'payment_date': row[4].isoformat() if row[4] else None,
-                'created_at': row[5].isoformat() if row[5] else None,
-                'legal_entity_id': row[6],
-                'contractor_id': row[7],
-                'department_id': row[8]
-            })
+            # Audit log
+            cur.execute(f"SELECT username FROM {SCHEMA}.users WHERE id = %s", (payload['user_id'],))
+            username_row = cur.fetchone()
+            username = username_row['username'] if username_row else 'Unknown'
+            
+            new_payment_data = {
+                'id': row['id'],
+                'category_id': row['category_id'],
+                'amount': float(row['amount']),
+                'description': row['description'],
+                'payment_date': row['payment_date'].isoformat() if row['payment_date'] else None,
+                'legal_entity_id': row['legal_entity_id'],
+                'contractor_id': row['contractor_id'],
+                'department_id': row['department_id']
+            }
+            
+            # Вычисляем изменённые поля
+            changed_fields = {}
+            for key in ['category_id', 'amount', 'description', 'payment_date', 'legal_entity_id', 'contractor_id', 'department_id']:
+                old_val = old_payment.get(key)
+                new_val = row[key] if key in row else None
+                
+                if key == 'amount':
+                    old_val = float(old_val) if old_val else None
+                    new_val = float(new_val) if new_val else None
+                elif key == 'payment_date':
+                    old_val = old_val.isoformat() if old_val else None
+                    new_val = new_val.isoformat() if new_val else None
+                
+                if old_val != new_val:
+                    changed_fields[key] = {'old': old_val, 'new': new_val}
+            
+            if changed_fields:
+                create_audit_log(
+                    conn,
+                    'payment',
+                    payment_id,
+                    'updated',
+                    payload['user_id'],
+                    username,
+                    changed_fields=changed_fields,
+                    old_values=dict(old_payment),
+                    new_values=new_payment_data
+                )
+            
+            cur.close()
+            return response(200, new_payment_data)
         
         elif method == 'DELETE':
             payload, error = verify_token_and_permission(event, conn, 'payments.delete')
@@ -1876,6 +1971,24 @@ def handle_approvals(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]
         """, (req.payment_id, user_id, user_role, req.action, req.comment))
         
         conn.commit()
+        
+        # Audit log
+        cur.execute(f"SELECT username FROM {SCHEMA}.users WHERE id = %s", (user_id,))
+        username_row = cur.fetchone()
+        username = username_row['username'] if username_row else 'Unknown'
+        
+        action_name = 'approved' if req.action == 'approve' else 'rejected'
+        create_audit_log(
+            conn,
+            'payment',
+            req.payment_id,
+            action_name,
+            user_id,
+            username,
+            changed_fields={'status': {'old': current_status, 'new': new_status}},
+            metadata={'comment': req.comment, 'role': user_role}
+        )
+        
         cur.close()
         
         return response(200, {'message': 'Решение принято', 'status': new_status})
@@ -2237,3 +2350,135 @@ def handle_comment_likes(method: str, event: Dict[str, Any], conn, current_user:
             return response(500, {'error': str(e)})
     
     return response(405, {'error': 'Method not allowed'})
+
+def handle_audit_logs(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    '''Обработка запросов к audit logs'''
+    if method == 'GET':
+        params = event.get('queryStringParameters', {})
+        entity_type = params.get('entity_type')
+        entity_id = params.get('entity_id')
+        user_id = params.get('user_id')
+        action = params.get('action')
+        limit = int(params.get('limit', 100))
+        offset = int(params.get('offset', 0))
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        try:
+            query = f"SELECT * FROM {SCHEMA}.audit_logs WHERE 1=1"
+            query_params = []
+            
+            if entity_type:
+                query += " AND entity_type = %s"
+                query_params.append(entity_type)
+            
+            if entity_id:
+                query += " AND entity_id = %s"
+                query_params.append(int(entity_id))
+            
+            if user_id:
+                query += " AND user_id = %s"
+                query_params.append(int(user_id))
+            
+            if action:
+                query += " AND action = %s"
+                query_params.append(action)
+            
+            query += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
+            query_params.extend([limit, offset])
+            
+            cur.execute(query, tuple(query_params))
+            logs = cur.fetchall()
+            
+            result = [dict(log) for log in logs]
+            cur.close()
+            
+            return response(200, result)
+        except Exception as e:
+            if cur:
+                cur.close()
+            return response(500, {'error': str(e)})
+    
+    return response(405, {'error': 'Method not allowed'})
+
+def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    '''Главная функция-роутер для обработки всех запросов'''
+    method = event.get('httpMethod', 'GET')
+    
+    if method == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
+                'Access-Control-Max-Age': '86400'
+            },
+            'body': '',
+            'isBase64Encoded': False
+        }
+    
+    try:
+        conn = get_db_connection()
+    except Exception as e:
+        return response(500, {'error': f'Database connection failed: {str(e)}'})
+    
+    try:
+        endpoint = event.get('queryStringParameters', {}).get('endpoint', '')
+        
+        if endpoint == 'login' and method == 'POST':
+            return handle_login(event, conn)
+        
+        if endpoint == 'health':
+            return response(200, {'status': 'healthy'})
+        
+        payload = verify_token(event)
+        if not payload:
+            conn.close()
+            return response(401, {'error': 'Unauthorized'})
+        
+        if endpoint == 'payments':
+            result = handle_payments(method, event, conn)
+        elif endpoint == 'categories':
+            result = handle_categories(method, event, conn)
+        elif endpoint == 'legal-entities':
+            result = handle_legal_entities(method, event, conn)
+        elif endpoint == 'contractors':
+            result = handle_contractors(method, event, conn)
+        elif endpoint == 'customer-departments':
+            result = handle_customer_departments(method, event, conn)
+        elif endpoint == 'custom-fields':
+            result = handle_custom_fields(method, event, conn)
+        elif endpoint == 'services':
+            result = handle_services(method, event, conn)
+        elif endpoint == 'users':
+            result = handle_users(method, event, conn)
+        elif endpoint == 'roles':
+            result = handle_roles(method, event, conn)
+        elif endpoint == 'permissions':
+            result = handle_permissions(method, event, conn)
+        elif endpoint == 'approvals':
+            result = handle_approvals(method, event, conn, payload)
+        elif endpoint == 'stats':
+            result = handle_stats(method, event, conn)
+        elif endpoint == 'comments':
+            user_data = get_user_with_permissions(conn, payload['user_id'])
+            result = handle_comments(method, event, conn, user_data)
+        elif endpoint == 'comment-likes':
+            user_data = get_user_with_permissions(conn, payload['user_id'])
+            result = handle_comment_likes(method, event, conn, user_data)
+        elif endpoint == 'audit-logs':
+            result = handle_audit_logs(method, event, conn, payload)
+        else:
+            result = response(404, {'error': f'Endpoint not found: {endpoint}'})
+        
+        conn.close()
+        return result
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error: {str(e)}")
+        print(f"Traceback: {error_details}")
+        conn.close()
+        return response(500, {'error': str(e), 'details': error_details})
