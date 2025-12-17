@@ -765,17 +765,23 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     cd.name as department_name,
                     p.status,
                     p.created_by,
+                    u.username as created_by_name,
                     p.submitted_at,
                     p.tech_director_approved_at,
                     p.tech_director_approved_by,
                     p.ceo_approved_at,
                     p.ceo_approved_by,
-                    p.service_id
+                    p.service_id,
+                    s.name as service_name,
+                    p.invoice_number,
+                    p.invoice_date
                 FROM {SCHEMA}.payments p
                 LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
                 LEFT JOIN {SCHEMA}.legal_entities le ON p.legal_entity_id = le.id
                 LEFT JOIN {SCHEMA}.contractors ct ON p.contractor_id = ct.id
                 LEFT JOIN {SCHEMA}.customer_departments cd ON p.department_id = cd.id
+                LEFT JOIN {SCHEMA}.users u ON p.created_by = u.id
+                LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
                 ORDER BY p.payment_date DESC
             """)
             rows = cur.fetchall()
@@ -797,12 +803,16 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'department_name': row[13],
                     'status': row[14],
                     'created_by': row[15],
-                    'submitted_at': row[16].isoformat() if row[16] else None,
-                    'tech_director_approved_at': row[17].isoformat() if row[17] else None,
-                    'tech_director_approved_by': row[18],
-                    'ceo_approved_at': row[19].isoformat() if row[19] else None,
-                    'ceo_approved_by': row[20],
-                    'service_id': row[21]
+                    'created_by_name': row[16],
+                    'submitted_at': row[17].isoformat() if row[17] else None,
+                    'tech_director_approved_at': row[18].isoformat() if row[18] else None,
+                    'tech_director_approved_by': row[19],
+                    'ceo_approved_at': row[20].isoformat() if row[20] else None,
+                    'ceo_approved_by': row[21],
+                    'service_id': row[22],
+                    'service_name': row[23],
+                    'invoice_number': row[24],
+                    'invoice_date': row[25].isoformat() if row[25] else None
                 }
                 for row in rows
             ]

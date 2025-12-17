@@ -21,11 +21,17 @@ interface Payment {
   legal_entity_name?: string;
   status?: string;
   created_by?: number;
+  created_by_name?: string;
   service_id?: number;
   service_name?: string;
   contractor_name?: string;
+  contractor_id?: number;
   department_name?: string;
+  department_id?: number;
   invoice_number?: string;
+  invoice_date?: string;
+  created_at?: string;
+  submitted_at?: string;
 }
 
 interface Service {
@@ -100,52 +106,27 @@ const PendingApprovals = () => {
         
         const allPayments = Array.isArray(paymentsData) ? paymentsData : [];
         
-        console.log('[PendingApprovals] Current user ID:', user.id);
-        console.log('[PendingApprovals] All payments:', allPayments.length);
-        console.log('[PendingApprovals] All payments data:', allPayments);
-        console.log('[PendingApprovals] Services:', servicesList);
-        
         const myPendingPayments = allPayments.filter((payment: Payment) => {
           if (!payment.status || !payment.service_id) {
-            console.log('[Filter] Skipping payment:', {
-              id: payment.id,
-              status: payment.status,
-              service_id: payment.service_id,
-              description: payment.description
-            });
             return false;
           }
           
           const service = servicesList.find((s: Service) => s.id === payment.service_id);
           if (!service) {
-            console.log('[Filter] Service not found for payment:', payment.id, 'service_id:', payment.service_id);
             return false;
           }
 
-          console.log('[Filter] Checking payment:', {
-            id: payment.id,
-            status: payment.status,
-            service_id: payment.service_id,
-            intermediate_approver_id: service.intermediate_approver_id,
-            final_approver_id: service.final_approver_id,
-            user_id: user.id
-          });
-
           if (payment.status === 'pending_tech_director' && service.intermediate_approver_id === user.id) {
-            console.log('[Filter] ✅ Match: pending_tech_director');
             return true;
           }
           
           if (payment.status === 'pending_ceo' && service.final_approver_id === user.id) {
-            console.log('[Filter] ✅ Match: pending_ceo');
             return true;
           }
           
-          console.log('[Filter] ❌ No match');
           return false;
         });
 
-        console.log('[PendingApprovals] Filtered payments:', myPendingPayments.length);
         setPayments(myPendingPayments);
       } catch (err) {
         console.error('Failed to load data:', err);
@@ -433,13 +414,20 @@ const PendingApprovals = () => {
                     <p className="text-sm text-muted-foreground mb-1">Дата платежа</p>
                     <p className="font-medium">{new Date(selectedPayment.payment_date).toLocaleDateString('ru-RU')}</p>
                   </div>
-                  {selectedPayment.legal_entity_name && (
+                  {selectedPayment.submitted_at && (
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Юр. лицо</p>
-                      <p className="font-medium">{selectedPayment.legal_entity_name}</p>
+                      <p className="text-sm text-muted-foreground mb-1">Дата отправки</p>
+                      <p className="font-medium">{new Date(selectedPayment.submitted_at).toLocaleDateString('ru-RU')}</p>
                     </div>
                   )}
                 </div>
+
+                {selectedPayment.legal_entity_name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Юридическое лицо</p>
+                    <p className="font-medium">{selectedPayment.legal_entity_name}</p>
+                  </div>
+                )}
 
                 {selectedPayment.contractor_name && (
                   <div>
@@ -450,17 +438,46 @@ const PendingApprovals = () => {
 
                 {selectedPayment.department_name && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Департамент</p>
+                    <p className="text-sm text-muted-foreground mb-1">Отдел-заказчик</p>
                     <p className="font-medium">{selectedPayment.department_name}</p>
                   </div>
                 )}
 
-                {selectedPayment.invoice_number && (
+                {selectedPayment.service_name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Сервис</p>
+                    <p className="font-medium">{selectedPayment.service_name}</p>
+                  </div>
+                )}
+
+                {(selectedPayment.invoice_number || selectedPayment.invoice_date) && (
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
-                      <p className="font-medium">{selectedPayment.invoice_number}</p>
-                    </div>
+                    {selectedPayment.invoice_number && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
+                        <p className="font-medium">{selectedPayment.invoice_number}</p>
+                      </div>
+                    )}
+                    {selectedPayment.invoice_date && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Дата счёта</p>
+                        <p className="font-medium">{new Date(selectedPayment.invoice_date).toLocaleDateString('ru-RU')}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedPayment.created_by_name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Создал заявку</p>
+                    <p className="font-medium">{selectedPayment.created_by_name}</p>
+                  </div>
+                )}
+
+                {selectedPayment.created_at && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Дата создания</p>
+                    <p className="font-medium">{new Date(selectedPayment.created_at).toLocaleString('ru-RU')}</p>
                   </div>
                 )}
               </div>
