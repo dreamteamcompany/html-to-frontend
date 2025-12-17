@@ -33,10 +33,10 @@ const Dashboard2ServicesDynamics = () => {
     return amount.toLocaleString('ru-RU') + ' ₽';
   };
 
-  const barHeight = 12;
-  const spacing = 16;
-  const maxWidth = 180;
-  const startX = 80;
+  const barHeight = 4;
+  const spacing = 5.5;
+  const maxWidth = 60;
+  const startX = 27;
   const barColors = ['#3965ff', '#2CD9FF', '#01B574', '#7551e9', '#ffb547'];
 
   return (
@@ -111,7 +111,7 @@ const Dashboard2ServicesDynamics = () => {
           position: 'relative',
           minHeight: `${sortedData.length * spacing + 20}px`
         }}>
-          <svg viewBox={`0 0 300 ${sortedData.length * spacing + 15}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
+          <svg viewBox={`0 0 100 ${sortedData.length * spacing + 5}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               {sortedData.map((_, index) => {
                 const color = barColors[index % barColors.length];
@@ -138,19 +138,19 @@ const Dashboard2ServicesDynamics = () => {
                 <g key={`grid-${idx}`}>
                   <line
                     x1={x}
-                    y1="5"
+                    y1="2"
                     x2={x}
-                    y2={sortedData.length * spacing + 5}
+                    y2={sortedData.length * spacing + 2}
                     stroke="rgba(255, 255, 255, 0.08)"
-                    strokeWidth="0.5"
-                    strokeDasharray="2 2"
+                    strokeWidth="0.2"
+                    strokeDasharray="0.5 0.5"
                   />
                   <text
                     x={x}
-                    y="4"
+                    y="1.5"
                     textAnchor="middle"
                     fill="#a3aed0"
-                    style={{ fontSize: '6px', fontWeight: '600' }}
+                    style={{ fontSize: '2px', fontWeight: '600' }}
                   >
                     {value}
                   </text>
@@ -159,7 +159,7 @@ const Dashboard2ServicesDynamics = () => {
             })}
 
             {sortedData.map((service, index) => {
-              const y = 10 + index * spacing;
+              const y = 3.5 + index * spacing;
               const barWidth = (service.amount / maxAmount) * maxWidth;
               const isHovered = hoveredService === index;
               const color = barColors[index % barColors.length];
@@ -172,12 +172,12 @@ const Dashboard2ServicesDynamics = () => {
                   style={{ cursor: 'pointer' }}
                 >
                   <text
-                    x="5"
-                    y={y + barHeight / 2 + 2}
+                    x="1.5"
+                    y={y + barHeight / 2 + 0.7}
                     textAnchor="start"
                     fill={isHovered ? color : '#a3aed0'}
                     style={{ 
-                      fontSize: '7px', 
+                      fontSize: '2.3px', 
                       fontWeight: isHovered ? '700' : '600',
                       transition: 'all 0.3s ease'
                     }}
@@ -191,7 +191,7 @@ const Dashboard2ServicesDynamics = () => {
                     width={barWidth}
                     height={barHeight}
                     fill={`url(#d2Bar-${index})`}
-                    rx="3"
+                    rx="1"
                     filter={isHovered ? 'url(#d2Glow)' : 'none'}
                     style={{
                       transition: 'all 0.3s ease',
@@ -200,12 +200,12 @@ const Dashboard2ServicesDynamics = () => {
                   />
 
                   <text
-                    x={startX + barWidth + 4}
-                    y={y + barHeight / 2 + 2}
+                    x={startX + barWidth + 1.3}
+                    y={y + barHeight / 2 + 0.7}
                     textAnchor="start"
                     fill={color}
                     style={{ 
-                      fontSize: '7px', 
+                      fontSize: '2.3px', 
                       fontWeight: '700',
                       opacity: isHovered ? 1 : 0.9
                     }}
@@ -216,17 +216,17 @@ const Dashboard2ServicesDynamics = () => {
                   {service.trend !== 0 && (
                     <g>
                       <circle
-                        cx={startX + barWidth + 50}
+                        cx={startX + barWidth + 17}
                         cy={y + barHeight / 2}
-                        r="5"
+                        r="1.7"
                         fill={service.trend > 0 ? 'rgba(1, 181, 116, 0.15)' : 'rgba(255, 107, 107, 0.15)'}
                       />
                       <text
-                        x={startX + barWidth + 50}
-                        y={y + barHeight / 2 + 2}
+                        x={startX + barWidth + 17}
+                        y={y + barHeight / 2 + 0.7}
                         textAnchor="middle"
                         fill={service.trend > 0 ? '#01b574' : '#ff6b6b'}
-                        style={{ fontSize: '6px', fontWeight: '700' }}
+                        style={{ fontSize: '2px', fontWeight: '700' }}
                       >
                         {service.trend > 0 ? '+' : ''}{service.trend}%
                       </text>
