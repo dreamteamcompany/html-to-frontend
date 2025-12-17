@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
-import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
-import { Button } from '@/components/ui/button';
+import PendingApprovalsHeader from '@/components/approvals/PendingApprovalsHeader';
+import PendingApprovalsFilters from '@/components/approvals/PendingApprovalsFilters';
+import PendingApprovalsList from '@/components/approvals/PendingApprovalsList';
 
 interface Payment {
   id: number;
@@ -325,246 +326,43 @@ const PendingApprovals = () => {
           </div>
         </header>
 
-        <div className="mb-6">
-          <div className="flex items-center justify-between gap-4 mb-2">
-            <h1 className="text-2xl md:text-3xl font-bold">На согласовании</h1>
-            <div className="flex items-center gap-2">
-              {notificationPermission === 'default' && (
-                <Button
-                  onClick={async () => {
-                    await requestNotificationPermission();
-                    if ('Notification' in window) {
-                      setNotificationPermission(Notification.permission);
-                    }
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Icon name="Bell" size={16} />
-                  <span className="hidden sm:inline">Включить уведомления</span>
-                </Button>
-              )}
-              {notificationPermission === 'granted' && (
-                <div className="flex items-center gap-2 text-sm text-green-400">
-                  <Icon name="BellRing" size={16} />
-                  <span className="hidden sm:inline">Уведомления включены</span>
-                </div>
-              )}
-              <Button
-                onClick={() => setShowFilters(!showFilters)}
-                variant="outline"
-                size="sm"
-                className="gap-2 relative"
-              >
-                <Icon name="Filter" size={16} />
-                <span className="hidden sm:inline">Фильтры</span>
-                {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </Button>
-            </div>
-          </div>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Платежи, ожидающие вашего решения
-          </p>
-        </div>
+        <PendingApprovalsHeader
+          notificationPermission={notificationPermission}
+          requestNotificationPermission={requestNotificationPermission}
+          setNotificationPermission={setNotificationPermission}
+          showFilters={showFilters}
+          setShowFilters={setShowFilters}
+          activeFiltersCount={activeFiltersCount}
+        />
 
         {showFilters && (
-          <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] mb-6">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Icon name="SlidersHorizontal" size={20} />
-                  Фильтры
-                </h3>
-                {activeFiltersCount > 0 && (
-                  <Button
-                    onClick={clearFilters}
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-primary"
-                  >
-                    <Icon name="X" size={16} className="mr-1" />
-                    Сбросить
-                  </Button>
-                )}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Сервис</label>
-                  <select
-                    value={selectedService}
-                    onChange={(e) => setSelectedService(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="all">Все сервисы</option>
-                    {services.map((service) => (
-                      <option key={service.id} value={service.id.toString()}>
-                        {service.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Сумма от</label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={amountFrom}
-                    onChange={(e) => setAmountFrom(e.target.value)}
-                    className="bg-white/5 border-white/10"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Сумма до</label>
-                  <Input
-                    type="number"
-                    placeholder="∞"
-                    value={amountTo}
-                    onChange={(e) => setAmountTo(e.target.value)}
-                    className="bg-white/5 border-white/10"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Дата от</label>
-                  <Input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    className="bg-white/5 border-white/10"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Дата до</label>
-                  <Input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    className="bg-white/5 border-white/10"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <div className="text-sm text-muted-foreground">
-                    {filteredPayments.length === payments.length ? (
-                      <>Показано: <span className="font-semibold text-white">{payments.length}</span> платежей</>
-                    ) : (
-                      <>Найдено: <span className="font-semibold text-primary">{filteredPayments.length}</span> из {payments.length}</>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <PendingApprovalsFilters
+            services={services}
+            selectedService={selectedService}
+            setSelectedService={setSelectedService}
+            amountFrom={amountFrom}
+            setAmountFrom={setAmountFrom}
+            amountTo={amountTo}
+            setAmountTo={setAmountTo}
+            dateFrom={dateFrom}
+            setDateFrom={setDateFrom}
+            dateTo={dateTo}
+            setDateTo={setDateTo}
+            activeFiltersCount={activeFiltersCount}
+            clearFilters={clearFilters}
+            filteredCount={filteredPayments.length}
+            totalCount={payments.length}
+          />
         )}
 
-        {loading ? (
-          <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
-            <CardContent className="p-6">
-              <div className="text-center text-muted-foreground py-8">Загрузка...</div>
-            </CardContent>
-          </Card>
-        ) : filteredPayments.length === 0 ? (
-          <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
-            <CardContent className="p-6">
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Icon name="CheckCircle" size={32} className="text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Всё согласовано!</h3>
-                <p className="text-muted-foreground">
-                  {searchQuery ? 'Платежи не найдены' : 'У вас нет платежей, ожидающих согласования'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {filteredPayments.map((payment) => (
-              <Card key={payment.id} className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-white/10 transition-all">
-                <CardContent className="p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                          <Icon name={payment.category_icon} size={24} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2 flex-wrap">
-                            <h3 className="text-lg font-semibold">{payment.category_name}</h3>
-                            {getStatusBadge(payment.status)}
-                          </div>
-                          <p className="text-muted-foreground text-sm mb-2">{payment.description}</p>
-                          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                            {payment.service_name && (
-                              <div className="flex items-center gap-1">
-                                <Icon name="Briefcase" size={14} />
-                                <span>{payment.service_name}</span>
-                              </div>
-                            )}
-                            {payment.contractor_name && (
-                              <div className="flex items-center gap-1">
-                                <Icon name="Building2" size={14} />
-                                <span>{payment.contractor_name}</span>
-                              </div>
-                            )}
-                            {payment.department_name && (
-                              <div className="flex items-center gap-1">
-                                <Icon name="Users" size={14} />
-                                <span>{payment.department_name}</span>
-                              </div>
-                            )}
-                            {payment.invoice_number && (
-                              <div className="flex items-center gap-1">
-                                <Icon name="FileText" size={14} />
-                                <span>Счёт №{payment.invoice_number}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-1">
-                              <Icon name="Calendar" size={14} />
-                              <span>
-                                {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
-                                  day: '2-digit',
-                                  month: 'long',
-                                  year: 'numeric'
-                                })}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:border-l lg:border-white/10 lg:pl-6">
-                      <div className="text-center sm:text-right">
-                        <div className="text-sm text-muted-foreground mb-1">Сумма платежа</div>
-                        <div className="text-2xl font-bold">{payment.amount.toLocaleString('ru-RU')} ₽</div>
-                      </div>
-                      <div className="flex gap-2 w-full sm:w-auto">
-                        <button
-                          onClick={() => handleApprove(payment.id)}
-                          className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-green-500/20 text-green-300 hover:bg-green-500/30 transition-colors font-medium flex items-center justify-center gap-2"
-                        >
-                          <Icon name="Check" size={18} />
-                          Одобрить
-                        </button>
-                        <button
-                          onClick={() => handleReject(payment.id)}
-                          className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors font-medium flex items-center justify-center gap-2"
-                        >
-                          <Icon name="X" size={18} />
-                          Отклонить
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        <PendingApprovalsList
+          loading={loading}
+          payments={filteredPayments}
+          searchQuery={searchQuery}
+          handleApprove={handleApprove}
+          handleReject={handleReject}
+          getStatusBadge={getStatusBadge}
+        />
       </main>
     </div>
   );
