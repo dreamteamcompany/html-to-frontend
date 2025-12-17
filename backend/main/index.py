@@ -769,7 +769,8 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     p.tech_director_approved_at,
                     p.tech_director_approved_by,
                     p.ceo_approved_at,
-                    p.ceo_approved_by
+                    p.ceo_approved_by,
+                    p.service_id
                 FROM {SCHEMA}.payments p
                 LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
                 LEFT JOIN {SCHEMA}.legal_entities le ON p.legal_entity_id = le.id
@@ -793,7 +794,15 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'contractor_id': row[10],
                     'contractor_name': row[11],
                     'department_id': row[12],
-                    'department_name': row[13]
+                    'department_name': row[13],
+                    'status': row[14],
+                    'created_by': row[15],
+                    'submitted_at': row[16].isoformat() if row[16] else None,
+                    'tech_director_approved_at': row[17].isoformat() if row[17] else None,
+                    'tech_director_approved_by': row[18],
+                    'ceo_approved_at': row[19].isoformat() if row[19] else None,
+                    'ceo_approved_by': row[20],
+                    'service_id': row[21]
                 }
                 for row in rows
             ]
