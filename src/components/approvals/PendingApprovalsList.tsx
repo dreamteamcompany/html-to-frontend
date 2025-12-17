@@ -27,6 +27,7 @@ interface PendingApprovalsListProps {
   handleApprove: (paymentId: number) => void;
   handleReject: (paymentId: number) => void;
   getStatusBadge: (status?: string) => JSX.Element | null;
+  onPaymentClick: (payment: Payment) => void;
 }
 
 const PendingApprovalsList = ({
@@ -36,6 +37,7 @@ const PendingApprovalsList = ({
   handleApprove,
   handleReject,
   getStatusBadge,
+  onPaymentClick,
 }: PendingApprovalsListProps) => {
   if (loading) {
     return (
@@ -68,7 +70,7 @@ const PendingApprovalsList = ({
   return (
     <div className="space-y-4">
       {payments.map((payment) => (
-        <Card key={payment.id} className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-white/10 transition-all">
+        <Card key={payment.id} className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-white/10 transition-all cursor-pointer" onClick={() => onPaymentClick(payment)}>
           <CardContent className="p-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="flex-1 space-y-3">
@@ -129,14 +131,20 @@ const PendingApprovalsList = ({
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
                   <button
-                    onClick={() => handleApprove(payment.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleApprove(payment.id);
+                    }}
                     className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-green-500/20 text-green-300 hover:bg-green-500/30 transition-colors font-medium flex items-center justify-center gap-2"
                   >
                     <Icon name="Check" size={18} />
                     Одобрить
                   </button>
                   <button
-                    onClick={() => handleReject(payment.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReject(payment.id);
+                    }}
                     className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors font-medium flex items-center justify-center gap-2"
                   >
                     <Icon name="X" size={18} />

@@ -55,6 +55,8 @@ const PendingApprovals = () => {
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [comment, setComment] = useState('');
 
   useEffect(() => {
     if ('Notification' in window) {
@@ -160,10 +162,7 @@ const PendingApprovals = () => {
     loadData();
   }, [token, user, toast]);
 
-  const handleApprove = async (paymentId: number) => {
-    const comment = prompt('Комментарий к согласованию (опционально):');
-    if (comment === null) return;
-
+  const handleApprove = async (paymentId: number, approveComment?: string) => {
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
         method: 'PUT',
@@ -174,7 +173,7 @@ const PendingApprovals = () => {
         body: JSON.stringify({
           payment_id: paymentId,
           action: 'approve',
-          comment,
+          comment: approveComment || '',
         }),
       });
 
@@ -184,6 +183,8 @@ const PendingApprovals = () => {
           description: 'Платёж согласован',
         });
         setPayments(payments.filter(p => p.id !== paymentId));
+        setSelectedPayment(null);
+        setComment('');
       } else {
         const errorData = await response.json();
         toast({
@@ -202,10 +203,7 @@ const PendingApprovals = () => {
     }
   };
 
-  const handleReject = async (paymentId: number) => {
-    const comment = prompt('Причина отклонения (опционально):');
-    if (comment === null) return;
-
+  const handleReject = async (paymentId: number, rejectComment?: string) => {
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
         method: 'PUT',
@@ -216,7 +214,7 @@ const PendingApprovals = () => {
         body: JSON.stringify({
           payment_id: paymentId,
           action: 'reject',
-          comment,
+          comment: rejectComment || '',
         }),
       });
 
@@ -226,6 +224,8 @@ const PendingApprovals = () => {
           description: 'Платёж отклонён',
         });
         setPayments(payments.filter(p => p.id !== paymentId));
+        setSelectedPayment(null);
+        setComment('');
       } else {
         const errorData = await response.json();
         toast({
@@ -392,7 +392,109 @@ const PendingApprovals = () => {
           handleApprove={handleApprove}
           handleReject={handleReject}
           getStatusBadge={getStatusBadge}
+          onPaymentClick={setSelectedPayment}
         />
+
+        {selectedPayment && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setSelectedPayment(null)}>
+            <div className="bg-card border border-white/10 rounded-[20px] p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">Детали платежа #{selectedPayment.id}</h2>
+                  {getStatusBadge(selectedPayment.status)}
+                </div>
+                <button onClick={() => setSelectedPayment(null)} className="text-muted-foreground hover:text-white transition-colors">
+                  <Icon name="X" size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Категория</p>
+                    <div className="flex items-center gap-2">
+                      <Icon name={selectedPayment.category_icon} size={18} />
+                      <p className="font-medium">{selectedPayment.category_name}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Сумма</p>
+                    <p className="font-medium text-lg">{selectedPayment.amount.toLocaleString('ru-RU')} ₽</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Описание</p>
+                  <p className="font-medium">{selectedPayment.description || '—'}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Дата платежа</p>
+                    <p className="font-medium">{new Date(selectedPayment.payment_date).toLocaleDateString('ru-RU')}</p>
+                  </div>
+                  {selectedPayment.legal_entity_name && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Юр. лицо</p>
+                      <p className="font-medium">{selectedPayment.legal_entity_name}</p>
+                    </div>
+                  )}
+                </div>
+
+                {selectedPayment.contractor_name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Контрагент</p>
+                    <p className="font-medium">{selectedPayment.contractor_name}</p>
+                  </div>
+                )}
+
+                {selectedPayment.department_name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Департамент</p>
+                    <p className="font-medium">{selectedPayment.department_name}</p>
+                  </div>
+                )}
+
+                {selectedPayment.invoice_number && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
+                      <p className="font-medium">{selectedPayment.invoice_number}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-6">
+                <label className="text-sm text-muted-foreground mb-2 block">Комментарий</label>
+                <textarea 
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Оставьте комментарий к решению (опционально)"
+                  className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleApprove(selectedPayment.id, comment)}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Icon name="Check" size={20} />
+                  Согласовать
+                </button>
+                <button
+                  onClick={() => handleReject(selectedPayment.id, comment)}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Icon name="X" size={20} />
+                  Отклонить
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
