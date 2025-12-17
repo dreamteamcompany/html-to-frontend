@@ -47,28 +47,28 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-card border border-white/10 rounded-xl w-[70vw] max-w-[1400px] h-[90vh] flex flex-col">
-        <div className="bg-card border-b border-white/10 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Детали заявки #{payment.id}</h2>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="bg-card border border-white/10 rounded-xl w-full max-w-[1400px] h-[95vh] sm:h-[90vh] flex flex-col">
+        <div className="bg-card border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <h2 className="text-lg sm:text-xl font-semibold">Детали заявки #{payment.id}</h2>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-white transition-colors"
           >
-            <Icon name="X" size={24} />
+            <Icon name="X" size={20} />
           </button>
         </div>
 
-        <div className="flex-1 flex overflow-hidden">
-          <div className="w-1/2 border-r border-white/10 flex flex-col">
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/20 p-3 rounded-lg">
-                  <span className="text-2xl">{payment.category_icon}</span>
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          <div className="w-full lg:w-1/2 lg:border-r border-white/10 flex flex-col">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="bg-primary/20 p-2 sm:p-3 rounded-lg">
+                  <span className="text-xl sm:text-2xl">{payment.category_icon}</span>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-medium mb-1">{payment.category_name}</h3>
-                  <p className="text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
+                  <h3 className="text-base sm:text-lg font-medium mb-1">{payment.category_name}</h3>
+                  <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
                 </div>
               </div>
 
@@ -122,28 +122,28 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
               )}
             </div>
 
-            <div className="border-t border-white/10 p-6">
-              <div className="flex gap-3">
+            <div className="border-t border-white/10 p-4 sm:p-6">
+              <div className="flex gap-2 sm:gap-3">
                 <button
                   onClick={handleApprove}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
                 >
-                  <Icon name="Check" size={20} />
+                  <Icon name="Check" size={18} />
                   Согласовать
                 </button>
                 <button
                   onClick={handleReject}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
                 >
-                  <Icon name="X" size={20} />
+                  <Icon name="X" size={18} />
                   Отклонить
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="w-1/2 flex flex-col">
-            <div className="p-6 border-b border-white/10">
+          <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10">
+            <div className="p-4 sm:p-6 border-b border-white/10">
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Дата платежа</p>
@@ -171,9 +171,9 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
             </div>
 
             <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="p-6 border-b border-white/10">
-                <h3 className="text-lg font-medium flex items-center gap-2">
-                  <Icon name="MessageSquare" size={20} />
+              <div className="p-4 sm:p-6 border-b border-white/10">
+                <h3 className="text-base sm:text-lg font-medium flex items-center gap-2">
+                  <Icon name="MessageSquare" size={18} />
                   Обсуждение заявки
                 </h3>
               </div>

@@ -157,40 +157,40 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
     const replies = getReplies(comment.id);
 
     return (
-      <div className={`${isReply ? 'ml-12' : ''}`}>
-        <div className="flex gap-3 group">
+      <div className={`${isReply ? 'ml-6 sm:ml-12' : ''}`}>
+        <div className="flex gap-2 sm:gap-3 group">
           <div className="flex-shrink-0">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center text-xs sm:text-sm font-medium">
               {comment.full_name?.charAt(0) || comment.username.charAt(0).toUpperCase()}
             </div>
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="bg-card border border-white/10 rounded-lg p-3 mb-2">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium text-sm">{comment.full_name || comment.username}</span>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(comment.created_at).toLocaleString('ru-RU')}
+            <div className="bg-card border border-white/10 rounded-lg p-2 sm:p-3 mb-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2 mb-1">
+                <span className="font-medium text-xs sm:text-sm">{comment.full_name || comment.username}</span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground">
+                  {new Date(comment.created_at).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' })}
                 </span>
               </div>
-              <p className="text-sm whitespace-pre-wrap">{comment.comment_text}</p>
+              <p className="text-xs sm:text-sm whitespace-pre-wrap">{comment.comment_text}</p>
             </div>
 
-            <div className="flex items-center gap-4 mb-3">
+            <div className="flex items-center gap-3 sm:gap-4 mb-3">
               <button
                 onClick={() => handleLike(comment.id, comment.user_liked)}
-                className={`flex items-center gap-1 text-xs transition-colors ${
+                className={`flex items-center gap-1 text-[10px] sm:text-xs transition-colors ${
                   comment.user_liked ? 'text-primary' : 'text-muted-foreground hover:text-primary'
                 }`}
               >
-                <Icon name={comment.user_liked ? 'Heart' : 'Heart'} size={14} fill={comment.user_liked ? 'currentColor' : 'none'} />
+                <Icon name={comment.user_liked ? 'Heart' : 'Heart'} size={12} fill={comment.user_liked ? 'currentColor' : 'none'} />
                 {comment.likes_count > 0 && <span>{comment.likes_count}</span>}
               </button>
 
               {!isReply && (
                 <button
                   onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  className="text-[10px] sm:text-xs text-muted-foreground hover:text-primary transition-colors"
                 >
                   Ответить
                 </button>
@@ -203,14 +203,14 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder="Напишите ответ..."
-                  className="w-full bg-background border border-white/10 rounded-lg px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  className="w-full bg-background border border-white/10 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   rows={2}
                 />
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => handleReply(comment.id)}
                     disabled={!replyText.trim()}
-                    className="px-3 py-1 bg-primary hover:bg-primary/90 text-white text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 sm:px-3 py-1 bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Отправить
                   </button>
@@ -219,7 +219,7 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
                       setReplyingTo(null);
                       setReplyText('');
                     }}
-                    className="px-3 py-1 bg-white/5 hover:bg-white/10 text-sm rounded-lg transition-colors"
+                    className="px-2 sm:px-3 py-1 bg-white/5 hover:bg-white/10 text-xs sm:text-sm rounded-lg transition-colors"
                   >
                     Отмена
                   </button>
@@ -250,8 +250,8 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
 
   return (
     <div className="flex-1 flex flex-col">
-      <div className="flex-1 overflow-y-auto px-6 py-4">
-        <div className="space-y-4">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4">
+        <div className="space-y-3 sm:space-y-4">
           {parentComments.length === 0 ? (
             <p className="text-center text-muted-foreground py-8 text-sm">
               Пока нет комментариев. Будьте первым!
@@ -264,20 +264,20 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
         </div>
       </div>
 
-      <div className="border-t border-white/10 p-6">
+      <div className="border-t border-white/10 p-3 sm:p-6">
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Напишите комментарий..."
-          className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+          className="w-full bg-background border border-white/10 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
           rows={2}
         />
         <button
           onClick={handleAddComment}
           disabled={!newComment.trim()}
-          className="mt-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="mt-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          <Icon name="Send" size={16} />
+          <Icon name="Send" size={14} />
           Отправить
         </button>
       </div>
