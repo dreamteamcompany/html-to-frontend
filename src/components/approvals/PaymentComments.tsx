@@ -249,35 +249,37 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="border-b border-white/10 pb-4">
+    <div className="flex-1 flex flex-col">
+      <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="space-y-4">
+          {parentComments.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8 text-sm">
+              Пока нет комментариев. Будьте первым!
+            </p>
+          ) : (
+            parentComments.map((comment) => (
+              <CommentItem key={comment.id} comment={comment} />
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="border-t border-white/10 p-6">
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Напишите комментарий..."
           className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-          rows={3}
+          rows={2}
         />
         <button
           onClick={handleAddComment}
           disabled={!newComment.trim()}
           className="mt-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          <Icon name="MessageSquare" size={18} />
-          Отправить комментарий
+          <Icon name="Send" size={16} />
+          Отправить
         </button>
-      </div>
-
-      <div className="space-y-4">
-        {parentComments.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8 text-sm">
-            Пока нет комментариев. Будьте первым!
-          </p>
-        ) : (
-          parentComments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} />
-          ))
-        )}
       </div>
     </div>
   );

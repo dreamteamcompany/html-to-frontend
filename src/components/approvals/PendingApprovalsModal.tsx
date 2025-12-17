@@ -52,8 +52,8 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-card border border-white/10 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-card border-b border-white/10 px-6 py-4 flex items-center justify-between">
+      <div className="bg-card border border-white/10 rounded-xl w-[70vw] max-w-[1400px] h-[90vh] flex flex-col">
+        <div className="bg-card border-b border-white/10 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Детали заявки #{payment.id}</h2>
           <button
             onClick={onClose}
@@ -63,72 +63,112 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
           </button>
         </div>
 
-        <div className="p-6">
-          <div className="space-y-4 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="bg-primary/20 p-3 rounded-lg">
-                <span className="text-2xl">{payment.category_icon}</span>
+        <div className="flex-1 flex overflow-hidden">
+          <div className="w-1/2 border-r border-white/10 flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="bg-primary/20 p-3 rounded-lg">
+                  <span className="text-2xl">{payment.category_icon}</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium mb-1">{payment.category_name}</h3>
+                  <p className="text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-medium mb-1">{payment.category_name}</h3>
-                <p className="text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
-              </div>
-            </div>
 
-            {payment.description && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Описание</p>
-                <p className="font-medium">{payment.description}</p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Дата платежа</p>
-                <p className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</p>
-              </div>
-              {payment.submitted_at && (
+              {payment.description && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Дата отправки</p>
-                  <p className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</p>
+                  <p className="text-sm text-muted-foreground mb-1">Описание</p>
+                  <p className="font-medium">{payment.description}</p>
                 </div>
               )}
+
+              {payment.legal_entity_name && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Юридическое лицо</p>
+                  <p className="font-medium">{payment.legal_entity_name}</p>
+                </div>
+              )}
+
+              {payment.contractor_name && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Контрагент</p>
+                  <p className="font-medium">{payment.contractor_name}</p>
+                </div>
+              )}
+
+              {payment.department_name && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Отдел-заказчик</p>
+                  <p className="font-medium">{payment.department_name}</p>
+                </div>
+              )}
+
+              {payment.service_name && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Сервис</p>
+                  <p className="font-medium">{payment.service_name}</p>
+                </div>
+              )}
+
+              {payment.invoice_number && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
+                  <p className="font-medium">{payment.invoice_number}</p>
+                </div>
+              )}
+
+              {payment.created_by_name && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Создал заявку</p>
+                  <p className="font-medium">{payment.created_by_name}</p>
+                </div>
+              )}
+
+              <div className="border-t border-white/10 pt-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Решение по заявке</h3>
+                <label className="text-sm text-muted-foreground mb-2 block">Комментарий к решению (опционально)</label>
+                <textarea 
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Укажите причину согласования или отклонения"
+                  className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  rows={2}
+                />
+              </div>
             </div>
 
-            {payment.legal_entity_name && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Юридическое лицо</p>
-                <p className="font-medium">{payment.legal_entity_name}</p>
+            <div className="border-t border-white/10 p-6">
+              <div className="flex gap-3">
+                <button
+                  onClick={handleApprove}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Icon name="Check" size={20} />
+                  Согласовать
+                </button>
+                <button
+                  onClick={handleReject}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Icon name="X" size={20} />
+                  Отклонить
+                </button>
               </div>
-            )}
+            </div>
+          </div>
 
-            {payment.contractor_name && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Контрагент</p>
-                <p className="font-medium">{payment.contractor_name}</p>
-              </div>
-            )}
-
-            {payment.department_name && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Отдел-заказчик</p>
-                <p className="font-medium">{payment.department_name}</p>
-              </div>
-            )}
-
-            {payment.service_name && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Сервис</p>
-                <p className="font-medium">{payment.service_name}</p>
-              </div>
-            )}
-
-            {(payment.invoice_number || payment.invoice_date) && (
-              <div className="grid grid-cols-2 gap-4">
-                {payment.invoice_number && (
+          <div className="w-1/2 flex flex-col">
+            <div className="p-6 border-b border-white/10">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Дата платежа</p>
+                  <p className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</p>
+                </div>
+                {payment.submitted_at && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
-                    <p className="font-medium">{payment.invoice_number}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Дата отправки</p>
+                    <p className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</p>
                   </div>
                 )}
                 {payment.invoice_date && (
@@ -137,59 +177,24 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
                     <p className="font-medium">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</p>
                   </div>
                 )}
+                {payment.created_at && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Дата создания</p>
+                    <p className="font-medium">{new Date(payment.created_at).toLocaleString('ru-RU')}</p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
-            {payment.created_by_name && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Создал заявку</p>
-                <p className="font-medium">{payment.created_by_name}</p>
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="p-6 border-b border-white/10">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                  <Icon name="MessageSquare" size={20} />
+                  Обсуждение заявки
+                </h3>
               </div>
-            )}
-
-            {payment.created_at && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Дата создания</p>
-                <p className="font-medium">{new Date(payment.created_at).toLocaleString('ru-RU')}</p>
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-white/10 pt-6 mb-6">
-            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-              <Icon name="MessageSquare" size={20} />
-              Обсуждение заявки
-            </h3>
-            <PaymentComments paymentId={payment.id} />
-          </div>
-
-          <div className="border-t border-white/10 pt-6 mb-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">Решение по заявке</h3>
-            <label className="text-sm text-muted-foreground mb-2 block">Комментарий к решению (опционально)</label>
-            <textarea 
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Укажите причину согласования или отклонения"
-              className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-              rows={2}
-            />
-          </div>
-
-          <div className="flex gap-3 sticky bottom-0 bg-card py-4 border-t border-white/10">
-            <button
-              onClick={handleApprove}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-            >
-              <Icon name="Check" size={20} />
-              Согласовать
-            </button>
-            <button
-              onClick={handleReject}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-            >
-              <Icon name="X" size={20} />
-              Отклонить
-            </button>
+              <PaymentComments paymentId={payment.id} />
+            </div>
           </div>
         </div>
       </div>
