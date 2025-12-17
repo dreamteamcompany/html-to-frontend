@@ -19,6 +19,7 @@ import Roles from "./pages/Roles";
 import Contractors from "./pages/Contractors";
 import CustomerDepartments from "./pages/CustomerDepartments";
 import ApprovalsHistory from "./pages/ApprovalsHistory";
+import PendingApprovals from "./pages/PendingApprovals";
 import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/users" element={<ProtectedRoute requiredPermission={{ resource: 'users', action: 'read' }}><Users /></ProtectedRoute>} />
             <Route path="/roles" element={<ProtectedRoute requiredPermission={{ resource: 'roles', action: 'read' }}><Roles /></ProtectedRoute>} />
             <Route path="/approvals-history" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><ApprovalsHistory /></ProtectedRoute>} />
+            <Route path="/pending-approvals" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><PendingApprovals /></ProtectedRoute>} />
             <Route path="/services" element={<ProtectedRoute requiredPermission={{ resource: 'services', action: 'read' }}><Services /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

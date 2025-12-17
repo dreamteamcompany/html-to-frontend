@@ -79,12 +79,20 @@ const PaymentsSidebar = ({
           </Link>
         </li>
         {hasPermission('payments', 'read') && (
-          <li>
-            <Link to="/payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-              <Icon name="CreditCard" size={20} />
-              <span>Платежи</span>
-            </Link>
-          </li>
+          <>
+            <li>
+              <Link to="/payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+                <Icon name="CreditCard" size={20} />
+                <span>Платежи</span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/pending-approvals" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/pending-approvals') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+                <Icon name="ClipboardCheck" size={20} />
+                <span>На согласовании</span>
+              </Link>
+            </li>
+          </>
         )}
         <li>
           <button 
