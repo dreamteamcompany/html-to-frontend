@@ -36,18 +36,14 @@ interface PendingApprovalsModalProps {
 }
 
 const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: PendingApprovalsModalProps) => {
-  const [comment, setComment] = useState('');
-
   if (!payment) return null;
 
   const handleApprove = () => {
-    onApprove(payment.id, comment);
-    setComment('');
+    onApprove(payment.id);
   };
 
   const handleReject = () => {
-    onReject(payment.id, comment);
-    setComment('');
+    onReject(payment.id);
   };
 
   return (
@@ -124,17 +120,6 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
                   <p className="font-medium">{payment.created_by_name}</p>
                 </div>
               )}
-
-              <div className="border-t border-white/10 pt-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Решение по заявке</h3>
-                <textarea 
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Укажите причину согласования или отклонения"
-                  className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                  rows={2}
-                />
-              </div>
             </div>
 
             <div className="border-t border-white/10 p-6">
