@@ -34,8 +34,8 @@ const AuditLogs = () => {
   const [touchEnd, setTouchEnd] = useState(0);
   
   // Filters
-  const [entityTypeFilter, setEntityTypeFilter] = useState<string>('');
-  const [actionFilter, setActionFilter] = useState<string>('');
+  const [entityTypeFilter, setEntityTypeFilter] = useState<string>('all');
+  const [actionFilter, setActionFilter] = useState<string>('all');
   const [userFilter, setUserFilter] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -59,8 +59,8 @@ const AuditLogs = () => {
     const loadLogs = async () => {
       try {
         const params = new URLSearchParams({
-          ...(entityTypeFilter && { entity_type: entityTypeFilter }),
-          ...(actionFilter && { action: actionFilter }),
+          ...(entityTypeFilter && entityTypeFilter !== 'all' && { entity_type: entityTypeFilter }),
+          ...(actionFilter && actionFilter !== 'all' && { action: actionFilter }),
         });
 
         const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=audit-logs&${params}`, {
@@ -186,7 +186,7 @@ const AuditLogs = () => {
                     <SelectValue placeholder="Тип объекта" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Все типы</SelectItem>
+                    <SelectItem value="all">Все типы</SelectItem>
                     <SelectItem value="payment">Платежи</SelectItem>
                     <SelectItem value="category">Категории</SelectItem>
                     <SelectItem value="user">Пользователи</SelectItem>
@@ -198,7 +198,7 @@ const AuditLogs = () => {
                     <SelectValue placeholder="Действие" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Все действия</SelectItem>
+                    <SelectItem value="all">Все действия</SelectItem>
                     <SelectItem value="created">Создание</SelectItem>
                     <SelectItem value="updated">Изменение</SelectItem>
                     <SelectItem value="deleted">Удаление</SelectItem>
