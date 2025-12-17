@@ -226,6 +226,24 @@ const PaymentForm = ({
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="invoice_number">Номер счёта</Label>
+              <Input
+                id="invoice_number"
+                value={formData.invoice_number || ''}
+                onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
+                placeholder="Введите номер счёта"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invoice_date">Дата счёта</Label>
+              <Input
+                id="invoice_date"
+                type="date"
+                value={formData.invoice_date || ''}
+                onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
+              />
+            </div>
             
             {customFields.length > 0 && (
               <div className="border-t border-white/10 pt-4 space-y-4">

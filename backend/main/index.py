@@ -20,6 +20,8 @@ class PaymentRequest(BaseModel):
     contractor_id: int = Field(default=None)
     department_id: int = Field(default=None)
     service_id: int = Field(default=None)
+    invoice_number: str = Field(default=None)
+    invoice_date: str = Field(default=None)
 
 class CategoryRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -825,11 +827,12 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 category_name = category['name']
                 
                 cur.execute(
-                    f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, created_by, status) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
-                       RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, status, created_by""",
+                    f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, created_by, status) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
+                       RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, status, created_by""",
                     (category_name, pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
-                     pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, pay_req.service_id, payload['user_id'])
+                     pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, pay_req.service_id, 
+                     pay_req.invoice_number, pay_req.invoice_date, payload['user_id'])
                 )
                 row = cur.fetchone()
                 conn.commit()
@@ -846,6 +849,8 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'contractor_id': row['contractor_id'],
                     'department_id': row['department_id'],
                     'service_id': row['service_id'],
+                    'invoice_number': row['invoice_number'],
+                    'invoice_date': row['invoice_date'].isoformat() if row['invoice_date'] else None,
                     'status': row['status'],
                     'created_by': row['created_by']
                 })

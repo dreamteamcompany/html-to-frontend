@@ -101,6 +101,8 @@ const Payments = () => {
     contractor_id: undefined,
     department_id: undefined,
     service_id: undefined,
+    invoice_number: '',
+    invoice_date: '',
   });
 
   const loadPayments = () => {
@@ -227,6 +229,8 @@ const Payments = () => {
           legal_entity_id: undefined,
           contractor_id: undefined,
           department_id: undefined,
+          invoice_number: '',
+          invoice_date: '',
         };
         (Array.isArray(fields) ? fields : []).forEach((field: CustomField) => {
           initialData[`custom_field_${field.id}`] = undefined;
@@ -272,6 +276,8 @@ const Payments = () => {
           contractor_id: formData.contractor_id ? parseInt(formData.contractor_id) : null,
           department_id: formData.department_id ? parseInt(formData.department_id) : null,
           service_id: formData.service_id ? parseInt(formData.service_id) : null,
+          invoice_number: formData.invoice_number || null,
+          invoice_date: formData.invoice_date || null,
         }),
       });
 
@@ -289,6 +295,8 @@ const Payments = () => {
           contractor_id: undefined,
           department_id: undefined,
           service_id: undefined,
+          invoice_number: '',
+          invoice_date: '',
         };
         customFields.forEach(field => {
           resetData[`custom_field_${field.id}`] = undefined;
