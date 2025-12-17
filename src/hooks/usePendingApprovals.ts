@@ -70,6 +70,10 @@ export const usePendingApprovals = () => {
           const newPaymentsCount = currentCount - previousCountRef.current;
           const lastPayment = myPendingPayments[0];
 
+          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBDGH0fPTgjMGHm7A7+OZSA0PVKzn7q1aFwtDmuTyvWsjBSyBzfHZiTgIG2m98OWhUQ0NTqfi8LRlHwc5ldb0yoA1Bxt0w/DbmE0PD1am5fCsXhsLQ5zk876tJAU2idTy0oU4ByBxy+/cnE8ND1Gq5O+zYxwGO5fX9Mx+NwcbbMDv3ZlLDhBTrOXurV0bCkSb5fK8rSMGLH/M8diJOQgbbsjv35xPDwxPqeLusWIcBzuY2PTLfzcHHG/D7+CbSw0OUazl7KxeHApFnePzu64jBSh9zPLXijsIG3DI8OGdTQ4OT6nh7bJjHQc9mdj0yoA2ByBuxO3cnEwNDlKr5eyqXBsLRJrj8r6tIwYsf8zw14o7CBtwyPDhnU0ODk+p4e2yYx0HPZnY9MqANgcgbsTt3JxMDQ5Sq+XsqlwbC0Sa4/K+rSMGLH/M8NeKOwgbcMjw4Z1NDg5PqeHtsmMdBz2Z2PTKgDYHIG7E7dycTA0OUqvl7KpcGwtEmuPyvq0jBix/zPDXijsIG3DI8OGdTQ4OT6nh7bJjHQc9mdj0yoA2ByBuxO3cnEwNDlKr5eyqXBsLRJrj8r6tIwYsf8zw14o7CBtwyPDhnU0ODk+p4e2yYx0HPZnY9MqANgcgbsTt3JxMDQ5Sq+XsqlwbC0Sa4/K+rSMGLH/M8NeKOwgbcMjw4Z1NDg5PqeHtsmMdBz2Z2PTKgDYHIG7E7dycTA0OUqvl7KpcGwtEmuPyvq0jBix/zPDXijsIG3DI8OGdTQ4OT6nh7bJjHQc9mdj0yoA2ByBuxO3cnEwNDlKr5eyqXBsLRJrj8r6tIwYsf8zw14o7CBtwyPDhnU0ODk+p4e2yYx0HPZnY9MqANgcgbsTt3JxMDQ5Sq+XsqlwbC0Sa4/K+rSMGLH/M8NeKOwgbcMjw4Z1NDg5PqeHtsmMdBz2Z2PTKgDYHIG7E7dycTA0OUqvl7KpcGwtEmuPyvq0jBix/zPDXijsIG3DI8OGdTQ4OT6nh7bJjHQc9mdj0yoA2ByBuxO3cnEwNDlKr5eyqXBsLRJrj8r6tIwYsf8zw14o7CBtwyPDhnU0ODk+p4e2yYx0HPZnY9MqANgcgbsTt3JxMDQ5Sq+XsqlwbC0Sa4/K+rSMGLH/M8NeKOwgbcMjw4Z1NDg5PqeHtsmMdBz2Z2PTKgDYHIG7E7dycTA0OUqvl7KpcGwtEmuPyvq0jBix/zPDXijsIG3DI8OGdTQ4OT6nh7bJjHQc9mdj0yoA2ByBuxO3cnEwNDlKr5eyqXBsLRJrj8r6tIwYsf8zw14o7CBtwyPDhnU0ODk+p4e2yYx0HPZnY9MqANgcgbsTt3JxMDQ5Sq+XsqlwbC0Sa4/K+rSMGLH/M8NeKOwgbcMjw4Z1NDg5PqeHtsmMdBz2Z2PTKgDYHIG7E7dycTA0OUqvl7KpcGwtEmuPyA==');
+          audio.volume = 0.3;
+          audio.play().catch(err => console.log('Audio play failed:', err));
+
           toast({
             title: '🔔 Новый платёж на согласование',
             description: lastPayment?.description 
