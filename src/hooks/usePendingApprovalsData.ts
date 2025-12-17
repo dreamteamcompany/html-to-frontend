@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
+interface CustomField {
+  id: number;
+  name: string;
+  field_type: string;
+  value: string;
+}
+
 interface Payment {
   id: number;
   category_id: number;
@@ -25,6 +32,7 @@ interface Payment {
   invoice_date?: string;
   created_at?: string;
   submitted_at?: string;
+  custom_fields?: CustomField[];
 }
 
 interface Service {

@@ -838,6 +838,26 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 }
                 for row in rows
             ]
+            
+            # Load custom fields for each payment
+            for payment in payments:
+                cur.execute(f"""
+                    SELECT cf.id, cf.name, cf.field_type, pcv.value
+                    FROM {SCHEMA}.payment_custom_values pcv
+                    JOIN {SCHEMA}.custom_fields cf ON pcv.custom_field_id = cf.id
+                    WHERE pcv.payment_id = %s
+                """, (payment['id'],))
+                custom_fields = cur.fetchall()
+                payment['custom_fields'] = [
+                    {
+                        'id': cf[0],
+                        'name': cf[1],
+                        'field_type': cf[2],
+                        'value': cf[3]
+                    }
+                    for cf in custom_fields
+                ]
+            
             return response(200, payments)
         
         elif method == 'POST':

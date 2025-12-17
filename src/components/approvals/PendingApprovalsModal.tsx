@@ -3,6 +3,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import PaymentComments from './PaymentComments';
 
+interface CustomField {
+  id: number;
+  name: string;
+  field_type: string;
+  value: string;
+}
+
 interface Payment {
   id: number;
   category_id: number;
@@ -26,6 +33,7 @@ interface Payment {
   invoice_date?: string;
   created_at?: string;
   submitted_at?: string;
+  custom_fields?: CustomField[];
 }
 
 interface PendingApprovalsModalProps {
@@ -118,6 +126,18 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Создал заявку</p>
                   <p className="font-medium">{payment.created_by_name}</p>
+                </div>
+              )}
+
+              {payment.custom_fields && payment.custom_fields.length > 0 && (
+                <div className="border-t border-white/10 pt-3 space-y-3">
+                  <h4 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h4>
+                  {payment.custom_fields.map((field) => (
+                    <div key={field.id}>
+                      <p className="text-sm text-muted-foreground mb-1">{field.name}</p>
+                      <p className="font-medium">{field.value}</p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

@@ -10,6 +10,13 @@ import PendingApprovalsModal from '@/components/approvals/PendingApprovalsModal'
 import { usePendingApprovalsData } from '@/hooks/usePendingApprovalsData';
 import { usePendingApprovalsFilters } from '@/hooks/usePendingApprovalsFilters';
 
+interface CustomField {
+  id: number;
+  name: string;
+  field_type: string;
+  value: string;
+}
+
 interface Payment {
   id: number;
   category_id: number;
@@ -33,6 +40,7 @@ interface Payment {
   invoice_date?: string;
   created_at?: string;
   submitted_at?: string;
+  custom_fields?: CustomField[];
 }
 
 const PendingApprovals = () => {

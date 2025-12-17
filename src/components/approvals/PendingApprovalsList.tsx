@@ -1,6 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 
+interface CustomField {
+  id: number;
+  name: string;
+  field_type: string;
+  value: string;
+}
+
 interface Payment {
   id: number;
   category_id: number;
@@ -18,6 +25,7 @@ interface Payment {
   contractor_name?: string;
   department_name?: string;
   invoice_number?: string;
+  custom_fields?: CustomField[];
 }
 
 interface PendingApprovalsListProps {
