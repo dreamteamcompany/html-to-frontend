@@ -260,6 +260,18 @@ const Payments = () => {
       });
       return;
     }
+
+    if (formData.invoice_date) {
+      const year = new Date(formData.invoice_date).getFullYear();
+      if (year < 2000 || year > 2099) {
+        toast({
+          title: 'Ошибка',
+          description: 'Дата должна быть между 2000 и 2099 годом',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
     
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments', {

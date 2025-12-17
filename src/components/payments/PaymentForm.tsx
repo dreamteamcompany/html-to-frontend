@@ -233,6 +233,8 @@ const PaymentForm = ({
                   type="date"
                   value={formData.invoice_date || ''}
                   onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
+                  min="2000-01-01"
+                  max="2099-12-31"
                 />
               </div>
             </div>
