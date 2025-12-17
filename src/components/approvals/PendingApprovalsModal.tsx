@@ -127,7 +127,6 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
 
               <div className="border-t border-white/10 pt-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Решение по заявке</h3>
-                <label className="text-sm text-muted-foreground mb-2 block">Комментарий к решению (опционально)</label>
                 <textarea 
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
