@@ -175,87 +175,7 @@ const Payments = () => {
     }
   };
 
-  const handleApprove = async (paymentId: number) => {
-    const comment = prompt('Комментарий (необязательно):');
-    
-    try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Auth-Token': token || '',
-        },
-        body: JSON.stringify({ payment_id: paymentId, action: 'approve', comment: comment || '' }),
-      });
 
-      if (response.ok) {
-        toast({
-          title: 'Успешно',
-          description: 'Платёж одобрен',
-        });
-        loadPayments();
-      } else {
-        const error = await response.json();
-        toast({
-          title: 'Ошибка',
-          description: error.error || 'Не удалось одобрить платёж',
-          variant: 'destructive',
-        });
-      }
-    } catch (err) {
-      console.error('Failed to approve:', err);
-      toast({
-        title: 'Ошибка сети',
-        description: 'Проверьте подключение к интернету',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleReject = async (paymentId: number) => {
-    const comment = prompt('Укажите причину отклонения:');
-    if (!comment) {
-      toast({
-        title: 'Ошибка',
-        description: 'Комментарий обязателен при отклонении',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Auth-Token': token || '',
-        },
-        body: JSON.stringify({ payment_id: paymentId, action: 'reject', comment }),
-      });
-
-      if (response.ok) {
-        toast({
-          title: 'Успешно',
-          description: 'Платёж отклонён',
-        });
-        loadPayments();
-      } else {
-        const error = await response.json();
-        toast({
-          title: 'Ошибка',
-          description: error.error || 'Не удалось отклонить платёж',
-          variant: 'destructive',
-        });
-      }
-    } catch (err) {
-      console.error('Failed to reject:', err);
-      toast({
-        title: 'Ошибка сети',
-        description: 'Проверьте подключение к интернету',
-        variant: 'destructive',
-      });
-    }
-  };
 
   useEffect(() => {
     loadPayments();
@@ -443,8 +363,6 @@ const Payments = () => {
         <PaymentsList 
           payments={payments} 
           loading={loading} 
-          onApprove={handleApprove}
-          onReject={handleReject}
           onSubmitForApproval={handleSubmitForApproval}
           onPaymentClick={setSelectedPayment}
         />
