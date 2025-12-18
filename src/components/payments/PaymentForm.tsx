@@ -303,7 +303,7 @@ const PaymentForm = ({
                           id={`custom_field_${field.id}`}
                           type="file"
                           accept={field.options ? field.options.split(',').map(ext => `.${ext.trim()}`).join(',') : '*'}
-                          className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                          className="cursor-pointer file:mr-4 file:py-2.5 file:px-5 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer file:shadow-sm"
                           onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
