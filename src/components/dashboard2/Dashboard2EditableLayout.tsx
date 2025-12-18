@@ -227,16 +227,39 @@ const Dashboard2EditableLayout = () => {
   ];
 
   useEffect(() => {
-    const saved = localStorage.getItem('dashboard2-free-layout');
-    if (saved) {
+    const loadLayouts = async () => {
       try {
-        setLayouts(JSON.parse(saved));
-      } catch (e) {
+        const response = await fetch('https://functions.poehali.dev/5977014b-b187-49a2-8bf6-4ffb51e2aaeb', {
+          method: 'GET',
+          headers: {
+            'X-User-Id': 'admin',
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.layouts && data.layouts.length > 0) {
+            const loadedLayouts = data.layouts.map((l: any) => ({
+              id: l.card_id,
+              x: l.x,
+              y: l.y,
+              width: l.width,
+              height: l.height,
+            }));
+            setLayouts(loadedLayouts);
+          } else {
+            setLayouts(defaultLayouts);
+          }
+        } else {
+          setLayouts(defaultLayouts);
+        }
+      } catch (error) {
+        console.error('Failed to load layouts:', error);
         setLayouts(defaultLayouts);
       }
-    } else {
-      setLayouts(defaultLayouts);
-    }
+    };
+    
+    loadLayouts();
   }, []);
 
   useEffect(() => {
@@ -300,16 +323,44 @@ const Dashboard2EditableLayout = () => {
     }
   }, [dragState, resizeState]);
 
-  const handleSave = () => {
-    localStorage.setItem('dashboard2-free-layout', JSON.stringify(layouts));
-    setIsEditMode(false);
-    alert('Расположение сохранено!');
+  const handleSave = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/5977014b-b187-49a2-8bf6-4ffb51e2aaeb', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': 'admin',
+        },
+        body: JSON.stringify({ layouts }),
+      });
+      
+      if (response.ok) {
+        setIsEditMode(false);
+        alert('Расположение сохранено!');
+      } else {
+        alert('Ошибка при сохранении');
+      }
+    } catch (error) {
+      console.error('Failed to save layouts:', error);
+      alert('Ошибка при сохранении');
+    }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (confirm('Сбросить расположение к исходному?')) {
       setLayouts(defaultLayouts);
-      localStorage.removeItem('dashboard2-free-layout');
+      try {
+        await fetch('https://functions.poehali.dev/5977014b-b187-49a2-8bf6-4ffb51e2aaeb', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': 'admin',
+          },
+          body: JSON.stringify({ layouts: defaultLayouts }),
+        });
+      } catch (error) {
+        console.error('Failed to reset layouts:', error);
+      }
     }
   };
 

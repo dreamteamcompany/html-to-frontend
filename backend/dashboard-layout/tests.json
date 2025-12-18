@@ -1,0 +1,42 @@
+{
+  "tests": [
+    {
+      "name": "Get empty layouts",
+      "method": "GET",
+      "path": "/",
+      "headers": {
+        "X-User-Id": "test-user-123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "layouts": []
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Save layouts",
+      "method": "POST",
+      "path": "/",
+      "headers": {
+        "X-User-Id": "test-user-456",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "layouts": [
+          {
+            "id": "total-expenses",
+            "x": 0,
+            "y": 0,
+            "width": 350,
+            "height": 200
+          }
+        ]
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
