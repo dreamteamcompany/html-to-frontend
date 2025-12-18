@@ -67,7 +67,6 @@ const Services = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    intermediate_approver_id: '',
     final_approver_id: '',
   });
 
@@ -122,7 +121,7 @@ const Services = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.intermediate_approver_id || !formData.final_approver_id) {
+    if (!formData.name || !formData.final_approver_id) {
       toast({
         title: 'Ошибка',
         description: 'Заполните все обязательные поля',
@@ -142,7 +141,7 @@ const Services = () => {
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
-          intermediate_approver_id: parseInt(formData.intermediate_approver_id),
+          intermediate_approver_id: parseInt(formData.final_approver_id),
           final_approver_id: parseInt(formData.final_approver_id),
         }),
       });
@@ -173,7 +172,6 @@ const Services = () => {
     setFormData({
       name: service.name,
       description: service.description || '',
-      intermediate_approver_id: service.intermediate_approver_id.toString(),
       final_approver_id: service.final_approver_id.toString(),
     });
     setDialogOpen(true);
@@ -210,7 +208,6 @@ const Services = () => {
     setFormData({
       name: '',
       description: '',
-      intermediate_approver_id: '',
       final_approver_id: '',
     });
     setEditingService(null);
@@ -296,28 +293,7 @@ const Services = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="intermediate">Промежуточное согласующее лицо (Техдир) *</Label>
-                  <Select
-                    value={formData.intermediate_approver_id}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, intermediate_approver_id: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите пользователя" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="final">Окончательно согласующее лицо (CEO) *</Label>
+                  <Label htmlFor="final">Согласующее лицо (CEO) *</Label>
                   <Select
                     value={formData.final_approver_id}
                     onValueChange={(value) =>
