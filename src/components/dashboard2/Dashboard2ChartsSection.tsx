@@ -7,7 +7,7 @@ import DepartmentComparisonChart from './blocks/DepartmentComparisonChart';
 
 const Dashboard2ChartsSection = () => {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '30px' }}>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
       <MonthlyDynamicsChart />
       <CategoryExpensesChart />
       <ContractorComparisonChart />
