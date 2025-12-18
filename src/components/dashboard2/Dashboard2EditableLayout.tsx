@@ -70,6 +70,9 @@ const Dashboard2EditableLayout = () => {
         
         if (response.ok) {
           const data = await response.json();
+          console.log('Loaded from DB:', data.layouts);
+          console.log('Available cards:', dashboardCards.map((c: DashboardCard) => c.id));
+          
           if (data.layouts && data.layouts.length > 0) {
             const loadedLayouts = data.layouts
               .filter((l: any) => dashboardCards.some((c: DashboardCard) => c.id === l.card_id))
@@ -80,6 +83,8 @@ const Dashboard2EditableLayout = () => {
                 width: l.width,
                 height: l.height,
               }));
+            
+            console.log('Filtered layouts:', loadedLayouts);
             
             if (loadedLayouts.length > 0) {
               setLayouts(loadedLayouts);

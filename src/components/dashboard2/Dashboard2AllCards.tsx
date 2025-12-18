@@ -14,8 +14,6 @@ const Dashboard2AllCards = () => {
 
   const defaultCards: DashboardCard[] = [
     { id: 'total-expenses', title: 'Общие IT Расходы', type: 'stat' },
-    { id: 'server-infrastructure', title: 'Серверная Инфраструктура', type: 'stat' },
-    { id: 'communication-services', title: 'Коммуникационные Сервисы', type: 'stat' },
     { id: 'total-payments', title: 'Всего Платежей', type: 'stat' },
     { id: 'attention-required', title: 'Требуют внимания', type: 'stat' },
     { id: 'annual-savings', title: 'Годовая Экономия', type: 'stat' },
@@ -61,50 +59,6 @@ const Dashboard2AllCards = () => {
               <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>Общая сумма расходов</div>
               <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#e31a1a' }}>
                 <Icon name="ArrowUp" size={14} /> +12.5% с прошлого месяца
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 'server-infrastructure':
-        return (
-          <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', borderTop: '4px solid #01b574', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)' }}>
-            <CardContent className="p-6">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                <div>
-                  <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Серверная Инфраструктура</div>
-                  <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500' }}>Расходы на серверы</div>
-                </div>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(1, 181, 116, 0.1)', color: '#01b574', border: '1px solid rgba(1, 181, 116, 0.2)' }}>
-                  <Icon name="Database" size={20} />
-                </div>
-              </div>
-              <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>98,500 ₽</div>
-              <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>53.4% от общего бюджета</div>
-              <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#e31a1a' }}>
-                <Icon name="ArrowUp" size={14} /> +8.2% с прошлого месяца
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 'communication-services':
-        return (
-          <Card style={{ background: '#111c44', border: '1px solid rgba(57, 101, 255, 0.4)', borderTop: '4px solid #3965ff', boxShadow: '0 0 30px rgba(57, 101, 255, 0.2), inset 0 0 15px rgba(57, 101, 255, 0.05)' }}>
-            <CardContent className="p-6">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                <div>
-                  <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Коммуникационные Сервисы</div>
-                  <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500' }}>Телефония и мессенджеры</div>
-                </div>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(57, 101, 255, 0.1)', color: '#3965ff', border: '1px solid rgba(57, 101, 255, 0.2)' }}>
-                  <Icon name="MessageCircle" size={20} />
-                </div>
-              </div>
-              <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>45,300 ₽</div>
-              <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>24.6% от общего бюджета</div>
-              <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#a3aed0' }}>
-                <Icon name="Minus" size={14} /> Без изменений
               </div>
             </CardContent>
           </Card>
