@@ -12,25 +12,25 @@ interface ExpensesGrowthChartProps {
 
 const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
   return (
-    <Card className="relative" style={{
+    <Card className="relative w-full" style={{
       background: '#111c44',
       backdropFilter: 'blur(60px)',
       border: 'none',
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
-      width: '600px',
-      maxWidth: '100%',
-      height: '350px',
+      maxWidth: '600px',
+      height: 'auto',
+      minHeight: '300px',
       overflow: 'hidden',
     }}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2" style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
-          <Icon name="BarChart3" style={{ color: '#2CD9FF' }} />
-          Динамика роста затрат
+      <CardHeader className="px-4 py-3 sm:px-6 sm:py-4">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg" style={{ color: '#fff', fontWeight: 'bold' }}>
+          <Icon name="BarChart3" size={20} style={{ color: '#2CD9FF' }} />
+          <span className="text-sm sm:text-base">Динамика роста затрат</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4" style={{ overflow: 'hidden' }}>
-        <div className="relative flex items-center justify-center" style={{ height: '210px', overflow: 'auto' }}>
-          <svg viewBox="0 0 800 400" style={{ width: '100%', height: '210px', minHeight: '210px' }} preserveAspectRatio="xMidYMid meet">
+      <CardContent className="p-2 sm:p-4" style={{ overflow: 'hidden' }}>
+        <div className="relative flex items-center justify-center w-full" style={{ height: '200px', minHeight: '200px', overflow: 'auto' }}>
+          <svg viewBox="0 0 800 400" className="w-full h-full" style={{ minHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
             {(() => {
               const maxMonthAmount = Math.max(...monthlyData.map(m => m.amount));
               const spacing = 130;
@@ -80,7 +80,7 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                         y={line.y + 4}
                         textAnchor="end"
                         fill="#c8cfca"
-                        style={{ fontSize: '14px', fontWeight: '500' }}
+                        style={{ fontSize: '12px', fontWeight: '500' }}
                       >
                         {line.value}М
                       </text>
@@ -97,7 +97,7 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
                           y={365}
                           textAnchor="middle"
                           fill="#c8cfca"
-                          style={{ fontSize: '14px' }}
+                          style={{ fontSize: '12px' }}
                         >
                           {data.month}
                         </text>
