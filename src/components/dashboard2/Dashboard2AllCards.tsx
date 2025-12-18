@@ -80,19 +80,14 @@ const Dashboard2AllCards = () => {
   const chartCards = cardOrder.filter(card => card.type === 'chart');
 
   return (
-    <div style={{ marginBottom: '30px' }}>
+    <div className="mb-6 sm:mb-8">
       {/* Stat Cards Row */}
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '24px', flexWrap: 'nowrap' }}>
+      <div className="flex gap-3 sm:gap-5 mb-4 sm:mb-6 overflow-x-auto pb-2">
         {statCards.map((card) => {
-          const isAttention = card.id === 'attention-required';
           return (
             <div 
               key={card.id} 
-              style={{ 
-                width: isAttention ? '400px' : '360px', 
-                height: '300px',
-                flexShrink: 0
-              }}
+              className="flex-shrink-0 w-[280px] sm:w-[320px] lg:w-[360px] h-[280px] sm:h-[300px]"
             >
               {renderCard(card)}
             </div>
@@ -101,14 +96,11 @@ const Dashboard2AllCards = () => {
       </div>
 
       {/* Chart Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 580px)', gap: '24px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {chartCards.map((card) => (
           <div 
             key={card.id} 
-            style={{ 
-              width: '580px', 
-              height: '400px'
-            }}
+            className="w-full"
           >
             {renderCard(card)}
           </div>
