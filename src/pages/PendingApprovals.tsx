@@ -226,9 +226,13 @@ const PendingApprovals = () => {
             </div>
           ) : (
             <PendingApprovalsList
+              loading={loading}
               payments={filteredPayments}
-              onPaymentClick={setSelectedPayment}
+              searchQuery={searchQuery}
+              handleApprove={handleModalApprove}
+              handleReject={handleModalReject}
               getStatusBadge={getStatusBadge}
+              onPaymentClick={setSelectedPayment}
             />
           )}
         </div>
