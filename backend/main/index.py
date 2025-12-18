@@ -1860,8 +1860,7 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
     finally:
         cur.close()
 
-def handle_approvals(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
-    payload = verify_token(event)
+def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
     if not payload:
         return response(401, {'error': 'Требуется авторизация'})
     
@@ -1973,12 +1972,19 @@ def handle_approvals(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]
             cur.close()
             return response(403, {'error': 'У вас нет прав для этого действия'})
         
-        cur.execute(f"""
-            INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (req.payment_id, user_id, user_role, req.action, req.comment))
-        
-        conn.commit()
+        try:
+            print(f"[DEBUG] Inserting approval: payment_id={req.payment_id}, user_id={user_id}, user_role={user_role}, action={req.action}, comment={req.comment}")
+            cur.execute(f"""
+                INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (req.payment_id, user_id, user_role, req.action, req.comment))
+            
+            conn.commit()
+        except Exception as e:
+            print(f"[ERROR] Error saving to DB: {str(e)}")
+            conn.rollback()
+            cur.close()
+            return response(500, {'error': f'Error saving to DB: {str(e)}'})
         
         # Audit log
         cur.execute(f"SELECT username FROM {SCHEMA}.users WHERE id = %s", (user_id,))
