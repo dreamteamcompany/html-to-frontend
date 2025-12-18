@@ -335,6 +335,14 @@ const Payments = () => {
     }
     
     try {
+      const customFieldsData: Record<string, string> = {};
+      customFields.forEach(field => {
+        const value = formData[`custom_field_${field.id}`];
+        if (value) {
+          customFieldsData[field.id.toString()] = value;
+        }
+      });
+
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments', {
         method: 'POST',
         headers: {
@@ -351,6 +359,7 @@ const Payments = () => {
           service_id: formData.service_id ? parseInt(formData.service_id) : null,
           invoice_number: formData.invoice_number || null,
           invoice_date: formData.invoice_date || null,
+          custom_fields: customFieldsData,
         }),
       });
 

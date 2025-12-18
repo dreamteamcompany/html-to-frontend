@@ -886,10 +886,10 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             # Load custom fields for each payment
             for payment in payments:
                 cur.execute(f"""
-                    SELECT cf.id, cf.name, cf.field_type, pcv.value
-                    FROM {SCHEMA}.payment_custom_values pcv
-                    JOIN {SCHEMA}.custom_fields cf ON pcv.custom_field_id = cf.id
-                    WHERE pcv.payment_id = %s
+                    SELECT cf.id, cf.name, cf.field_type, cfv.value
+                    FROM {SCHEMA}.custom_field_values cfv
+                    JOIN {SCHEMA}.custom_fields cf ON cfv.custom_field_id = cf.id
+                    WHERE cfv.payment_id = %s
                 """, (payment['id'],))
                 custom_fields = cur.fetchall()
                 payment['custom_fields'] = [
@@ -940,6 +940,18 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                      pay_req.invoice_number, pay_req.invoice_date, payload['user_id'])
                 )
                 row = cur.fetchone()
+                payment_id = row['id']
+                
+                # Save custom field values
+                custom_fields_data = body.get('custom_fields', {})
+                if custom_fields_data:
+                    for field_id_str, field_value in custom_fields_data.items():
+                        field_id = int(field_id_str)
+                        cur.execute(
+                            f"INSERT INTO {SCHEMA}.custom_field_values (payment_id, custom_field_id, value) VALUES (%s, %s, %s)",
+                            (payment_id, field_id, str(field_value))
+                        )
+                
                 conn.commit()
                 
                 # Audit log
