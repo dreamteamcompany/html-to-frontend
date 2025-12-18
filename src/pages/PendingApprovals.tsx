@@ -188,6 +188,13 @@ const PendingApprovals = () => {
                 <Icon name="CheckCircle" size={18} />
                 <span className="text-sm font-medium">Согласованные и оплаченные</span>
               </Link>
+              <Link
+                to="/rejected-payments"
+                className="px-4 py-2 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors flex items-center gap-2"
+              >
+                <Icon name="XCircle" size={18} />
+                <span className="text-sm font-medium">Отклонённые</span>
+              </Link>
             </div>
 
             {showFilters && (
