@@ -33,7 +33,7 @@ const Dashboard2ServicesDynamics = () => {
     return amount.toLocaleString('ru-RU') + ' ₽';
   };
 
-  const dynamicHeight = Math.max(300, sortedData.length * 45 + 90);
+  const dynamicHeight = Math.max(300, sortedData.length * 45 + 120);
   const barHeight = 32;
   const spacing = 45;
   const maxWidth = 420;
@@ -65,45 +65,10 @@ const Dashboard2ServicesDynamics = () => {
         animation: 'rotate 30s linear infinite'
       }} />
       <CardContent className="p-3" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ 
-              background: 'linear-gradient(135deg, #3965ff 0%, #2948cc 100%)',
-              padding: '5px',
-              borderRadius: '6px',
-              boxShadow: '0 0 15px rgba(57, 101, 255, 0.6)',
-              animation: 'pulse 3s infinite'
-            }}>
-              <Icon name="Activity" size={12} style={{ color: '#fff' }} />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '11px', fontWeight: '800', color: '#fff' }}>Динамика Расходов по Сервисам</h3>
-              <p style={{ fontSize: '8px', color: '#a3aed0', marginTop: '1px' }}>Топ-10 сервисов • Тренды за месяц</p>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            <div style={{ 
-              background: 'rgba(57, 101, 255, 0.15)',
-              padding: '3px 6px',
-              borderRadius: '4px',
-              border: '1px solid rgba(57, 101, 255, 0.3)'
-            }}>
-              <span style={{ color: '#3965ff', fontSize: '8px', fontWeight: '700' }}>{formatAmount(totalAmount)}</span>
-            </div>
-            <div style={{ 
-              background: avgTrend >= 0 ? 'rgba(1, 181, 116, 0.15)' : 'rgba(255, 107, 107, 0.15)',
-              padding: '3px 6px',
-              borderRadius: '4px',
-              border: avgTrend >= 0 ? '1px solid rgba(1, 181, 116, 0.3)' : '1px solid rgba(255, 107, 107, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '3px'
-            }}>
-              <Icon name={avgTrend >= 0 ? "TrendingUp" : "TrendingDown"} size={8} style={{ color: avgTrend >= 0 ? '#01b574' : '#ff6b6b' }} />
-              <span style={{ color: avgTrend >= 0 ? '#01b574' : '#ff6b6b', fontSize: '8px', fontWeight: '700' }}>
-                {avgTrend >= 0 ? '+' : ''}{avgTrend}%
-              </span>
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon name="Activity" size={18} style={{ color: '#2CD9FF' }} />
+            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>Динамика расходов по сервисам</h3>
           </div>
         </div>
 
