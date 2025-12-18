@@ -142,26 +142,23 @@ const PendingApprovals = () => {
 
       <main className="flex-1 lg:ml-64 bg-background min-h-screen">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-white/10">
-          <div className="px-4 sm:px-6 py-3">
+          <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="lg:hidden p-2 rounded-lg hover:bg-white/5 transition-colors"
             >
               <Icon name="Menu" size={24} />
             </button>
+            <div className="flex-1 lg:ml-0 ml-2">
+              <h1 className="text-2xl md:text-3xl font-bold">На согласовании</h1>
+              <p className="text-sm md:text-base text-muted-foreground">
+                Платежи, ожидающие вашего решения
+              </p>
+            </div>
           </div>
           
           <div className="px-4 sm:px-6 py-3 border-t border-white/10">
             <div className="flex items-center gap-3 mb-3">
-              <Link
-                to="/approved-payments"
-                className="px-4 py-2 rounded-lg border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-400 transition-colors flex items-center gap-2"
-              >
-                <Icon name="CheckCircle" size={18} />
-                <span className="text-sm font-medium">Согласованные и оплаченные</span>
-              </Link>
-            </div>
-            <div className="flex items-center gap-3">
               <div className="flex-1 relative">
                 <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -182,6 +179,15 @@ const PendingApprovals = () => {
                   </span>
                 )}
               </button>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/approved-payments"
+                className="px-4 py-2 rounded-lg border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-400 transition-colors flex items-center gap-2"
+              >
+                <Icon name="CheckCircle" size={18} />
+                <span className="text-sm font-medium">Согласованные и оплаченные</span>
+              </Link>
             </div>
 
             {showFilters && (
@@ -222,15 +228,6 @@ const PendingApprovals = () => {
         </div>
 
         <div className="p-4 sm:p-6">
-          <div className="mb-6">
-            <div className="flex items-center justify-between gap-4 mb-2">
-              <h1 className="text-2xl md:text-3xl font-bold">На согласовании</h1>
-            </div>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Платежи, ожидающие вашего решения
-            </p>
-          </div>
-
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
