@@ -33,19 +33,24 @@ const Dashboard2ServicesDynamics = () => {
     return amount.toLocaleString('ru-RU') + ' ₽';
   };
 
-  const barHeight = 1.3;
-  const spacing = 1.8;
-  const maxWidth = 60;
-  const startX = 27;
+  const dynamicHeight = Math.max(300, sortedData.length * 45 + 90);
+  const barHeight = 32;
+  const spacing = 45;
+  const maxWidth = 420;
+  const startX = 160;
   const barColors = ['#3965ff', '#2CD9FF', '#01B574', '#7551e9', '#ffb547'];
 
   return (
     <Card style={{ 
-      background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
-      border: '1px solid rgba(57, 101, 255, 0.3)',
-      boxShadow: '0 0 40px rgba(57, 101, 255, 0.2), inset 0 0 30px rgba(57, 101, 255, 0.08)',
-      position: 'relative',
+      background: '#111c44',
+      backdropFilter: 'blur(60px)',
+      border: 'none',
+      boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
+      width: '100%',
+      maxWidth: '650px',
+      height: `${dynamicHeight}px`,
       overflow: 'hidden',
+      position: 'relative',
       marginBottom: '20px'
     }}>
       <div style={{
@@ -110,7 +115,7 @@ const Dashboard2ServicesDynamics = () => {
           marginBottom: '8px',
           position: 'relative'
         }}>
-          <svg viewBox={`0 0 100 ${sortedData.length * spacing + 5}`} style={{ width: '100%', height: 'auto', maxHeight: '380px' }} preserveAspectRatio="xMidYMid meet">
+          <svg viewBox={`0 0 650 ${sortedData.length * spacing + 30}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               {sortedData.map((_, index) => {
                 const color = barColors[index % barColors.length];
