@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 
@@ -44,6 +46,7 @@ interface Payment {
 
 const ApprovedPayments = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,14 +145,24 @@ const ApprovedPayments = () => {
           <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
           
           <div className="px-4 sm:px-6 py-4">
-            <div className="mb-4">
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <Icon name="CheckCircle" size={28} className="text-green-500" />
-                Согласованные и оплаченные платежи
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Все платежи, одобренные CEO и готовые к оплате
-              </p>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  <Icon name="CheckCircle" size={28} className="text-green-500" />
+                  Согласованные и оплаченные платежи
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Все платежи, одобренные CEO и готовые к оплате
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/pending-approvals')}
+                className="flex items-center gap-2"
+              >
+                <Icon name="ArrowLeft" size={18} />
+                Назад
+              </Button>
             </div>
 
             <div className="relative">
