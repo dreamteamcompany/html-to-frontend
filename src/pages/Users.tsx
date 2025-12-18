@@ -15,6 +15,7 @@ interface User {
   is_active: boolean;
   created_at: string;
   last_login: string | null;
+  photo_url?: string;
   roles: { id: number; name: string }[];
 }
 
@@ -43,6 +44,7 @@ const Users = () => {
     full_name: '',
     position: '',
     role_ids: [] as number[],
+    photo_url: '',
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -127,6 +129,10 @@ const Users = () => {
         body.password = formData.password;
       }
       
+      if (formData.photo_url) {
+        body.photo_url = formData.photo_url;
+      }
+      
       const response = await fetch(url, {
         method,
         headers: {
@@ -145,6 +151,7 @@ const Users = () => {
           full_name: '',
           position: '',
           role_ids: [],
+          photo_url: '',
         });
         loadUsers();
       } else {
@@ -209,6 +216,7 @@ const Users = () => {
       position: user.position || '',
       password: '',
       role_ids: user.roles?.map(r => r.id).filter(id => id !== undefined) || [],
+      photo_url: user.photo_url || '',
     });
     setDialogOpen(true);
   };

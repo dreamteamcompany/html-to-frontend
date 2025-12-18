@@ -9,6 +9,7 @@ interface User {
   is_active: boolean;
   created_at: string;
   last_login: string | null;
+  photo_url?: string;
   roles: { id: number; name: string }[];
 }
 
@@ -38,9 +39,17 @@ const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps
             <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
               <td className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                    {user.full_name.charAt(0)}
-                  </div>
+                  {user.photo_url ? (
+                    <img 
+                      src={user.photo_url} 
+                      alt={user.full_name}
+                      className="w-10 h-10 rounded-full object-cover border-2 border-white/10"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                      {user.full_name.charAt(0)}
+                    </div>
+                  )}
                   <div>
                     <div className="font-medium">{user.full_name || 'Без имени'}</div>
                     <div className="text-sm text-muted-foreground">@{user.username}</div>

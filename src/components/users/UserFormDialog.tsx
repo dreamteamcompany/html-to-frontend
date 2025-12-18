@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +21,7 @@ interface User {
   is_active: boolean;
   created_at: string;
   last_login: string | null;
+  photo_url?: string;
   roles: { id: number; name: string }[];
 }
 
@@ -39,6 +42,7 @@ interface UserFormDialogProps {
     full_name: string;
     position: string;
     role_ids: number[];
+    photo_url: string;
   };
   setFormData: (data: any) => void;
   roles: Role[];
@@ -55,6 +59,73 @@ const UserFormDialog = ({
   roles,
   handleSubmit,
 }: UserFormDialogProps) => {
+  const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'Ошибка',
+        description: 'Файл слишком большой. Максимум 5 МБ',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Ошибка',
+        description: 'Можно загружать только изображения',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+        const base64Data = base64.split(',')[1];
+
+        const response = await fetch('https://functions.poehali.dev/37368ef2-6990-44c6-9439-232d3a5820ff', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            file: base64Data,
+            filename: file.name,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setFormData({ ...formData, photo_url: data.url });
+          toast({
+            title: 'Успешно',
+            description: 'Фото загружено',
+          });
+        } else {
+          throw new Error('Upload failed');
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Failed to upload photo:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось загрузить фото',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <Dialog open={dialogOpen} onOpenChange={(open) => {
       setDialogOpen(open);
@@ -66,6 +137,7 @@ const UserFormDialog = ({
           full_name: '',
           position: '',
           role_ids: [],
+          photo_url: '',
         });
       }
     }}>
@@ -83,6 +155,39 @@ const UserFormDialog = ({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Фото профиля</Label>
+            <div className="flex items-center gap-4">
+              {formData.photo_url ? (
+                <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-white/10">
+                  <img src={formData.photo_url} alt="Фото профиля" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, photo_url: '' })}
+                    className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                  >
+                    <Icon name="Trash2" size={20} className="text-white" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-white/5 border-2 border-white/10 flex items-center justify-center">
+                  <Icon name="User" size={32} className="text-muted-foreground" />
+                </div>
+              )}
+              <div className="flex-1">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  disabled={uploading}
+                  className="cursor-pointer"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {uploading ? 'Загрузка...' : 'JPG, PNG или GIF, до 5 МБ'}
+                </p>
+              </div>
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="username">Логин</Label>
             <Input
