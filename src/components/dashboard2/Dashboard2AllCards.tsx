@@ -91,49 +91,37 @@ const Dashboard2AllCards = () => {
           <Card style={{ 
             background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
             border: '1px solid rgba(255, 107, 107, 0.3)',
-            boxShadow: '0 0 30px rgba(255, 107, 107, 0.15), inset 0 0 20px rgba(255, 107, 107, 0.05)',
+            boxShadow: '0 0 30px rgba(255, 107, 107, 0.15)',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            height: '300px'
           }}>
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '150%',
-              height: '150%',
-              background: 'radial-gradient(circle, rgba(255, 107, 107, 0.08) 0%, transparent 70%)',
-              pointerEvents: 'none'
-            }} />
-            <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                <div style={{ 
-                  background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
-                  padding: '12px',
-                  borderRadius: '12px',
-                  boxShadow: '0 0 20px rgba(255, 107, 107, 0.5)',
-                  animation: 'pulse 2s infinite'
-                }}>
-                  <Icon name="AlertTriangle" size={24} style={{ color: '#fff' }} />
+            <CardContent className="p-6" style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Требуют внимания</div>
+                  <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500' }}>Критические задачи</div>
                 </div>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Требуют внимания</h3>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255, 107, 107, 0.1)', color: '#ff6b6b', border: '1px solid rgba(255, 107, 107, 0.2)' }}>
+                  <Icon name="AlertTriangle" size={20} />
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {[
-                  { icon: 'Clock3', text: 'Просрочено 4 платежа', color: '#ff6b6b', urgent: true },
-                  { icon: 'XCircle', text: '2 отклоненных запроса', color: '#ffb547', urgent: false }
+                  { icon: 'Clock3', text: 'Просрочено 4 платежа', color: '#ff6b6b' },
+                  { icon: 'XCircle', text: '2 отклоненных запроса', color: '#ffb547' }
                 ].map((alert, idx) => (
                   <div key={idx} style={{ 
-                    background: alert.urgent ? 'rgba(255, 107, 107, 0.1)' : 'rgba(255, 181, 71, 0.1)',
+                    background: 'rgba(255, 107, 107, 0.05)',
                     padding: '12px',
-                    borderRadius: '12px',
-                    border: `1px solid ${alert.color}40`,
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 107, 107, 0.2)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px'
                   }}>
-                    <Icon name={alert.icon} size={18} style={{ color: alert.color, flexShrink: 0 }} />
-                    <span style={{ color: '#fff', fontSize: '13px', fontWeight: '500' }}>{alert.text}</span>
+                    <Icon name={alert.icon} size={16} style={{ color: alert.color, flexShrink: 0 }} />
+                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500' }}>{alert.text}</span>
                   </div>
                 ))}
               </div>
@@ -180,11 +168,12 @@ const Dashboard2AllCards = () => {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 360px)', gap: '24px', marginBottom: '30px' }}>
       {cardOrder.map((card) => {
         const isChart = card.type === 'chart';
+        const isAttention = card.id === 'attention-required';
         return (
           <div 
             key={card.id} 
             style={{ 
-              width: isChart ? '580px' : '360px', 
+              width: isChart ? '580px' : isAttention ? '400px' : '360px', 
               height: isChart ? '400px' : '300px',
               gridColumn: isChart ? 'span 2' : 'span 1'
             }}
