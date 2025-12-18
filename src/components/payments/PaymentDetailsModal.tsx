@@ -140,8 +140,7 @@ const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => 
             )}
 
             {payment.custom_fields && payment.custom_fields.length > 0 && (
-              <div className="border-t border-white/10 pt-3 space-y-3">
-                <h4 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h4>
+              <>
                 {payment.custom_fields.map((field) => (
                   <div key={field.id}>
                     <p className="text-sm text-muted-foreground mb-1">{field.name}</p>
@@ -160,7 +159,7 @@ const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => 
                     )}
                   </div>
                 ))}
-              </div>
+              </>
             )}
           </div>
 
