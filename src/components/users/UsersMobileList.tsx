@@ -5,8 +5,8 @@ import Icon from '@/components/ui/icon';
 interface User {
   id: number;
   username: string;
-  email: string;
   full_name: string;
+  position: string;
   is_active: boolean;
   created_at: string;
   last_login: string | null;
@@ -42,7 +42,9 @@ const UsersMobileList = ({ users, onEdit, onToggleStatus, onDelete }: UsersMobil
                 {user.is_active ? 'Активен' : 'Заблокирован'}
               </span>
             </div>
-            <div className="text-sm text-muted-foreground">{user.email}</div>
+            {user.position && (
+              <div className="text-sm text-muted-foreground">Должность: {user.position}</div>
+            )}
             <div className="flex flex-wrap gap-2">
               {user.roles?.map((role) => (
                 <span key={role.id} className="px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">

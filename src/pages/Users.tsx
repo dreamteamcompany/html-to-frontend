@@ -10,8 +10,8 @@ import UsersMobileList from '@/components/users/UsersMobileList';
 interface User {
   id: number;
   username: string;
-  email: string;
   full_name: string;
+  position: string;
   is_active: boolean;
   created_at: string;
   last_login: string | null;
@@ -39,9 +39,9 @@ const Users = () => {
 
   const [formData, setFormData] = useState({
     username: '',
-    email: '',
     password: '',
     full_name: '',
+    position: '',
     role_ids: [] as number[],
   });
 
@@ -118,8 +118,8 @@ const Users = () => {
       
       const body: any = {
         username: formData.username,
-        email: formData.email,
         full_name: formData.full_name,
+        position: formData.position,
         role_ids: formData.role_ids,
       };
       
@@ -141,9 +141,9 @@ const Users = () => {
         setEditingUser(null);
         setFormData({
           username: '',
-          email: '',
           password: '',
           full_name: '',
+          position: '',
           role_ids: [],
         });
         loadUsers();
@@ -205,8 +205,8 @@ const Users = () => {
     setEditingUser(user);
     setFormData({
       username: user.username,
-      email: user.email,
       full_name: user.full_name,
+      position: user.position || '',
       password: '',
       role_ids: user.roles?.map(r => r.id).filter(id => id !== undefined) || [],
     });

@@ -504,7 +504,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute("""
             SELECT 
-                u.id, u.username, u.email, u.full_name, u.is_active, 
+                u.id, u.username, u.full_name, u.position, u.is_active, 
                 u.created_at, u.last_login,
                 COALESCE(
                     array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
@@ -529,13 +529,13 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         
         body_data = json.loads(event.get('body', '{}'))
         username = body_data.get('username', '').strip()
-        email = body_data.get('email', '').strip().lower()
         password = body_data.get('password', '')
         full_name = body_data.get('full_name', '').strip()
+        position = body_data.get('position', '').strip()
         role_ids = body_data.get('role_ids', [])
         
-        if not username or not email or not password or not full_name:
-            return response(400, {'error': 'Логин, email, пароль и имя обязательны'})
+        if not username or not password or not full_name:
+            return response(400, {'error': 'Логин, пароль и имя обязательны'})
         
         if len(password) < 4:
             return response(400, {'error': 'Пароль должен быть не менее 4 символов'})
@@ -546,10 +546,10 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         
         try:
             cur.execute("""
-                INSERT INTO users (username, email, password_hash, full_name, is_active)
+                INSERT INTO users (username, password_hash, full_name, position, is_active)
                 VALUES (%s, %s, %s, %s, true)
-                RETURNING id, username, email, full_name, is_active, created_at
-            """, (username, email, password_hash, full_name))
+                RETURNING id, username, full_name, position, is_active, created_at
+            """, (username, password_hash, full_name, position))
             
             new_user = cur.fetchone()
             
@@ -564,7 +564,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             cur.execute("""
                 SELECT 
-                    u.id, u.username, u.email, u.full_name, u.is_active, 
+                    u.id, u.username, u.full_name, u.position, u.is_active, 
                     u.created_at, u.last_login,
                     COALESCE(
                         array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
@@ -584,9 +584,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         except psycopg2.IntegrityError as e:
             conn.rollback()
             cur.close()
-            if 'username' in str(e):
-                return response(409, {'error': 'Пользователь с таким логином уже существует'})
-            return response(409, {'error': 'Пользователь с таким email уже существует'})
+            return response(409, {'error': 'Пользователь с таким логином уже существует'})
     
     elif method == 'PUT':
         user_payload, error = verify_token_and_permission(event, conn, 'users.update')
@@ -607,7 +605,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             cur.execute("""
                 UPDATE users SET is_active = %s
                 WHERE id = %s
-                RETURNING id, username, email, full_name, is_active
+                RETURNING id, username, full_name, position, is_active
             """, (body_data['is_active'], user_id))
             
             updated_user = cur.fetchone()
@@ -617,20 +615,20 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             return response(200, dict(updated_user))
         
         username = body_data.get('username', '').strip()
-        email = body_data.get('email', '').strip().lower()
         full_name = body_data.get('full_name', '').strip()
+        position = body_data.get('position', '').strip()
         password = body_data.get('password')
         role_ids = body_data.get('role_ids')
         
-        if not username or not email or not full_name:
-            return response(400, {'error': 'Логин, email и имя обязательны'})
+        if not username or not full_name:
+            return response(400, {'error': 'Логин и имя обязательны'})
         
         try:
             cur.execute("""
                 UPDATE users 
-                SET username = %s, email = %s, full_name = %s
+                SET username = %s, full_name = %s, position = %s
                 WHERE id = %s
-            """, (username, email, full_name, user_id))
+            """, (username, full_name, position, user_id))
             
             if password and len(password) >= 4:
                 password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -648,7 +646,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             cur.execute("""
                 SELECT 
-                    u.id, u.username, u.email, u.full_name, u.is_active, 
+                    u.id, u.username, u.full_name, u.position, u.is_active, 
                     u.created_at, u.last_login,
                     COALESCE(
                         array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),

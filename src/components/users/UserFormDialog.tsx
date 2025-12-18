@@ -14,8 +14,8 @@ import {
 interface User {
   id: number;
   username: string;
-  email: string;
   full_name: string;
+  position: string;
   is_active: boolean;
   created_at: string;
   last_login: string | null;
@@ -35,9 +35,9 @@ interface UserFormDialogProps {
   setEditingUser: (user: User | null) => void;
   formData: {
     username: string;
-    email: string;
     password: string;
     full_name: string;
+    position: string;
     role_ids: number[];
   };
   setFormData: (data: any) => void;
@@ -62,9 +62,9 @@ const UserFormDialog = ({
         setEditingUser(null);
         setFormData({
           username: '',
-          email: '',
           password: '',
           full_name: '',
+          position: '',
           role_ids: [],
         });
       }
@@ -94,17 +94,6 @@ const UserFormDialog = ({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="user@example.com"
-              required
-            />
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="full_name">Полное имя</Label>
             <Input
               id="full_name"
@@ -112,6 +101,15 @@ const UserFormDialog = ({
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               placeholder="Иван Иванов"
               required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="position">Должность</Label>
+            <Input
+              id="position"
+              value={formData.position}
+              onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+              placeholder="Менеджер"
             />
           </div>
           <div className="space-y-2">

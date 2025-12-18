@@ -4,8 +4,8 @@ import Icon from '@/components/ui/icon';
 interface User {
   id: number;
   username: string;
-  email: string;
   full_name: string;
+  position: string;
   is_active: boolean;
   created_at: string;
   last_login: string | null;
@@ -26,7 +26,7 @@ const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps
         <thead>
           <tr className="border-b border-white/10">
             <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Пользователь</th>
-            <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Email</th>
+            <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Должность</th>
             <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Роли</th>
             <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Последний вход</th>
             <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Статус</th>
@@ -47,7 +47,7 @@ const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps
                   </div>
                 </div>
               </td>
-              <td className="p-4 text-muted-foreground">{user.email}</td>
+              <td className="p-4 text-muted-foreground">{user.position || '—'}</td>
               <td className="p-4">
                 <div className="flex flex-wrap gap-2">
                   {user.roles?.map((role) => (
