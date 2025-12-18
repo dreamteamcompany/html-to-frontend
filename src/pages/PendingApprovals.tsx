@@ -142,12 +142,16 @@ const PendingApprovals = () => {
 
       <main className="flex-1 lg:ml-64 bg-background min-h-screen">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-white/10">
-          <PendingApprovalsHeader
-            menuOpen={menuOpen}
-            setMenuOpen={setMenuOpen}
-          />
+          <div className="px-4 sm:px-6 py-3">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="lg:hidden p-2 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              <Icon name="Menu" size={24} />
+            </button>
+          </div>
           
-          <div className="px-4 sm:px-6 py-3 border-b border-white/10">
+          <div className="px-4 sm:px-6 py-3 border-t border-white/10">
             <div className="flex items-center gap-3 mb-3">
               <Link
                 to="/approved-payments"
@@ -218,6 +222,15 @@ const PendingApprovals = () => {
         </div>
 
         <div className="p-4 sm:p-6">
+          <div className="mb-6">
+            <div className="flex items-center justify-between gap-4 mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold">На согласовании</h1>
+            </div>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Платежи, ожидающие вашего решения
+            </p>
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
