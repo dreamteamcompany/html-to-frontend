@@ -6,6 +6,7 @@ import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 
@@ -192,67 +193,81 @@ const RejectedPayments = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              <div className="mb-4 text-sm text-muted-foreground">
-                Найдено платежей: {filteredPayments.length} • Общая сумма: {formatAmount(filteredPayments.reduce((sum, p) => sum + p.amount, 0))}
-              </div>
-              
+            <div className="space-y-4">
               {filteredPayments.map((payment) => (
-                <div
-                  key={payment.id}
+                <Card 
+                  key={payment.id} 
+                  className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-white/10 transition-all cursor-pointer" 
                   onClick={() => setSelectedPayment(payment)}
-                  className="p-4 rounded-lg border border-red-500/20 hover:bg-red-500/5 transition-all cursor-pointer"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className="text-2xl flex-shrink-0">
-                        {payment.category_icon || '📄'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h4 className="font-semibold">{payment.description}</h4>
-                          <span className="px-2 py-0.5 rounded-full text-xs bg-red-500/20 text-red-300 flex-shrink-0">
-                            ✗ Отклонено
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span>{payment.category_name}</span>
-                            {payment.service_name && (
-                              <>
-                                <span>•</span>
-                                <span>{payment.service_name}</span>
-                              </>
+                  <CardContent className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400 flex-shrink-0">
+                            <Icon name={payment.category_icon} size={24} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-2 flex-wrap">
+                              <h3 className="text-lg font-semibold">{payment.category_name}</h3>
+                              <span className="px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-300">✗ Отклонено</span>
+                            </div>
+                            <p className="text-muted-foreground text-sm mb-2">{payment.description}</p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                              {payment.service_name && (
+                                <div className="flex items-center gap-1">
+                                  <Icon name="Briefcase" size={14} />
+                                  <span>{payment.service_name}</span>
+                                </div>
+                              )}
+                              {payment.contractor_name && (
+                                <div className="flex items-center gap-1">
+                                  <Icon name="Building2" size={14} />
+                                  <span>{payment.contractor_name}</span>
+                                </div>
+                              )}
+                              {payment.department_name && (
+                                <div className="flex items-center gap-1">
+                                  <Icon name="Users" size={14} />
+                                  <span>{payment.department_name}</span>
+                                </div>
+                              )}
+                              {payment.invoice_number && (
+                                <div className="flex items-center gap-1">
+                                  <Icon name="FileText" size={14} />
+                                  <span>Счёт №{payment.invoice_number}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1">
+                                <Icon name="Calendar" size={14} />
+                                <span>
+                                  {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
+                                    day: '2-digit',
+                                    month: 'long',
+                                    year: 'numeric'
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                            {payment.rejection_comment && (
+                              <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                                <div className="text-xs text-red-300 mb-1 font-medium">Причина отклонения:</div>
+                                <div className="text-sm text-red-200">{payment.rejection_comment}</div>
+                              </div>
                             )}
                           </div>
-                          {payment.legal_entity_name && (
-                            <div>Юр. лицо: {payment.legal_entity_name}</div>
-                          )}
-                          {payment.contractor_name && (
-                            <div>Контрагент: {payment.contractor_name}</div>
-                          )}
-                          {payment.rejected_at && (
-                            <div className="text-red-400">
-                              Отклонено: {formatDate(payment.rejected_at)}
-                            </div>
-                          )}
-                          {payment.rejection_comment && (
-                            <div className="mt-2 p-2 rounded bg-red-500/10 border border-red-500/20">
-                              <div className="text-xs text-red-300 mb-1">Причина отклонения:</div>
-                              <div className="text-sm text-red-200">{payment.rejection_comment}</div>
-                            </div>
-                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col items-start lg:items-end gap-2 lg:border-l lg:border-white/10 lg:pl-6">
+                        <div className="text-center lg:text-right">
+                          <div className="text-sm text-muted-foreground mb-1">Сумма платежа</div>
+                          <div className="text-2xl font-bold">{payment.amount.toLocaleString('ru-RU')} ₽</div>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-xl font-bold">{formatAmount(payment.amount)}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {formatDate(payment.payment_date)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
