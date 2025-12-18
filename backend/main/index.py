@@ -512,7 +512,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute("""
             SELECT 
-                u.id, u.username, u.full_name, u.position, u.is_active, 
+                u.id, u.username, u.full_name, u.position, u.photo_url, u.is_active, 
                 u.created_at, u.last_login,
                 COALESCE(
                     array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
@@ -540,6 +540,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         password = body_data.get('password', '')
         full_name = body_data.get('full_name', '').strip()
         position = body_data.get('position', '').strip()
+        photo_url = body_data.get('photo_url', '').strip()
         role_ids = body_data.get('role_ids', [])
         
         if not username or not password or not full_name:
@@ -554,10 +555,10 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         
         try:
             cur.execute("""
-                INSERT INTO users (username, password_hash, full_name, position, is_active)
-                VALUES (%s, %s, %s, %s, true)
-                RETURNING id, username, full_name, position, is_active, created_at
-            """, (username, password_hash, full_name, position))
+                INSERT INTO users (username, password_hash, full_name, position, photo_url, email, is_active)
+                VALUES (%s, %s, %s, %s, %s, %s, true)
+                RETURNING id, username, full_name, position, photo_url, is_active, created_at
+            """, (username, password_hash, full_name, position, photo_url, username + '@example.com'))
             
             new_user = cur.fetchone()
             
@@ -572,7 +573,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             cur.execute("""
                 SELECT 
-                    u.id, u.username, u.full_name, u.position, u.is_active, 
+                    u.id, u.username, u.full_name, u.position, u.photo_url, u.is_active, 
                     u.created_at, u.last_login,
                     COALESCE(
                         array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
@@ -613,7 +614,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             cur.execute("""
                 UPDATE users SET is_active = %s
                 WHERE id = %s
-                RETURNING id, username, full_name, position, is_active
+                RETURNING id, username, full_name, position, photo_url, is_active
             """, (body_data['is_active'], user_id))
             
             updated_user = cur.fetchone()
@@ -625,6 +626,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         username = body_data.get('username', '').strip()
         full_name = body_data.get('full_name', '').strip()
         position = body_data.get('position', '').strip()
+        photo_url = body_data.get('photo_url', '').strip()
         password = body_data.get('password')
         role_ids = body_data.get('role_ids')
         
@@ -634,9 +636,9 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         try:
             cur.execute("""
                 UPDATE users 
-                SET username = %s, full_name = %s, position = %s
+                SET username = %s, full_name = %s, position = %s, photo_url = %s
                 WHERE id = %s
-            """, (username, full_name, position, user_id))
+            """, (username, full_name, position, photo_url, user_id))
             
             if password and len(password) >= 4:
                 password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -654,7 +656,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             cur.execute("""
                 SELECT 
-                    u.id, u.username, u.full_name, u.position, u.is_active, 
+                    u.id, u.username, u.full_name, u.position, u.photo_url, u.is_active, 
                     u.created_at, u.last_login,
                     COALESCE(
                         array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
