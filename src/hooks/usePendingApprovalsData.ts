@@ -80,10 +80,6 @@ export const usePendingApprovalsData = () => {
           if (!service) {
             return false;
           }
-
-          if (payment.status === 'pending_tech_director' && service.intermediate_approver_id === user.id) {
-            return true;
-          }
           
           if (payment.status === 'pending_ceo' && service.final_approver_id === user.id) {
             return true;
