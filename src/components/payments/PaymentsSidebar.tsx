@@ -101,6 +101,12 @@ const PaymentsSidebar = ({
                 )}
               </Link>
             </li>
+            <li>
+              <Link to="/savings" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/savings') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+                <Icon name="PiggyBank" size={20} />
+                <span>Реестр экономии</span>
+              </Link>
+            </li>
           </>
         )}
         <li>
@@ -164,12 +170,6 @@ const PaymentsSidebar = ({
               </button>
             </div>
           )}
-        </li>
-        <li>
-          <Link to="/savings" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/savings') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-            <Icon name="PiggyBank" size={20} />
-            <span>Реестр экономии</span>
-          </Link>
         </li>
         <li>
           <button 
