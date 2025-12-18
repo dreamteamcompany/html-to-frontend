@@ -48,6 +48,7 @@ const CustomFields = () => {
     name: '',
     field_type: 'text',
     options: '',
+    file_extensions: '',
   });
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -111,7 +112,7 @@ const CustomFields = () => {
       if (response.ok) {
         setDialogOpen(false);
         setEditingField(null);
-        setFormData({ name: '', field_type: 'text', options: '' });
+        setFormData({ name: '', field_type: 'text', options: '', file_extensions: '' });
         loadFields();
       }
     } catch (err) {
@@ -121,7 +122,12 @@ const CustomFields = () => {
 
   const handleEdit = (field: CustomField) => {
     setEditingField(field);
-    setFormData({ name: field.name, field_type: field.field_type, options: field.options });
+    setFormData({ 
+      name: field.name, 
+      field_type: field.field_type, 
+      options: field.options,
+      file_extensions: field.options || ''
+    });
     setDialogOpen(true);
   };
 
@@ -152,7 +158,7 @@ const CustomFields = () => {
     setDialogOpen(open);
     if (!open) {
       setEditingField(null);
-      setFormData({ name: '', field_type: 'text', options: '' });
+      setFormData({ name: '', field_type: 'text', options: '', file_extensions: '' });
     }
   };
 
@@ -165,6 +171,7 @@ const CustomFields = () => {
   };
 
   const needsOptions = formData.field_type === 'select' || formData.field_type === 'toggle';
+  const needsFileExtensions = formData.field_type === 'file';
 
   return (
     <div className="flex min-h-screen">
@@ -292,6 +299,20 @@ const CustomFields = () => {
                     </p>
                   </div>
                 )}
+                {needsFileExtensions && (
+                  <div className="space-y-2">
+                    <Label htmlFor="file_extensions">Разрешённые форматы файлов</Label>
+                    <Input
+                      id="file_extensions"
+                      value={formData.file_extensions}
+                      onChange={(e) => setFormData({ ...formData, file_extensions: e.target.value, options: e.target.value })}
+                      placeholder="pdf, jpg, png, doc, docx"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Введите расширения файлов через запятую (например: pdf, jpg, png)
+                    </p>
+                  </div>
+                )}
                 <Button type="submit" className="w-full">
                   {editingField ? 'Сохранить' : 'Добавить'}
                 </Button>
@@ -326,13 +347,21 @@ const CustomFields = () => {
                         </div>
                       </div>
                     </div>
-                    {field.options && (
+                    {field.options && field.field_type !== 'file' && (
                       <div className="mb-3 text-sm text-muted-foreground">
                         <div className="font-medium mb-1">Варианты:</div>
                         <div className="text-xs space-y-1">
                           {field.options.split('\n').filter(opt => opt.trim()).map((opt, idx) => (
                             <div key={idx} className="truncate">• {opt}</div>
                           ))}
+                        </div>
+                      </div>
+                    )}
+                    {field.options && field.field_type === 'file' && (
+                      <div className="mb-3 text-sm text-muted-foreground">
+                        <div className="font-medium mb-1">Разрешённые форматы:</div>
+                        <div className="text-xs">
+                          {field.options}
                         </div>
                       </div>
                     )}

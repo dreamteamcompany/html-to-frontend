@@ -298,13 +298,57 @@ const PaymentForm = ({
                       </Select>
                     )}
                     {field.field_type === 'file' && (
-                      <Input
-                        id={`custom_field_${field.id}`}
-                        type="text"
-                        value={formData[`custom_field_${field.id}`] || ''}
-                        onChange={(e) => setFormData({ ...formData, [`custom_field_${field.id}`]: e.target.value })}
-                        placeholder="URL файла"
-                      />
+                      <div>
+                        <Input
+                          id={`custom_field_${field.id}`}
+                          type="file"
+                          accept={field.options ? field.options.split(',').map(ext => `.${ext.trim()}`).join(',') : '*'}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            
+                            const allowedExtensions = field.options?.split(',').map(ext => ext.trim().toLowerCase()) || [];
+                            const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+                            
+                            if (allowedExtensions.length > 0 && !allowedExtensions.includes(fileExtension)) {
+                              alert(`Недопустимый формат файла. Разрешены: ${field.options}`);
+                              e.target.value = '';
+                              return;
+                            }
+                            
+                            const reader = new FileReader();
+                            reader.onload = async () => {
+                              const base64 = (reader.result as string).split(',')[1];
+                              
+                              try {
+                                const response = await fetch('https://functions.poehali.dev/465f29bc-7031-4a0b-a671-05368d234efe', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({
+                                    file: base64,
+                                    fileName: file.name,
+                                    contentType: file.type
+                                  })
+                                });
+                                
+                                const data = await response.json();
+                                if (data.url) {
+                                  setFormData({ ...formData, [`custom_field_${field.id}`]: data.url });
+                                }
+                              } catch (err) {
+                                console.error('Upload failed:', err);
+                                alert('Ошибка загрузки файла');
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                        {formData[`custom_field_${field.id}`] && (
+                          <p className="text-xs text-green-500 mt-1">✓ Файл загружен</p>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}

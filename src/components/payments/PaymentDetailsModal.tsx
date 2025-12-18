@@ -145,7 +145,19 @@ const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => 
                 {payment.custom_fields.map((field) => (
                   <div key={field.id}>
                     <p className="text-sm text-muted-foreground mb-1">{field.name}</p>
-                    <p className="font-medium">{field.value}</p>
+                    {field.field_type === 'file' && field.value ? (
+                      <a 
+                        href={field.value} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="font-medium text-primary hover:underline flex items-center gap-2"
+                      >
+                        <Icon name="Download" size={16} />
+                        Скачать файл
+                      </a>
+                    ) : (
+                      <p className="font-medium">{field.value}</p>
+                    )}
                   </div>
                 ))}
               </div>
