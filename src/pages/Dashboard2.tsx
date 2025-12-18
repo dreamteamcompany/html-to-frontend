@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
-import Dashboard2EditableLayout from '@/components/dashboard2/Dashboard2EditableLayout';
-import Dashboard2Charts from '@/components/dashboard2/Dashboard2Charts';
+import Dashboard2FullEditableLayout from '@/components/dashboard2/Dashboard2FullEditableLayout';
 import Dashboard2Table from '@/components/dashboard2/Dashboard2Table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
@@ -129,23 +128,23 @@ const Dashboard2 = () => {
             )}
 
             <TabsContent value="today" className="space-y-6 mt-6">
-              <Dashboard2EditableLayout />
+              <Dashboard2FullEditableLayout />
               <Dashboard2Table />
             </TabsContent>
             <TabsContent value="week" className="space-y-6 mt-6">
-              <Dashboard2EditableLayout />
+              <Dashboard2FullEditableLayout />
               <Dashboard2Table />
             </TabsContent>
             <TabsContent value="month" className="space-y-6 mt-6">
-              <Dashboard2EditableLayout />
+              <Dashboard2FullEditableLayout />
               <Dashboard2Table />
             </TabsContent>
             <TabsContent value="year" className="space-y-6 mt-6">
-              <Dashboard2EditableLayout />
+              <Dashboard2FullEditableLayout />
               <Dashboard2Table />
             </TabsContent>
             <TabsContent value="custom" className="space-y-6 mt-6">
-              <Dashboard2EditableLayout />
+              <Dashboard2FullEditableLayout />
               <Dashboard2Table />
             </TabsContent>
           </Tabs>

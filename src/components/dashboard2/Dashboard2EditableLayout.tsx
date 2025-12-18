@@ -64,6 +64,24 @@ const Dashboard2EditableLayout = () => {
     { id: 'communication-services', x: 740, y: 0, width: 350, height: 200 },
     { id: 'total-payments', x: 0, y: 220, width: 350, height: 200 },
     { id: 'attention-required', x: 370, y: 220, width: 720, height: 420 },
+    
+    { id: 'chart-expenses-monthly', x: 0, y: 660, width: 550, height: 450 },
+    { id: 'chart-it-categories', x: 570, y: 660, width: 550, height: 450 },
+    { id: 'chart-contractors', x: 0, y: 1130, width: 550, height: 450 },
+    { id: 'chart-budget-structure', x: 570, y: 1130, width: 550, height: 450 },
+    { id: 'chart-efficiency', x: 0, y: 1600, width: 550, height: 450 },
+    { id: 'chart-trends', x: 570, y: 1600, width: 550, height: 450 },
+    
+    { id: 'top-payments', x: 0, y: 2070, width: 370, height: 420 },
+    { id: 'live-metrics', x: 390, y: 2070, width: 370, height: 420 },
+    { id: 'contractors-list', x: 780, y: 2070, width: 370, height: 420 },
+    
+    { id: 'annual-savings', x: 0, y: 2510, width: 370, height: 300 },
+    { id: 'average-speed', x: 390, y: 2510, width: 370, height: 300 },
+    { id: 'active-team', x: 780, y: 2510, width: 370, height: 300 },
+    
+    { id: 'payment-calendar', x: 0, y: 2830, width: 1150, height: 450 },
+    { id: 'upcoming-payments', x: 0, y: 3300, width: 1150, height: 500 },
   ];
 
   const cards: DashboardCard[] = [
