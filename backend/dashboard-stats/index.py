@@ -53,7 +53,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             COALESCE(SUM(amount), 0) as total_amount,
             COUNT(*) as total_count
         FROM t_p61788166_html_to_frontend.payments 
-        WHERE status IN ('pending_tech_director', 'pending_ceo') 
+        WHERE status = 'pending_ceo' 
            OR ceo_approved_at IS NOT NULL
     """)
     row = cur.fetchone()
@@ -65,7 +65,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     cur.execute("""
         SELECT COALESCE(SUM(amount), 0) as prev_amount
         FROM t_p61788166_html_to_frontend.payments 
-        WHERE (status IN ('pending_tech_director', 'pending_ceo') OR ceo_approved_at IS NOT NULL)
+        WHERE (status = 'pending_ceo' OR ceo_approved_at IS NOT NULL)
           AND created_at < %s
     """, (one_month_ago,))
     row = cur.fetchone()

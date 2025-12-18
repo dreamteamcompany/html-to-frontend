@@ -47,9 +47,6 @@ const getStatusBadge = (status?: string) => {
   if (!status || status === 'draft') {
     return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-gray-300">Черновик</span>;
   }
-  if (status === 'pending_tech_director') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">Ожидает тех.директора</span>;
-  }
   if (status === 'pending_ceo') {
     return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300">Ожидает CEO</span>;
   }

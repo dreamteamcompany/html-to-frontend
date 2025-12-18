@@ -47,9 +47,6 @@ const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => 
     if (!status || status === 'draft') {
       return <span className="px-3 py-1 rounded-full text-sm bg-gray-500/20 text-gray-300">Черновик</span>;
     }
-    if (status === 'pending_tech_director') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-yellow-500/20 text-yellow-300">Ожидает тех.директора</span>;
-    }
     if (status === 'pending_ceo') {
       return <span className="px-3 py-1 rounded-full text-sm bg-blue-500/20 text-blue-300">Ожидает CEO</span>;
     }

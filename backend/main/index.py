@@ -1914,7 +1914,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
         
         cur.execute(f"""
             UPDATE {SCHEMA}.payments 
-            SET status = 'pending_tech_director', submitted_at = NOW()
+            SET status = 'pending_ceo', submitted_at = NOW()
             WHERE id = %s
         """, (payment_id,))
         
@@ -1926,7 +1926,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
         conn.commit()
         cur.close()
         
-        return response(200, {'message': 'Платеж отправлен на согласование', 'status': 'pending_tech_director'})
+        return response(200, {'message': 'Платеж отправлен на согласование', 'status': 'pending_ceo'})
     
     elif method == 'PUT':
         body_data = json.loads(event.get('body', '{}'))
@@ -1954,23 +1954,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
         intermediate_approver = payment.get('intermediate_approver_id')
         final_approver = payment.get('final_approver_id')
         
-        if current_status == 'pending_tech_director' and user_id == intermediate_approver:
-            if req.action == 'approve':
-                new_status = 'pending_ceo'
-                cur.execute(f"""
-                    UPDATE {SCHEMA}.payments 
-                    SET status = %s, tech_director_approved_at = NOW(), tech_director_approved_by = %s
-                    WHERE id = %s
-                """, (new_status, user_id, req.payment_id))
-            else:
-                new_status = 'rejected'
-                cur.execute(f"""
-                    UPDATE {SCHEMA}.payments 
-                    SET status = %s, tech_director_approved_at = NOW(), tech_director_approved_by = %s
-                    WHERE id = %s
-                """, (new_status, user_id, req.payment_id))
-        
-        elif current_status == 'pending_ceo' and user_id == final_approver:
+        if current_status == 'pending_ceo' and user_id == final_approver:
             if req.action == 'approve':
                 new_status = 'approved'
                 cur.execute(f"""

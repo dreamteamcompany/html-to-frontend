@@ -98,8 +98,6 @@ const PendingApprovals = () => {
 
   const getStatusBadge = (status?: string) => {
     switch (status) {
-      case 'pending_tech_director':
-        return <span className="px-3 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300">Ожидает техдиректора</span>;
       case 'pending_ceo':
         return <span className="px-3 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">Ожидает CEO</span>;
       default:
