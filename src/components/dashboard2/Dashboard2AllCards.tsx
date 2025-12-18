@@ -160,7 +160,7 @@ const Dashboard2AllCards = () => {
                   <Icon name="PiggyBank" size={20} />
                 </div>
               </div>
-              <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>480,000 ₽</div>
+              <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#01b574', textShadow: '0 0 20px rgba(1, 181, 116, 0.4)' }}>480,000 ₽</div>
               <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>сэкономлено за год</div>
               <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#01b574' }}>
                 <Icon name="TrendingDown" size={14} /> -25% от прошлогодних расходов
