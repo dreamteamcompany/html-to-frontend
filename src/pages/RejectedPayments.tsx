@@ -64,17 +64,17 @@ const RejectedPayments = () => {
   const fetchRejectedPayments = async () => {
     setLoading(true);
     try {
-      const data = await apiFetch('/payments', {
-        headers: token ? { 'X-User-Token': token } : {},
-      });
+      const response = await apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments');
+      const data = await response.json();
       
-      const rejectedPayments = data.filter((p: Payment) => 
+      const rejectedPayments = (Array.isArray(data) ? data : []).filter((p: Payment) => 
         p.status === 'rejected'
       );
       
       setPayments(rejectedPayments);
     } catch (error) {
       console.error('Failed to fetch rejected payments:', error);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
