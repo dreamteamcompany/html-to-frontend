@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { Rnd } from 'react-rnd';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
@@ -18,9 +17,46 @@ interface DashboardCard {
   component: React.ReactNode;
 }
 
+interface DragState {
+  isDragging: boolean;
+  cardId: string;
+  startX: number;
+  startY: number;
+  offsetX: number;
+  offsetY: number;
+}
+
+interface ResizeState {
+  isResizing: boolean;
+  cardId: string;
+  startX: number;
+  startY: number;
+  startWidth: number;
+  startHeight: number;
+  handle: string;
+}
+
 const Dashboard2EditableLayout = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [layouts, setLayouts] = useState<CardLayout[]>([]);
+  const [dragState, setDragState] = useState<DragState>({
+    isDragging: false,
+    cardId: '',
+    startX: 0,
+    startY: 0,
+    offsetX: 0,
+    offsetY: 0,
+  });
+  const [resizeState, setResizeState] = useState<ResizeState>({
+    isResizing: false,
+    cardId: '',
+    startX: 0,
+    startY: 0,
+    startWidth: 0,
+    startHeight: 0,
+    handle: '',
+  });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const defaultLayouts: CardLayout[] = [
     { id: 'total-expenses', x: 0, y: 0, width: 350, height: 200 },
@@ -203,6 +239,67 @@ const Dashboard2EditableLayout = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (dragState.isDragging) {
+        const deltaX = e.clientX - dragState.startX;
+        const deltaY = e.clientY - dragState.startY;
+        
+        setLayouts(prev => prev.map(l => 
+          l.id === dragState.cardId 
+            ? { ...l, x: Math.max(0, dragState.offsetX + deltaX), y: Math.max(0, dragState.offsetY + deltaY) }
+            : l
+        ));
+      }
+      
+      if (resizeState.isResizing) {
+        const deltaX = e.clientX - resizeState.startX;
+        const deltaY = e.clientY - resizeState.startY;
+        
+        setLayouts(prev => prev.map(l => {
+          if (l.id !== resizeState.cardId) return l;
+          
+          const newLayout = { ...l };
+          
+          if (resizeState.handle.includes('right')) {
+            newLayout.width = Math.max(280, resizeState.startWidth + deltaX);
+          }
+          if (resizeState.handle.includes('left')) {
+            const newWidth = Math.max(280, resizeState.startWidth - deltaX);
+            const widthDiff = resizeState.startWidth - newWidth;
+            newLayout.width = newWidth;
+            newLayout.x = l.x + widthDiff;
+          }
+          if (resizeState.handle.includes('bottom')) {
+            newLayout.height = Math.max(150, resizeState.startHeight + deltaY);
+          }
+          if (resizeState.handle.includes('top')) {
+            const newHeight = Math.max(150, resizeState.startHeight - deltaY);
+            const heightDiff = resizeState.startHeight - newHeight;
+            newLayout.height = newHeight;
+            newLayout.y = l.y + heightDiff;
+          }
+          
+          return newLayout;
+        }));
+      }
+    };
+
+    const handleMouseUp = () => {
+      setDragState(prev => ({ ...prev, isDragging: false }));
+      setResizeState(prev => ({ ...prev, isResizing: false }));
+    };
+
+    if (dragState.isDragging || resizeState.isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [dragState, resizeState]);
+
   const handleSave = () => {
     localStorage.setItem('dashboard2-free-layout', JSON.stringify(layouts));
     setIsEditMode(false);
@@ -216,10 +313,38 @@ const Dashboard2EditableLayout = () => {
     }
   };
 
-  const updateLayout = (id: string, x: number, y: number, width: number, height: number) => {
-    setLayouts(prev => prev.map(l => 
-      l.id === id ? { ...l, x, y, width, height } : l
-    ));
+  const handleDragStart = (e: React.MouseEvent, cardId: string) => {
+    if (!isEditMode) return;
+    
+    const layout = layouts.find(l => l.id === cardId);
+    if (!layout) return;
+    
+    setDragState({
+      isDragging: true,
+      cardId,
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: layout.x,
+      offsetY: layout.y,
+    });
+  };
+
+  const handleResizeStart = (e: React.MouseEvent, cardId: string, handle: string) => {
+    if (!isEditMode) return;
+    e.stopPropagation();
+    
+    const layout = layouts.find(l => l.id === cardId);
+    if (!layout) return;
+    
+    setResizeState({
+      isResizing: true,
+      cardId,
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidth: layout.width,
+      startHeight: layout.height,
+      handle,
+    });
   };
 
   const getCardStyle = (id: string) => {
@@ -252,6 +377,37 @@ const Dashboard2EditableLayout = () => {
       default:
         return baseStyle;
     }
+  };
+
+  const renderResizeHandles = (cardId: string) => {
+    if (!isEditMode) return null;
+    
+    const handleStyle = {
+      position: 'absolute' as const,
+      background: '#7551e9',
+      zIndex: 10,
+    };
+    
+    return (
+      <>
+        <div style={{ ...handleStyle, top: 0, left: 0, width: '10px', height: '10px', cursor: 'nwse-resize' }} 
+             onMouseDown={(e) => handleResizeStart(e, cardId, 'top-left')} />
+        <div style={{ ...handleStyle, top: 0, right: 0, width: '10px', height: '10px', cursor: 'nesw-resize' }} 
+             onMouseDown={(e) => handleResizeStart(e, cardId, 'top-right')} />
+        <div style={{ ...handleStyle, bottom: 0, left: 0, width: '10px', height: '10px', cursor: 'nesw-resize' }} 
+             onMouseDown={(e) => handleResizeStart(e, cardId, 'bottom-left')} />
+        <div style={{ ...handleStyle, bottom: 0, right: 0, width: '10px', height: '10px', cursor: 'nwse-resize' }} 
+             onMouseDown={(e) => handleResizeStart(e, cardId, 'bottom-right')} />
+        <div style={{ ...handleStyle, top: 0, left: '50%', transform: 'translateX(-50%)', width: '40px', height: '6px', cursor: 'ns-resize' }} 
+             onMouseDown={(e) => handleResizeStart(e, cardId, 'top')} />
+        <div style={{ ...handleStyle, bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '40px', height: '6px', cursor: 'ns-resize' }} 
+             onMouseDown={(e) => handleResizeStart(e, cardId, 'bottom')} />
+        <div style={{ ...handleStyle, left: 0, top: '50%', transform: 'translateY(-50%)', width: '6px', height: '40px', cursor: 'ew-resize' }} 
+             onMouseDown={(e) => handleResizeStart(e, cardId, 'left')} />
+        <div style={{ ...handleStyle, right: 0, top: '50%', transform: 'translateY(-50%)', width: '6px', height: '40px', cursor: 'ew-resize' }} 
+             onMouseDown={(e) => handleResizeStart(e, cardId, 'right')} />
+      </>
+    );
   };
 
   return (
@@ -302,70 +458,34 @@ const Dashboard2EditableLayout = () => {
         </div>
       </div>
 
-      <div style={{ position: 'relative', minHeight: '800px' }}>
+      <div ref={containerRef} style={{ position: 'relative', minHeight: '800px' }}>
         {layouts.map((layout) => {
           const card = cards.find(c => c.id === layout.id);
           if (!card) return null;
 
-          if (isEditMode) {
-            return (
-              <Rnd
-                key={layout.id}
-                size={{ width: layout.width, height: layout.height }}
-                position={{ x: layout.x, y: layout.y }}
-                onDragStop={(e, d) => {
-                  updateLayout(layout.id, d.x, d.y, layout.width, layout.height);
-                }}
-                onResizeStop={(e, direction, ref, delta, position) => {
-                  updateLayout(
-                    layout.id,
-                    position.x,
-                    position.y,
-                    parseInt(ref.style.width),
-                    parseInt(ref.style.height)
-                  );
-                }}
-                bounds="parent"
-                minWidth={280}
-                minHeight={150}
-                enableResizing={{
-                  top: true,
-                  right: true,
-                  bottom: true,
-                  left: true,
-                  topRight: true,
-                  bottomRight: true,
-                  bottomLeft: true,
-                  topLeft: true,
-                }}
-              >
-                <Card style={{ 
-                  ...getCardStyle(layout.id),
-                  cursor: 'move',
-                  border: '2px dashed rgba(117, 81, 233, 0.5)'
-                }}>
-                  {card.component}
-                </Card>
-              </Rnd>
-            );
-          } else {
-            return (
-              <div
-                key={layout.id}
-                style={{
-                  position: 'absolute',
-                  left: layout.x,
-                  top: layout.y,
-                  width: layout.width,
-                  height: layout.height,
-                }}
-              >
-                <Card style={getCardStyle(layout.id)}>
-                  {card.component}
-                </Card>
-              </div>
-            );
-          }
+          return (
+            <div
+              key={layout.id}
+              style={{
+                position: 'absolute',
+                left: layout.x,
+                top: layout.y,
+                width: layout.width,
+                height: layout.height,
+                cursor: isEditMode ? 'move' : 'default',
+              }}
+              onMouseDown={(e) => handleDragStart(e, layout.id)}
+            >
+              <Card style={{
+                ...getCardStyle(layout.id),
+                border: isEditMode ? '2px dashed rgba(117, 81, 233, 0.5)' : getCardStyle(layout.id).border,
+                userSelect: 'none',
+              }}>
+                {card.component}
+              </Card>
+              {renderResizeHandles(layout.id)}
+            </div>
+          );
         })}
       </div>
     </div>
