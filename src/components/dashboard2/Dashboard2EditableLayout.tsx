@@ -71,14 +71,21 @@ const Dashboard2EditableLayout = () => {
         if (response.ok) {
           const data = await response.json();
           if (data.layouts && data.layouts.length > 0) {
-            const loadedLayouts = data.layouts.map((l: any) => ({
-              id: l.card_id,
-              x: l.x,
-              y: l.y,
-              width: l.width,
-              height: l.height,
-            }));
-            setLayouts(loadedLayouts);
+            const loadedLayouts = data.layouts
+              .filter((l: any) => dashboardCards.some((c: DashboardCard) => c.id === l.card_id))
+              .map((l: any) => ({
+                id: l.card_id,
+                x: l.x,
+                y: l.y,
+                width: l.width,
+                height: l.height,
+              }));
+            
+            if (loadedLayouts.length > 0) {
+              setLayouts(loadedLayouts);
+            } else {
+              setLayouts(defaultLayouts);
+            }
           } else {
             setLayouts(defaultLayouts);
           }
