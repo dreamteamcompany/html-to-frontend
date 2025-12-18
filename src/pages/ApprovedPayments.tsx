@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import Icon from '@/components/ui/icon';
+import { useEffect, useState } from 'react';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
+import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
+import PaymentsHeader from '@/components/payments/PaymentsHeader';
+import { Input } from '@/components/ui/input';
+import Icon from '@/components/ui/icon';
+import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 
 interface CustomField {
   id: number;
@@ -36,26 +38,25 @@ interface Payment {
   created_at?: string;
   submitted_at?: string;
   ceo_approved_at?: string;
+  tech_director_approved_at?: string;
   custom_fields?: CustomField[];
 }
 
-interface ApprovedPaymentsModalProps {
-  open: boolean;
-  onClose: () => void;
-}
-
-const ApprovedPaymentsModal = ({ open, onClose }: ApprovedPaymentsModalProps) => {
+const ApprovedPayments = () => {
   const { token } = useAuth();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [dictionariesOpen, setDictionariesOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   useEffect(() => {
-    if (open) {
-      fetchApprovedPayments();
-    }
-  }, [open]);
+    fetchApprovedPayments();
+  }, []);
 
   const fetchApprovedPayments = async () => {
     setLoading(true);
@@ -64,9 +65,9 @@ const ApprovedPaymentsModal = ({ open, onClose }: ApprovedPaymentsModalProps) =>
         headers: token ? { 'X-User-Token': token } : {},
       });
       
-      // Фильтруем только одобренные платежи (со статусом approved или с ceo_approved_at)
+      // Фильтруем только полностью одобренные платежи (с ceo_approved_at)
       const approvedPayments = data.filter((p: Payment) => 
-        p.ceo_approved_at !== null || p.status === 'approved'
+        p.ceo_approved_at !== null
       );
       
       setPayments(approvedPayments);
@@ -74,6 +75,20 @@ const ApprovedPaymentsModal = ({ open, onClose }: ApprovedPaymentsModalProps) =>
       console.error('Failed to fetch approved payments:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStart - touchEnd > 75) {
+      setMenuOpen(false);
     }
   };
 
@@ -103,28 +118,53 @@ const ApprovedPaymentsModal = ({ open, onClose }: ApprovedPaymentsModalProps) =>
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Icon name="CheckCircle" size={24} className="text-green-500" />
-            Согласованные и оплаченные платежи
-          </DialogTitle>
-        </DialogHeader>
+    <div className="flex min-h-screen">
+      <PaymentsSidebar
+        menuOpen={menuOpen}
+        dictionariesOpen={dictionariesOpen}
+        setDictionariesOpen={setDictionariesOpen}
+        settingsOpen={settingsOpen}
+        setSettingsOpen={setSettingsOpen}
+        handleTouchStart={handleTouchStart}
+        handleTouchMove={handleTouchMove}
+        handleTouchEnd={handleTouchEnd}
+      />
 
-        <div className="flex-1 overflow-auto">
-          <div className="mb-4">
+      {menuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      <main className="flex-1 lg:ml-64 bg-background min-h-screen">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-white/10">
+          <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+          
+          <div className="px-4 sm:px-6 py-4">
+            <div className="mb-4">
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Icon name="CheckCircle" size={28} className="text-green-500" />
+                Согласованные и оплаченные платежи
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Все платежи, одобренные CEO и готовые к оплате
+              </p>
+            </div>
+
             <div className="relative">
               <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Поиск по описанию, категории, сумме..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-background border-white/10"
               />
             </div>
           </div>
+        </div>
 
+        <div className="p-4 sm:p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -135,12 +175,16 @@ const ApprovedPaymentsModal = ({ open, onClose }: ApprovedPaymentsModalProps) =>
               <h3 className="text-xl font-semibold mb-2">Нет согласованных платежей</h3>
               <p className="text-muted-foreground">
                 {payments.length === 0 
-                  ? 'Когда платежи будут согласованы, они отобразятся здесь'
+                  ? 'Когда платежи будут одобрены CEO, они отобразятся здесь'
                   : 'Попробуйте изменить поисковый запрос'}
               </p>
             </div>
           ) : (
             <div className="space-y-3">
+              <div className="mb-4 text-sm text-muted-foreground">
+                Найдено платежей: {filteredPayments.length} • Общая сумма: {formatAmount(filteredPayments.reduce((sum, p) => sum + p.amount, 0))}
+              </div>
+              
               {filteredPayments.map((payment) => (
                 <div
                   key={payment.id}
@@ -153,14 +197,14 @@ const ApprovedPaymentsModal = ({ open, onClose }: ApprovedPaymentsModalProps) =>
                         {payment.category_icon || '📄'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold truncate">{payment.description}</h4>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <h4 className="font-semibold">{payment.description}</h4>
                           <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/20 text-green-300 flex-shrink-0">
-                            Одобрено
+                            ✓ Одобрено CEO
                           </span>
                         </div>
                         <div className="text-sm text-muted-foreground space-y-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span>{payment.category_name}</span>
                             {payment.service_name && (
                               <>
@@ -181,12 +225,26 @@ const ApprovedPaymentsModal = ({ open, onClose }: ApprovedPaymentsModalProps) =>
                               <span>{payment.legal_entity_name}</span>
                             </div>
                           )}
-                          {payment.ceo_approved_at && (
-                            <div className="flex items-center gap-2 text-green-400">
-                              <Icon name="Calendar" size={14} />
-                              <span>Одобрено: {formatDate(payment.ceo_approved_at)}</span>
+                          {payment.department_name && (
+                            <div className="flex items-center gap-2">
+                              <Icon name="Users" size={14} />
+                              <span>{payment.department_name}</span>
                             </div>
                           )}
+                          <div className="flex items-center gap-4 text-xs">
+                            {payment.tech_director_approved_at && (
+                              <div className="flex items-center gap-1 text-blue-400">
+                                <Icon name="Check" size={12} />
+                                <span>Техдир: {formatDate(payment.tech_director_approved_at)}</span>
+                              </div>
+                            )}
+                            {payment.ceo_approved_at && (
+                              <div className="flex items-center gap-1 text-green-400">
+                                <Icon name="CheckCheck" size={12} />
+                                <span>CEO: {formatDate(payment.ceo_approved_at)}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -206,90 +264,14 @@ const ApprovedPaymentsModal = ({ open, onClose }: ApprovedPaymentsModalProps) =>
         </div>
 
         {selectedPayment && (
-          <Dialog open={!!selectedPayment} onOpenChange={() => setSelectedPayment(null)}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <span className="text-2xl">{selectedPayment.category_icon || '📄'}</span>
-                  {selectedPayment.description}
-                </DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Сумма</div>
-                    <div className="text-2xl font-bold">{formatAmount(selectedPayment.amount)}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Дата платежа</div>
-                    <div className="text-lg">{formatDate(selectedPayment.payment_date)}</div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">Категория</div>
-                  <div>{selectedPayment.category_name}</div>
-                </div>
-
-                {selectedPayment.service_name && (
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Сервис</div>
-                    <div>{selectedPayment.service_name}</div>
-                  </div>
-                )}
-
-                {selectedPayment.contractor_name && (
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Контрагент</div>
-                    <div>{selectedPayment.contractor_name}</div>
-                  </div>
-                )}
-
-                {selectedPayment.legal_entity_name && (
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Юридическое лицо</div>
-                    <div>{selectedPayment.legal_entity_name}</div>
-                  </div>
-                )}
-
-                {selectedPayment.department_name && (
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Отдел</div>
-                    <div>{selectedPayment.department_name}</div>
-                  </div>
-                )}
-
-                {selectedPayment.invoice_number && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">Номер счета</div>
-                      <div>{selectedPayment.invoice_number}</div>
-                    </div>
-                    {selectedPayment.invoice_date && (
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Дата счета</div>
-                        <div>{formatDate(selectedPayment.invoice_date)}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {selectedPayment.ceo_approved_at && (
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <div className="flex items-center gap-2 text-green-400">
-                      <Icon name="CheckCircle" size={20} />
-                      <span className="font-medium">Одобрено CEO: {formatDate(selectedPayment.ceo_approved_at)}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
+          <PaymentDetailsModal
+            payment={selectedPayment}
+            onClose={() => setSelectedPayment(null)}
+          />
         )}
-      </DialogContent>
-    </Dialog>
+      </main>
+    </div>
   );
 };
 
-export default ApprovedPaymentsModal;
+export default ApprovedPayments;

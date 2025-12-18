@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,6 @@ import PendingApprovalsHeader from '@/components/approvals/PendingApprovalsHeade
 import PendingApprovalsFilters from '@/components/approvals/PendingApprovalsFilters';
 import PendingApprovalsList from '@/components/approvals/PendingApprovalsList';
 import PendingApprovalsModal from '@/components/approvals/PendingApprovalsModal';
-import ApprovedPaymentsModal from '@/components/approvals/ApprovedPaymentsModal';
 import { usePendingApprovalsData } from '@/hooks/usePendingApprovalsData';
 import { usePendingApprovalsFilters } from '@/hooks/usePendingApprovalsFilters';
 
@@ -75,7 +75,6 @@ const PendingApprovals = () => {
   const [touchEnd, setTouchEnd] = useState(0);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [showApprovedModal, setShowApprovedModal] = useState(false);
 
   useEffect(() => {
     if ('Notification' in window) {
@@ -152,13 +151,13 @@ const PendingApprovals = () => {
           
           <div className="px-4 sm:px-6 py-3 border-b border-white/10">
             <div className="flex items-center gap-3 mb-3">
-              <button
-                onClick={() => setShowApprovedModal(true)}
+              <Link
+                to="/approved-payments"
                 className="px-4 py-2 rounded-lg border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-400 transition-colors flex items-center gap-2"
               >
                 <Icon name="CheckCircle" size={18} />
                 <span className="text-sm font-medium">Согласованные и оплаченные</span>
-              </button>
+              </Link>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex-1 relative">
@@ -253,11 +252,6 @@ const PendingApprovals = () => {
           onClose={() => setSelectedPayment(null)}
           onApprove={handleModalApprove}
           onReject={handleModalReject}
-        />
-
-        <ApprovedPaymentsModal
-          open={showApprovedModal}
-          onClose={() => setShowApprovedModal(false)}
         />
       </main>
     </div>
