@@ -5,7 +5,6 @@ import Dashboard2UpcomingPayments from './Dashboard2UpcomingPayments';
 
 import Dashboard2TeamPerformance from './Dashboard2TeamPerformance';
 import Dashboard2ServicesDynamics from './Dashboard2ServicesDynamics';
-import Dashboard2CostIndexing from './Dashboard2CostIndexing';
 
 const Dashboard2NeonCards = () => {
   return (
@@ -17,7 +16,6 @@ const Dashboard2NeonCards = () => {
 
       <Dashboard2TeamPerformance />
       <Dashboard2ServicesDynamics />
-      <Dashboard2CostIndexing />
     </>
   );
 };
