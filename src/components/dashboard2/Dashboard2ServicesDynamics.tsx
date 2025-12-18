@@ -110,7 +110,7 @@ const Dashboard2ServicesDynamics = () => {
           marginBottom: '8px',
           position: 'relative'
         }}>
-          <svg viewBox={`0 0 100 ${sortedData.length * spacing + 5}`} style={{ width: '100%', height: 'auto', maxHeight: '80px' }} preserveAspectRatio="xMidYMid meet">
+          <svg viewBox={`0 0 100 ${sortedData.length * spacing + 5}`} style={{ width: '100%', height: 'auto', maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               {sortedData.map((_, index) => {
                 const color = barColors[index % barColors.length];
