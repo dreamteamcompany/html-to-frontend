@@ -149,7 +149,7 @@ const PendingApprovals = () => {
             >
               <Icon name="Menu" size={24} />
             </button>
-            <div className="flex-1 lg:ml-0 ml-2">
+            <div className="flex-1 lg:ml-0 ml-2 mt-[5px]">
               <h1 className="text-2xl md:text-3xl font-bold">На согласовании</h1>
               <p className="text-sm md:text-base text-muted-foreground">
                 Платежи, ожидающие вашего решения
