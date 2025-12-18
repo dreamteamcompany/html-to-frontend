@@ -188,9 +188,9 @@ const Dashboard2AllCards = () => {
   if (cardOrder.length === 0) return null;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '30px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 280px)', gap: '24px', marginBottom: '30px' }}>
       {cardOrder.map((card) => (
-        <div key={card.id}>
+        <div key={card.id} style={{ width: '280px', height: '200px' }}>
           {renderCard(card)}
         </div>
       ))}
