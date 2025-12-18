@@ -6,6 +6,14 @@ import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import PaymentForm from '@/components/payments/PaymentForm';
 import PaymentsList from '@/components/payments/PaymentsList';
+import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
+
+interface CustomField {
+  id: number;
+  name: string;
+  field_type: string;
+  value: string;
+}
 
 interface Payment {
   id: number;
@@ -19,6 +27,18 @@ interface Payment {
   legal_entity_name?: string;
   status?: string;
   created_by?: number;
+  created_by_name?: string;
+  service_id?: number;
+  service_name?: string;
+  contractor_name?: string;
+  contractor_id?: number;
+  department_name?: string;
+  department_id?: number;
+  invoice_number?: string;
+  invoice_date?: string;
+  created_at?: string;
+  submitted_at?: string;
+  custom_fields?: CustomField[];
 }
 
 interface Category {
@@ -47,7 +67,7 @@ interface CustomerDepartment {
   description: string;
 }
 
-interface CustomField {
+interface CustomFieldDefinition {
   id: number;
   name: string;
   field_type: string;
@@ -70,7 +90,7 @@ const Payments = () => {
   const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [customerDepartments, setCustomerDepartments] = useState<CustomerDepartment[]>([]);
-  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -79,6 +99,7 @@ const Payments = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -416,6 +437,12 @@ const Payments = () => {
           onApprove={handleApprove}
           onReject={handleReject}
           onSubmitForApproval={handleSubmitForApproval}
+          onPaymentClick={setSelectedPayment}
+        />
+
+        <PaymentDetailsModal
+          payment={selectedPayment}
+          onClose={() => setSelectedPayment(null)}
         />
       </main>
     </div>

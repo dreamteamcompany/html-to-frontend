@@ -1,6 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 
+interface CustomField {
+  id: number;
+  name: string;
+  field_type: string;
+  value: string;
+}
+
 interface Payment {
   id: number;
   category_id: number;
@@ -13,7 +20,18 @@ interface Payment {
   legal_entity_name?: string;
   status?: string;
   created_by?: number;
+  created_by_name?: string;
+  service_id?: number;
+  service_name?: string;
+  contractor_name?: string;
+  contractor_id?: number;
+  department_name?: string;
+  department_id?: number;
+  invoice_number?: string;
+  invoice_date?: string;
+  created_at?: string;
   submitted_at?: string;
+  custom_fields?: CustomField[];
 }
 
 interface PaymentsListProps {
@@ -22,6 +40,7 @@ interface PaymentsListProps {
   onApprove?: (paymentId: number) => void;
   onReject?: (paymentId: number) => void;
   onSubmitForApproval?: (paymentId: number) => void;
+  onPaymentClick?: (payment: Payment) => void;
 }
 
 const getStatusBadge = (status?: string) => {
@@ -43,7 +62,7 @@ const getStatusBadge = (status?: string) => {
   return null;
 };
 
-const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForApproval }: PaymentsListProps) => {
+const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForApproval, onPaymentClick }: PaymentsListProps) => {
   return (
     <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
       <CardContent className="p-0">
@@ -70,7 +89,11 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                 </thead>
                 <tbody>
                   {payments.map((payment) => (
-                    <tr key={payment.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <tr 
+                      key={payment.id} 
+                      className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                      onClick={() => onPaymentClick && onPaymentClick(payment)}
+                    >
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
@@ -97,7 +120,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                         })}
                       </td>
                       <td className="p-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                           {(!payment.status || payment.status === 'draft') && onSubmitForApproval && (
                             <button
                               onClick={() => onSubmitForApproval(payment.id)}
@@ -132,7 +155,11 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
             
             <div className="md:hidden space-y-3 p-4">
               {payments.map((payment) => (
-                <Card key={payment.id} className="border-white/10 bg-white/5">
+                <Card 
+                  key={payment.id} 
+                  className="border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                  onClick={() => onPaymentClick && onPaymentClick(payment)}
+                >
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -160,7 +187,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       </div>
                       {getStatusBadge(payment.status)}
                     </div>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                       {(!payment.status || payment.status === 'draft') && onSubmitForApproval && (
                         <button
                           onClick={() => onSubmitForApproval(payment.id)}
