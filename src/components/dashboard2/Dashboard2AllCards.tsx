@@ -189,11 +189,21 @@ const Dashboard2AllCards = () => {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 280px)', gap: '24px', marginBottom: '30px' }}>
-      {cardOrder.map((card) => (
-        <div key={card.id} style={{ width: '280px', height: '200px' }}>
-          {renderCard(card)}
-        </div>
-      ))}
+      {cardOrder.map((card) => {
+        const isChart = card.type === 'chart';
+        return (
+          <div 
+            key={card.id} 
+            style={{ 
+              width: isChart ? '580px' : '280px', 
+              height: isChart ? '400px' : '200px',
+              gridColumn: isChart ? 'span 2' : 'span 1'
+            }}
+          >
+            {renderCard(card)}
+          </div>
+        );
+      })}
     </div>
   );
 };
