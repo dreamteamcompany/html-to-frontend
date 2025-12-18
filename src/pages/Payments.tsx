@@ -100,6 +100,7 @@ const Payments = () => {
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -220,6 +221,22 @@ const Payments = () => {
       })
       .catch(err => { console.error('Failed to load custom fields:', err); setCustomFields([]); });
   }, []);
+
+  const filteredPayments = payments.filter(payment => {
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = (
+        payment.description.toLowerCase().includes(query) ||
+        payment.category_name.toLowerCase().includes(query) ||
+        payment.amount.toString().includes(query) ||
+        payment.service_name?.toLowerCase().includes(query) ||
+        payment.contractor_name?.toLowerCase().includes(query) ||
+        payment.legal_entity_name?.toLowerCase().includes(query)
+      );
+      if (!matchesSearch) return false;
+    }
+    return true;
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -346,6 +363,18 @@ const Payments = () => {
       <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1">
         <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
+        <div className="mb-6">
+          <div className="relative">
+            <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Поиск по описанию, категории, сумме, контрагенту..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-background border-white/10"
+            />
+          </div>
+        </div>
+
         <PaymentForm
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}
@@ -361,7 +390,7 @@ const Payments = () => {
         />
 
         <PaymentsList 
-          payments={payments} 
+          payments={filteredPayments} 
           loading={loading} 
           onSubmitForApproval={handleSubmitForApproval}
           onPaymentClick={setSelectedPayment}
