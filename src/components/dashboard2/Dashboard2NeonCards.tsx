@@ -15,7 +15,7 @@ const Dashboard2NeonCards = () => {
       <Dashboard2UpcomingPayments />
 
       <Dashboard2TeamPerformance />
-      <div style={{ width: '30%' }}>
+      <div style={{ width: '45%' }}>
         <Dashboard2ServicesDynamics />
       </div>
     </>
