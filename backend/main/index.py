@@ -80,6 +80,14 @@ class ServiceRequest(BaseModel):
     intermediate_approver_id: int = Field(..., gt=0)
     final_approver_id: int = Field(..., gt=0)
 
+class SavingRequest(BaseModel):
+    service_id: int = Field(..., gt=0)
+    description: str = Field(..., min_length=1)
+    amount: float = Field(..., gt=0)
+    frequency: str = Field(..., pattern='^(once|monthly|quarterly|yearly)$')
+    currency: str = Field(default='RUB')
+    employee_id: int = Field(..., gt=0)
+
 # Utility functions
 def response(status_code: int, body: Any) -> Dict[str, Any]:
     return {
@@ -2166,6 +2174,77 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     finally:
         cur.close()
 
+def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'payments.read')
+            if error:
+                return error
+            
+            cur.execute(f"""
+                SELECT 
+                    s.id, s.service_id, s.description, s.amount, s.frequency, 
+                    s.currency, s.employee_id, s.created_at,
+                    srv.name as service_name,
+                    u.full_name as employee_name
+                FROM {SCHEMA}.savings s
+                LEFT JOIN {SCHEMA}.services srv ON s.service_id = srv.id
+                LEFT JOIN {SCHEMA}.users u ON s.employee_id = u.id
+                ORDER BY s.created_at DESC
+            """)
+            
+            rows = cur.fetchall()
+            return response(200, [dict(row) for row in rows])
+        
+        elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'payments.create')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            saving_req = SavingRequest(**body)
+            
+            cur.execute(
+                f"""INSERT INTO {SCHEMA}.savings 
+                   (service_id, description, amount, frequency, currency, employee_id) 
+                   VALUES (%s, %s, %s, %s, %s, %s) 
+                   RETURNING id, service_id, description, amount, frequency, currency, employee_id, created_at""",
+                (saving_req.service_id, saving_req.description, saving_req.amount, 
+                 saving_req.frequency, saving_req.currency, saving_req.employee_id)
+            )
+            
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, dict(row))
+        
+        elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'payments.delete')
+            if error:
+                return error
+            
+            params = event.get('queryStringParameters') or {}
+            saving_id = params.get('id')
+            
+            if not saving_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(f"DELETE FROM {SCHEMA}.savings WHERE id = %s RETURNING id", (saving_id,))
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Saving not found'})
+            
+            conn.commit()
+            return response(200, {'message': 'Saving deleted'})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
 def handle_stats(event: Dict[str, Any], conn) -> Dict[str, Any]:
     method = event.get('httpMethod', 'GET')
     
@@ -2482,6 +2561,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_custom_fields(method, event, conn)
         elif endpoint == 'services':
             result = handle_services(method, event, conn)
+        elif endpoint == 'savings':
+            result = handle_savings(method, event, conn)
         elif endpoint == 'users':
             result = handle_users(method, event, conn)
         elif endpoint == 'roles':
