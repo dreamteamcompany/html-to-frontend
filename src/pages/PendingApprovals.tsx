@@ -7,6 +7,7 @@ import PendingApprovalsHeader from '@/components/approvals/PendingApprovalsHeade
 import PendingApprovalsFilters from '@/components/approvals/PendingApprovalsFilters';
 import PendingApprovalsList from '@/components/approvals/PendingApprovalsList';
 import PendingApprovalsModal from '@/components/approvals/PendingApprovalsModal';
+import ApprovedPaymentsModal from '@/components/approvals/ApprovedPaymentsModal';
 import { usePendingApprovalsData } from '@/hooks/usePendingApprovalsData';
 import { usePendingApprovalsFilters } from '@/hooks/usePendingApprovalsFilters';
 
@@ -74,6 +75,7 @@ const PendingApprovals = () => {
   const [touchEnd, setTouchEnd] = useState(0);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [showApprovedModal, setShowApprovedModal] = useState(false);
 
   useEffect(() => {
     if ('Notification' in window) {
@@ -149,6 +151,15 @@ const PendingApprovals = () => {
           />
           
           <div className="px-4 sm:px-6 py-3 border-b border-white/10">
+            <div className="flex items-center gap-3 mb-3">
+              <button
+                onClick={() => setShowApprovedModal(true)}
+                className="px-4 py-2 rounded-lg border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-400 transition-colors flex items-center gap-2"
+              >
+                <Icon name="CheckCircle" size={18} />
+                <span className="text-sm font-medium">Согласованные и оплаченные</span>
+              </button>
+            </div>
             <div className="flex items-center gap-3">
               <div className="flex-1 relative">
                 <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -242,6 +253,11 @@ const PendingApprovals = () => {
           onClose={() => setSelectedPayment(null)}
           onApprove={handleModalApprove}
           onReject={handleModalReject}
+        />
+
+        <ApprovedPaymentsModal
+          open={showApprovedModal}
+          onClose={() => setShowApprovedModal(false)}
         />
       </main>
     </div>
