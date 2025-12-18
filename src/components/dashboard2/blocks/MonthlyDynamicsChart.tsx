@@ -6,6 +6,18 @@ import { apiFetch } from '@/utils/api';
 const MonthlyDynamicsChart = () => {
   const [monthlyData, setMonthlyData] = useState<number[]>(Array(12).fill(0));
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const fetchApprovedPayments = async () => {
@@ -59,17 +71,17 @@ const MonthlyDynamicsChart = () => {
                 data: monthlyData,
                 borderColor: 'rgb(117, 81, 233)',
                 backgroundColor: 'rgba(117, 81, 233, 0.1)',
-                borderWidth: 3,
+                borderWidth: isMobile ? 2 : 3,
                 fill: true,
                 tension: 0.4,
                 pointBackgroundColor: 'rgb(117, 81, 233)',
                 pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 5,
-                pointHoverRadius: 7,
+                pointBorderWidth: isMobile ? 1 : 2,
+                pointRadius: isMobile ? 3 : 5,
+                pointHoverRadius: isMobile ? 5 : 7,
                 pointHoverBackgroundColor: 'rgb(117, 81, 233)',
                 pointHoverBorderColor: '#fff',
-                pointHoverBorderWidth: 3
+                pointHoverBorderWidth: isMobile ? 2 : 3
               }]
             }}
             options={{
@@ -84,6 +96,7 @@ const MonthlyDynamicsChart = () => {
                   display: false
                 },
                 tooltip: {
+                  enabled: !isMobile,
                   callbacks: {
                     label: function(context) {
                       return `Расходы: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`;
@@ -96,8 +109,16 @@ const MonthlyDynamicsChart = () => {
                   beginAtZero: false,
                   ticks: {
                     color: '#a3aed0',
+                    font: {
+                      size: isMobile ? 10 : 12
+                    },
+                    maxTicksLimit: isMobile ? 5 : 8,
                     callback: function(value) {
-                      return new Intl.NumberFormat('ru-RU').format(value as number) + ' ₽';
+                      const numValue = value as number;
+                      if (isMobile && numValue >= 1000) {
+                        return (numValue / 1000).toFixed(0) + 'k ₽';
+                      }
+                      return new Intl.NumberFormat('ru-RU').format(numValue) + ' ₽';
                     }
                   },
                   grid: {
@@ -106,7 +127,12 @@ const MonthlyDynamicsChart = () => {
                 },
                 x: {
                   ticks: {
-                    color: '#a3aed0'
+                    color: '#a3aed0',
+                    font: {
+                      size: isMobile ? 9 : 12
+                    },
+                    maxRotation: isMobile ? 45 : 0,
+                    minRotation: isMobile ? 45 : 0
                   },
                   grid: {
                     display: false
