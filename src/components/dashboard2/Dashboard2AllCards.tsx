@@ -170,7 +170,7 @@ const Dashboard2AllCards = () => {
   return (
     <div style={{ marginBottom: '30px' }}>
       {/* Stat Cards Row */}
-      <div style={{ display: 'flex', gap: '24px', marginBottom: '24px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '24px', flexWrap: 'nowrap' }}>
         {statCards.map((card) => {
           const isAttention = card.id === 'attention-required';
           return (
@@ -178,7 +178,8 @@ const Dashboard2AllCards = () => {
               key={card.id} 
               style={{ 
                 width: isAttention ? '400px' : '360px', 
-                height: '300px'
+                height: '300px',
+                flexShrink: 0
               }}
             >
               {renderCard(card)}
