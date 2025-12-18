@@ -188,15 +188,15 @@ const Dashboard2AllCards = () => {
   if (cardOrder.length === 0) return null;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 280px)', gap: '24px', marginBottom: '30px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 360px)', gap: '24px', marginBottom: '30px' }}>
       {cardOrder.map((card) => {
         const isChart = card.type === 'chart';
         return (
           <div 
             key={card.id} 
             style={{ 
-              width: isChart ? '580px' : '280px', 
-              height: isChart ? '400px' : '200px',
+              width: isChart ? '580px' : '360px', 
+              height: isChart ? '400px' : '300px',
               gridColumn: isChart ? 'span 2' : 'span 1'
             }}
           >
