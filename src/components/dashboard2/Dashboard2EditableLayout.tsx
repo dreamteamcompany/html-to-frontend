@@ -54,10 +54,8 @@ const Dashboard2EditableLayout = () => {
 
   const defaultLayouts: CardLayout[] = [
     { id: 'total-expenses', x: 0, y: 0, width: 350, height: 200 },
-    { id: 'server-infrastructure', x: 370, y: 0, width: 350, height: 200 },
-    { id: 'communication-services', x: 740, y: 0, width: 350, height: 200 },
-    { id: 'total-payments', x: 0, y: 220, width: 350, height: 200 },
-    { id: 'attention-required', x: 370, y: 220, width: 720, height: 420 },
+    { id: 'total-payments', x: 370, y: 0, width: 350, height: 200 },
+    { id: 'attention-required', x: 0, y: 220, width: 720, height: 420 },
   ];
 
   useEffect(() => {
