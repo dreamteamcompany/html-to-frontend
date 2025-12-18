@@ -5,7 +5,7 @@ const Dashboard2ChartsSection = () => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '30px' }}>
       {/* Динамика Расходов по Месяцам */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.3)', boxShadow: '0 0 20px rgba(117, 81, 233, 0.1)' }}>
+      <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Динамика Расходов по Месяцам</h3>
@@ -85,7 +85,7 @@ const Dashboard2ChartsSection = () => {
       </Card>
 
       {/* IT Расходы по Категориям */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.3)', boxShadow: '0 0 20px rgba(1, 181, 116, 0.1)' }}>
+      <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>IT Расходы по Категориям</h3>
@@ -183,7 +183,7 @@ const Dashboard2ChartsSection = () => {
       </Card>
 
       {/* Сравнение по Контрагентам */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(57, 101, 255, 0.3)', boxShadow: '0 0 20px rgba(57, 101, 255, 0.1)' }}>
+      <Card style={{ background: '#111c44', border: '1px solid rgba(57, 101, 255, 0.4)', boxShadow: '0 0 30px rgba(57, 101, 255, 0.2), inset 0 0 15px rgba(57, 101, 255, 0.05)' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Сравнение по Контрагентам</h3>
@@ -267,7 +267,7 @@ const Dashboard2ChartsSection = () => {
       </Card>
 
       {/* Структура Расходов */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 181, 71, 0.3)', boxShadow: '0 0 20px rgba(255, 181, 71, 0.1)' }}>
+      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 181, 71, 0.4)', boxShadow: '0 0 30px rgba(255, 181, 71, 0.2), inset 0 0 15px rgba(255, 181, 71, 0.05)' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Структура Расходов</h3>
