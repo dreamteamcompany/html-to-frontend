@@ -164,24 +164,43 @@ const Dashboard2AllCards = () => {
 
   if (cardOrder.length === 0) return null;
 
+  const statCards = cardOrder.filter(card => card.type === 'stat');
+  const chartCards = cardOrder.filter(card => card.type === 'chart');
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 360px)', gap: '24px', marginBottom: '30px' }}>
-      {cardOrder.map((card) => {
-        const isChart = card.type === 'chart';
-        const isAttention = card.id === 'attention-required';
-        return (
+    <div style={{ marginBottom: '30px' }}>
+      {/* Stat Cards Row */}
+      <div style={{ display: 'flex', gap: '24px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        {statCards.map((card) => {
+          const isAttention = card.id === 'attention-required';
+          return (
+            <div 
+              key={card.id} 
+              style={{ 
+                width: isAttention ? '400px' : '360px', 
+                height: '300px'
+              }}
+            >
+              {renderCard(card)}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Chart Cards Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 580px)', gap: '24px' }}>
+        {chartCards.map((card) => (
           <div 
             key={card.id} 
             style={{ 
-              width: isChart ? '580px' : isAttention ? '400px' : '360px', 
-              height: isChart ? '400px' : '300px',
-              gridColumn: isChart ? 'span 2' : 'span 1'
+              width: '580px', 
+              height: '400px'
             }}
           >
             {renderCard(card)}
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 };
