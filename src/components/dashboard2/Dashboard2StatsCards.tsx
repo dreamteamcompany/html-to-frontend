@@ -5,81 +5,220 @@ const Dashboard2StatsCards = () => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '30px' }}>
       {/* Общие IT Расходы */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)', borderTop: '4px solid #7551e9' }}>
-        <CardContent className="p-6">
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        border: 'none',
+        boxShadow: '0 8px 32px rgba(102, 126, 234, 0.4)',
+        overflow: 'hidden',
+        position: 'relative'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '200px',
+          height: '200px',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+          borderRadius: '50%',
+          transform: 'translate(50%, -50%)'
+        }} />
+        <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Общие IT Расходы</div>
-              <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500' }}>Все время</div>
+              <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px', color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '1px' }}>Все время</div>
+              <div style={{ fontSize: '20px', fontWeight: '800', color: '#fff' }}>Общие IT Расходы</div>
             </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(117, 81, 233, 0.1)', color: '#7551e9', border: '1px solid rgba(117, 81, 233, 0.2)' }}>
-              <Icon name="Server" size={20} />
+            <div style={{ 
+              width: '56px', 
+              height: '56px', 
+              borderRadius: '16px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              background: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+            }}>
+              <Icon name="Server" size={24} style={{ color: '#fff' }} />
             </div>
           </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>184,200 ₽</div>
-          <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>Общая сумма расходов</div>
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#e31a1a' }}>
-            <Icon name="ArrowUp" size={14} /> +12.5% с прошлого месяца
+          <div style={{ fontSize: '40px', fontWeight: '900', marginBottom: '12px', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>184,200 ₽</div>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            padding: '8px 12px',
+            background: 'rgba(227, 26, 26, 0.2)',
+            borderRadius: '8px',
+            width: 'fit-content'
+          }}>
+            <Icon name="TrendingUp" size={16} style={{ color: '#ff6b6b' }} />
+            <span style={{ fontSize: '14px', fontWeight: '700', color: '#fff' }}>+12.5% с прошлого месяца</span>
           </div>
         </CardContent>
       </Card>
 
       {/* Серверная Инфраструктура */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)', borderTop: '4px solid #7551e9' }}>
-        <CardContent className="p-6">
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+        border: 'none',
+        boxShadow: '0 8px 32px rgba(56, 239, 125, 0.4)',
+        overflow: 'hidden',
+        position: 'relative'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '200px',
+          height: '200px',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+          borderRadius: '50%',
+          transform: 'translate(50%, -50%)'
+        }} />
+        <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Серверная Инфраструктура</div>
-              <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500' }}>Расходы на серверы</div>
+              <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px', color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '1px' }}>Серверы</div>
+              <div style={{ fontSize: '20px', fontWeight: '800', color: '#fff' }}>Инфраструктура</div>
             </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(1, 181, 116, 0.1)', color: '#01b574', border: '1px solid rgba(1, 181, 116, 0.2)' }}>
-              <Icon name="Database" size={20} />
+            <div style={{ 
+              width: '56px', 
+              height: '56px', 
+              borderRadius: '16px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              background: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+            }}>
+              <Icon name="Database" size={24} style={{ color: '#fff' }} />
             </div>
           </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>98,500 ₽</div>
-          <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>53.4% от общего бюджета</div>
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#e31a1a' }}>
-            <Icon name="ArrowUp" size={14} /> +8.2% с прошлого месяца
+          <div style={{ fontSize: '40px', fontWeight: '900', marginBottom: '8px', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>98,500 ₽</div>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginBottom: '12px', fontWeight: '600' }}>53.4% от общего бюджета</div>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            padding: '8px 12px',
+            background: 'rgba(255, 107, 107, 0.2)',
+            borderRadius: '8px',
+            width: 'fit-content'
+          }}>
+            <Icon name="TrendingUp" size={16} style={{ color: '#ff6b6b' }} />
+            <span style={{ fontSize: '14px', fontWeight: '700', color: '#fff' }}>+8.2%</span>
           </div>
         </CardContent>
       </Card>
 
       {/* Коммуникационные Сервисы */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)', borderTop: '4px solid #7551e9' }}>
-        <CardContent className="p-6">
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        border: 'none',
+        boxShadow: '0 8px 32px rgba(79, 172, 254, 0.4)',
+        overflow: 'hidden',
+        position: 'relative'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '200px',
+          height: '200px',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+          borderRadius: '50%',
+          transform: 'translate(50%, -50%)'
+        }} />
+        <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Коммуникационные Сервисы</div>
-              <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500' }}>Телефония и мессенджеры</div>
+              <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px', color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '1px' }}>Связь</div>
+              <div style={{ fontSize: '20px', fontWeight: '800', color: '#fff' }}>Коммуникации</div>
             </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(57, 101, 255, 0.1)', color: '#3965ff', border: '1px solid rgba(57, 101, 255, 0.2)' }}>
-              <Icon name="MessageCircle" size={20} />
+            <div style={{ 
+              width: '56px', 
+              height: '56px', 
+              borderRadius: '16px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              background: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+            }}>
+              <Icon name="MessageCircle" size={24} style={{ color: '#fff' }} />
             </div>
           </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>45,300 ₽</div>
-          <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>24.6% от общего бюджета</div>
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#a3aed0' }}>
-            <Icon name="Minus" size={14} /> Без изменений
+          <div style={{ fontSize: '40px', fontWeight: '900', marginBottom: '8px', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>45,300 ₽</div>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginBottom: '12px', fontWeight: '600' }}>24.6% от общего бюджета</div>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            padding: '8px 12px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            borderRadius: '8px',
+            width: 'fit-content'
+          }}>
+            <Icon name="Minus" size={16} style={{ color: '#fff' }} />
+            <span style={{ fontSize: '14px', fontWeight: '700', color: '#fff' }}>Без изменений</span>
           </div>
         </CardContent>
       </Card>
 
       {/* Всего Платежей */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)', borderTop: '4px solid #7551e9' }}>
-        <CardContent className="p-6">
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+        border: 'none',
+        boxShadow: '0 8px 32px rgba(250, 112, 154, 0.4)',
+        overflow: 'hidden',
+        position: 'relative'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '200px',
+          height: '200px',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+          borderRadius: '50%',
+          transform: 'translate(50%, -50%)'
+        }} />
+        <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Всего Платежей</div>
-              <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500' }}>История операций</div>
+              <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px', color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '1px' }}>История</div>
+              <div style={{ fontSize: '20px', fontWeight: '800', color: '#fff' }}>Всего Платежей</div>
             </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255, 181, 71, 0.1)', color: '#ffb547', border: '1px solid rgba(255, 181, 71, 0.2)' }}>
-              <Icon name="Box" size={20} />
+            <div style={{ 
+              width: '56px', 
+              height: '56px', 
+              borderRadius: '16px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              background: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+            }}>
+              <Icon name="Box" size={24} style={{ color: '#fff' }} />
             </div>
           </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>23</div>
-          <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>платежей за все время</div>
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#e31a1a' }}>
-            <Icon name="ArrowUp" size={14} /> +3 за месяц
+          <div style={{ fontSize: '40px', fontWeight: '900', marginBottom: '8px', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>23</div>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginBottom: '12px', fontWeight: '600' }}>платежей за все время</div>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            padding: '8px 12px',
+            background: 'rgba(255, 107, 107, 0.2)',
+            borderRadius: '8px',
+            width: 'fit-content'
+          }}>
+            <Icon name="TrendingUp" size={16} style={{ color: '#fff' }} />
+            <span style={{ fontSize: '14px', fontWeight: '700', color: '#fff' }}>+3 за месяц</span>
           </div>
         </CardContent>
       </Card>
