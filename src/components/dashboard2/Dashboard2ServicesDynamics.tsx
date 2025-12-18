@@ -108,14 +108,11 @@ const Dashboard2ServicesDynamics = () => {
         </div>
 
         <div style={{ 
-          background: 'rgba(255, 255, 255, 0.02)',
-          borderRadius: '8px',
-          padding: '10px 8px 8px 8px',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          marginBottom: '8px',
-          position: 'relative'
+          position: 'relative',
+          width: '100%',
+          minHeight: `${sortedData.length * 45 + 30}px`
         }}>
-          <svg viewBox={`0 0 650 ${sortedData.length * spacing + 30}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
+          <svg viewBox={`0 0 650 ${sortedData.length * 45 + 30}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               {sortedData.map((_, index) => {
                 const color = barColors[index % barColors.length];
@@ -135,102 +132,82 @@ const Dashboard2ServicesDynamics = () => {
               </filter>
             </defs>
 
-            {[0, 0.5, 1].map((ratio, idx) => {
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
               const x = startX + ratio * maxWidth;
               const value = formatAmount(Math.round(ratio * maxAmount));
               return (
                 <g key={`grid-${idx}`}>
                   <line
                     x1={x}
-                    y1="2"
+                    y1="15"
                     x2={x}
-                    y2={sortedData.length * spacing + 2}
-                    stroke="rgba(255, 255, 255, 0.08)"
-                    strokeWidth="0.2"
-                    strokeDasharray="0.5 0.5"
+                    y2={sortedData.length * spacing + 15}
+                    stroke="#56577A"
+                    strokeWidth="1"
+                    strokeDasharray="5 5"
                   />
                   <text
                     x={x}
-                    y="1.5"
+                    y="12"
                     textAnchor="middle"
-                    fill="#a3aed0"
-                    style={{ fontSize: '2px', fontWeight: '600' }}
+                    fill="#c8cfca"
+                    style={{ fontSize: '11px', fontWeight: '500' }}
                   >
                     {value}
                   </text>
                 </g>
               );
-            })}
+            })()}
 
             {sortedData.map((service, index) => {
-              const y = 3.5 + index * spacing;
+              const y = 25 + index * spacing;
               const barWidth = (service.amount / maxAmount) * maxWidth;
-              const isHovered = hoveredService === index;
-              const color = barColors[index % barColors.length];
               
               return (
-                <g 
-                  key={`bar-${service.name}-${index}`}
-                  onMouseEnter={() => setHoveredService(index)}
-                  onMouseLeave={() => setHoveredService(null)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <text
-                    x="1.5"
-                    y={y + barHeight / 2 + 0.7}
-                    textAnchor="start"
-                    fill={isHovered ? color : '#a3aed0'}
-                    style={{ 
-                      fontSize: '2.3px', 
-                      fontWeight: isHovered ? '700' : '600',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    {service.name}
-                  </text>
-
+                <g key={`bar-${service.name}-${index}`}>
                   <rect
                     x={startX}
                     y={y}
                     width={barWidth}
                     height={barHeight}
                     fill={`url(#d2Bar-${index})`}
-                    rx="1"
-                    filter={isHovered ? 'url(#d2Glow)' : 'none'}
-                    style={{
-                      transition: 'all 0.3s ease',
-                      opacity: isHovered ? 1 : 0.85
-                    }}
+                    rx="8"
                   />
-
                   <text
-                    x={startX + barWidth + 1.3}
-                    y={y + barHeight / 2 + 0.7}
+                    x="15"
+                    y={y + barHeight / 2 + 4}
                     textAnchor="start"
-                    fill={color}
-                    style={{ 
-                      fontSize: '2.3px', 
-                      fontWeight: '700',
-                      opacity: isHovered ? 1 : 0.9
-                    }}
+                    fill="#c8cfca"
+                    style={{ fontSize: '14px' }}
+                  >
+                    {service.name}
+                  </text>
+                  <text
+                    x={startX + barWidth + 10}
+                    y={y + barHeight / 2 + 4}
+                    textAnchor="start"
+                    fill="#fff"
+                    style={{ fontSize: '14px', fontWeight: '600' }}
                   >
                     {formatAmount(service.amount)}
                   </text>
-
                   {service.trend !== 0 && (
                     <g>
-                      <circle
-                        cx={startX + barWidth + 17}
-                        cy={y + barHeight / 2}
-                        r="1.7"
-                        fill={service.trend > 0 ? 'rgba(1, 181, 116, 0.15)' : 'rgba(255, 107, 107, 0.15)'}
+                      <rect
+                        x={startX + barWidth + 95}
+                        y={y + barHeight / 2 - 9}
+                        width="45"
+                        height="18"
+                        rx="3"
+                        fill={service.trend > 0 ? '#01B574' : '#E31A1A'}
+                        opacity="0.9"
                       />
                       <text
-                        x={startX + barWidth + 17}
-                        y={y + barHeight / 2 + 0.7}
+                        x={startX + barWidth + 117}
+                        y={y + barHeight / 2 + 4}
                         textAnchor="middle"
-                        fill={service.trend > 0 ? '#01b574' : '#ff6b6b'}
-                        style={{ fontSize: '2px', fontWeight: '700' }}
+                        fill="#fff"
+                        style={{ fontSize: '12px', fontWeight: 'bold' }}
                       >
                         {service.trend > 0 ? '+' : ''}{service.trend}%
                       </text>
