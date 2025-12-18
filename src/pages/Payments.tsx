@@ -7,6 +7,8 @@ import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import PaymentForm from '@/components/payments/PaymentForm';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
+import Icon from '@/components/ui/icon';
+import { Input } from '@/components/ui/input';
 
 interface CustomField {
   id: number;
