@@ -157,7 +157,7 @@ const Dashboard2ServicesDynamics = () => {
                   </text>
                 </g>
               );
-            })()}
+            })}
 
             {sortedData.map((service, index) => {
               const y = 25 + index * spacing;
