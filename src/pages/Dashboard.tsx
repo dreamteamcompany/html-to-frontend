@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { apiFetch } from '@/utils/api';
 import ExpensesByCategoryChart from '@/components/dashboard/ExpensesByCategoryChart';
 import ServicesDynamicsChart from '@/components/dashboard/ServicesDynamicsChart';
 import ExpensesGrowthChart from '@/components/dashboard/ExpensesGrowthChart';
@@ -73,14 +74,20 @@ const Dashboard = () => {
     { name: 'Тестирование', amount: 33000, trend: -7 },
   ];
 
-  const monthlyData = [
-    { month: 'Янв', amount: 1200000 },
-    { month: 'Фев', amount: 1350000 },
-    { month: 'Мар', amount: 1280000 },
-    { month: 'Апр', amount: 1420000 },
-    { month: 'Май', amount: 1380000 },
-    { month: 'Июн', amount: 1450000 },
-  ];
+  const [monthlyData, setMonthlyData] = useState([
+    { month: 'Янв', amount: 0 },
+    { month: 'Фев', amount: 0 },
+    { month: 'Мар', amount: 0 },
+    { month: 'Апр', amount: 0 },
+    { month: 'Май', amount: 0 },
+    { month: 'Июн', amount: 0 },
+    { month: 'Июл', amount: 0 },
+    { month: 'Авг', amount: 0 },
+    { month: 'Сен', amount: 0 },
+    { month: 'Окт', amount: 0 },
+    { month: 'Ноя', amount: 0 },
+    { month: 'Дек', amount: 0 },
+  ]);
 
   const contractorsData = [
     { name: 'ООО "Техсервис"', amount: 420000, invoices: 12 },
@@ -141,6 +148,41 @@ const Dashboard = () => {
 
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchApprovedPayments = async () => {
+      try {
+        const response = await apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments');
+        const data = await response.json();
+        
+        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: any) => 
+          p.status === 'approved' || p.status === 'paid'
+        );
+        
+        const monthsMap: { [key: number]: number } = {};
+        approvedPayments.forEach((payment: any) => {
+          const date = new Date(payment.payment_date);
+          const month = date.getMonth();
+          if (!monthsMap[month]) {
+            monthsMap[month] = 0;
+          }
+          monthsMap[month] += payment.amount;
+        });
+        
+        const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+        const updatedMonthlyData = monthNames.map((name, index) => ({
+          month: name,
+          amount: monthsMap[index] || 0,
+        }));
+        
+        setMonthlyData(updatedMonthlyData);
+      } catch (error) {
+        console.error('Failed to fetch approved payments:', error);
+      }
+    };
+    
+    fetchApprovedPayments();
+  }, []);
 
   return (
     <div className="flex min-h-screen">
