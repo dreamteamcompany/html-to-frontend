@@ -43,70 +43,27 @@ const Dashboard2StatsCards = () => {
           pointerEvents: 'none'
         }} />
         <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
             <div style={{ 
               background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
-              padding: '12px',
+              width: '48px',
+              height: '48px',
               borderRadius: '12px',
-              boxShadow: '0 0 20px rgba(255, 107, 107, 0.5)',
-              animation: 'pulse 2s infinite'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 20px rgba(255, 107, 107, 0.5)'
             }}>
-              <Icon name="AlertTriangle" size={24} style={{ color: '#fff' }} />
+              <Icon name="AlertTriangle" size={20} style={{ color: '#fff' }} />
             </div>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Требуют внимания</h3>
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Требуют внимания</h3>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {[
-              { icon: 'Clock3', text: 'Просрочено 4 платежа', color: '#ff6b6b', urgent: true },
-              { icon: 'XCircle', text: '2 отклоненных запроса', color: '#ffb547', urgent: false },
-              { icon: 'AlertCircle', text: 'Лимит приближается к 80%', color: '#ff6b6b', urgent: true },
-              { icon: 'FileWarning', text: '3 документа без подписи', color: '#ffb547', urgent: false }
-            ].map((alert, idx) => (
-              <div key={idx} style={{ 
-                background: alert.urgent ? 'rgba(255, 107, 107, 0.1)' : 'rgba(255, 181, 71, 0.1)',
-                padding: '16px',
-                borderRadius: '12px',
-                border: `1px solid ${alert.color}40`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                transition: 'all 0.3s ease',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateX(4px)';
-                e.currentTarget.style.boxShadow = `0 0 20px ${alert.color}40`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateX(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}>
-                <Icon name={alert.icon} size={20} style={{ color: alert.color, flexShrink: 0 }} />
-                <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500' }}>{alert.text}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ 
-            marginTop: '20px',
-            padding: '16px',
-            background: 'rgba(117, 81, 233, 0.1)',
-            borderRadius: '12px',
-            border: '1px solid rgba(117, 81, 233, 0.2)',
-            textAlign: 'center',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(117, 81, 233, 0.2)';
-            e.currentTarget.style.boxShadow = '0 0 20px rgba(117, 81, 233, 0.3)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(117, 81, 233, 0.1)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}>
-            <span style={{ color: '#7551e9', fontSize: '14px', fontWeight: '600' }}>
-              Посмотреть все уведомления
-            </span>
+          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#ff6b6b' }}>4</div>
+          <div style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500', marginBottom: '12px' }}>критичных уведомления</div>
+          <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#ff6b6b' }}>
+            <Icon name="AlertTriangle" size={14} /> Требуют немедленного внимания
           </div>
         </CardContent>
       </Card>
