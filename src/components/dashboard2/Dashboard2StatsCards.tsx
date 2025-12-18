@@ -30,8 +30,7 @@ const Dashboard2StatsCards = () => {
         border: '1px solid rgba(255, 107, 107, 0.3)',
         boxShadow: '0 0 30px rgba(255, 107, 107, 0.15), inset 0 0 20px rgba(255, 107, 107, 0.05)',
         position: 'relative',
-        overflow: 'hidden',
-        gridColumn: 'span 2'
+        overflow: 'hidden'
       }}>
         <div style={{
           position: 'absolute',
