@@ -5,7 +5,7 @@ const Dashboard2StatsCards = () => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '30px' }}>
       {/* Общие IT Расходы */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)', borderTop: '4px solid #7551e9' }}>
+      <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.3)', borderTop: '4px solid #7551e9', boxShadow: '0 0 20px rgba(117, 81, 233, 0.1)' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
@@ -25,7 +25,7 @@ const Dashboard2StatsCards = () => {
       </Card>
 
       {/* Серверная Инфраструктура */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)', borderTop: '4px solid #7551e9' }}>
+      <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.3)', borderTop: '4px solid #01b574', boxShadow: '0 0 20px rgba(1, 181, 116, 0.1)' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
@@ -45,7 +45,7 @@ const Dashboard2StatsCards = () => {
       </Card>
 
       {/* Коммуникационные Сервисы */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)', borderTop: '4px solid #7551e9' }}>
+      <Card style={{ background: '#111c44', border: '1px solid rgba(57, 101, 255, 0.3)', borderTop: '4px solid #3965ff', boxShadow: '0 0 20px rgba(57, 101, 255, 0.1)' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
@@ -65,7 +65,7 @@ const Dashboard2StatsCards = () => {
       </Card>
 
       {/* Всего Платежей */}
-      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)', borderTop: '4px solid #7551e9' }}>
+      <Card style={{ background: '#111c44', border: '1px solid rgba(255, 181, 71, 0.3)', borderTop: '4px solid #ffb547', boxShadow: '0 0 20px rgba(255, 181, 71, 0.1)' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
