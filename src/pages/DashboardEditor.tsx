@@ -34,6 +34,7 @@ const defaultCards: DashboardCard[] = [
   { id: 'communication-services', title: 'Коммуникационные Сервисы', type: 'stat' },
   { id: 'total-payments', title: 'Всего Платежей', type: 'stat' },
   { id: 'attention-required', title: 'Требуют внимания', type: 'stat' },
+  { id: 'annual-savings', title: 'Годовая Экономия', type: 'stat' },
   { id: 'monthly-dynamics', title: 'Динамика Расходов по Месяцам', type: 'chart' },
   { id: 'category-expenses', title: 'IT Расходы по Категориям', type: 'chart' },
   { id: 'contractor-comparison', title: 'Сравнение по Контрагентам', type: 'chart' },
