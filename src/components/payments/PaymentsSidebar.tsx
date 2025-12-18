@@ -223,13 +223,6 @@ const PaymentsSidebar = ({
                 <Icon name="History" size={18} />
                 <span>История изменений</span>
               </Link>
-              <Link
-                to="/dashboard-editor"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/dashboard-editor') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Layout" size={18} />
-                <span>Редактор дашборда</span>
-              </Link>
             </div>
           )}
         </li>
