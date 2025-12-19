@@ -30,8 +30,8 @@ interface Saving {
   amount: number;
   frequency: string;
   currency: string;
-  employee_id: number;
-  employee_name: string;
+  department_id: number;
+  department_name: string;
   created_at: string;
 }
 
@@ -40,15 +40,15 @@ interface Service {
   name: string;
 }
 
-interface User {
+interface Department {
   id: number;
-  full_name: string;
+  name: string;
 }
 
 const Savings = () => {
   const [savings, setSavings] = useState<Saving[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
@@ -64,7 +64,7 @@ const Savings = () => {
     amount: '',
     frequency: 'once',
     currency: 'RUB',
-    employee_id: '',
+    department_id: '',
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -130,9 +130,9 @@ const Savings = () => {
     }
   };
 
-  const loadUsers = async () => {
+  const loadDepartments = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=departments', {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -140,17 +140,18 @@ const Savings = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setUsers(Array.isArray(data) ? data : []);
+        const departmentsList = data.departments || data;
+        setDepartments(Array.isArray(departmentsList) ? departmentsList : []);
       }
     } catch (err) {
-      console.error('Failed to load users:', err);
+      console.error('Failed to load departments:', err);
     }
   };
 
   useEffect(() => {
     loadSavings();
     loadServices();
-    loadUsers();
+    loadDepartments();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -169,7 +170,7 @@ const Savings = () => {
           amount: parseFloat(formData.amount),
           frequency: formData.frequency,
           currency: formData.currency,
-          employee_id: parseInt(formData.employee_id),
+          department_id: parseInt(formData.department_id),
         }),
       });
 
@@ -181,7 +182,7 @@ const Savings = () => {
           amount: '',
           frequency: 'once',
           currency: 'RUB',
-          employee_id: '',
+          department_id: '',
         });
         loadSavings();
       } else {
@@ -358,20 +359,24 @@ const Savings = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="employee_id">Сотрудник *</Label>
+                  <Label htmlFor="department_id">Отдел-заказчик *</Label>
                   <Select 
-                    value={formData.employee_id} 
-                    onValueChange={(value) => setFormData({ ...formData, employee_id: value })}
+                    value={formData.department_id} 
+                    onValueChange={(value) => setFormData({ ...formData, department_id: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Выберите сотрудника" />
+                      <SelectValue placeholder={departments.length === 0 ? "Загрузка..." : "Выберите отдел"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {users.map(user => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.full_name}
-                        </SelectItem>
-                      ))}
+                      {departments.length === 0 ? (
+                        <SelectItem value="none" disabled>Загрузка отделов...</SelectItem>
+                      ) : (
+                        departments.map(department => (
+                          <SelectItem key={department.id} value={department.id.toString()}>
+                            {department.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -405,7 +410,7 @@ const Savings = () => {
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Описание</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Эквивалент</th>
-                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сотрудник</th>
+                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Отдел</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Дата</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Действия</th>
                       </tr>
@@ -419,7 +424,7 @@ const Savings = () => {
                             {saving.amount.toLocaleString('ru-RU')} {saving.currency}
                           </td>
                           <td className="p-4 text-muted-foreground">{frequencyLabels[saving.frequency]}</td>
-                          <td className="p-4 text-muted-foreground">{saving.employee_name}</td>
+                          <td className="p-4 text-muted-foreground">{saving.department_name}</td>
                           <td className="p-4 text-muted-foreground">
                             {new Date(saving.created_at).toLocaleDateString('ru-RU')}
                           </td>
@@ -463,7 +468,7 @@ const Savings = () => {
                         {frequencyLabels[saving.frequency]}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Сотрудник: {saving.employee_name}
+                        Отдел: {saving.department_name}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {new Date(saving.created_at).toLocaleDateString('ru-RU')}
