@@ -119,24 +119,25 @@ const Dashboard2TeamPerformance = () => {
             <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
-        <div className="h-[250px] sm:h-[350px]" style={{ position: 'relative' }}>
+        <div className="h-[280px] sm:h-[380px]" style={{ position: 'relative', padding: isMobile ? '10px' : '20px' }}>
           <Radar
             data={{
               labels: activeData.map(d => d.name),
               datasets: [{
-                label: 'Расходы',
+                label: 'Расходы по отделам',
                 data: activeData.map(d => d.amount),
-                backgroundColor: 'rgba(117, 81, 233, 0.2)',
-                borderColor: 'rgb(117, 81, 233)',
-                borderWidth: isMobile ? 2 : 3,
-                pointBackgroundColor: 'rgb(117, 81, 233)',
+                backgroundColor: 'rgba(1, 181, 116, 0.15)',
+                borderColor: 'rgb(1, 181, 116)',
+                borderWidth: 3,
+                pointBackgroundColor: 'rgb(1, 181, 116)',
                 pointBorderColor: '#fff',
-                pointBorderWidth: isMobile ? 1 : 2,
-                pointRadius: isMobile ? 3 : 5,
-                pointHoverRadius: isMobile ? 5 : 7,
-                pointHoverBackgroundColor: 'rgb(117, 81, 233)',
-                pointHoverBorderColor: '#fff',
-                pointHoverBorderWidth: isMobile ? 2 : 3
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(1, 181, 116)',
+                pointHoverBorderWidth: 3,
+                pointStyle: 'circle'
               }]
             }}
             options={{
@@ -147,10 +148,25 @@ const Dashboard2TeamPerformance = () => {
                   display: false
                 },
                 tooltip: {
-                  enabled: !isMobile,
+                  enabled: true,
+                  backgroundColor: 'rgba(17, 28, 68, 0.95)',
+                  titleColor: '#fff',
+                  bodyColor: '#01b574',
+                  borderColor: 'rgba(1, 181, 116, 0.5)',
+                  borderWidth: 1,
+                  padding: 12,
+                  displayColors: false,
+                  titleFont: {
+                    size: 13,
+                    weight: 'bold'
+                  },
+                  bodyFont: {
+                    size: 14,
+                    weight: 'bold'
+                  },
                   callbacks: {
                     label: function(context) {
-                      return `Расходы: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`;
+                      return `${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`;
                     }
                   }
                 }
@@ -158,31 +174,41 @@ const Dashboard2TeamPerformance = () => {
               scales: {
                 r: {
                   beginAtZero: true,
+                  min: 0,
                   ticks: {
-                    color: '#a3aed0',
+                    color: 'rgba(163, 174, 208, 0.6)',
                     backdropColor: 'transparent',
                     font: {
-                      size: isMobile ? 9 : 11
+                      size: isMobile ? 9 : 11,
+                      weight: '500'
                     },
+                    stepSize: undefined,
                     callback: function(value) {
                       const numValue = value as number;
-                      if (isMobile && numValue >= 1000) {
-                        return (numValue / 1000).toFixed(0) + 'k';
+                      if (numValue >= 1000000) {
+                        return (numValue / 1000000).toFixed(1) + 'M';
                       }
-                      return new Intl.NumberFormat('ru-RU').format(numValue) + ' ₽';
+                      if (numValue >= 1000) {
+                        return (numValue / 1000).toFixed(0) + 'K';
+                      }
+                      return numValue.toString();
                     }
                   },
                   grid: {
-                    color: 'rgba(255, 255, 255, 0.1)'
+                    color: 'rgba(1, 181, 116, 0.15)',
+                    lineWidth: 1
                   },
                   angleLines: {
-                    color: 'rgba(255, 255, 255, 0.1)'
+                    color: 'rgba(1, 181, 116, 0.2)',
+                    lineWidth: 2
                   },
                   pointLabels: {
-                    color: '#a3aed0',
+                    color: '#fff',
                     font: {
-                      size: isMobile ? 10 : 13
-                    }
+                      size: isMobile ? 11 : 13,
+                      weight: '600'
+                    },
+                    padding: isMobile ? 5 : 10
                   }
                 }
               }
