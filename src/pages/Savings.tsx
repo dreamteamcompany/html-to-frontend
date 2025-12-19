@@ -152,7 +152,7 @@ const Savings = () => {
           currency: formData.currency,
           employee_id: parseInt(formData.employee_id),
           saving_reason_id: formData.saving_reason_id ? parseInt(formData.saving_reason_id) : null,
-        });
+        }),
       });
 
       if (response.ok) {
