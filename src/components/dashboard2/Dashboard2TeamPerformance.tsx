@@ -190,17 +190,23 @@ const Dashboard2TeamPerformance = () => {
                     lineWidth: 2
                   },
                   pointLabels: {
-                    padding: isMobile ? 8 : 12,
-                    font: {
-                      size: isMobile ? 10 : 12,
-                      weight: '600'
+                    padding: isMobile ? 10 : 15,
+                    font: function(context: any) {
+                      const lines = context.label.split('\n');
+                      return {
+                        size: isMobile ? 11 : 14,
+                        weight: '700'
+                      };
                     },
                     callback: function(label: string, index: number) {
                       const dept = activeData[index];
                       const formatted = new Intl.NumberFormat('ru-RU').format(dept.amount);
-                      return `${label}: ${formatted} ₽`;
+                      return [`${label}`, `${formatted} ₽`];
                     },
-                    color: '#a3aed0'
+                    color: function(context: any) {
+                      const lines = Array.isArray(context.label) ? context.label : [context.label];
+                      return ['#fff', '#01b574'];
+                    }
                   }
                 }
               }
