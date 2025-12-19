@@ -70,7 +70,7 @@ const Dashboard2TeamPerformance = () => {
   const activeData = currentData;
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)', maxWidth: '600px' }}>
+    <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)', maxWidth: '550px' }}>
       <CardContent className="p-6">
         <div style={{ marginBottom: '16px' }}>
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Отделам-Заказчикам</h3>
