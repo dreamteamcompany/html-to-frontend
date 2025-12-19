@@ -114,7 +114,14 @@ const Savings = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('[Savings] Loaded services:', data);
-        setServices(Array.isArray(data) ? data : []);
+        console.log('[Savings] Is array?', Array.isArray(data));
+        console.log('[Savings] Type:', typeof data);
+        
+        // Если пришел объект со свойством services
+        const servicesList = data.services || data;
+        console.log('[Savings] Services list:', servicesList);
+        
+        setServices(Array.isArray(servicesList) ? servicesList : []);
       } else {
         console.error('[Savings] Failed to load services, status:', response.status);
       }
