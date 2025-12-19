@@ -47,45 +47,36 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         cursor = conn.cursor()
         
         cursor.execute('''
-            WITH total_stats AS (
-                SELECT 
-                    COALESCE(SUM(amount), 0) as total_amount,
-                    COUNT(id) as count
-                FROM t_p61788166_html_to_frontend.savings
-            ),
-            dept_stats AS (
-                SELECT 
-                    cd.name as department_name,
-                    SUM(s.amount) as total_saved
-                FROM t_p61788166_html_to_frontend.savings s
-                LEFT JOIN t_p61788166_html_to_frontend.customer_departments cd ON s.customer_department_id = cd.id
-                WHERE s.customer_department_id IS NOT NULL
-                GROUP BY cd.id, cd.name
-                ORDER BY total_saved DESC
-                LIMIT 5
-            )
             SELECT 
-                (SELECT total_amount FROM total_stats) as total_amount,
-                (SELECT count FROM total_stats) as count,
-                COALESCE(json_agg(dept_stats.*), '[]'::json) as departments
-            FROM dept_stats
+                COALESCE(SUM(amount), 0) as total_amount,
+                COUNT(id) as count
+            FROM t_p61788166_html_to_frontend.savings
         ''')
         
         row = cursor.fetchone()
         total_amount = float(row[0]) if row and row[0] else 0
         count = int(row[1]) if row and row[1] else 0
-        departments_json = row[2] if row and row[2] else []
         
+        cursor.execute('''
+            SELECT 
+                cd.name as department_name,
+                SUM(s.amount) as total_saved
+            FROM t_p61788166_html_to_frontend.savings s
+            INNER JOIN t_p61788166_html_to_frontend.customer_departments cd ON s.customer_department_id = cd.id
+            WHERE s.customer_department_id IS NOT NULL
+            GROUP BY cd.id, cd.name
+            ORDER BY total_saved DESC
+            LIMIT 5
+        ''')
+        
+        dept_rows = cursor.fetchall()
         top_departments: List[Dict[str, Any]] = []
-        if departments_json and departments_json != '[]':
-            import json as json_module
-            dept_list = json_module.loads(departments_json) if isinstance(departments_json, str) else departments_json
-            for dept in dept_list:
-                if dept.get('department_name'):
-                    top_departments.append({
-                        'department_name': dept['department_name'],
-                        'total_saved': float(dept['total_saved'])
-                    })
+        for dept_row in dept_rows:
+            if dept_row[0]:
+                top_departments.append({
+                    'department_name': dept_row[0],
+                    'total_saved': float(dept_row[1])
+                })
         
         cursor.close()
         conn.close()
