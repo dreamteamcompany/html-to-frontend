@@ -58,9 +58,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     cd.name as department_name,
                     SUM(s.amount) as total_saved
                 FROM t_p61788166_html_to_frontend.savings s
-                JOIN t_p61788166_html_to_frontend.services srv ON s.service_id = srv.id
-                LEFT JOIN t_p61788166_html_to_frontend.customer_departments cd ON srv.customer_department_id = cd.id
-                WHERE srv.customer_department_id IS NOT NULL
+                LEFT JOIN t_p61788166_html_to_frontend.customer_departments cd ON s.customer_department_id = cd.id
+                WHERE s.customer_department_id IS NOT NULL
                 GROUP BY cd.id, cd.name
                 ORDER BY total_saved DESC
                 LIMIT 5

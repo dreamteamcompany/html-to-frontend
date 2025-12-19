@@ -4,13 +4,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/icon';
 import SavingFormDialog from './Savings/SavingFormDialog';
 import SavingsTable from './Savings/SavingsTable';
-import { Saving, Service, Employee, SavingReason, SavingFormData } from './Savings/types';
+import { Saving, Service, Employee, SavingReason, SavingFormData, CustomerDepartment } from './Savings/types';
 
 const Savings = () => {
   const [savings, setSavings] = useState<Saving[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [savingReasons, setSavingReasons] = useState<SavingReason[]>([]);
+  const [departments, setDepartments] = useState<CustomerDepartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
@@ -28,6 +29,7 @@ const Savings = () => {
     currency: 'RUB',
     employee_id: '',
     saving_reason_id: '',
+    customer_department_id: '',
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -127,11 +129,29 @@ const Savings = () => {
     }
   };
 
+  const loadDepartments = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=customer-departments', {
+        headers: {
+          'X-Auth-Token': token || '',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDepartments(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Failed to load departments:', err);
+    }
+  };
+
   useEffect(() => {
     loadSavings();
     loadServices();
     loadEmployees();
     loadSavingReasons();
+    loadDepartments();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,6 +172,7 @@ const Savings = () => {
           currency: formData.currency,
           employee_id: parseInt(formData.employee_id),
           saving_reason_id: formData.saving_reason_id ? parseInt(formData.saving_reason_id) : null,
+          customer_department_id: formData.customer_department_id ? parseInt(formData.customer_department_id) : null,
         }),
       });
 
@@ -165,6 +186,7 @@ const Savings = () => {
           currency: 'RUB',
           employee_id: '',
           saving_reason_id: '',
+          customer_department_id: '',
         });
         loadSavings();
       } else {
@@ -244,6 +266,7 @@ const Savings = () => {
             services={services}
             employees={employees}
             savingReasons={savingReasons}
+            departments={departments}
             onSubmit={handleSubmit}
           />
         </div>

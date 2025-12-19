@@ -10,6 +10,8 @@ export interface Saving {
   employee_name: string;
   saving_reason_id?: number;
   saving_reason_name?: string;
+  customer_department_id?: number;
+  customer_department_name?: string;
   created_at: string;
 }
 
@@ -37,4 +39,11 @@ export interface SavingFormData {
   currency: string;
   employee_id: string;
   saving_reason_id: string;
+  customer_department_id: string;
+}
+
+export interface CustomerDepartment {
+  id: number;
+  name: string;
+  description: string;
 }

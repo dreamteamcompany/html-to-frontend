@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Service, Employee, SavingReason, SavingFormData } from './types';
+import { Service, Employee, SavingReason, SavingFormData, CustomerDepartment } from './types';
 
 interface SavingFormDialogProps {
   open: boolean;
@@ -27,6 +27,7 @@ interface SavingFormDialogProps {
   services: Service[];
   employees: Employee[];
   savingReasons: SavingReason[];
+  departments: CustomerDepartment[];
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -38,6 +39,7 @@ const SavingFormDialog = ({
   services,
   employees,
   savingReasons,
+  departments,
   onSubmit,
 }: SavingFormDialogProps) => {
   return (
@@ -160,6 +162,29 @@ const SavingFormDialog = ({
                 <SelectItem value="monthly">Ежемесячно</SelectItem>
                 <SelectItem value="quarterly">Ежеквартально</SelectItem>
                 <SelectItem value="yearly">Ежегодно</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="customer_department_id">Отдел, благодаря которому сэкономлено *</Label>
+            <Select 
+              value={formData.customer_department_id} 
+              onValueChange={(value) => setFormData({ ...formData, customer_department_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={departments.length === 0 ? "Загрузка..." : "Выберите отдел"} />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.length === 0 ? (
+                  <SelectItem value="none" disabled>Загрузка отделов...</SelectItem>
+                ) : (
+                  departments.map(dept => (
+                    <SelectItem key={dept.id} value={dept.id.toString()}>
+                      {dept.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>

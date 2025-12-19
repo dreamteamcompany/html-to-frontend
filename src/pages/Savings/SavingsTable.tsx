@@ -34,6 +34,7 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                   <tr>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сервис</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Описание</th>
+                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Отдел</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Причина</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Эквивалент</th>
@@ -47,6 +48,13 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                     <tr key={saving.id} className="border-b border-white/5 last:border-0 hover:bg-white/5">
                       <td className="p-4 font-medium">{saving.service_name}</td>
                       <td className="p-4 text-muted-foreground max-w-xs truncate">{saving.description}</td>
+                      <td className="p-4">
+                        {saving.customer_department_name ? (
+                          <span className="text-muted-foreground">{saving.customer_department_name}</span>
+                        ) : (
+                          <span className="text-muted-foreground/50">—</span>
+                        )}
+                      </td>
                       <td className="p-4">
                         {saving.saving_reason_name ? (
                           <span className="text-muted-foreground">{saving.saving_reason_name}</span>
@@ -101,6 +109,11 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                   <div className="text-sm text-muted-foreground">
                     {frequencyLabels[saving.frequency]}
                   </div>
+                  {saving.customer_department_name && (
+                    <div className="text-sm text-muted-foreground">
+                      Отдел: {saving.customer_department_name}
+                    </div>
+                  )}
                   {saving.saving_reason_name && (
                     <div className="text-sm text-muted-foreground">
                       Причина: {saving.saving_reason_name}
