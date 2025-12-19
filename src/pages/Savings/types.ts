@@ -6,8 +6,8 @@ export interface Saving {
   amount: number;
   frequency: string;
   currency: string;
-  department_id: number;
-  department_name: string;
+  employee_id: number;
+  employee_name: string;
   saving_reason_id?: number;
   saving_reason_name?: string;
   created_at: string;
@@ -18,9 +18,9 @@ export interface Service {
   name: string;
 }
 
-export interface Department {
+export interface Employee {
   id: number;
-  name: string;
+  full_name: string;
 }
 
 export interface SavingReason {
@@ -35,6 +35,6 @@ export interface SavingFormData {
   amount: string;
   frequency: string;
   currency: string;
-  department_id: string;
+  employee_id: string;
   saving_reason_id: string;
 }

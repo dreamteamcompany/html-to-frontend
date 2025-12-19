@@ -37,7 +37,7 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Причина</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Эквивалент</th>
-                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Отдел</th>
+                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Автор</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Дата</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Действия</th>
                   </tr>
@@ -58,7 +58,7 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                         {saving.amount.toLocaleString('ru-RU')} {saving.currency}
                       </td>
                       <td className="p-4 text-muted-foreground">{frequencyLabels[saving.frequency]}</td>
-                      <td className="p-4 text-muted-foreground">{saving.department_name}</td>
+                      <td className="p-4 text-muted-foreground">{saving.employee_name}</td>
                       <td className="p-4 text-muted-foreground">
                         {new Date(saving.created_at).toLocaleDateString('ru-RU')}
                       </td>
@@ -107,7 +107,7 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                     </div>
                   )}
                   <div className="text-sm text-muted-foreground">
-                    Отдел: {saving.department_name}
+                    Автор: {saving.employee_name}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {new Date(saving.created_at).toLocaleDateString('ru-RU')}

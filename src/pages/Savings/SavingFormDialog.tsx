@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Service, Department, SavingReason, SavingFormData } from './types';
+import { Service, Employee, SavingReason, SavingFormData } from './types';
 
 interface SavingFormDialogProps {
   open: boolean;
@@ -25,7 +25,7 @@ interface SavingFormDialogProps {
   formData: SavingFormData;
   setFormData: (data: SavingFormData) => void;
   services: Service[];
-  departments: Department[];
+  employees: Employee[];
   savingReasons: SavingReason[];
   onSubmit: (e: React.FormEvent) => void;
 }
@@ -36,7 +36,7 @@ const SavingFormDialog = ({
   formData,
   setFormData,
   services,
-  departments,
+  employees,
   savingReasons,
   onSubmit,
 }: SavingFormDialogProps) => {
@@ -165,21 +165,21 @@ const SavingFormDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="department_id">Отдел-заказчик *</Label>
+            <Label htmlFor="employee_id">Автор экономии *</Label>
             <Select 
-              value={formData.department_id} 
-              onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+              value={formData.employee_id} 
+              onValueChange={(value) => setFormData({ ...formData, employee_id: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder={departments.length === 0 ? "Загрузка..." : "Выберите отдел"} />
+                <SelectValue placeholder={employees.length === 0 ? "Загрузка..." : "Выберите сотрудника"} />
               </SelectTrigger>
               <SelectContent>
-                {departments.length === 0 ? (
-                  <SelectItem value="none" disabled>Загрузка отделов...</SelectItem>
+                {employees.length === 0 ? (
+                  <SelectItem value="none" disabled>Загрузка сотрудников...</SelectItem>
                 ) : (
-                  departments.map(department => (
-                    <SelectItem key={department.id} value={department.id.toString()}>
-                      {department.name}
+                  employees.map(employee => (
+                    <SelectItem key={employee.id} value={employee.id.toString()}>
+                      {employee.full_name}
                     </SelectItem>
                   ))
                 )}

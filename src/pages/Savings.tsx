@@ -4,12 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/icon';
 import SavingFormDialog from './Savings/SavingFormDialog';
 import SavingsTable from './Savings/SavingsTable';
-import { Saving, Service, Department, SavingReason, SavingFormData } from './Savings/types';
+import { Saving, Service, Employee, SavingReason, SavingFormData } from './Savings/types';
 
 const Savings = () => {
   const [savings, setSavings] = useState<Saving[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [savingReasons, setSavingReasons] = useState<SavingReason[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -26,7 +26,7 @@ const Savings = () => {
     amount: '',
     frequency: 'once',
     currency: 'RUB',
-    department_id: '',
+    employee_id: '',
     saving_reason_id: '',
   });
 
@@ -92,9 +92,9 @@ const Savings = () => {
     }
   };
 
-  const loadDepartments = async () => {
+  const loadEmployees = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=departments', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users', {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -102,11 +102,11 @@ const Savings = () => {
       
       if (response.ok) {
         const data = await response.json();
-        const departmentsList = data.departments || data;
-        setDepartments(Array.isArray(departmentsList) ? departmentsList : []);
+        const employeesList = data.users || data;
+        setEmployees(Array.isArray(employeesList) ? employeesList : []);
       }
     } catch (err) {
-      console.error('Failed to load departments:', err);
+      console.error('Failed to load employees:', err);
     }
   };
 
@@ -130,7 +130,7 @@ const Savings = () => {
   useEffect(() => {
     loadSavings();
     loadServices();
-    loadDepartments();
+    loadEmployees();
     loadSavingReasons();
   }, []);
 
@@ -150,9 +150,9 @@ const Savings = () => {
           amount: parseFloat(formData.amount),
           frequency: formData.frequency,
           currency: formData.currency,
-          department_id: parseInt(formData.department_id),
+          employee_id: parseInt(formData.employee_id),
           saving_reason_id: formData.saving_reason_id ? parseInt(formData.saving_reason_id) : null,
-        }),
+        });
       });
 
       if (response.ok) {
@@ -163,7 +163,7 @@ const Savings = () => {
           amount: '',
           frequency: 'once',
           currency: 'RUB',
-          department_id: '',
+          employee_id: '',
           saving_reason_id: '',
         });
         loadSavings();
@@ -242,7 +242,7 @@ const Savings = () => {
             formData={formData}
             setFormData={setFormData}
             services={services}
-            departments={departments}
+            employees={employees}
             savingReasons={savingReasons}
             onSubmit={handleSubmit}
           />
