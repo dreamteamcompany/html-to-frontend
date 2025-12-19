@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
+import ApprovedPaymentDetailsModal from '@/components/payments/ApprovedPaymentDetailsModal';
 
 interface CustomField {
   id: number;
@@ -297,9 +297,10 @@ const ApprovedPayments = () => {
         </div>
 
         {selectedPayment && (
-          <PaymentDetailsModal
+          <ApprovedPaymentDetailsModal
             payment={selectedPayment}
             onClose={() => setSelectedPayment(null)}
+            onRevoked={loadPayments}
           />
         )}
       </main>

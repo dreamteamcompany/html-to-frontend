@@ -1,6 +1,11 @@
+import { useState } from 'react';
 import Icon from '@/components/ui/icon';
 import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { apiFetch } from '@/utils/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CustomField {
   id: number;
@@ -32,34 +37,58 @@ interface Payment {
   invoice_date?: string;
   created_at?: string;
   submitted_at?: string;
+  ceo_approved_at?: string;
+  tech_director_approved_at?: string;
   custom_fields?: CustomField[];
 }
 
-interface PaymentDetailsModalProps {
+interface ApprovedPaymentDetailsModalProps {
   payment: Payment | null;
   onClose: () => void;
+  onRevoked?: () => void;
 }
 
-const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => {
+const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPaymentDetailsModalProps) => {
+  const { token } = useAuth();
+  const [showRevokeForm, setShowRevokeForm] = useState(false);
+  const [revokeReason, setRevokeReason] = useState('');
+  const [isRevoking, setIsRevoking] = useState(false);
+
   if (!payment) return null;
 
-  const getStatusBadge = (status?: string) => {
-    if (!status || status === 'draft') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-gray-500/20 text-gray-300">Черновик</span>;
+  const handleRevoke = async () => {
+    if (!revokeReason.trim()) {
+      alert('Пожалуйста, укажите причину отзыва');
+      return;
     }
-    if (status === 'pending_ceo') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-blue-500/20 text-blue-300">Ожидает CEO</span>;
+
+    setIsRevoking(true);
+    try {
+      const response = await fetch('https://functions.poehali.dev/b79dfca0-9f01-41a8-92bb-7a6d9212d2f1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': localStorage.getItem('user_id') || '1'
+        },
+        body: JSON.stringify({
+          payment_id: payment.id,
+          reason: revokeReason.trim()
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка отзыва');
+      }
+
+      if (onRevoked) onRevoked();
+      onClose();
+    } catch (error) {
+      console.error('Ошибка отзыва платежа:', error);
+      alert('Не удалось отозвать платеж');
+    } finally {
+      setIsRevoking(false);
     }
-    if (status === 'approved') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-300">Одобрен</span>;
-    }
-    if (status === 'rejected') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-red-500/20 text-red-300">Отклонен</span>;
-    }
-    if (status === 'revoked') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-orange-500/20 text-orange-300">⚠ Отозван</span>;
-    }
-    return null;
   };
 
   return (
@@ -68,7 +97,7 @@ const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => 
         <div className="bg-card border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg sm:text-xl font-semibold">Детали платежа #{payment.id}</h2>
-            {getStatusBadge(payment.status)}
+            <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-300">✓ Одобрено CEO</span>
           </div>
           <button
             onClick={onClose}
@@ -161,6 +190,53 @@ const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => 
                 ))}
               </>
             )}
+
+            <div className="pt-4 border-t border-white/10">
+              {!showRevokeForm ? (
+                <Button 
+                  variant="destructive"
+                  className="w-full"
+                  onClick={() => setShowRevokeForm(true)}
+                >
+                  <Icon name="XCircle" size={18} />
+                  Отозвать платеж
+                </Button>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-2 block">
+                      Причина отзыва <span className="text-red-400">*</span>
+                    </label>
+                    <Textarea
+                      value={revokeReason}
+                      onChange={(e) => setRevokeReason(e.target.value)}
+                      placeholder="Укажите причину отзыва платежа..."
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
+                      onClick={handleRevoke}
+                      disabled={isRevoking || !revokeReason.trim()}
+                    >
+                      {isRevoking ? 'Отзываем...' : 'Подтвердить отзыв'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowRevokeForm(false);
+                        setRevokeReason('');
+                      }}
+                      disabled={isRevoking}
+                    >
+                      Отмена
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10 overflow-hidden">
@@ -174,6 +250,18 @@ const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => 
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Дата отправки:</span>
                     <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
+                  </div>
+                )}
+                {payment.ceo_approved_at && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Одобрено CEO:</span>
+                    <span className="font-medium">{new Date(payment.ceo_approved_at).toLocaleDateString('ru-RU')}</span>
+                  </div>
+                )}
+                {payment.tech_director_approved_at && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Одобрено Техдиром:</span>
+                    <span className="font-medium">{new Date(payment.tech_director_approved_at).toLocaleDateString('ru-RU')}</span>
                   </div>
                 )}
                 {payment.invoice_date && (
@@ -207,4 +295,4 @@ const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => 
   );
 };
 
-export default PaymentDetailsModal;
+export default ApprovedPaymentDetailsModal;

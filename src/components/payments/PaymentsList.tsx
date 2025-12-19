@@ -56,6 +56,9 @@ const getStatusBadge = (status?: string) => {
   if (status === 'rejected') {
     return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-300">Отклонен</span>;
   }
+  if (status === 'revoked') {
+    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-300">⚠ Отозван</span>;
+  }
   return null;
 };
 
