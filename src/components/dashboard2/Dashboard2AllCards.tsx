@@ -8,7 +8,6 @@ import CategoryExpensesChart from './blocks/CategoryExpensesChart';
 import ContractorComparisonChart from './blocks/ContractorComparisonChart';
 import ExpenseStructureChart from './blocks/ExpenseStructureChart';
 import LegalEntityComparisonChart from './blocks/LegalEntityComparisonChart';
-import DepartmentComparisonChart from './blocks/DepartmentComparisonChart';
 
 interface DashboardCard {
   id: string;
@@ -29,7 +28,6 @@ const Dashboard2AllCards = () => {
     { id: 'contractor-comparison', title: 'Сравнение по Контрагентам', type: 'chart' },
     { id: 'expense-structure', title: 'Структура Расходов', type: 'chart' },
     { id: 'legal-entity-comparison', title: 'Сравнение по Юридическим Лицам', type: 'chart' },
-    { id: 'department-comparison', title: 'Сравнение Затрат по Отделам-Заказчикам', type: 'chart' },
   ];
 
   useEffect(() => {
@@ -67,8 +65,6 @@ const Dashboard2AllCards = () => {
         return <ExpenseStructureChart />;
       case 'legal-entity-comparison':
         return <LegalEntityComparisonChart />;
-      case 'department-comparison':
-        return <DepartmentComparisonChart />;
       default:
         return null;
     }

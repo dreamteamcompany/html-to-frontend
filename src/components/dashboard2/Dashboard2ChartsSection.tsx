@@ -3,7 +3,6 @@ import CategoryExpensesChart from './blocks/CategoryExpensesChart';
 import ContractorComparisonChart from './blocks/ContractorComparisonChart';
 import ExpenseStructureChart from './blocks/ExpenseStructureChart';
 import LegalEntityComparisonChart from './blocks/LegalEntityComparisonChart';
-import DepartmentComparisonChart from './blocks/DepartmentComparisonChart';
 
 const Dashboard2ChartsSection = () => {
   return (
@@ -13,7 +12,6 @@ const Dashboard2ChartsSection = () => {
       <ContractorComparisonChart />
       <ExpenseStructureChart />
       <LegalEntityComparisonChart />
-      <DepartmentComparisonChart />
     </div>
   );
 };
