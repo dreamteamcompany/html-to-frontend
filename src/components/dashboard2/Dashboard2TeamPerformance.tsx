@@ -122,10 +122,7 @@ const Dashboard2TeamPerformance = () => {
         <div className="h-[280px] sm:h-[380px]" style={{ position: 'relative', padding: isMobile ? '10px' : '20px' }}>
           <Radar
             data={{
-              labels: activeData.map(d => {
-                const formatted = new Intl.NumberFormat('ru-RU').format(d.amount);
-                return [d.name, `${formatted} ₽`];
-              }),
+              labels: activeData.map(d => d.name),
               datasets: [{
                 label: 'Расходы по отделам',
                 data: activeData.map(d => d.amount),
@@ -206,24 +203,17 @@ const Dashboard2TeamPerformance = () => {
                     lineWidth: 2
                   },
                   pointLabels: {
-                    color: (context: any) => {
-                      const label = context.label;
-                      if (Array.isArray(label) && context.index !== undefined) {
-                        return ['#fff', '#01b574'];
-                      }
-                      return '#fff';
+                    padding: isMobile ? 8 : 12,
+                    font: {
+                      size: isMobile ? 10 : 12,
+                      weight: '600'
                     },
-                    font: (context: any) => {
-                      const label = context.label;
-                      if (Array.isArray(label)) {
-                        return [
-                          { size: isMobile ? 11 : 13, weight: '600' },
-                          { size: isMobile ? 10 : 12, weight: '700' }
-                        ];
-                      }
-                      return { size: isMobile ? 11 : 13, weight: '600' };
+                    callback: function(label: string, index: number) {
+                      const dept = activeData[index];
+                      const formatted = new Intl.NumberFormat('ru-RU').format(dept.amount);
+                      return `${label}: ${formatted} ₽`;
                     },
-                    padding: isMobile ? 8 : 12
+                    color: '#a3aed0'
                   }
                 }
               }
