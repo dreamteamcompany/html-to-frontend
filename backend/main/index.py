@@ -2541,7 +2541,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_legal_entities(method, event, conn)
         elif endpoint == 'contractors':
             result = handle_contractors(method, event, conn)
-        elif endpoint == 'customer-departments' or endpoint == 'customer_departments':
+        elif endpoint == 'customer-departments' or endpoint == 'customer_departments' or endpoint == 'departments':
             result = handle_customer_departments(method, event, conn)
         elif endpoint == 'custom-fields':
             result = handle_custom_fields(method, event, conn)
