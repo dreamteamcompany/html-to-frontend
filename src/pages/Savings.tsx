@@ -32,6 +32,8 @@ interface Saving {
   currency: string;
   department_id: number;
   department_name: string;
+  saving_reason_id?: number;
+  saving_reason_name?: string;
   created_at: string;
 }
 
@@ -45,10 +47,17 @@ interface Department {
   name: string;
 }
 
+interface SavingReason {
+  id: number;
+  name: string;
+  icon: string;
+}
+
 const Savings = () => {
   const [savings, setSavings] = useState<Saving[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [savingReasons, setSavingReasons] = useState<SavingReason[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
@@ -65,6 +74,7 @@ const Savings = () => {
     frequency: 'once',
     currency: 'RUB',
     department_id: '',
+    saving_reason_id: '',
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -148,10 +158,28 @@ const Savings = () => {
     }
   };
 
+  const loadSavingReasons = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=saving-reasons', {
+        headers: {
+          'X-Auth-Token': token || '',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSavingReasons(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Failed to load saving reasons:', err);
+    }
+  };
+
   useEffect(() => {
     loadSavings();
     loadServices();
     loadDepartments();
+    loadSavingReasons();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,6 +199,7 @@ const Savings = () => {
           frequency: formData.frequency,
           currency: formData.currency,
           department_id: parseInt(formData.department_id),
+          saving_reason_id: formData.saving_reason_id ? parseInt(formData.saving_reason_id) : null,
         }),
       });
 
@@ -183,6 +212,7 @@ const Savings = () => {
           frequency: 'once',
           currency: 'RUB',
           department_id: '',
+          saving_reason_id: '',
         });
         loadSavings();
       } else {
@@ -341,6 +371,32 @@ const Savings = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="saving_reason_id">Экономия достигнута за счет:</Label>
+                  <Select 
+                    value={formData.saving_reason_id} 
+                    onValueChange={(value) => setFormData({ ...formData, saving_reason_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={savingReasons.length === 0 ? "Загрузка..." : "Выберите причину"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {savingReasons.length === 0 ? (
+                        <SelectItem value="none" disabled>Загрузка причин...</SelectItem>
+                      ) : (
+                        savingReasons.map(reason => (
+                          <SelectItem key={reason.id} value={reason.id.toString()}>
+                            <span className="flex items-center gap-2">
+                              <span>{reason.icon}</span>
+                              <span>{reason.name}</span>
+                            </span>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="frequency">Эквивалент *</Label>
                   <Select 
                     value={formData.frequency} 
@@ -408,6 +464,7 @@ const Savings = () => {
                       <tr>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сервис</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Описание</th>
+                        <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Причина</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Эквивалент</th>
                         <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Отдел</th>
@@ -420,6 +477,13 @@ const Savings = () => {
                         <tr key={saving.id} className="border-b border-white/5 last:border-0 hover:bg-white/5">
                           <td className="p-4 font-medium">{saving.service_name}</td>
                           <td className="p-4 text-muted-foreground max-w-xs truncate">{saving.description}</td>
+                          <td className="p-4">
+                            {saving.saving_reason_name ? (
+                              <span className="text-muted-foreground">{saving.saving_reason_name}</span>
+                            ) : (
+                              <span className="text-muted-foreground/50">—</span>
+                            )}
+                          </td>
                           <td className="p-4 font-semibold text-green-500">
                             {saving.amount.toLocaleString('ru-RU')} {saving.currency}
                           </td>
@@ -467,6 +531,11 @@ const Savings = () => {
                       <div className="text-sm text-muted-foreground">
                         {frequencyLabels[saving.frequency]}
                       </div>
+                      {saving.saving_reason_name && (
+                        <div className="text-sm text-muted-foreground">
+                          Причина: {saving.saving_reason_name}
+                        </div>
+                      )}
                       <div className="text-sm text-muted-foreground">
                         Отдел: {saving.department_name}
                       </div>

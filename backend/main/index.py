@@ -87,6 +87,7 @@ class SavingRequest(BaseModel):
     frequency: str = Field(..., pattern='^(once|monthly|quarterly|yearly)$')
     currency: str = Field(default='RUB')
     employee_id: int = Field(..., gt=0)
+    saving_reason_id: Optional[int] = None
 
 class SavingReasonRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -2271,12 +2272,15 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             cur.execute(f"""
                 SELECT 
                     s.id, s.service_id, s.description, s.amount, s.frequency, 
-                    s.currency, s.employee_id, s.created_at,
+                    s.currency, s.employee_id, s.saving_reason_id, s.created_at,
                     srv.name as service_name,
-                    u.full_name as employee_name
+                    u.full_name as employee_name,
+                    sr.name as saving_reason_name,
+                    sr.icon as saving_reason_icon
                 FROM {SCHEMA}.savings s
                 LEFT JOIN {SCHEMA}.services srv ON s.service_id = srv.id
                 LEFT JOIN {SCHEMA}.users u ON s.employee_id = u.id
+                LEFT JOIN {SCHEMA}.saving_reasons sr ON s.saving_reason_id = sr.id
                 ORDER BY s.created_at DESC
             """)
             
@@ -2293,11 +2297,11 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             cur.execute(
                 f"""INSERT INTO {SCHEMA}.savings 
-                   (service_id, description, amount, frequency, currency, employee_id) 
-                   VALUES (%s, %s, %s, %s, %s, %s) 
-                   RETURNING id, service_id, description, amount, frequency, currency, employee_id, created_at""",
+                   (service_id, description, amount, frequency, currency, employee_id, saving_reason_id) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s) 
+                   RETURNING id, service_id, description, amount, frequency, currency, employee_id, saving_reason_id, created_at""",
                 (saving_req.service_id, saving_req.description, saving_req.amount, 
-                 saving_req.frequency, saving_req.currency, saving_req.employee_id)
+                 saving_req.frequency, saving_req.currency, saving_req.employee_id, saving_req.saving_reason_id)
             )
             
             row = cur.fetchone()
