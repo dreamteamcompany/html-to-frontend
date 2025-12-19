@@ -40,6 +40,12 @@ interface User {
   role: string;
 }
 
+interface CustomerDepartment {
+  id: number;
+  name: string;
+  description: string;
+}
+
 interface Service {
   id: number;
   name: string;
@@ -48,12 +54,15 @@ interface Service {
   final_approver_id: number;
   intermediate_approver_name?: string;
   final_approver_name?: string;
+  customer_department_id?: number;
+  customer_department_name?: string;
   created_at: string;
 }
 
 const Services = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [departments, setDepartments] = useState<CustomerDepartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -68,6 +77,7 @@ const Services = () => {
     name: '',
     description: '',
     final_approver_id: '',
+    customer_department_id: '',
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -87,6 +97,7 @@ const Services = () => {
   useEffect(() => {
     loadServices();
     loadUsers();
+    loadDepartments();
   }, []);
 
   const loadServices = async () => {
@@ -118,6 +129,17 @@ const Services = () => {
     }
   };
 
+  const loadDepartments = async () => {
+    try {
+      const response = await apiFetch(`${BACKEND_URL}?endpoint=customer-departments`);
+      const data = await response.json();
+      setDepartments(Array.isArray(data) ? data : data.departments || []);
+    } catch (error) {
+      console.error('Failed to load departments:', error);
+      setDepartments([]);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -143,6 +165,7 @@ const Services = () => {
           description: formData.description,
           intermediate_approver_id: parseInt(formData.final_approver_id),
           final_approver_id: parseInt(formData.final_approver_id),
+          customer_department_id: formData.customer_department_id ? parseInt(formData.customer_department_id) : null,
         }),
       });
 
@@ -173,6 +196,7 @@ const Services = () => {
       name: service.name,
       description: service.description || '',
       final_approver_id: service.final_approver_id.toString(),
+      customer_department_id: service.customer_department_id ? service.customer_department_id.toString() : '',
     });
     setDialogOpen(true);
   };
@@ -209,6 +233,7 @@ const Services = () => {
       name: '',
       description: '',
       final_approver_id: '',
+      customer_department_id: '',
     });
     setEditingService(null);
   };
@@ -293,6 +318,27 @@ const Services = () => {
                 </div>
 
                 <div>
+                  <Label htmlFor="department">Отдел-заказчик</Label>
+                  <Select
+                    value={formData.customer_department_id}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, customer_department_id: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Выберите отдел" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id.toString()}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
                   <Label htmlFor="final">Согласующее лицо (CEO) *</Label>
                   <Select
                     value={formData.final_approver_id}
@@ -343,6 +389,7 @@ const Services = () => {
                   <TableRow>
                     <TableHead>Название</TableHead>
                     <TableHead>Описание</TableHead>
+                    <TableHead>Отдел-заказчик</TableHead>
                     <TableHead>Промежуточное согласование</TableHead>
                     <TableHead>Окончательное согласование</TableHead>
                     <TableHead className="text-right">Действия</TableHead>
@@ -353,6 +400,7 @@ const Services = () => {
                     <TableRow key={service.id}>
                       <TableCell className="font-medium">{service.name}</TableCell>
                       <TableCell>{service.description || '—'}</TableCell>
+                      <TableCell>{service.customer_department_name || '—'}</TableCell>
                       <TableCell>{service.intermediate_approver_name || '—'}</TableCell>
                       <TableCell>{service.final_approver_name || '—'}</TableCell>
                       <TableCell className="text-right">
