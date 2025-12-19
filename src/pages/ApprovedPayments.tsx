@@ -300,7 +300,7 @@ const ApprovedPayments = () => {
           <ApprovedPaymentDetailsModal
             payment={selectedPayment}
             onClose={() => setSelectedPayment(null)}
-            onRevoked={loadPayments}
+            onRevoked={fetchApprovedPayments}
           />
         )}
       </main>
