@@ -17,8 +17,10 @@ const AnnualSavingsStatCard = () => {
   const { token } = useAuth();
 
   useEffect(() => {
-    loadSavingsData();
-  }, []);
+    if (token) {
+      loadSavingsData();
+    }
+  }, [token]);
 
   const loadSavingsData = async () => {
     try {
@@ -30,7 +32,10 @@ const AnnualSavingsStatCard = () => {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Savings data loaded:', data);
         setSavingsData(data);
+      } else {
+        console.error('Failed to load savings, status:', response.status);
       }
     } catch (err) {
       console.error('Failed to load savings data:', err);
