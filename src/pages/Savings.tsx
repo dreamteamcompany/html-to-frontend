@@ -113,10 +113,13 @@ const Savings = () => {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('[Savings] Loaded services:', data);
         setServices(Array.isArray(data) ? data : []);
+      } else {
+        console.error('[Savings] Failed to load services, status:', response.status);
       }
     } catch (err) {
-      console.error('Failed to load services:', err);
+      console.error('[Savings] Failed to load services:', err);
     }
   };
 
@@ -269,14 +272,18 @@ const Savings = () => {
                     onValueChange={(value) => setFormData({ ...formData, service_id: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Выберите сервис" />
+                      <SelectValue placeholder={services.length === 0 ? "Загрузка..." : "Выберите сервис"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {services.map(service => (
-                        <SelectItem key={service.id} value={service.id.toString()}>
-                          {service.name}
-                        </SelectItem>
-                      ))}
+                      {services.length === 0 ? (
+                        <SelectItem value="none" disabled>Загрузка сервисов...</SelectItem>
+                      ) : (
+                        services.map(service => (
+                          <SelectItem key={service.id} value={service.id.toString()}>
+                            {service.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
