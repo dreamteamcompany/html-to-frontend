@@ -74,6 +74,12 @@ const PaymentsSidebar = ({
             <span>Дашборд</span>
           </Link>
         </li>
+        <li>
+          <Link to="/dashboard2" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/dashboard2') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+            <Icon name="LayoutDashboard" size={20} />
+            <span>Дашборд 2</span>
+          </Link>
+        </li>
         {hasPermission('payments', 'read') && (
           <>
             <li>
