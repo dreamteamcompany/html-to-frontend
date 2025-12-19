@@ -68,9 +68,9 @@ const ApprovedPayments = () => {
         headers: token ? { 'X-User-Token': token } : {},
       });
       
-      // Фильтруем только полностью одобренные платежи (с ceo_approved_at)
+      // Фильтруем только полностью одобренные платежи
       const approvedPayments = data.filter((p: Payment) => 
-        p.ceo_approved_at !== null
+        p.status === 'approved' && p.ceo_approved_at !== null
       );
       
       setPayments(approvedPayments);
