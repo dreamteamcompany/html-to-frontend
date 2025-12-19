@@ -209,7 +209,7 @@ const Dashboard2TeamPerformance = () => {
         </div>
         
         <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(1, 181, 116, 0.08)', borderRadius: '12px', border: '1px solid rgba(1, 181, 116, 0.2)' }}>
-          <h4 style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '700', color: '#01b574', marginBottom: '12px' }}>Топ-3 Отделов по Затратам</h4>
+          <h4 style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '800', color: '#fff', marginBottom: '12px' }}>Топ-3 Отделов по Затратам</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {activeData.slice(0, 3).map((dept, index) => (
               <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(1, 181, 116, 0.15)' }}>
