@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
+import { Chart, registerables } from 'chart.js';
 import Dashboard2ChartsSection from './Dashboard2ChartsSection';
 import Dashboard2StatsRow from './Dashboard2StatsRow';
 import Dashboard2KPIRow from './Dashboard2KPIRow';
@@ -11,6 +12,8 @@ import Dashboard2TeamPerformance from './Dashboard2TeamPerformance';
 import Dashboard2ServicesDynamics from './Dashboard2ServicesDynamics';
 import Dashboard2CostIndexing from './Dashboard2CostIndexing';
 import Dashboard2BudgetBreakdown from './Dashboard2BudgetBreakdown';
+
+Chart.register(...registerables);
 
 interface BlockLayout {
   id: string;
