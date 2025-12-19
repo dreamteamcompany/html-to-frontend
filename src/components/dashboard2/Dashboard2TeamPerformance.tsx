@@ -53,7 +53,9 @@ const Dashboard2TeamPerformance = () => {
             }
             deptMap[dept] += payment.amount;
           });
-          return Object.entries(deptMap).map(([name, amount]) => ({ name, amount }));
+          return Object.entries(deptMap)
+            .map(([name, amount]) => ({ name, amount }))
+            .sort((a, b) => b.amount - a.amount);
         };
         
         setCurrentData(aggregateByDepartment(currentMonthPayments));
