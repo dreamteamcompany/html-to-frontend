@@ -64,15 +64,14 @@ const ApprovedPayments = () => {
   const fetchApprovedPayments = async () => {
     setLoading(true);
     try {
-      const data = await apiFetch('/payments', {
-        headers: token ? { 'X-User-Token': token } : {},
-      });
+      const response = await apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments');
+      const data = await response.json();
       
       console.log('[ApprovedPayments] Total payments received:', data.length);
       console.log('[ApprovedPayments] Sample payment:', data[0]);
       
       // Фильтруем только полностью одобренные платежи
-      const approvedPayments = data.filter((p: Payment) => 
+      const approvedPayments = (Array.isArray(data) ? data : []).filter((p: Payment) => 
         p.status === 'approved' && p.ceo_approved_at !== null
       );
       
@@ -82,6 +81,7 @@ const ApprovedPayments = () => {
       setPayments(approvedPayments);
     } catch (error) {
       console.error('Failed to fetch approved payments:', error);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
