@@ -68,10 +68,16 @@ const ApprovedPayments = () => {
         headers: token ? { 'X-User-Token': token } : {},
       });
       
+      console.log('[ApprovedPayments] Total payments received:', data.length);
+      console.log('[ApprovedPayments] Sample payment:', data[0]);
+      
       // Фильтруем только полностью одобренные платежи
       const approvedPayments = data.filter((p: Payment) => 
         p.status === 'approved' && p.ceo_approved_at !== null
       );
+      
+      console.log('[ApprovedPayments] Filtered approved payments:', approvedPayments.length);
+      console.log('[ApprovedPayments] First approved payment:', approvedPayments[0]);
       
       setPayments(approvedPayments);
     } catch (error) {
