@@ -5,9 +5,7 @@ import { apiFetch } from '@/utils/api';
 
 const Dashboard2TeamPerformance = () => {
   const [currentData, setCurrentData] = useState<{name: string, amount: number}[]>([]);
-  const [previousData, setPreviousData] = useState<{name: string, amount: number}[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'current' | 'previous'>('current');
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -59,7 +57,6 @@ const Dashboard2TeamPerformance = () => {
         };
         
         setCurrentData(aggregateByDepartment(currentMonthPayments));
-        setPreviousData(aggregateByDepartment(previousMonthPayments));
       } catch (error) {
         console.error('Failed to fetch department data:', error);
       } finally {
@@ -70,47 +67,13 @@ const Dashboard2TeamPerformance = () => {
     fetchDepartmentData();
   }, []);
 
-  const activeData = viewMode === 'current' ? currentData : previousData;
+  const activeData = currentData;
 
   return (
     <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)', maxWidth: '600px' }}>
       <CardContent className="p-6">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ marginBottom: '16px' }}>
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Отделам-Заказчикам</h3>
-          <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '10px' }}>
-            <button 
-              onClick={() => setViewMode('current')}
-              style={{ 
-                background: viewMode === 'current' ? '#7551e9' : 'transparent', 
-                border: 'none', 
-                color: viewMode === 'current' ? 'white' : '#a3aed0', 
-                padding: isMobile ? '6px 12px' : '8px 16px', 
-                borderRadius: '8px', 
-                cursor: 'pointer', 
-                fontSize: isMobile ? '11px' : '13px', 
-                fontWeight: '600', 
-                boxShadow: viewMode === 'current' ? '0 2px 8px rgba(117, 81, 233, 0.3)' : 'none'
-              }}
-            >
-              Текущий
-            </button>
-            <button 
-              onClick={() => setViewMode('previous')}
-              style={{ 
-                background: viewMode === 'previous' ? '#7551e9' : 'transparent', 
-                border: 'none', 
-                color: viewMode === 'previous' ? 'white' : '#a3aed0', 
-                padding: isMobile ? '6px 12px' : '8px 16px', 
-                borderRadius: '8px', 
-                cursor: 'pointer', 
-                fontSize: isMobile ? '11px' : '13px', 
-                fontWeight: '600',
-                boxShadow: viewMode === 'previous' ? '0 2px 8px rgba(117, 81, 233, 0.3)' : 'none'
-              }}
-            >
-              Предыдущий
-            </button>
-          </div>
         </div>
         {loading ? (
           <div className="flex items-center justify-center" style={{ height: '250px' }}>
