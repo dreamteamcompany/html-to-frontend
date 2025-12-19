@@ -119,6 +119,7 @@ const Dashboard2TeamPerformance = () => {
             <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
+        <>
         <div className="h-[280px] sm:h-[380px]" style={{ position: 'relative', padding: isMobile ? '10px' : '20px' }}>
           <Radar
             data={{
@@ -176,23 +177,7 @@ const Dashboard2TeamPerformance = () => {
                   beginAtZero: true,
                   min: 0,
                   ticks: {
-                    color: 'rgba(163, 174, 208, 0.6)',
-                    backdropColor: 'transparent',
-                    font: {
-                      size: isMobile ? 9 : 11,
-                      weight: '500'
-                    },
-                    stepSize: undefined,
-                    callback: function(value) {
-                      const numValue = value as number;
-                      if (numValue >= 1000000) {
-                        return (numValue / 1000000).toFixed(1) + 'M';
-                      }
-                      if (numValue >= 1000) {
-                        return (numValue / 1000).toFixed(0) + 'K';
-                      }
-                      return numValue.toString();
-                    }
+                    display: false
                   },
                   grid: {
                     color: 'rgba(1, 181, 116, 0.15)',
@@ -220,6 +205,22 @@ const Dashboard2TeamPerformance = () => {
             }}
           />
         </div>
+        
+        <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(1, 181, 116, 0.08)', borderRadius: '12px', border: '1px solid rgba(1, 181, 116, 0.2)' }}>
+          <h4 style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '700', color: '#01b574', marginBottom: '12px' }}>Топ-3 Отделов по Затратам</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {activeData.slice(0, 3).map((dept, index) => (
+              <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(1, 181, 116, 0.15)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', color: '#01b574', minWidth: '24px' }}>{index + 1}</span>
+                  <span style={{ fontSize: isMobile ? '12px' : '13px', color: '#fff', fontWeight: '600' }}>{dept.name}</span>
+                </div>
+                <span style={{ fontSize: isMobile ? '12px' : '14px', color: '#01b574', fontWeight: '700' }}>{new Intl.NumberFormat('ru-RU').format(dept.amount)} ₽</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        </>
         )}
       </CardContent>
     </Card>
