@@ -126,6 +126,16 @@ const ApprovedPayments = () => {
     });
   };
 
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
     <div className="flex min-h-screen">
       <PaymentsSidebar
@@ -242,6 +252,12 @@ const ApprovedPayments = () => {
                             <div className="flex items-center gap-2">
                               <Icon name="Briefcase" size={14} />
                               <span>{payment.legal_entity_name}</span>
+                            </div>
+                          )}
+                          {payment.ceo_approved_at && (
+                            <div className="flex items-center gap-2">
+                              <Icon name="Clock" size={14} />
+                              <span>Согласовано CEO: {formatDateTime(payment.ceo_approved_at)}</span>
                             </div>
                           )}
                           {payment.department_name && (
