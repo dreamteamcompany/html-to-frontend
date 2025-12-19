@@ -22,7 +22,7 @@ const Dashboard2AllCards = () => {
     { id: 'total-expenses', title: 'Общие IT Расходы', type: 'stat' },
     { id: 'total-payments', title: 'Индексация', type: 'stat' },
     { id: 'attention-required', title: 'Требуют внимания', type: 'stat' },
-    { id: 'annual-savings', title: 'Годовая Экономия', type: 'stat' },
+    { id: 'annual-savings', title: 'Экономия', type: 'stat' },
     { id: 'monthly-dynamics', title: 'Динамика Расходов по Месяцам', type: 'chart' },
     { id: 'category-expenses', title: 'IT Расходы по Категориям', type: 'chart' },
     { id: 'contractor-comparison', title: 'Сравнение по Контрагентам', type: 'chart' },

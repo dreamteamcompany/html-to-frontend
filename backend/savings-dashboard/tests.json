@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Get savings dashboard data",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "total_amount": "number",
+        "count": "number",
+        "top_departments": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

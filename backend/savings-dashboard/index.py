@@ -1,0 +1,96 @@
+import json
+import os
+import psycopg2
+from typing import Dict, Any, List
+
+def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    '''
+    Получение статистики по экономии для дашборда
+    Args: event - словарь с httpMethod, headers
+          context - объект с атрибутами request_id, function_name
+    Returns: JSON с общей суммой экономии и топом отделов-заказчиков
+    '''
+    method: str = event.get('httpMethod', 'GET')
+    
+    if method == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
+                'Access-Control-Max-Age': '86400'
+            },
+            'body': '',
+            'isBase64Encoded': False
+        }
+    
+    if method != 'GET':
+        return {
+            'statusCode': 405,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Method not allowed'}),
+            'isBase64Encoded': False
+        }
+    
+    dsn = os.environ.get('DATABASE_URL')
+    if not dsn:
+        return {
+            'statusCode': 500,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Database not configured'}),
+            'isBase64Encoded': False
+        }
+    
+    conn = psycopg2.connect(dsn)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT 
+            COALESCE(SUM(s.amount), 0) as total_amount,
+            COUNT(s.id) as count
+        FROM t_p61788166_html_to_frontend.savings s
+    ''')
+    
+    total_row = cursor.fetchone()
+    total_amount = float(total_row[0]) if total_row else 0
+    count = int(total_row[1]) if total_row else 0
+    
+    cursor.execute('''
+        SELECT 
+            cd.name as department_name,
+            SUM(s.amount) as total_saved
+        FROM t_p61788166_html_to_frontend.savings s
+        JOIN t_p61788166_html_to_frontend.services srv ON s.service_id = srv.id
+        LEFT JOIN t_p61788166_html_to_frontend.customer_departments cd ON srv.customer_department_id = cd.id
+        WHERE srv.customer_department_id IS NOT NULL
+        GROUP BY cd.id, cd.name
+        ORDER BY total_saved DESC
+        LIMIT 5
+    ''')
+    
+    top_departments: List[Dict[str, Any]] = []
+    for row in cursor.fetchall():
+        top_departments.append({
+            'department_name': row[0],
+            'total_saved': float(row[1])
+        })
+    
+    cursor.close()
+    conn.close()
+    
+    result = {
+        'total_amount': total_amount,
+        'count': count,
+        'top_departments': top_departments
+    }
+    
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps(result),
+        'isBase64Encoded': False
+    }
