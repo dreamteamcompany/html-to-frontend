@@ -123,8 +123,8 @@ const Dashboard2TeamPerformance = () => {
           <Radar
             data={{
               labels: activeData.map(d => {
-                const formatted = new Intl.NumberFormat('ru-RU', { notation: 'compact', compactDisplay: 'short' }).format(d.amount);
-                return `${d.name}\n${formatted} ₽`;
+                const formatted = new Intl.NumberFormat('ru-RU').format(d.amount);
+                return [d.name, `${formatted} ₽`];
               }),
               datasets: [{
                 label: 'Расходы по отделам',
@@ -206,12 +206,24 @@ const Dashboard2TeamPerformance = () => {
                     lineWidth: 2
                   },
                   pointLabels: {
-                    color: '#fff',
-                    font: {
-                      size: isMobile ? 11 : 13,
-                      weight: '600'
+                    color: (context: any) => {
+                      const label = context.label;
+                      if (Array.isArray(label) && context.index !== undefined) {
+                        return ['#fff', '#01b574'];
+                      }
+                      return '#fff';
                     },
-                    padding: isMobile ? 5 : 10
+                    font: (context: any) => {
+                      const label = context.label;
+                      if (Array.isArray(label)) {
+                        return [
+                          { size: isMobile ? 11 : 13, weight: '600' },
+                          { size: isMobile ? 10 : 12, weight: '700' }
+                        ];
+                      }
+                      return { size: isMobile ? 11 : 13, weight: '600' };
+                    },
+                    padding: isMobile ? 8 : 12
                   }
                 }
               }
