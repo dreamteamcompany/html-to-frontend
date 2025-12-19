@@ -47,7 +47,7 @@ const Dashboard2TeamPerformance = () => {
         const aggregateByDepartment = (payments: any[]) => {
           const deptMap: {[key: string]: number} = {};
           payments.forEach((payment: any) => {
-            const dept = payment.department || 'Без отдела';
+            const dept = payment.department_customer || payment.department || 'Без отдела';
             if (!deptMap[dept]) {
               deptMap[dept] = 0;
             }
