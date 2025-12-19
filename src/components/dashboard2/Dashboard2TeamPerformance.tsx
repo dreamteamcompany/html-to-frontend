@@ -71,7 +71,7 @@ const Dashboard2TeamPerformance = () => {
   const activeData = viewMode === 'current' ? currentData : previousData;
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)' }}>
+    <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)', maxWidth: '600px' }}>
       <CardContent className="p-6">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Отделам-Заказчикам</h3>
@@ -122,7 +122,10 @@ const Dashboard2TeamPerformance = () => {
         <div className="h-[280px] sm:h-[380px]" style={{ position: 'relative', padding: isMobile ? '10px' : '20px' }}>
           <Radar
             data={{
-              labels: activeData.map(d => d.name),
+              labels: activeData.map(d => {
+                const formatted = new Intl.NumberFormat('ru-RU', { notation: 'compact', compactDisplay: 'short' }).format(d.amount);
+                return `${d.name}\n${formatted} ₽`;
+              }),
               datasets: [{
                 label: 'Расходы по отделам',
                 data: activeData.map(d => d.amount),
