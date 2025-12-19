@@ -29,6 +29,12 @@ const Dashboard2TeamPerformance = () => {
           p.status === 'approved' || p.status === 'paid'
         );
         
+        // Debug: check first payment structure
+        if (approvedPayments.length > 0) {
+          console.log('[Dashboard2TeamPerformance] First payment fields:', Object.keys(approvedPayments[0]));
+          console.log('[Dashboard2TeamPerformance] Sample payment:', approvedPayments[0]);
+        }
+        
         const now = new Date();
         const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
