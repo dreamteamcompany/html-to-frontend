@@ -217,7 +217,7 @@ const Dashboard2TeamPerformance = () => {
                   <span style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', color: '#01b574', minWidth: '24px' }}>{index + 1}</span>
                   <span style={{ fontSize: isMobile ? '12px' : '13px', color: '#fff', fontWeight: '600' }}>{dept.name}</span>
                 </div>
-                <span style={{ fontSize: isMobile ? '12px' : '14px', color: '#01b574', fontWeight: '700' }}>{new Intl.NumberFormat('ru-RU').format(dept.amount)} ₽</span>
+                <span style={{ fontSize: isMobile ? '14px' : '16px', color: '#01b574', fontWeight: '800', textShadow: '0 0 10px rgba(1, 181, 116, 0.5)' }}>{new Intl.NumberFormat('ru-RU').format(dept.amount)} ₽</span>
               </div>
             ))}
           </div>
