@@ -6,6 +6,7 @@ import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 
@@ -209,90 +210,87 @@ const ApprovedPayments = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="mb-4 text-sm text-muted-foreground">
                 Найдено платежей: {filteredPayments.length} • Общая сумма: {formatAmount(filteredPayments.reduce((sum, p) => sum + p.amount, 0))}
               </div>
               
               {filteredPayments.map((payment) => (
-                <div
-                  key={payment.id}
+                <Card 
+                  key={payment.id} 
+                  className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-white/10 transition-all cursor-pointer"
                   onClick={() => setSelectedPayment(payment)}
-                  className="p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-all cursor-pointer"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className="text-2xl flex-shrink-0">
-                        {payment.category_icon || '📄'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h4 className="font-semibold">{payment.description}</h4>
-                          <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/20 text-green-300 flex-shrink-0">
-                            ✓ Одобрено CEO
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span>{payment.category_name}</span>
-                            {payment.service_name && (
-                              <>
-                                <span>•</span>
-                                <span>{payment.service_name}</span>
-                              </>
-                            )}
+                  <CardContent className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                            <Icon name={payment.category_icon} size={24} />
                           </div>
-                          {payment.contractor_name && (
-                            <div className="flex items-center gap-2">
-                              <Icon name="Building" size={14} />
-                              <span>{payment.contractor_name}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-2 flex-wrap">
+                              <h3 className="text-lg font-semibold">{payment.category_name}</h3>
+                              <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/20 text-green-300 flex-shrink-0">
+                                ✓ Одобрено CEO
+                              </span>
                             </div>
-                          )}
-                          {payment.legal_entity_name && (
-                            <div className="flex items-center gap-2">
-                              <Icon name="Briefcase" size={14} />
-                              <span>{payment.legal_entity_name}</span>
-                            </div>
-                          )}
-                          {payment.ceo_approved_at && (
-                            <div className="flex items-center gap-2">
-                              <Icon name="Clock" size={14} />
-                              <span>Согласовано CEO: {formatDateTime(payment.ceo_approved_at)}</span>
-                            </div>
-                          )}
-                          {payment.department_name && (
-                            <div className="flex items-center gap-2">
-                              <Icon name="Users" size={14} />
-                              <span>{payment.department_name}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-4 text-xs">
-                            {payment.tech_director_approved_at && (
-                              <div className="flex items-center gap-1 text-blue-400">
-                                <Icon name="Check" size={12} />
-                                <span>Техдир: {formatDate(payment.tech_director_approved_at)}</span>
+                            <p className="text-muted-foreground text-sm mb-2">{payment.description}</p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                              {payment.service_name && (
+                                <div className="flex items-center gap-1">
+                                  <Icon name="Briefcase" size={14} />
+                                  <span>{payment.service_name}</span>
+                                </div>
+                              )}
+                              {payment.contractor_name && (
+                                <div className="flex items-center gap-1">
+                                  <Icon name="Building2" size={14} />
+                                  <span>{payment.contractor_name}</span>
+                                </div>
+                              )}
+                              {payment.department_name && (
+                                <div className="flex items-center gap-1">
+                                  <Icon name="Users" size={14} />
+                                  <span>{payment.department_name}</span>
+                                </div>
+                              )}
+                              {payment.invoice_number && (
+                                <div className="flex items-center gap-1">
+                                  <Icon name="FileText" size={14} />
+                                  <span>Счёт №{payment.invoice_number}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1">
+                                <Icon name="Calendar" size={14} />
+                                <span>
+                                  {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
+                                    day: '2-digit',
+                                    month: 'long',
+                                    year: 'numeric'
+                                  })}
+                                </span>
                               </div>
-                            )}
-                            {payment.ceo_approved_at && (
-                              <div className="flex items-center gap-1 text-green-400">
-                                <Icon name="CheckCheck" size={12} />
-                                <span>CEO: {formatDate(payment.ceo_approved_at)}</span>
-                              </div>
-                            )}
+                              {payment.ceo_approved_at && (
+                                <div className="flex items-center gap-1">
+                                  <Icon name="Clock" size={14} />
+                                  <span>Согласовано: {formatDateTime(payment.ceo_approved_at)}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-xl font-bold mb-1">{formatAmount(payment.amount)}</div>
-                      {payment.payment_date && (
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(payment.payment_date)}
+                      
+                      <div className="flex flex-col items-start lg:items-end gap-2 lg:border-l lg:border-white/10 lg:pl-6">
+                        <div className="text-center lg:text-right">
+                          <div className="text-sm text-muted-foreground mb-1">Сумма платежа</div>
+                          <div className="text-2xl font-bold">{payment.amount.toLocaleString('ru-RU')} ₽</div>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
