@@ -162,6 +162,13 @@ const PaymentsSidebar = ({
                 <Icon name="Box" size={18} />
                 <span>Сервисы</span>
               </button>
+              <button 
+                onClick={() => navigate('/saving-reasons')}
+                className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/saving-reasons') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+              >
+                <Icon name="Target" size={18} />
+                <span>Причины экономии</span>
+              </button>
             </div>
           )}
         </li>

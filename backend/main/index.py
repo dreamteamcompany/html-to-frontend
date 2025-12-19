@@ -88,6 +88,10 @@ class SavingRequest(BaseModel):
     currency: str = Field(default='RUB')
     employee_id: int = Field(..., gt=0)
 
+class SavingReasonRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    icon: str = Field(default='Target')
+
 # Utility functions
 def response(status_code: int, body: Any) -> Dict[str, Any]:
     return {
@@ -803,6 +807,101 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
                 return response(400, {'error': 'Cannot delete category with existing payments'})
             
             cur.execute('DELETE FROM categories WHERE id = %s', (category_id,))
+            conn.commit()
+            
+            return response(200, {'success': True})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
+def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'categories.read')
+            if error:
+                return error
+            
+            cur.execute('SELECT id, name, icon, created_at FROM saving_reasons WHERE is_active = true ORDER BY name')
+            rows = cur.fetchall()
+            reasons = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'icon': row[2],
+                    'created_at': row[3].isoformat() if row[3] else None
+                }
+                for row in rows
+            ]
+            return response(200, reasons)
+        
+        elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'categories.create')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            reason_req = SavingReasonRequest(**body)
+            
+            cur.execute(
+                "INSERT INTO saving_reasons (name, icon) VALUES (%s, %s) RETURNING id, name, icon, created_at",
+                (reason_req.name, reason_req.icon)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'icon': row[2],
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'categories.update')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            reason_id = body.get('id')
+            reason_req = SavingReasonRequest(**body)
+            
+            if not reason_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(
+                "UPDATE saving_reasons SET name = %s, icon = %s WHERE id = %s RETURNING id, name, icon, created_at",
+                (reason_req.name, reason_req.icon, reason_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Saving reason not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'icon': row[2],
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'categories.delete')
+            if error:
+                return error
+            
+            params = event.get('queryStringParameters', {})
+            reason_id = params.get('id')
+            
+            if not reason_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute('DELETE FROM saving_reasons WHERE id = %s', (reason_id,))
             conn.commit()
             
             return response(200, {'success': True})
@@ -2549,6 +2648,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_services(method, event, conn)
         elif endpoint == 'savings':
             result = handle_savings(method, event, conn)
+        elif endpoint == 'saving-reasons':
+            result = handle_saving_reasons(method, event, conn)
         elif endpoint == 'users':
             result = handle_users(method, event, conn)
         elif endpoint == 'roles':
