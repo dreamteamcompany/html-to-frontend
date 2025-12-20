@@ -19,45 +19,45 @@ const AnnualSavingsKPICard = () => {
         left: '-150px',
         animation: 'rotate 20s linear infinite'
       }} />
-      <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
+      <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ 
           background: 'linear-gradient(135deg, #01b574 0%, #018c5a 100%)',
-          padding: '12px',
-          borderRadius: '12px',
+          padding: '8px',
+          borderRadius: '10px',
           boxShadow: '0 0 20px rgba(1, 181, 116, 0.5)',
           display: 'inline-flex',
-          marginBottom: '20px'
-        }}>
-          <Icon name="PiggyBank" size={24} style={{ color: '#fff' }} />
+          marginBottom: '14px'
+        }} className="sm:p-3 sm:mb-5">
+          <Icon name="PiggyBank" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
         </div>
-        <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', marginBottom: '16px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginBottom: '12px' }} className="sm:text-lg sm:mb-4">
           Годовая Экономия
         </h3>
         <div style={{ 
           color: '#01b574', 
-          fontSize: '42px', 
+          fontSize: '32px', 
           fontWeight: '900',
           textShadow: '0 0 30px rgba(1, 181, 116, 0.6)',
-          marginBottom: '12px'
-        }}>
+          marginBottom: '8px'
+        }} className="sm:text-[42px] sm:mb-3">
           ₽480K
         </div>
-        <div style={{ color: '#a3aed0', fontSize: '14px', marginBottom: '20px' }}>
+        <div style={{ color: '#a3aed0', fontSize: '12px', marginBottom: '14px' }} className="sm:text-sm sm:mb-5">
           За счет оптимизации подписок
         </div>
         <div style={{ 
           background: 'rgba(1, 181, 116, 0.1)',
-          padding: '12px',
-          borderRadius: '10px',
+          padding: '10px',
+          borderRadius: '8px',
           border: '1px solid rgba(1, 181, 116, 0.2)'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#a3aed0', fontSize: '13px' }}>Прогресс цели</span>
-            <span style={{ color: '#01b574', fontSize: '13px', fontWeight: '700' }}>73%</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }} className="sm:mb-2">
+            <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">Прогресс цели</span>
+            <span style={{ color: '#01b574', fontSize: '11px', fontWeight: '700' }} className="sm:text-xs">73%</span>
           </div>
           <div style={{ 
             width: '100%', 
-            height: '8px', 
+            height: '6px', 
             background: 'rgba(255, 255, 255, 0.05)', 
             borderRadius: '10px',
             overflow: 'hidden'

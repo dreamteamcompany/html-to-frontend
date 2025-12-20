@@ -17,14 +17,15 @@ const Dashboard2CostIndexingFilters = ({ categories, selectedCategory, onCategor
   return (
     <div style={{ 
       display: 'flex', 
-      gap: '10px', 
-      marginBottom: '24px',
+      gap: '6px', 
+      marginBottom: '16px',
       flexWrap: 'wrap'
-    }}>
+    }} className="sm:gap-2.5 sm:mb-6">
       {categories.map((cat) => (
         <button
           key={cat.id}
           onClick={() => onCategoryChange(cat.id)}
+          className="px-3 py-2 sm:px-4 sm:py-2.5"
           style={{
             background: selectedCategory === cat.id 
               ? `linear-gradient(135deg, ${cat.color}30 0%, ${cat.color}15 100%)`
@@ -32,13 +33,12 @@ const Dashboard2CostIndexingFilters = ({ categories, selectedCategory, onCategor
             border: selectedCategory === cat.id 
               ? `1px solid ${cat.color}`
               : '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '10px 16px',
-            borderRadius: '10px',
+            borderRadius: '8px',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '6px'
           }}
           onMouseEnter={(e) => {
             if (selectedCategory !== cat.id) {
@@ -53,12 +53,12 @@ const Dashboard2CostIndexingFilters = ({ categories, selectedCategory, onCategor
             }
           }}
         >
-          <Icon name={cat.icon} size={16} style={{ color: selectedCategory === cat.id ? cat.color : '#a3aed0' }} />
+          <Icon name={cat.icon} size={14} style={{ color: selectedCategory === cat.id ? cat.color : '#a3aed0' }} className="sm:w-4 sm:h-4" />
           <span style={{ 
             color: selectedCategory === cat.id ? cat.color : '#a3aed0',
-            fontSize: '13px',
+            fontSize: '11px',
             fontWeight: selectedCategory === cat.id ? '700' : '600'
-          }}>
+          }} className="sm:text-xs">
             {cat.name}
           </span>
         </button>

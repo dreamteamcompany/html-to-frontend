@@ -58,15 +58,15 @@ const Dashboard2CostIndexingStats = ({
     <>
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(4, 1fr)', 
-        gap: '16px',
-        marginBottom: '24px'
-      }}>
+        gridTemplateColumns: '1fr', 
+        gap: '12px',
+        marginBottom: '16px'
+      }} className="sm:grid-cols-2 lg:grid-cols-4 sm:gap-4 sm:mb-6">
         {stats.map((stat, idx) => (
           <div key={idx} style={{ 
             background: `linear-gradient(135deg, ${stat.bgGradient} 0%, ${stat.bgGradient}80 100%)`,
-            padding: '18px',
-            borderRadius: '14px',
+            padding: '12px',
+            borderRadius: '10px',
             border: `1px solid ${stat.color}30`,
             transition: 'all 0.3s ease',
             cursor: 'pointer',
@@ -92,20 +92,20 @@ const Dashboard2CostIndexingStats = ({
               background: `radial-gradient(circle, ${stat.color}20 0%, transparent 70%)`,
               pointerEvents: 'none'
             }} />
-            <Icon name={stat.icon} size={20} style={{ color: stat.color, marginBottom: '10px' }} />
+            <Icon name={stat.icon} size={16} style={{ color: stat.color, marginBottom: '8px' }} className="sm:w-5 sm:h-5 sm:mb-2.5" />
             <div style={{ 
               color: stat.color, 
-              fontSize: '20px', 
+              fontSize: '18px', 
               fontWeight: '900',
-              marginBottom: '6px',
+              marginBottom: '4px',
               textShadow: `0 0 20px ${stat.color}60`
-            }}>
+            }} className="sm:text-xl sm:mb-1.5">
               {stat.value}
             </div>
-            <div style={{ color: '#fff', fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>
+            <div style={{ color: '#fff', fontSize: '12px', fontWeight: '600', marginBottom: '2px' }} className="sm:text-xs sm:mb-1">
               {stat.label}
             </div>
-            <div style={{ color: '#a3aed0', fontSize: '11px', fontWeight: '500' }}>
+            <div style={{ color: '#a3aed0', fontSize: '10px', fontWeight: '500' }} className="sm:text-[11px]">
               {stat.sublabel}
             </div>
           </div>
@@ -115,33 +115,35 @@ const Dashboard2CostIndexingStats = ({
       <div style={{
         background: 'linear-gradient(135deg, rgba(57, 101, 255, 0.15) 0%, rgba(57, 101, 255, 0.05) 100%)',
         border: '1px solid rgba(57, 101, 255, 0.3)',
-        borderRadius: '14px',
-        padding: '18px 24px',
+        borderRadius: '10px',
+        padding: '12px 16px',
         display: 'flex',
-        alignItems: 'center',
-        gap: '16px'
-      }}>
+        flexDirection: 'column',
+        gap: '12px'
+      }} className="sm:flex-row sm:items-center sm:p-[18px_24px] sm:gap-4">
         <div style={{
           background: 'linear-gradient(135deg, #3965ff 0%, #2948cc 100%)',
-          padding: '12px',
-          borderRadius: '12px',
-          boxShadow: '0 0 20px rgba(57, 101, 255, 0.5)'
-        }}>
-          <Icon name="TrendingUp" size={24} style={{ color: '#fff' }} />
+          padding: '10px',
+          borderRadius: '10px',
+          boxShadow: '0 0 20px rgba(57, 101, 255, 0.5)',
+          alignSelf: 'flex-start'
+        }} className="sm:p-3">
+          <Icon name="TrendingUp" size={20} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ color: '#3965ff', fontSize: '15px', fontWeight: '700', marginBottom: '4px' }}>
+          <div style={{ color: '#3965ff', fontSize: '13px', fontWeight: '700', marginBottom: '3px' }} className="sm:text-[15px] sm:mb-1">
             Индекс вырос на {totalChange.toFixed(1)}% за год 📈
           </div>
-          <div style={{ color: '#a3aed0', fontSize: '13px', lineHeight: '1.6' }}>
+          <div style={{ color: '#a3aed0', fontSize: '11px', lineHeight: '1.5' }} className="sm:text-xs sm:leading-relaxed">
             Средний темп роста затрат составляет <span style={{ color: '#3965ff', fontWeight: '700' }}>{avgMonthlyChange.toFixed(1)}% в месяц</span>. 
             {avgMonthlyChange > 5 ? ' Рекомендуется анализ причин высокого роста' : ' Темп роста в пределах нормы'}
           </div>
         </div>
         <div style={{
           background: 'rgba(255, 255, 255, 0.05)',
-          padding: '10px 20px',
-          borderRadius: '10px',
+          padding: '8px 16px',
+          borderRadius: '8px',
+          alignSelf: 'flex-start',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           cursor: 'pointer',
           transition: 'all 0.3s ease'
@@ -154,7 +156,7 @@ const Dashboard2CostIndexingStats = ({
           e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
           e.currentTarget.style.transform = 'scale(1)';
         }}>
-          <span style={{ color: '#fff', fontSize: '13px', fontWeight: '600' }}>
+          <span style={{ color: '#fff', fontSize: '11px', fontWeight: '600' }} className="sm:text-xs">
             Анализ →
           </span>
         </div>
