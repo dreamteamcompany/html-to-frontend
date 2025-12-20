@@ -92,36 +92,36 @@ const Dashboard2 = () => {
 
         <div style={{ padding: '20px 0' }}>
           <Tabs value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as typeof selectedPeriod)} className="mb-6">
-            <TabsList className="grid w-full grid-cols-5 max-w-2xl">
-              <TabsTrigger value="today">Сегодня</TabsTrigger>
-              <TabsTrigger value="week">Неделя</TabsTrigger>
-              <TabsTrigger value="month">Месяц</TabsTrigger>
-              <TabsTrigger value="year">Год</TabsTrigger>
-              <TabsTrigger value="custom">Период</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 max-w-2xl text-xs sm:text-sm">
+              <TabsTrigger value="today" className="px-2 sm:px-4">Сегодня</TabsTrigger>
+              <TabsTrigger value="week" className="px-2 sm:px-4">Неделя</TabsTrigger>
+              <TabsTrigger value="month" className="px-2 sm:px-4">Месяц</TabsTrigger>
+              <TabsTrigger value="year" className="px-2 sm:px-4">Год</TabsTrigger>
+              <TabsTrigger value="custom" className="px-2 sm:px-4">Период</TabsTrigger>
             </TabsList>
 
             {selectedPeriod === 'custom' && (
-              <div className="flex gap-4 mt-4 flex-wrap">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="justify-start text-left font-normal">
-                      <Icon name="Calendar" className="mr-2" />
+                    <Button variant="outline" className="justify-start text-left font-normal w-full sm:w-auto text-sm">
+                      <Icon name="Calendar" className="mr-2 h-4 w-4" />
                       {dateFrom ? format(dateFrom, 'PPP', { locale: ru }) : 'Дата от'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                  <PopoverContent className="w-auto p-0" align="start">
                     <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} />
                   </PopoverContent>
                 </Popover>
 
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="justify-start text-left font-normal">
-                      <Icon name="Calendar" className="mr-2" />
+                    <Button variant="outline" className="justify-start text-left font-normal w-full sm:w-auto text-sm">
+                      <Icon name="Calendar" className="mr-2 h-4 w-4" />
                       {dateTo ? format(dateTo, 'PPP', { locale: ru }) : 'Дата до'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                  <PopoverContent className="w-auto p-0" align="start">
                     <Calendar mode="single" selected={dateTo} onSelect={setDateTo} />
                   </PopoverContent>
                 </Popover>

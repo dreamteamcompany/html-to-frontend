@@ -50,10 +50,10 @@ const Dashboard2Table = () => {
 
   return (
     <Card style={{ background: '#111c44', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-      <CardContent className="p-6">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>IT Сервисы и Расходы</h3>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <CardContent className="p-3 sm:p-4 md:p-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px' }} className="sm:flex-row sm:justify-between sm:items-center">
+          <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }} className="sm:text-lg">Реестр сервисов</h3>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }} className="sm:gap-2">
             {[
               { key: 'all', label: 'Все Сервисы' },
               { key: 'server', label: 'Серверы' },
@@ -68,13 +68,15 @@ const Dashboard2Table = () => {
                   background: activeFilter === filter.key ? '#7551e9' : 'rgba(255, 255, 255, 0.05)',
                   border: `1px solid ${activeFilter === filter.key ? '#7551e9' : 'rgba(255, 255, 255, 0.1)'}`,
                   color: activeFilter === filter.key ? 'white' : '#a3aed0',
-                  padding: '8px 16px',
-                  borderRadius: '8px',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
                   cursor: 'pointer',
-                  fontSize: '13px',
+                  fontSize: '11px',
                   fontWeight: '600',
-                  transition: 'all 0.3s'
+                  transition: 'all 0.3s',
+                  whiteSpace: 'nowrap'
                 }}
+                className="sm:text-xs sm:px-4 sm:py-2"
               >
                 {filter.label}
               </button>
@@ -82,27 +84,27 @@ const Dashboard2Table = () => {
           </div>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1000px' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }} className="lg:min-w-[1000px]">
             <thead>
               <tr style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
-                <th style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '13px', textTransform: 'uppercase' }}>Сервис</th>
-                <th style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '13px', textTransform: 'uppercase' }}>Категория</th>
-                <th style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '13px', textTransform: 'uppercase' }}>Описание</th>
-                <th style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '13px', textTransform: 'uppercase' }}>Сумма (₽)</th>
-                <th style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '13px', textTransform: 'uppercase' }}>Дата</th>
-                <th style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '13px', textTransform: 'uppercase' }}>Статус</th>
+                <th style={{ padding: '10px 8px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase' }} className="sm:px-4 sm:py-3 sm:text-xs">Сервис</th>
+                <th style={{ padding: '10px 8px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase' }} className="sm:px-4 sm:py-3 sm:text-xs hidden md:table-cell">Категория</th>
+                <th style={{ padding: '10px 8px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase' }} className="sm:px-4 sm:py-3 sm:text-xs hidden lg:table-cell">Описание</th>
+                <th style={{ padding: '10px 8px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase' }} className="sm:px-4 sm:py-3 sm:text-xs">Сумма</th>
+                <th style={{ padding: '10px 8px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase' }} className="sm:px-4 sm:py-3 sm:text-xs hidden sm:table-cell">Дата</th>
+                <th style={{ padding: '10px 8px', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#a3aed0', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase' }} className="sm:px-4 sm:py-3 sm:text-xs hidden lg:table-cell">Статус</th>
               </tr>
             </thead>
             <tbody>
               {filteredPayments.map(payment => (
                 <tr key={payment.id}>
-                  <td style={{ padding: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '500', color: '#fff' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '500', color: '#fff' }} className="sm:px-4 sm:py-3">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ 
-                        width: '32px', 
-                        height: '32px', 
-                        borderRadius: '8px', 
+                        width: '28px', 
+                        height: '28px', 
+                        borderRadius: '6px', 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'center',
@@ -113,12 +115,12 @@ const Dashboard2Table = () => {
                               payment.category === 'communication' ? '#3965ff' :
                               payment.category === 'website' ? '#ffb547' : '#01b574'
                       }}>
-                        <Icon name={getServiceIcon(payment.category)} size={16} />
+                        <Icon name={getServiceIcon(payment.category)} size={14} className="sm:w-4 sm:h-4" />
                       </div>
-                      <span style={{ fontWeight: '600' }}>{payment.service}</span>
+                      <span style={{ fontWeight: '600', fontSize: '13px' }} className="sm:text-sm">{payment.service}</span>
                     </div>
                   </td>
-                  <td style={{ padding: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '500' }}>
+                  <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '500' }} className="sm:px-4 sm:py-3 hidden md:table-cell">
                     <span style={{
                       padding: '6px 12px',
                       borderRadius: '20px',
@@ -138,10 +140,10 @@ const Dashboard2Table = () => {
                       {getCategoryName(payment.category)}
                     </span>
                   </td>
-                  <td style={{ padding: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '500', color: '#a3aed0' }}>{payment.description}</td>
-                  <td style={{ padding: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '700', fontSize: '14px', color: '#fff' }}>{formatCurrency(payment.amount)}</td>
-                  <td style={{ padding: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '500', color: '#a3aed0' }}>{payment.date}</td>
-                  <td style={{ padding: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#01b574', fontWeight: '500' }}>✓ Оплачен</td>
+                  <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '500', color: '#a3aed0', fontSize: '12px' }} className="sm:px-4 sm:py-3 sm:text-sm hidden lg:table-cell">{payment.description}</td>
+                  <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '700', fontSize: '13px', color: '#fff' }} className="sm:px-4 sm:py-3 sm:text-sm">{formatCurrency(payment.amount)}</td>
+                  <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', fontWeight: '500', color: '#a3aed0', fontSize: '12px' }} className="sm:px-4 sm:py-3 sm:text-sm hidden sm:table-cell">{payment.date}</td>
+                  <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#01b574', fontWeight: '500', fontSize: '12px' }} className="sm:px-4 sm:py-3 sm:text-sm hidden lg:table-cell">✓ Оплачен</td>
                 </tr>
               ))}
             </tbody>

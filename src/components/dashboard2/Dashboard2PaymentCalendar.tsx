@@ -20,65 +20,65 @@ const Dashboard2PaymentCalendar = () => {
         background: 'radial-gradient(circle at 20% 50%, rgba(117, 81, 233, 0.1) 0%, transparent 50%)',
         pointerEvents: 'none'
       }} />
-      <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px' }} className="sm:flex-row sm:justify-between sm:items-center sm:mb-8">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="sm:gap-3">
             <div style={{ 
               background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
-              padding: '14px',
-              borderRadius: '14px',
+              padding: '10px',
+              borderRadius: '12px',
               boxShadow: '0 0 25px rgba(117, 81, 233, 0.6)'
-            }}>
-              <Icon name="Calendar" size={28} style={{ color: '#fff' }} />
+            }} className="sm:p-3.5">
+              <Icon name="Calendar" size={20} style={{ color: '#fff' }} className="sm:w-7 sm:h-7" />
             </div>
             <div>
-              <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#fff' }}>Календарь Платежей</h3>
-              <p style={{ fontSize: '14px', color: '#a3aed0', marginTop: '4px' }}>Декабрь 2024 • Распределение по дням</p>
+              <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }} className="sm:text-xl md:text-2xl">Календарь Платежей</h3>
+              <p style={{ fontSize: '11px', color: '#a3aed0', marginTop: '2px' }} className="sm:text-sm sm:mt-1">Декабрь 2024 • Распределение по дням</p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }} className="sm:flex-row sm:gap-4 sm:items-center">
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }} className="sm:gap-3">
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'linear-gradient(135deg, #01b574 0%, #018c5a 100%)', boxShadow: '0 0 10px #01b574' }} />
-                <span style={{ color: '#a3aed0', fontSize: '12px' }}>Малые</span>
+                <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">Малые</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)', boxShadow: '0 0 10px #ffb547' }} />
-                <span style={{ color: '#a3aed0', fontSize: '12px' }}>Средние</span>
+                <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">Средние</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)', boxShadow: '0 0 10px #ff6b6b' }} />
-                <span style={{ color: '#a3aed0', fontSize: '12px' }}>Крупные</span>
+                <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">Крупные</span>
               </div>
             </div>
             <div style={{ 
               background: 'rgba(117, 81, 233, 0.15)',
-              padding: '8px 16px',
-              borderRadius: '10px',
+              padding: '6px 12px',
+              borderRadius: '8px',
               border: '1px solid rgba(117, 81, 233, 0.3)'
-            }}>
-              <span style={{ color: '#7551e9', fontSize: '14px', fontWeight: '700' }}>18 платежей</span>
+            }} className="sm:px-4 sm:py-2">
+              <span style={{ color: '#7551e9', fontSize: '12px', fontWeight: '700' }} className="sm:text-sm">18 платежей</span>
             </div>
           </div>
         </div>
 
         {/* Days of week header */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px', marginBottom: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', marginBottom: '8px' }} className="sm:gap-3 sm:mb-3">
           {['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'].map((day, idx) => (
             <div key={idx} style={{ 
               textAlign: 'center', 
               color: '#7551e9', 
-              fontSize: '13px', 
+              fontSize: '10px', 
               fontWeight: '700',
-              padding: '8px'
-            }}>
+              padding: '4px'
+            }} className="sm:text-xs sm:p-2">
               {day}
             </div>
           ))}
         </div>
 
         {/* Calendar grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }} className="sm:gap-3">
           {(() => {
             const days = [];
             const paymentsData = {
@@ -136,9 +136,9 @@ const Dashboard2PaymentCalendar = () => {
                   style={{
                     background: bgColor,
                     border: `1px solid ${borderColor}`,
-                    borderRadius: '12px',
-                    padding: '12px',
-                    minHeight: '80px',
+                    borderRadius: '8px',
+                    padding: '6px',
+                    minHeight: '60px',
                     display: 'flex',
                     flexDirection: 'column',
                     position: 'relative',
@@ -168,23 +168,23 @@ const Dashboard2PaymentCalendar = () => {
                   }}>
                     <span style={{ 
                       color: textColor, 
-                      fontSize: '16px', 
+                      fontSize: '12px', 
                       fontWeight: '700',
                       textShadow: isToday ? `0 0 10px ${glowColor}` : 'none'
-                    }}>
+                    }} className="sm:text-base">
                       {i}
                     </span>
                     {isToday && (
                       <div style={{
                         background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
-                        padding: '2px 6px',
-                        borderRadius: '6px',
-                        fontSize: '9px',
+                        padding: '2px 4px',
+                        borderRadius: '4px',
+                        fontSize: '8px',
                         fontWeight: '700',
                         color: '#fff',
                         textTransform: 'uppercase',
                         boxShadow: '0 0 10px rgba(117, 81, 233, 0.5)'
-                      }}>
+                      }} className="sm:text-[9px] sm:px-1.5">
                         Сегодня
                       </div>
                     )}
@@ -193,11 +193,11 @@ const Dashboard2PaymentCalendar = () => {
                     <>
                       <div style={{ 
                         color: textColor, 
-                        fontSize: '14px', 
+                        fontSize: '11px', 
                         fontWeight: '800',
-                        marginBottom: '6px',
+                        marginBottom: '4px',
                         textShadow: `0 0 15px ${glowColor}`
-                      }}>
+                      }} className="sm:text-sm sm:mb-1.5">
                         {new Intl.NumberFormat('ru-RU').format(dayData.amount)} ₽
                       </div>
                       <div style={{ 

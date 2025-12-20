@@ -45,34 +45,34 @@ const Dashboard2UpcomingPayments = () => {
         pointerEvents: 'none',
         animation: 'breathe 6s infinite'
       }} />
-      <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px' }} className="sm:flex-row sm:justify-between sm:items-center sm:mb-8">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="sm:gap-3">
             <div style={{ 
               background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)',
-              padding: '14px',
-              borderRadius: '14px',
+              padding: '10px',
+              borderRadius: '12px',
               boxShadow: '0 0 25px rgba(255, 181, 71, 0.6)',
               animation: 'pulse 2s infinite'
-            }}>
-              <Icon name="Clock" size={28} style={{ color: '#fff' }} />
+            }} className="sm:p-3.5">
+              <Icon name="Clock" size={20} style={{ color: '#fff' }} className="sm:w-7 sm:h-7" />
             </div>
             <div>
-              <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#fff' }}>Предстоящие Платежи</h3>
-              <p style={{ fontSize: '14px', color: '#a3aed0', marginTop: '4px' }}>Ближайшие 7 дней • Следите за дедлайнами</p>
+              <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }} className="sm:text-xl md:text-2xl">Предстоящие Платежи</h3>
+              <p style={{ fontSize: '11px', color: '#a3aed0', marginTop: '2px' }} className="sm:text-sm sm:mt-1">Ближайшие 7 дней • Следите за дедлайнами</p>
             </div>
           </div>
           <div style={{ 
             background: 'rgba(255, 181, 71, 0.15)',
-            padding: '12px 24px',
-            borderRadius: '12px',
+            padding: '8px 16px',
+            borderRadius: '10px',
             border: '1px solid rgba(255, 181, 71, 0.3)',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
-          }}>
-            <Icon name="AlertCircle" size={18} style={{ color: '#ffb547' }} />
-            <span style={{ color: '#ffb547', fontSize: '14px', fontWeight: '700' }}>7 платежей</span>
+            gap: '8px'
+          }} className="sm:px-6 sm:py-3">
+            <Icon name="AlertCircle" size={16} style={{ color: '#ffb547' }} className="sm:w-[18px] sm:h-[18px]" />
+            <span style={{ color: '#ffb547', fontSize: '12px', fontWeight: '700' }} className="sm:text-sm">7 платежей</span>
           </div>
         </div>
 

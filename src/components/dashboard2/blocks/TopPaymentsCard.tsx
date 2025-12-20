@@ -19,19 +19,19 @@ const TopPaymentsCard = () => {
         background: 'radial-gradient(circle, rgba(117, 81, 233, 0.1) 0%, transparent 70%)',
         pointerEvents: 'none'
       }} />
-      <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+      <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }} className="sm:gap-3 sm:mb-6">
           <div style={{ 
             background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
-            padding: '12px',
-            borderRadius: '12px',
+            padding: '8px',
+            borderRadius: '10px',
             boxShadow: '0 0 20px rgba(117, 81, 233, 0.5)'
-          }}>
-            <Icon name="TrendingUp" size={24} style={{ color: '#fff' }} />
+          }} className="sm:p-3">
+            <Icon name="TrendingUp" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
           </div>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Топ-5 Платежей</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }} className="sm:text-lg">Топ-5 Платежей</h3>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="sm:gap-4">
           {[
             { name: 'AWS Hosting', amount: 45000, percent: 100, color: '#7551e9' },
             { name: 'Google Ads', amount: 38000, percent: 84, color: '#3965ff' },
@@ -41,8 +41,8 @@ const TopPaymentsCard = () => {
           ].map((item, idx) => (
             <div key={idx} style={{ 
               background: 'rgba(255, 255, 255, 0.03)',
-              padding: '14px',
-              borderRadius: '12px',
+              padding: '10px',
+              borderRadius: '10px',
               border: '1px solid rgba(255, 255, 255, 0.05)',
               transition: 'all 0.3s ease',
               cursor: 'pointer'
@@ -57,15 +57,15 @@ const TopPaymentsCard = () => {
               e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
               e.currentTarget.style.boxShadow = 'none';
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>{item.name}</span>
-                <span style={{ color: item.color, fontSize: '14px', fontWeight: '700' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }} className="sm:mb-2">
+                <span style={{ color: '#fff', fontSize: '12px', fontWeight: '600' }} className="sm:text-sm">{item.name}</span>
+                <span style={{ color: item.color, fontSize: '12px', fontWeight: '700' }} className="sm:text-sm">
                   {new Intl.NumberFormat('ru-RU').format(item.amount)} ₽
                 </span>
               </div>
               <div style={{ 
                 width: '100%', 
-                height: '6px', 
+                height: '5px', 
                 background: 'rgba(255, 255, 255, 0.05)', 
                 borderRadius: '10px',
                 overflow: 'hidden'

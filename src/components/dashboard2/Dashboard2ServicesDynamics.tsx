@@ -41,13 +41,11 @@ const Dashboard2ServicesDynamics = () => {
   const barColors = ['#3965ff', '#2CD9FF', '#01B574', '#7551e9', '#ffb547'];
 
   return (
-    <Card style={{ 
+    <Card className="w-full max-w-full sm:max-w-[650px]" style={{ 
       background: '#111c44',
       backdropFilter: 'blur(60px)',
       border: 'none',
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
-      width: '100%',
-      maxWidth: '650px',
       height: `${dynamicHeight}px`,
       overflow: 'hidden',
       position: 'relative',
@@ -64,11 +62,11 @@ const Dashboard2ServicesDynamics = () => {
         pointerEvents: 'none',
         animation: 'rotate 30s linear infinite'
       }} />
-      <CardContent className="p-3" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Icon name="Activity" size={18} style={{ color: '#2CD9FF' }} />
-            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>Динамика расходов по сервисам</h3>
+      <CardContent className="p-3 sm:p-4" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }} className="sm:mb-4">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="sm:gap-2">
+            <Icon name="Activity" size={16} style={{ color: '#2CD9FF' }} className="sm:w-[18px] sm:h-[18px]" />
+            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff' }} className="sm:text-base">Динамика расходов по сервисам</h3>
           </div>
         </div>
 

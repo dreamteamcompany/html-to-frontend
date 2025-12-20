@@ -21,32 +21,32 @@ const Dashboard2BudgetBreakdown = () => {
         pointerEvents: 'none',
         animation: 'slide 3s infinite'
       }} />
-      <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px' }} className="sm:flex-row sm:justify-between sm:items-center sm:mb-8">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="sm:gap-3">
             <div style={{ 
               background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
-              padding: '14px',
-              borderRadius: '14px',
+              padding: '10px',
+              borderRadius: '12px',
               boxShadow: '0 0 25px rgba(117, 81, 233, 0.6)'
-            }}>
-              <Icon name="PieChart" size={28} style={{ color: '#fff' }} />
+            }} className="sm:p-3.5">
+              <Icon name="PieChart" size={20} style={{ color: '#fff' }} className="sm:w-7 sm:h-7" />
             </div>
             <div>
-              <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#fff' }}>Детальная Разбивка IT Бюджета</h3>
-              <p style={{ fontSize: '14px', color: '#a3aed0', marginTop: '4px' }}>Полный анализ всех категорий расходов</p>
+              <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }} className="sm:text-xl md:text-2xl">Детальная Разбивка IT Бюджета</h3>
+              <p style={{ fontSize: '12px', color: '#a3aed0', marginTop: '2px' }} className="sm:text-sm sm:mt-1">Полный анализ всех категорий расходов</p>
             </div>
           </div>
           <div style={{ 
             background: 'rgba(117, 81, 233, 0.15)',
-            padding: '12px 24px',
-            borderRadius: '12px',
+            padding: '10px 16px',
+            borderRadius: '10px',
             border: '1px solid rgba(117, 81, 233, 0.3)'
-          }}>
-            <span style={{ color: '#7551e9', fontSize: '16px', fontWeight: '700' }}>Общий бюджет: ₽1.8М</span>
+          }} className="sm:px-6 sm:py-3">
+            <span style={{ color: '#7551e9', fontSize: '14px', fontWeight: '700' }} className="sm:text-base">Общий бюджет: ₽1.8М</span>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }} className="sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4">
           {[
             { icon: 'Server', name: 'Серверы & Хостинг', amount: 540000, percent: 30, color: '#7551e9', details: ['AWS: ₽320K', 'Azure: ₽150K', 'DigitalOcean: ₽70K'] },
             { icon: 'Cloud', name: 'SaaS Подписки', amount: 360000, percent: 20, color: '#3965ff', details: ['Microsoft 365: ₽140K', 'Slack: ₽120K', 'Adobe: ₽100K'] },
@@ -57,8 +57,8 @@ const Dashboard2BudgetBreakdown = () => {
           ].map((category, idx) => (
             <div key={idx} style={{ 
               background: `linear-gradient(135deg, ${category.color}15 0%, ${category.color}08 100%)`,
-              padding: '20px',
-              borderRadius: '16px',
+              padding: '16px',
+              borderRadius: '14px',
               border: `1px solid ${category.color}30`,
               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               cursor: 'pointer',
@@ -89,8 +89,8 @@ const Dashboard2BudgetBreakdown = () => {
               <div style={{ 
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                marginBottom: '16px',
+                gap: '10px',
+                marginBottom: '12px',
                 position: 'relative',
                 zIndex: 1
               }}>
@@ -100,22 +100,22 @@ const Dashboard2BudgetBreakdown = () => {
                   borderRadius: '10px',
                   boxShadow: `0 0 20px ${category.color}60`
                 }}>
-                  <Icon name={category.icon} size={20} style={{ color: '#fff' }} />
+                  <Icon name={category.icon} size={18} style={{ color: '#fff' }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
+                  <div style={{ color: '#fff', fontSize: '13px', fontWeight: '600', marginBottom: '2px' }}>
                     {category.name}
                   </div>
-                  <div style={{ color: '#a3aed0', fontSize: '12px' }}>{category.percent}% бюджета</div>
+                  <div style={{ color: '#a3aed0', fontSize: '11px' }}>{category.percent}% бюджета</div>
                 </div>
               </div>
               <div style={{ 
                 color: category.color, 
-                fontSize: '24px', 
+                fontSize: '18px', 
                 fontWeight: '800',
-                marginBottom: '12px',
+                marginBottom: '10px',
                 textShadow: `0 0 20px ${category.color}60`
-              }}>
+              }} className="sm:text-xl md:text-2xl">
                 {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(category.amount)}
               </div>
               <div style={{ 
