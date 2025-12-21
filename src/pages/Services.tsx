@@ -46,6 +46,12 @@ interface CustomerDepartment {
   description: string;
 }
 
+interface Category {
+  id: number;
+  name: string;
+  icon: string;
+}
+
 interface Service {
   id: number;
   name: string;
@@ -56,6 +62,9 @@ interface Service {
   final_approver_name?: string;
   customer_department_id?: number;
   customer_department_name?: string;
+  category_id?: number;
+  category_name?: string;
+  category_icon?: string;
   created_at: string;
 }
 
@@ -63,6 +72,7 @@ const Services = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<CustomerDepartment[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -78,6 +88,7 @@ const Services = () => {
     description: '',
     final_approver_id: '',
     customer_department_id: '',
+    category_id: '',
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -98,6 +109,7 @@ const Services = () => {
     loadServices();
     loadUsers();
     loadDepartments();
+    loadCategories();
   }, []);
 
   const loadServices = async () => {
@@ -140,6 +152,17 @@ const Services = () => {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const response = await apiFetch(`${BACKEND_URL}?endpoint=categories`);
+      const data = await response.json();
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      setCategories([]);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -166,6 +189,7 @@ const Services = () => {
           intermediate_approver_id: parseInt(formData.final_approver_id),
           final_approver_id: parseInt(formData.final_approver_id),
           customer_department_id: formData.customer_department_id ? parseInt(formData.customer_department_id) : null,
+          category_id: formData.category_id ? parseInt(formData.category_id) : null,
         }),
       });
 
@@ -197,6 +221,7 @@ const Services = () => {
       description: service.description || '',
       final_approver_id: service.final_approver_id.toString(),
       customer_department_id: service.customer_department_id ? service.customer_department_id.toString() : '',
+      category_id: service.category_id ? service.category_id.toString() : '',
     });
     setDialogOpen(true);
   };
@@ -234,6 +259,7 @@ const Services = () => {
       description: '',
       final_approver_id: '',
       customer_department_id: '',
+      category_id: '',
     });
     setEditingService(null);
   };
@@ -318,6 +344,30 @@ const Services = () => {
                 </div>
 
                 <div>
+                  <Label htmlFor="category">Категория сервиса</Label>
+                  <Select
+                    value={formData.category_id}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, category_id: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Выберите категорию" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <Icon name={cat.icon} size={16} />
+                            {cat.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
                   <Label htmlFor="department">Отдел-заказчик</Label>
                   <Select
                     value={formData.customer_department_id}
@@ -389,6 +439,7 @@ const Services = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Название</TableHead>
+                    <TableHead>Категория</TableHead>
                     <TableHead>Описание</TableHead>
                     <TableHead>Отдел-заказчик</TableHead>
                     <TableHead>Промежуточное согласование</TableHead>
@@ -400,6 +451,14 @@ const Services = () => {
                   {services.map((service) => (
                     <TableRow key={service.id}>
                       <TableCell className="font-medium">{service.name}</TableCell>
+                      <TableCell>
+                        {service.category_name ? (
+                          <div className="flex items-center gap-2">
+                            <Icon name={service.category_icon || 'Tag'} size={16} />
+                            {service.category_name}
+                          </div>
+                        ) : '—'}
+                      </TableCell>
                       <TableCell>{service.description || '—'}</TableCell>
                       <TableCell>{service.customer_department_name || '—'}</TableCell>
                       <TableCell>{service.intermediate_approver_name || '—'}</TableCell>
