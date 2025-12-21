@@ -26,6 +26,7 @@ import AuditLogs from "./pages/AuditLogs";
 import Savings from "./pages/Savings";
 import SavingReasons from "./pages/SavingReasons";
 import LogAnalyzer from "./pages/LogAnalyzer";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/savings" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><Savings /></ProtectedRoute>} />
             <Route path="/saving-reasons" element={<ProtectedRoute requiredPermission={{ resource: 'categories', action: 'read' }}><SavingReasons /></ProtectedRoute>} />
             <Route path="/log-analyzer" element={<ProtectedRoute><LogAnalyzer /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
