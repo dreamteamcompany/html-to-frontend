@@ -242,7 +242,7 @@ const Savings = () => {
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1">
+      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
         <div className="flex justify-between items-center mb-6">
           <button
             className="lg:hidden p-2 hover:bg-primary/10 rounded-lg transition-colors"

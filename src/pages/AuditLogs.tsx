@@ -160,7 +160,7 @@ const AuditLogs = () => {
         handleTouchEnd={handleTouchEnd}
       />
 
-      <main className="flex-1 lg:ml-64 bg-background min-h-screen">
+      <main className="flex-1 lg:ml-64 bg-background min-h-screen overflow-x-hidden max-w-full">
         <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
         <div className="p-4 sm:p-6 space-y-6">

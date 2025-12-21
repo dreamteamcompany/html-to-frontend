@@ -210,7 +210,7 @@ const Contractors = () => {
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1">
+      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
         <ContractorsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
         <ContractorForm

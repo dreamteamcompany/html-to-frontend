@@ -174,7 +174,7 @@ const CustomerDepartments = () => {
         />
       )}
 
-      <div className="lg:ml-[250px] p-4 md:p-8">
+      <div className="lg:ml-[250px] p-4 md:p-8 overflow-x-hidden max-w-full">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <button 

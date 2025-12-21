@@ -265,7 +265,7 @@ const Services = () => {
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1">
+      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex items-center gap-4">
             <button
@@ -376,7 +376,7 @@ const Services = () => {
           <CardHeader>
             <CardTitle>Все сервисы</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 sm:p-6">
             {loading ? (
               <div className="text-center py-8">Загрузка...</div>
             ) : services.length === 0 ? (
@@ -384,7 +384,8 @@ const Services = () => {
                 Нет созданных сервисов
               </div>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Название</TableHead>
@@ -425,6 +426,7 @@ const Services = () => {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

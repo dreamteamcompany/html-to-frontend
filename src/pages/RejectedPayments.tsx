@@ -140,7 +140,7 @@ const RejectedPayments = () => {
         />
       )}
 
-      <main className="flex-1 lg:ml-64 bg-background min-h-screen">
+      <main className="flex-1 lg:ml-64 bg-background min-h-screen overflow-x-hidden max-w-full">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-white/10">
           <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
           
