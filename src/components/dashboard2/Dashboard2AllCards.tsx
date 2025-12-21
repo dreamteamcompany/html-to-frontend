@@ -76,14 +76,14 @@ const Dashboard2AllCards = () => {
   const chartCards = cardOrder.filter(card => card.type === 'chart');
 
   return (
-    <div className="mb-6 sm:mb-8">
+    <div className="mb-6 sm:mb-8 overflow-x-hidden max-w-full">
       {/* Stat Cards Row */}
-      <div className="flex gap-3 sm:gap-5 mb-4 sm:mb-6 overflow-x-auto pb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-4 sm:mb-6">
         {statCards.map((card) => {
           return (
             <div 
               key={card.id} 
-              className="flex-shrink-0 w-[280px] sm:w-[320px] lg:w-[360px] h-[280px] sm:h-[300px]"
+              className="w-full h-[280px] sm:h-[300px]"
             >
               {renderCard(card)}
             </div>
@@ -96,7 +96,7 @@ const Dashboard2AllCards = () => {
         {chartCards.map((card) => (
           <div 
             key={card.id} 
-            className="min-w-0"
+            className="min-w-0 max-w-full overflow-hidden"
           >
             {renderCard(card)}
           </div>

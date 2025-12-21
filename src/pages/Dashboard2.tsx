@@ -68,7 +68,7 @@ const Dashboard2 = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen" style={{ background: 'linear-gradient(135deg, #0f1535 0%, #1b254b 100%)' }}>
+    <div className="flex min-h-screen overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #0f1535 0%, #1b254b 100%)' }}>
       <PaymentsSidebar
         menuOpen={menuOpen}
         dictionariesOpen={dictionariesOpen}
@@ -87,7 +87,7 @@ const Dashboard2 = () => {
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1">
+      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
         <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
         <div style={{ padding: '20px 0' }}>
