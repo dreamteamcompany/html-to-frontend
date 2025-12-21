@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,6 @@ import {
 import Icon from '@/components/ui/icon';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useToast } from '@/hooks/use-toast';
-import { get_logs } from '@/lib/telemetry';
 
 interface LogEntry {
   timestamp: string;
@@ -63,14 +62,25 @@ const LogAnalyzer = () => {
   const loadLogs = async () => {
     setLoading(true);
     try {
-      const source = logSource.startsWith('backend/') ? logSource : logSource;
-      const result = await get_logs(source, parseInt(limit) || 100);
+      toast({
+        title: 'Функция в разработке',
+        description: 'API для получения логов будет добавлено позже',
+      });
       
-      if (result && Array.isArray(result)) {
-        setLogs(result);
-      } else {
-        setLogs([]);
-      }
+      setLogs([
+        {
+          timestamp: new Date().toISOString(),
+          level: 'info',
+          message: `Анализатор логов готов. Выбран источник: ${logSource}`,
+          source: logSource,
+        },
+        {
+          timestamp: new Date().toISOString(),
+          level: 'warn',
+          message: 'API для получения логов находится в разработке',
+          source: 'system',
+        },
+      ]);
     } catch (error) {
       console.error('Failed to load logs:', error);
       toast({
@@ -83,10 +93,6 @@ const LogAnalyzer = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadLogs();
-  }, []);
 
   const filteredLogs = logs.filter((log) => {
     const searchLower = searchQuery.toLowerCase();
@@ -249,7 +255,7 @@ const LogAnalyzer = () => {
               </div>
             ) : filteredLogs.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                {logs.length === 0 ? 'Логи не найдены' : 'Нет результатов по вашему запросу'}
+                {logs.length === 0 ? 'Нажмите "Загрузить логи" для просмотра' : 'Нет результатов по вашему запросу'}
               </div>
             ) : (
               <div className="max-h-[600px] overflow-y-auto">
@@ -261,7 +267,7 @@ const LogAnalyzer = () => {
                     >
                       <div className="flex items-start gap-3">
                         <span className="text-muted-foreground text-xs whitespace-nowrap">
-                          {log.timestamp || new Date().toISOString()}
+                          {new Date(log.timestamp).toLocaleString('ru-RU')}
                         </span>
                         <span className={`font-bold text-xs uppercase ${getLevelColor(log.level || '')}`}>
                           {log.level || 'LOG'}
