@@ -96,7 +96,7 @@ const Dashboard2AllCards = () => {
         {chartCards.map((card) => (
           <div 
             key={card.id} 
-            className="w-full min-w-0 overflow-hidden"
+            className="min-w-0"
           >
             {renderCard(card)}
           </div>
