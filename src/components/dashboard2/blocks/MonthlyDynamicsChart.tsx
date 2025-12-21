@@ -62,9 +62,8 @@ const MonthlyDynamicsChart = () => {
             <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-purple-500"></div>
           </div>
         ) : (
-        <div style={{ width: '100%', overflowX: isMobile ? 'auto' : 'visible', WebkitOverflowScrolling: 'touch' }}>
-          <div className="h-[200px] sm:h-[300px] lg:h-[350px]" style={{ position: 'relative', minWidth: isMobile ? '500px' : 'auto' }}>
-            <Line
+        <div className="h-[200px] sm:h-[300px] lg:h-[350px]" style={{ position: 'relative' }}>
+          <Line
             data={{
               labels: isMobile ? ['Я', 'Ф', 'М', 'А', 'М', 'И', 'И', 'А', 'С', 'О', 'Н', 'Д'] : ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
               datasets: [{
@@ -94,8 +93,8 @@ const MonthlyDynamicsChart = () => {
               },
               layout: {
                 padding: {
-                  left: isMobile ? 0 : 10,
-                  right: isMobile ? 0 : 10,
+                  left: 0,
+                  right: 0,
                   top: isMobile ? 5 : 10,
                   bottom: isMobile ? 5 : 10
                 }
@@ -143,13 +142,13 @@ const MonthlyDynamicsChart = () => {
                   ticks: {
                     color: '#a3aed0',
                     font: {
-                      size: isMobile ? 8 : 12
+                      size: isMobile ? 7 : 12
                     },
-                    padding: isMobile ? 0 : 8,
+                    padding: 0,
                     maxRotation: 0,
                     minRotation: 0,
                     autoSkip: true,
-                    autoSkipPadding: isMobile ? 5 : 10,
+                    autoSkipPadding: isMobile ? 15 : 10,
                     maxTicksLimit: isMobile ? 6 : 12
                   },
                   grid: {
@@ -159,7 +158,6 @@ const MonthlyDynamicsChart = () => {
               }
             }}
           />
-          </div>
         </div>
         )}
       </CardContent>
