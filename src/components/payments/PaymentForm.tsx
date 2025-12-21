@@ -116,10 +116,10 @@ const PaymentForm = ({
                 <Select
                   value={formData.category_id}
                   onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-                  disabled={!!formData.service_id}
+                  disabled={true}
                 >
-                  <SelectTrigger className={formData.service_id ? "bg-muted/50 cursor-not-allowed" : ""}>
-                    <SelectValue placeholder="Выберите категорию" />
+                  <SelectTrigger className="bg-muted/50 cursor-not-allowed">
+                    <SelectValue placeholder="Выбирается автоматически из сервиса" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
