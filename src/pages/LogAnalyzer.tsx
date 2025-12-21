@@ -30,6 +30,7 @@ interface LogEntry {
 }
 
 const API_URL = 'https://functions.poehali.dev/dd221a88-cc33-4a30-a59f-830b0a41862f';
+const COLLECT_API_URL = 'https://functions.poehali.dev/acbb6915-96bf-4e7f-ab66-c34c3fa4b26c';
 
 const LogAnalyzer = () => {
   const [files, setFiles] = useState<LogFile[]>([]);
@@ -37,6 +38,7 @@ const LogAnalyzer = () => {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [collecting, setCollecting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
@@ -122,6 +124,53 @@ const LogAnalyzer = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const collectAllLogs = async () => {
+    setCollecting(true);
+    try {
+      const backendFunctions = [
+        'main',
+        'upload-file',
+        'upload-photo',
+        'savings-dashboard',
+        'revoke-payment',
+        'dashboard-layout',
+        'dashboard-stats',
+        'log-analyzer',
+        'collect-logs'
+      ];
+      
+      const sources = ['frontend', ...backendFunctions.map(fn => `backend/${fn}`)];
+      
+      const response = await fetch(COLLECT_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sources,
+          limit: 1000
+        }),
+      });
+
+      if (!response.ok) throw new Error('Collection failed');
+
+      const result = await response.json();
+      toast({
+        title: 'Логи собраны!',
+        description: `Собрано записей: ${result.collected} из ${result.sources_processed} источников`,
+      });
+
+      loadFiles();
+    } catch (error) {
+      console.error('Collection failed:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось собрать логи',
+        variant: 'destructive',
+      });
+    } finally {
+      setCollecting(false);
     }
   };
 
@@ -237,7 +286,21 @@ const LogAnalyzer = () => {
             </div>
           </div>
 
-          <div>
+          <div className="flex gap-2">
+            <Button onClick={collectAllLogs} disabled={collecting} variant="default">
+              {collecting ? (
+                <>
+                  <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
+                  Сбор логов...
+                </>
+              ) : (
+                <>
+                  <Icon name="Download" size={18} className="mr-2" />
+                  Собрать все логи
+                </>
+              )}
+            </Button>
+            
             <Input
               type="file"
               accept=".log,.txt"
@@ -247,7 +310,7 @@ const LogAnalyzer = () => {
               id="file-upload"
             />
             <Label htmlFor="file-upload">
-              <Button disabled={uploading} asChild>
+              <Button disabled={uploading} variant="outline" asChild>
                 <span className="cursor-pointer">
                   {uploading ? (
                     <>
