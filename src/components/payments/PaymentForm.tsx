@@ -187,7 +187,14 @@ const PaymentForm = ({
                 <Label htmlFor="service">Сервис</Label>
                 <Select
                   value={formData.service_id}
-                  onValueChange={(value) => setFormData({ ...formData, service_id: value })}
+                  onValueChange={(value) => {
+                    const selectedService = services.find(s => s.id.toString() === value);
+                    setFormData({ 
+                      ...formData, 
+                      service_id: value,
+                      service_description: selectedService?.description || ''
+                    });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите сервис" />
@@ -201,6 +208,19 @@ const PaymentForm = ({
                   </SelectContent>
                 </Select>
               </div>
+              {formData.service_id && (
+                <div className="space-y-2">
+                  <Label htmlFor="service_description">Описание сервиса</Label>
+                  <Input
+                    id="service_description"
+                    value={formData.service_description || ''}
+                    readOnly
+                    disabled
+                    className="bg-muted/50 cursor-not-allowed"
+                    placeholder="Описание сервиса"
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="amount">Сумма</Label>
                 <Input
