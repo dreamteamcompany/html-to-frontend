@@ -126,6 +126,16 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
               </div>
             )}
 
+            {payment.category_name && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Категория</p>
+                <div className="flex items-center gap-2 font-medium">
+                  <Icon name={payment.category_icon || 'Tag'} size={18} />
+                  {payment.category_name}
+                </div>
+              </div>
+            )}
+
             {payment.legal_entity_name && (
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Юридическое лицо</p>

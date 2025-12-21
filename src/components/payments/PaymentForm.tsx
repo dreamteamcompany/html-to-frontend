@@ -57,6 +57,9 @@ interface Service {
   description: string;
   intermediate_approver_id: number;
   final_approver_id: number;
+  category_id?: number;
+  category_name?: string;
+  category_icon?: string;
 }
 
 interface PaymentFormProps {
@@ -113,8 +116,9 @@ const PaymentForm = ({
                 <Select
                   value={formData.category_id}
                   onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                  disabled={!!formData.service_id}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={formData.service_id ? "bg-muted/50 cursor-not-allowed" : ""}>
                     <SelectValue placeholder="Выберите категорию" />
                   </SelectTrigger>
                   <SelectContent>
@@ -192,7 +196,8 @@ const PaymentForm = ({
                     setFormData({ 
                       ...formData, 
                       service_id: value,
-                      service_description: selectedService?.description || ''
+                      service_description: selectedService?.description || '',
+                      category_id: selectedService?.category_id ? selectedService.category_id.toString() : formData.category_id
                     });
                   }}
                 >
