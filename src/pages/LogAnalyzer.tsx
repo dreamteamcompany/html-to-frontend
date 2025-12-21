@@ -1,38 +1,52 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useToast } from '@/hooks/use-toast';
 
-interface LogEntry {
-  timestamp: string;
-  level: string;
-  message: string;
-  source?: string;
-  [key: string]: unknown;
+interface LogFile {
+  id: number;
+  filename: string;
+  file_size: number;
+  uploaded_at: string;
+  total_lines: number;
+  status: string;
+  statistics: Array<{ level: string; count: number }>;
 }
 
+interface LogEntry {
+  id: number;
+  file_id: number;
+  line_number: number;
+  timestamp: string | null;
+  level: string | null;
+  message: string;
+  raw_line: string;
+}
+
+const API_URL = 'https://functions.poehali.dev/dd221a88-cc33-4a30-a59f-830b0a41862f';
+
 const LogAnalyzer = () => {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [files, setFiles] = useState<LogFile[]>([]);
+  const [selectedFile, setSelectedFile] = useState<LogFile | null>(null);
+  const [entries, setEntries] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
-  const [logSource, setLogSource] = useState<string>('frontend');
-  const [limit, setLimit] = useState<string>('100');
   const [searchQuery, setSearchQuery] = useState('');
+  const [levelFilter, setLevelFilter] = useState<string>('');
+  const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const limit = 100;
   const { toast } = useToast();
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -49,78 +63,142 @@ const LogAnalyzer = () => {
     }
   };
 
-  const backendFunctions = [
-    'main',
-    'upload-file',
-    'upload-photo',
-    'savings-dashboard',
-    'revoke-payment',
-    'dashboard-layout',
-    'dashboard-stats',
-  ];
+  useEffect(() => {
+    loadFiles();
+  }, []);
 
-  const loadLogs = async () => {
+  useEffect(() => {
+    if (selectedFile) {
+      loadEntries();
+    }
+  }, [selectedFile, levelFilter, searchQuery, offset]);
+
+  const loadFiles = async () => {
     setLoading(true);
     try {
-      toast({
-        title: 'Функция в разработке',
-        description: 'API для получения логов будет добавлено позже',
-      });
-      
-      setLogs([
-        {
-          timestamp: new Date().toISOString(),
-          level: 'info',
-          message: `Анализатор логов готов. Выбран источник: ${logSource}`,
-          source: logSource,
-        },
-        {
-          timestamp: new Date().toISOString(),
-          level: 'warn',
-          message: 'API для получения логов находится в разработке',
-          source: 'system',
-        },
-      ]);
+      const response = await fetch(`${API_URL}?action=list`);
+      if (!response.ok) throw new Error('Failed to load files');
+      const data = await response.json();
+      setFiles(data);
     } catch (error) {
-      console.error('Failed to load logs:', error);
+      console.error('Failed to load files:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось загрузить логи',
+        description: 'Не удалось загрузить список файлов',
         variant: 'destructive',
       });
-      setLogs([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredLogs = logs.filter((log) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      log.message?.toLowerCase().includes(searchLower) ||
-      log.level?.toLowerCase().includes(searchLower) ||
-      log.timestamp?.toLowerCase().includes(searchLower) ||
-      JSON.stringify(log).toLowerCase().includes(searchLower)
-    );
-  });
+  const loadEntries = async () => {
+    if (!selectedFile) return;
+    
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        action: 'entries',
+        file_id: selectedFile.id.toString(),
+        limit: limit.toString(),
+        offset: offset.toString(),
+      });
+      
+      if (levelFilter) params.append('level', levelFilter);
+      if (searchQuery) params.append('search', searchQuery);
+      
+      const response = await fetch(`${API_URL}?${params}`);
+      if (!response.ok) throw new Error('Failed to load entries');
+      
+      const data = await response.json();
+      setEntries(data.entries);
+      setTotal(data.total);
+    } catch (error) {
+      console.error('Failed to load entries:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось загрузить логи',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const getLevelColor = (level: string) => {
-    const levelLower = level?.toLowerCase() || '';
-    if (levelLower.includes('error')) return 'text-red-400';
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const content = e.target?.result as string;
+        const base64Content = btoa(content);
+
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            file_content: base64Content,
+          }),
+        });
+
+        if (!response.ok) throw new Error('Upload failed');
+
+        const result = await response.json();
+        toast({
+          title: 'Успешно',
+          description: `Файл загружен! Обработано строк: ${result.total_lines}`,
+        });
+
+        loadFiles();
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось загрузить файл',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const getLevelColor = (level: string | null) => {
+    if (!level) return 'text-gray-400';
+    const levelLower = level.toLowerCase();
+    if (levelLower.includes('error') || levelLower.includes('fatal')) return 'text-red-400';
     if (levelLower.includes('warn')) return 'text-yellow-400';
     if (levelLower.includes('info')) return 'text-blue-400';
-    if (levelLower.includes('debug')) return 'text-gray-400';
+    if (levelLower.includes('debug') || levelLower.includes('trace')) return 'text-gray-400';
     return 'text-gray-300';
   };
 
-  const getLevelBg = (level: string) => {
-    const levelLower = level?.toLowerCase() || '';
-    if (levelLower.includes('error')) return 'bg-red-500/10 border-red-500/20';
-    if (levelLower.includes('warn')) return 'bg-yellow-500/10 border-yellow-500/20';
-    if (levelLower.includes('info')) return 'bg-blue-500/10 border-blue-500/20';
-    if (levelLower.includes('debug')) return 'bg-gray-500/10 border-gray-500/20';
-    return 'bg-gray-500/10 border-gray-500/20';
+  const getLevelBadgeVariant = (level: string | null): "default" | "destructive" | "secondary" | "outline" => {
+    if (!level) return 'secondary';
+    const levelLower = level.toLowerCase();
+    if (levelLower.includes('error') || levelLower.includes('fatal')) return 'destructive';
+    if (levelLower.includes('warn')) return 'outline';
+    return 'secondary';
   };
+
+  const formatTimestamp = (timestamp: string | null) => {
+    if (!timestamp) return 'N/A';
+    try {
+      return new Date(timestamp).toLocaleString('ru-RU');
+    } catch {
+      return timestamp;
+    }
+  };
+
+  const uniqueLevels = selectedFile
+    ? Array.from(new Set(selectedFile.statistics.map((s) => s.level)))
+    : [];
 
   return (
     <div className="flex min-h-screen">
@@ -154,143 +232,252 @@ const LogAnalyzer = () => {
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">Анализатор логов</h1>
               <p className="text-sm md:text-base text-muted-foreground mt-1">
-                Все логи фронтенда и бэкенд функций
+                Загружайте и анализируйте файлы логов
               </p>
             </div>
           </div>
-        </header>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Фильтры</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="source">Источник логов</Label>
-                <Select value={logSource} onValueChange={setLogSource}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите источник" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="frontend">
-                      <div className="flex items-center gap-2">
-                        <Icon name="Monitor" size={16} />
-                        Frontend (браузер)
-                      </div>
-                    </SelectItem>
-                    {backendFunctions.map((fn) => (
-                      <SelectItem key={fn} value={`backend/${fn}`}>
-                        <div className="flex items-center gap-2">
-                          <Icon name="Server" size={16} />
-                          Backend: {fn}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="limit">Количество записей</Label>
-                <Input
-                  id="limit"
-                  type="number"
-                  value={limit}
-                  onChange={(e) => setLimit(e.target.value)}
-                  min="10"
-                  max="1000"
-                  placeholder="100"
-                />
-              </div>
-
-              <div className="flex items-end">
-                <Button onClick={loadLogs} disabled={loading} className="w-full">
-                  {loading ? (
+          <div>
+            <Input
+              type="file"
+              accept=".log,.txt"
+              onChange={handleFileUpload}
+              disabled={uploading}
+              className="hidden"
+              id="file-upload"
+            />
+            <Label htmlFor="file-upload">
+              <Button disabled={uploading} asChild>
+                <span className="cursor-pointer">
+                  {uploading ? (
                     <>
                       <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
                       Загрузка...
                     </>
                   ) : (
                     <>
-                      <Icon name="RefreshCw" size={18} className="mr-2" />
-                      Загрузить логи
+                      <Icon name="Upload" size={18} className="mr-2" />
+                      Загрузить файл
                     </>
                   )}
-                </Button>
-              </div>
-            </div>
+                </span>
+              </Button>
+            </Label>
+          </div>
+        </header>
 
-            <div className="mt-4">
-              <Label htmlFor="search">Поиск по логам</Label>
-              <div className="relative">
-                <Icon
-                  name="Search"
-                  size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                />
-                <Input
-                  id="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Поиск по сообщению, уровню, времени..."
-                  className="pl-10"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="files" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="files">
+              <Icon name="FileText" size={16} className="mr-2" />
+              Файлы ({files.length})
+            </TabsTrigger>
+            <TabsTrigger value="viewer" disabled={!selectedFile}>
+              <Icon name="Eye" size={16} className="mr-2" />
+              Просмотр логов
+            </TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Логи ({filteredLogs.length} из {logs.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-12">
-                <Icon name="Loader2" size={32} className="mx-auto animate-spin text-primary" />
-                <p className="text-muted-foreground mt-4">Загрузка логов...</p>
-              </div>
-            ) : filteredLogs.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                {logs.length === 0 ? 'Нажмите "Загрузить логи" для просмотра' : 'Нет результатов по вашему запросу'}
-              </div>
+          <TabsContent value="files">
+            {loading && files.length === 0 ? (
+              <Card>
+                <CardContent className="flex justify-center items-center py-12">
+                  <Icon name="Loader2" size={32} className="animate-spin" />
+                </CardContent>
+              </Card>
+            ) : files.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col justify-center items-center py-12 text-center">
+                  <Icon name="FileX" size={48} className="text-muted-foreground mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">Нет загруженных файлов</h3>
+                  <p className="text-muted-foreground">
+                    Загрузите файл логов для начала анализа
+                  </p>
+                </CardContent>
+              </Card>
             ) : (
-              <div className="max-h-[600px] overflow-y-auto">
-                <div className="space-y-2 p-4">
-                  {filteredLogs.map((log, index) => (
-                    <div
-                      key={index}
-                      className={`p-3 rounded-lg border ${getLevelBg(log.level || '')} font-mono text-sm`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="text-muted-foreground text-xs whitespace-nowrap">
-                          {new Date(log.timestamp).toLocaleString('ru-RU')}
-                        </span>
-                        <span className={`font-bold text-xs uppercase ${getLevelColor(log.level || '')}`}>
-                          {log.level || 'LOG'}
-                        </span>
-                        <span className="flex-1 break-all">{log.message || JSON.stringify(log)}</span>
+              <div className="grid gap-4">
+                {files.map((file) => (
+                  <Card
+                    key={file.id}
+                    className={`cursor-pointer transition-colors ${
+                      selectedFile?.id === file.id ? 'border-primary' : ''
+                    }`}
+                    onClick={() => {
+                      setSelectedFile(file);
+                      setOffset(0);
+                    }}
+                  >
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg">{file.filename}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {formatTimestamp(file.uploaded_at)} • {file.total_lines} строк • {(
+                              file.file_size / 1024
+                            ).toFixed(2)}{' '}
+                            KB
+                          </p>
+                        </div>
+                        <Badge variant={file.status === 'completed' ? 'default' : 'secondary'}>
+                          {file.status}
+                        </Badge>
                       </div>
-                      {Object.keys(log).length > 3 && (
-                        <details className="mt-2">
-                          <summary className="cursor-pointer text-xs text-muted-foreground hover:text-primary">
-                            Показать детали
-                          </summary>
-                          <pre className="mt-2 text-xs bg-black/20 p-2 rounded overflow-x-auto">
-                            {JSON.stringify(log, null, 2)}
-                          </pre>
-                        </details>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {file.statistics.map((stat) => (
+                          <Badge key={stat.level} variant={getLevelBadgeVariant(stat.level)}>
+                            {stat.level}: {stat.count}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </TabsContent>
+
+          <TabsContent value="viewer">
+            {selectedFile && (
+              <>
+                <Card className="mb-4">
+                  <CardHeader>
+                    <CardTitle>Фильтры</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Поиск</Label>
+                        <div className="relative">
+                          <Icon
+                            name="Search"
+                            size={18}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                          />
+                          <Input
+                            value={searchQuery}
+                            onChange={(e) => {
+                              setSearchQuery(e.target.value);
+                              setOffset(0);
+                            }}
+                            placeholder="Поиск по сообщению..."
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Уровень</Label>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            variant={levelFilter === '' ? 'default' : 'outline'}
+                            onClick={() => {
+                              setLevelFilter('');
+                              setOffset(0);
+                            }}
+                          >
+                            Все
+                          </Button>
+                          {uniqueLevels.map((level) => (
+                            <Button
+                              key={level}
+                              size="sm"
+                              variant={levelFilter === level ? 'default' : 'outline'}
+                              onClick={() => {
+                                setLevelFilter(level);
+                                setOffset(0);
+                              }}
+                            >
+                              {level}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
+                      <CardTitle>
+                        Логи ({total} записей)
+                      </CardTitle>
+                      <Button variant="outline" size="sm" onClick={loadEntries}>
+                        <Icon name="RefreshCw" size={16} className="mr-2" />
+                        Обновить
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <div className="flex justify-center py-8">
+                        <Icon name="Loader2" size={32} className="animate-spin" />
+                      </div>
+                    ) : entries.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        Логи не найдены
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-2 font-mono text-sm">
+                          {entries.map((entry) => (
+                            <div
+                              key={entry.id}
+                              className="p-3 rounded border bg-card hover:bg-accent/50 transition-colors"
+                            >
+                              <div className="flex flex-wrap gap-2 mb-1 text-xs text-muted-foreground">
+                                <span>#{entry.line_number}</span>
+                                {entry.timestamp && (
+                                  <span>{formatTimestamp(entry.timestamp)}</span>
+                                )}
+                                {entry.level && (
+                                  <Badge variant={getLevelBadgeVariant(entry.level)} className="text-xs">
+                                    {entry.level}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className={getLevelColor(entry.level)}>{entry.message}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setOffset(Math.max(0, offset - limit))}
+                            disabled={offset === 0}
+                          >
+                            <Icon name="ChevronLeft" size={16} className="mr-2" />
+                            Назад
+                          </Button>
+
+                          <span className="text-sm text-muted-foreground">
+                            {offset + 1} - {Math.min(offset + limit, total)} из {total}
+                          </span>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setOffset(offset + limit)}
+                            disabled={offset + limit >= total}
+                          >
+                            Вперёд
+                            <Icon name="ChevronRight" size={16} className="ml-2" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
