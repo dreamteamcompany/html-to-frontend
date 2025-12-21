@@ -52,8 +52,8 @@ const MonthlyDynamicsChart = () => {
   }, []);
 
   return (
-    <Card className="w-full overflow-hidden" style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
-      <CardContent className="p-3 sm:p-6">
+    <Card className="w-full max-w-full overflow-hidden" style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
+      <CardContent className="p-3 sm:p-6 max-w-full">
         <div style={{ marginBottom: '12px' }} className="sm:mb-4">
           <h3 className="text-sm sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Динамика Расходов по Месяцам</h3>
         </div>
@@ -62,7 +62,7 @@ const MonthlyDynamicsChart = () => {
             <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-purple-500"></div>
           </div>
         ) : (
-        <div className="h-[200px] sm:h-[300px] lg:h-[350px] w-full" style={{ position: 'relative' }}>
+        <div className="h-[200px] sm:h-[300px] lg:h-[350px]" style={{ position: 'relative', width: '100%', maxWidth: '100%', minWidth: 0 }}>
           <Line
             data={{
               labels: isMobile ? ['Я', 'Ф', 'М', 'А', 'М', 'И', 'И', 'А', 'С', 'О', 'Н', 'Д'] : ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
