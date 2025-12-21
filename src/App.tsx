@@ -25,7 +25,7 @@ import Services from "./pages/Services";
 import AuditLogs from "./pages/AuditLogs";
 import Savings from "./pages/Savings";
 import SavingReasons from "./pages/SavingReasons";
-import DashboardEditor from "./pages/DashboardEditor";
+import LogAnalyzer from "./pages/LogAnalyzer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,7 +56,7 @@ const App = () => (
             <Route path="/audit-logs" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><AuditLogs /></ProtectedRoute>} />
             <Route path="/savings" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><Savings /></ProtectedRoute>} />
             <Route path="/saving-reasons" element={<ProtectedRoute requiredPermission={{ resource: 'categories', action: 'read' }}><SavingReasons /></ProtectedRoute>} />
-            <Route path="/dashboard-editor" element={<ProtectedRoute><DashboardEditor /></ProtectedRoute>} />
+            <Route path="/log-analyzer" element={<ProtectedRoute><LogAnalyzer /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
