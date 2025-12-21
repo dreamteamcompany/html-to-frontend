@@ -62,8 +62,9 @@ const MonthlyDynamicsChart = () => {
             <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-purple-500"></div>
           </div>
         ) : (
-        <div className="h-[200px] sm:h-[300px] lg:h-[350px]" style={{ position: 'relative' }}>
-          <Line
+        <div style={{ width: '100%', overflowX: isMobile ? 'auto' : 'visible', WebkitOverflowScrolling: 'touch' }}>
+          <div className="h-[200px] sm:h-[300px] lg:h-[350px]" style={{ position: 'relative', minWidth: isMobile ? '500px' : 'auto' }}>
+            <Line
             data={{
               labels: isMobile ? ['Я', 'Ф', 'М', 'А', 'М', 'И', 'И', 'А', 'С', 'О', 'Н', 'Д'] : ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
               datasets: [{
@@ -144,11 +145,12 @@ const MonthlyDynamicsChart = () => {
                     font: {
                       size: isMobile ? 8 : 12
                     },
-                    padding: isMobile ? 2 : 8,
+                    padding: isMobile ? 0 : 8,
                     maxRotation: 0,
                     minRotation: 0,
-                    autoSkip: isMobile,
-                    maxTicksLimit: isMobile ? 12 : 12
+                    autoSkip: true,
+                    autoSkipPadding: isMobile ? 5 : 10,
+                    maxTicksLimit: isMobile ? 6 : 12
                   },
                   grid: {
                     display: false
@@ -157,6 +159,7 @@ const MonthlyDynamicsChart = () => {
               }
             }}
           />
+          </div>
         </div>
         )}
       </CardContent>
