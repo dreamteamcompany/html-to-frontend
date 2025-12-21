@@ -52,36 +52,36 @@ const MonthlyDynamicsChart = () => {
   }, []);
 
   return (
-    <Card className="w-full" style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
-      <CardContent className="p-4 sm:p-6">
-        <div style={{ marginBottom: '16px' }}>
-          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Динамика Расходов по Месяцам</h3>
+    <Card className="w-full overflow-hidden" style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
+      <CardContent className="p-3 sm:p-6">
+        <div style={{ marginBottom: '12px' }} className="sm:mb-4">
+          <h3 className="text-sm sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Динамика Расходов по Месяцам</h3>
         </div>
         {loading ? (
-          <div className="flex items-center justify-center" style={{ height: '250px' }}>
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+          <div className="flex items-center justify-center" style={{ height: '200px' }} className="sm:h-[250px]">
+            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-purple-500"></div>
           </div>
         ) : (
-        <div className="h-[250px] sm:h-[350px]" style={{ position: 'relative' }}>
+        <div className="h-[200px] sm:h-[300px] lg:h-[350px] w-full" style={{ position: 'relative' }}>
           <Line
             data={{
-              labels: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+              labels: isMobile ? ['Я', 'Ф', 'М', 'А', 'М', 'И', 'И', 'А', 'С', 'О', 'Н', 'Д'] : ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
               datasets: [{
                 label: 'Расходы',
                 data: monthlyData,
                 borderColor: 'rgb(117, 81, 233)',
                 backgroundColor: 'rgba(117, 81, 233, 0.1)',
-                borderWidth: isMobile ? 2 : 3,
+                borderWidth: isMobile ? 1.5 : 3,
                 fill: true,
                 tension: 0.4,
                 pointBackgroundColor: 'rgb(117, 81, 233)',
                 pointBorderColor: '#fff',
                 pointBorderWidth: isMobile ? 1 : 2,
-                pointRadius: isMobile ? 3 : 5,
-                pointHoverRadius: isMobile ? 5 : 7,
+                pointRadius: isMobile ? 2 : 5,
+                pointHoverRadius: isMobile ? 4 : 7,
                 pointHoverBackgroundColor: 'rgb(117, 81, 233)',
                 pointHoverBorderColor: '#fff',
-                pointHoverBorderWidth: isMobile ? 2 : 3
+                pointHoverBorderWidth: isMobile ? 1.5 : 3
               }]
             }}
             options={{
@@ -90,6 +90,14 @@ const MonthlyDynamicsChart = () => {
               interaction: {
                 mode: 'index' as const,
                 intersect: false
+              },
+              layout: {
+                padding: {
+                  left: isMobile ? 0 : 10,
+                  right: isMobile ? 0 : 10,
+                  top: isMobile ? 5 : 10,
+                  bottom: isMobile ? 5 : 10
+                }
               },
               plugins: {
                 legend: {
@@ -110,29 +118,37 @@ const MonthlyDynamicsChart = () => {
                   ticks: {
                     color: '#a3aed0',
                     font: {
-                      size: isMobile ? 10 : 12
+                      size: isMobile ? 9 : 12
                     },
-                    maxTicksLimit: isMobile ? 5 : 8,
+                    maxTicksLimit: isMobile ? 4 : 8,
+                    padding: isMobile ? 2 : 8,
                     callback: function(value) {
                       const numValue = value as number;
                       if (isMobile && numValue >= 1000) {
-                        return (numValue / 1000).toFixed(0) + 'k ₽';
+                        return (numValue / 1000).toFixed(0) + 'k';
+                      }
+                      if (isMobile) {
+                        return new Intl.NumberFormat('ru-RU', { notation: 'compact', compactDisplay: 'short' }).format(numValue);
                       }
                       return new Intl.NumberFormat('ru-RU').format(numValue) + ' ₽';
                     }
                   },
                   grid: {
-                    color: 'rgba(255, 255, 255, 0.05)'
+                    color: 'rgba(255, 255, 255, 0.05)',
+                    lineWidth: isMobile ? 0.5 : 1
                   }
                 },
                 x: {
                   ticks: {
                     color: '#a3aed0',
                     font: {
-                      size: isMobile ? 9 : 12
+                      size: isMobile ? 8 : 12
                     },
-                    maxRotation: isMobile ? 45 : 0,
-                    minRotation: isMobile ? 45 : 0
+                    padding: isMobile ? 2 : 8,
+                    maxRotation: 0,
+                    minRotation: 0,
+                    autoSkip: isMobile,
+                    maxTicksLimit: isMobile ? 12 : 12
                   },
                   grid: {
                     display: false
