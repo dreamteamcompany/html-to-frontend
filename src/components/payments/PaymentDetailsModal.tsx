@@ -24,6 +24,7 @@ interface Payment {
   created_by_name?: string;
   service_id?: number;
   service_name?: string;
+  service_description?: string;
   contractor_name?: string;
   contractor_id?: number;
   department_name?: string;
@@ -122,6 +123,9 @@ const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => 
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Сервис</p>
                 <p className="font-medium">{payment.service_name}</p>
+                {payment.service_description && (
+                  <p className="text-sm text-muted-foreground mt-1">{payment.service_description}</p>
+                )}
               </div>
             )}
 

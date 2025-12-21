@@ -32,6 +32,7 @@ interface Payment {
   created_by_name?: string;
   service_id?: number;
   service_name?: string;
+  service_description?: string;
   contractor_name?: string;
   contractor_id?: number;
   department_name?: string;

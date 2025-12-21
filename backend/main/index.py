@@ -947,6 +947,7 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     p.ceo_approved_by,
                     p.service_id,
                     s.name as service_name,
+                    s.description as service_description,
                     p.invoice_number,
                     p.invoice_date
                 FROM {SCHEMA}.payments p
@@ -985,8 +986,9 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'ceo_approved_by': row[21],
                     'service_id': row[22],
                     'service_name': row[23],
-                    'invoice_number': row[24],
-                    'invoice_date': row[25].isoformat() if row[25] else None
+                    'service_description': row[24],
+                    'invoice_number': row[25],
+                    'invoice_date': row[26].isoformat() if row[26] else None
                 }
                 for row in rows
             ]
