@@ -7,7 +7,7 @@ import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import PaymentsSearch from '@/components/payments/PaymentsSearch';
-import PaymentForm from '@/components/payments/PaymentForm';
+import PlannedPaymentForm from '@/components/payments/PlannedPaymentForm';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 
@@ -158,7 +158,7 @@ const PlannedPayments = () => {
 
         <PaymentsSearch searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-        <PaymentForm
+        <PlannedPaymentForm
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}
           formData={formData}

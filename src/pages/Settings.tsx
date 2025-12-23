@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
+import ScheduledPaymentsSettings from '@/components/settings/ScheduledPaymentsSettings';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -144,6 +145,8 @@ const Settings = () => {
         </header>
 
         <div className="grid gap-6">
+          <ScheduledPaymentsSettings />
+          
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
