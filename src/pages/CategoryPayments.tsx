@@ -94,28 +94,23 @@ const CategoryPayments = () => {
         style={{ flex: 1, overflow: 'auto' }}
         onTouchStart={handleSidebarTouch}
       >
-      <div style={{ padding: '20px' }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '15px', 
-          marginBottom: '30px',
-          cursor: 'pointer'
-        }} onClick={() => navigate('/')}>
-          <Icon name="ArrowLeft" size={24} style={{ color: '#7551e9' }} />
+      <div className="p-4 sm:p-6 md:p-8">
+        <div 
+          className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 cursor-pointer"
+          onClick={() => navigate('/')}
+        >
+          <Icon name="ArrowLeft" className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: '#7551e9' }} />
           <div style={{ 
             background: `linear-gradient(135deg, ${categoryInfo.color} 0%, ${categoryInfo.color}cc 100%)`,
-            padding: '12px',
-            borderRadius: '12px',
             boxShadow: `0 0 25px ${categoryInfo.color}60`
-          }}>
-            <Icon name={categoryInfo.icon} fallback="Tag" size={28} style={{ color: '#fff' }} />
+          }} className="p-2.5 sm:p-3 rounded-xl">
+            <Icon name={categoryInfo.icon} fallback="Tag" className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: '#fff' }} />
           </div>
-          <div>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#fff', marginBottom: '5px' }}>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-1 truncate">
               {categoryInfo.name}
             </h1>
-            <p style={{ color: '#a3aed0', fontSize: '14px' }}>
+            <p className="text-xs sm:text-sm text-[#a3aed0] truncate">
               {categoryInfo.payments_count} платежей • {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(categoryInfo.total_amount)}
             </p>
           </div>
@@ -134,12 +129,8 @@ const CategoryPayments = () => {
                 <div
                   key={payment.id}
                   onClick={() => setSelectedPaymentId(payment.id)}
+                  className="bg-white/[0.03] p-3 sm:p-4 rounded-xl border border-white/[0.08] cursor-pointer transition-all duration-300 hover:bg-white/[0.05]"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    cursor: 'pointer',
                     transition: 'all 0.3s ease'
                   }}
                   onMouseEnter={(e) => {
@@ -153,40 +144,28 @@ const CategoryPayments = () => {
                     e.currentTarget.style.transform = 'translateX(0)';
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ color: '#fff', fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-sm sm:text-base font-semibold mb-1 truncate">
                         {payment.service}
                       </div>
-                      <div style={{ color: '#a3aed0', fontSize: '13px' }}>
+                      <div className="text-[#a3aed0] text-xs sm:text-sm truncate">
                         {payment.contractor} • {payment.department}
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ color: categoryInfo.color, fontSize: '18px', fontWeight: '700' }}>
+                    <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1">
+                      <div style={{ color: categoryInfo.color }} className="text-base sm:text-lg font-bold">
                         {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(payment.amount)}
                       </div>
                       <div style={{
-                        display: 'inline-block',
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: '600',
                         background: statusColors[payment.status] + '20',
-                        color: statusColors[payment.status],
-                        marginTop: '4px'
-                      }}>
+                        color: statusColors[payment.status]
+                      }} className="inline-block px-2 py-1 rounded-md text-[10px] sm:text-xs font-semibold whitespace-nowrap">
                         {statusLabels[payment.status] || payment.status}
                       </div>
                     </div>
                   </div>
-                  <div style={{ 
-                    color: '#a3aed0', 
-                    fontSize: '12px',
-                    marginTop: '8px',
-                    paddingTop: '8px',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.05)'
-                  }}>
+                  <div className="text-[#a3aed0] text-xs sm:text-sm mt-2 pt-2 border-t border-white/5 line-clamp-2">
                     {payment.description}
                   </div>
                 </div>
