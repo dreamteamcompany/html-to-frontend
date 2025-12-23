@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { usePaymentsData } from '@/hooks/usePaymentsData';
-import { usePaymentForm } from '@/hooks/usePaymentForm';
+import { usePlannedPaymentsData } from '@/hooks/usePlannedPaymentsData';
+import { usePlannedPaymentForm } from '@/hooks/usePlannedPaymentForm';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
@@ -25,7 +25,8 @@ interface Payment {
   category_icon: string;
   description: string;
   amount: number;
-  payment_date: string;
+  payment_date?: string;
+  planned_date?: string;
   legal_entity_id?: number;
   legal_entity_name?: string;
   status?: string;
@@ -63,7 +64,7 @@ const PlannedPayments = () => {
     services,
     loading,
     loadPayments,
-  } = usePaymentsData();
+  } = usePlannedPaymentsData();
 
   const {
     dialogOpen,
@@ -71,7 +72,7 @@ const PlannedPayments = () => {
     formData,
     setFormData,
     handleSubmit,
-  } = usePaymentForm(customFields, loadPayments);
+  } = usePlannedPaymentForm(customFields, loadPayments);
 
   const {
     menuOpen,
@@ -81,33 +82,33 @@ const PlannedPayments = () => {
     handleTouchEnd,
   } = useSidebarTouch();
 
-  const handleSubmitForApproval = async (paymentId: number) => {
+  const handleConvertToPayment = async (paymentId: number) => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
+      const response = await fetch('https://functions.poehali.dev/a0000b1e-3d3e-4094-b08e-2893df500d3f', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Auth-Token': token || '',
         },
-        body: JSON.stringify({ payment_id: paymentId }),
+        body: JSON.stringify({ action: 'convert', payment_id: paymentId }),
       });
 
       if (response.ok) {
         toast({
           title: 'Успешно',
-          description: 'Платёж отправлен на согласование',
+          description: 'Платёж создан из запланированного',
         });
         loadPayments();
       } else {
         const error = await response.json();
         toast({
           title: 'Ошибка',
-          description: error.error || 'Не удалось отправить на согласование',
+          description: error.error || 'Не удалось конвертировать платёж',
           variant: 'destructive',
         });
       }
     } catch (err) {
-      console.error('Failed to submit for approval:', err);
+      console.error('Failed to convert payment:', err);
       toast({
         title: 'Ошибка сети',
         description: 'Проверьте подключение к интернету',
@@ -174,8 +175,9 @@ const PlannedPayments = () => {
         <PaymentsList 
           payments={filteredPayments} 
           loading={loading} 
-          onSubmitForApproval={handleSubmitForApproval}
+          onSubmitForApproval={handleConvertToPayment}
           onPaymentClick={setSelectedPayment}
+          isPlannedPayments
         />
 
         <PaymentDetailsModal
