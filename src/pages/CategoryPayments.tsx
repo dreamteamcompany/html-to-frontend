@@ -71,27 +71,27 @@ const CategoryPayments = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)' }}>
+      <div style={{ display: 'flex', height: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)', overflow: 'hidden' }}>
         <PaymentsSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div style={{ flex: 1, padding: '20px', color: '#a3aed0' }}>Загрузка...</div>
+        <div style={{ flex: 1, overflow: 'auto', height: '100%', padding: '20px', color: '#a3aed0' }}>Загрузка...</div>
       </div>
     );
   }
 
   if (!categoryInfo) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)' }}>
+      <div style={{ display: 'flex', height: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)', overflow: 'hidden' }}>
         <PaymentsSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div style={{ flex: 1, padding: '20px', color: '#a3aed0' }}>Категория не найдена</div>
+        <div style={{ flex: 1, overflow: 'auto', height: '100%', padding: '20px', color: '#a3aed0' }}>Категория не найдена</div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)', overflow: 'hidden' }}>
       <PaymentsSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div 
-        style={{ flex: 1, overflow: 'auto' }}
+        style={{ flex: 1, overflow: 'auto', height: '100%' }}
         onTouchStart={handleSidebarTouch}
       >
       <div className="p-4 sm:p-6 md:p-8">
