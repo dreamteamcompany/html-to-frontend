@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 
 interface Payment {
-  description: string;
+  service: string;
   amount: number;
   status: string;
 }
@@ -212,7 +212,7 @@ const Dashboard2BudgetBreakdown = () => {
                       fontSize: '11px',
                       borderBottom: pidx < category.payments.length - 1 ? '1px solid rgba(255, 255, 255, 0.05)' : 'none'
                     }}>
-                      <span style={{ color: '#a3aed0', flex: 1, paddingRight: '8px' }}>{payment.description}</span>
+                      <span style={{ color: '#a3aed0', flex: 1, paddingRight: '8px' }}>{payment.service}</span>
                       <span style={{ color: color, fontWeight: '600', whiteSpace: 'nowrap' }}>
                         {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(payment.amount)}
                       </span>

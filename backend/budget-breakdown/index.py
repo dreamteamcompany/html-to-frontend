@@ -69,19 +69,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         result = []
         for row in rows:
+            cur2 = conn.cursor(cursor_factory=RealDictCursor)
             payments_query = f"""
                 SELECT 
-                    description,
-                    amount,
-                    status
-                FROM {SCHEMA}.payments
-                WHERE category_id = {row['category_id']}
-                    AND status IN ('approved', 'paid')
-                ORDER BY amount DESC
+                    COALESCE(s.name, p.description, 'Без названия') as service,
+                    p.amount,
+                    p.status
+                FROM {SCHEMA}.payments p
+                LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+                WHERE p.category_id = {row['category_id']}
+                    AND p.status IN ('approved', 'paid')
+                ORDER BY p.amount DESC
                 LIMIT 5
             """
-            cur.execute(payments_query)
-            payments = cur.fetchall()
+            cur2.execute(payments_query)
+            payments = cur2.fetchall()
+            cur2.close()
             
             result.append({
                 'category_id': row['category_id'],
@@ -91,7 +94,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'percentage': float(row['percentage']),
                 'payments': [
                     {
-                        'description': p['description'],
+                        'service': p['service'],
                         'amount': float(p['amount']),
                         'status': p['status']
                     }
