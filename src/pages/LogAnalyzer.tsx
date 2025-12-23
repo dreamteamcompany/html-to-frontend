@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useToast } from '@/hooks/use-toast';
+import LogAnalyzerHeader from '@/components/log-analyzer/LogAnalyzerHeader';
+import LogFilesList from '@/components/log-analyzer/LogFilesList';
+import LogFilters from '@/components/log-analyzer/LogFilters';
+import LogEntriesViewer from '@/components/log-analyzer/LogEntriesViewer';
 
 interface LogFile {
   id: number;
@@ -249,6 +248,29 @@ const LogAnalyzer = () => {
     ? Array.from(new Set(selectedFile.statistics.map((s) => s.level)))
     : [];
 
+  const handleSelectFile = (file: LogFile) => {
+    setSelectedFile(file);
+    setOffset(0);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setOffset(0);
+  };
+
+  const handleLevelChange = (level: string) => {
+    setLevelFilter(level);
+    setOffset(0);
+  };
+
+  const handlePrevPage = () => {
+    setOffset(Math.max(0, offset - limit));
+  };
+
+  const handleNextPage = () => {
+    setOffset(offset + limit);
+  };
+
   return (
     <div className="flex min-h-screen">
       <PaymentsSidebar
@@ -270,64 +292,14 @@ const LogAnalyzer = () => {
       )}
 
       <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden p-2 text-white"
-            >
-              <Icon name="Menu" size={24} />
-            </button>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold">Анализатор логов</h1>
-              <p className="text-sm md:text-base text-muted-foreground mt-1">
-                Загружайте и анализируйте файлы логов
-              </p>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Button onClick={collectAllLogs} disabled={collecting} variant="default">
-              {collecting ? (
-                <>
-                  <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
-                  Сбор логов...
-                </>
-              ) : (
-                <>
-                  <Icon name="Download" size={18} className="mr-2" />
-                  Собрать все логи
-                </>
-              )}
-            </Button>
-            
-            <Input
-              type="file"
-              accept=".log,.txt"
-              onChange={handleFileUpload}
-              disabled={uploading}
-              className="hidden"
-              id="file-upload"
-            />
-            <Label htmlFor="file-upload">
-              <Button disabled={uploading} variant="outline" asChild>
-                <span className="cursor-pointer">
-                  {uploading ? (
-                    <>
-                      <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
-                      Загрузка...
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="Upload" size={18} className="mr-2" />
-                      Загрузить файл
-                    </>
-                  )}
-                </span>
-              </Button>
-            </Label>
-          </div>
-        </header>
+        <LogAnalyzerHeader
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          collecting={collecting}
+          uploading={uploading}
+          onCollectLogs={collectAllLogs}
+          onFileUpload={handleFileUpload}
+        />
 
         <Tabs defaultValue="files" className="space-y-4">
           <TabsList>
@@ -342,201 +314,40 @@ const LogAnalyzer = () => {
           </TabsList>
 
           <TabsContent value="files">
-            {loading && files.length === 0 ? (
-              <Card>
-                <CardContent className="flex justify-center items-center py-12">
-                  <Icon name="Loader2" size={32} className="animate-spin" />
-                </CardContent>
-              </Card>
-            ) : files.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col justify-center items-center py-12 text-center">
-                  <Icon name="FileX" size={48} className="text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Нет загруженных файлов</h3>
-                  <p className="text-muted-foreground">
-                    Загрузите файл логов для начала анализа
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4">
-                {files.map((file) => (
-                  <Card
-                    key={file.id}
-                    className={`cursor-pointer transition-colors ${
-                      selectedFile?.id === file.id ? 'border-primary' : ''
-                    }`}
-                    onClick={() => {
-                      setSelectedFile(file);
-                      setOffset(0);
-                    }}
-                  >
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{file.filename}</CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {formatTimestamp(file.uploaded_at)} • {file.total_lines} строк • {(
-                              file.file_size / 1024
-                            ).toFixed(2)}{' '}
-                            KB
-                          </p>
-                        </div>
-                        <Badge variant={file.status === 'completed' ? 'default' : 'secondary'}>
-                          {file.status}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {file.statistics.map((stat) => (
-                          <Badge key={stat.level} variant={getLevelBadgeVariant(stat.level)}>
-                            {stat.level}: {stat.count}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+            <LogFilesList
+              files={files}
+              selectedFile={selectedFile}
+              loading={loading}
+              onSelectFile={handleSelectFile}
+              formatTimestamp={formatTimestamp}
+              getLevelBadgeVariant={getLevelBadgeVariant}
+            />
           </TabsContent>
 
           <TabsContent value="viewer">
             {selectedFile && (
               <>
-                <Card className="mb-4">
-                  <CardHeader>
-                    <CardTitle>Фильтры</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Поиск</Label>
-                        <div className="relative">
-                          <Icon
-                            name="Search"
-                            size={18}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                          />
-                          <Input
-                            value={searchQuery}
-                            onChange={(e) => {
-                              setSearchQuery(e.target.value);
-                              setOffset(0);
-                            }}
-                            placeholder="Поиск по сообщению..."
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
+                <LogFilters
+                  searchQuery={searchQuery}
+                  levelFilter={levelFilter}
+                  uniqueLevels={uniqueLevels}
+                  onSearchChange={handleSearchChange}
+                  onLevelChange={handleLevelChange}
+                />
 
-                      <div>
-                        <Label>Уровень</Label>
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            variant={levelFilter === '' ? 'default' : 'outline'}
-                            onClick={() => {
-                              setLevelFilter('');
-                              setOffset(0);
-                            }}
-                          >
-                            Все
-                          </Button>
-                          {uniqueLevels.map((level) => (
-                            <Button
-                              key={level}
-                              size="sm"
-                              variant={levelFilter === level ? 'default' : 'outline'}
-                              onClick={() => {
-                                setLevelFilter(level);
-                                setOffset(0);
-                              }}
-                            >
-                              {level}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle>
-                        Логи ({total} записей)
-                      </CardTitle>
-                      <Button variant="outline" size="sm" onClick={loadEntries}>
-                        <Icon name="RefreshCw" size={16} className="mr-2" />
-                        Обновить
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {loading ? (
-                      <div className="flex justify-center py-8">
-                        <Icon name="Loader2" size={32} className="animate-spin" />
-                      </div>
-                    ) : entries.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        Логи не найдены
-                      </div>
-                    ) : (
-                      <>
-                        <div className="space-y-2 font-mono text-sm">
-                          {entries.map((entry) => (
-                            <div
-                              key={entry.id}
-                              className="p-3 rounded border bg-card hover:bg-accent/50 transition-colors"
-                            >
-                              <div className="flex flex-wrap gap-2 mb-1 text-xs text-muted-foreground">
-                                <span>#{entry.line_number}</span>
-                                {entry.timestamp && (
-                                  <span>{formatTimestamp(entry.timestamp)}</span>
-                                )}
-                                {entry.level && (
-                                  <Badge variant={getLevelBadgeVariant(entry.level)} className="text-xs">
-                                    {entry.level}
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className={getLevelColor(entry.level)}>{entry.message}</div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setOffset(Math.max(0, offset - limit))}
-                            disabled={offset === 0}
-                          >
-                            <Icon name="ChevronLeft" size={16} className="mr-2" />
-                            Назад
-                          </Button>
-
-                          <span className="text-sm text-muted-foreground">
-                            {offset + 1} - {Math.min(offset + limit, total)} из {total}
-                          </span>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setOffset(offset + limit)}
-                            disabled={offset + limit >= total}
-                          >
-                            Вперёд
-                            <Icon name="ChevronRight" size={16} className="ml-2" />
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
+                <LogEntriesViewer
+                  entries={entries}
+                  loading={loading}
+                  total={total}
+                  offset={offset}
+                  limit={limit}
+                  onRefresh={loadEntries}
+                  onPrevPage={handlePrevPage}
+                  onNextPage={handleNextPage}
+                  formatTimestamp={formatTimestamp}
+                  getLevelColor={getLevelColor}
+                  getLevelBadgeVariant={getLevelBadgeVariant}
+                />
               </>
             )}
           </TabsContent>
