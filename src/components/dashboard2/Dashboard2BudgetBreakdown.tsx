@@ -125,10 +125,10 @@ const Dashboard2BudgetBreakdown = () => {
             const color = colorMap[category.name] || getColorForCategory(idx);
             return (
             <div key={idx} style={{ 
-              background: `linear-gradient(135deg, ${category.color}15 0%, ${category.color}08 100%)`,
+              background: `linear-gradient(135deg, ${color}15 0%, ${color}08 100%)`,
               padding: '16px',
               borderRadius: '14px',
-              border: `1px solid ${category.color}30`,
+              border: `1px solid ${color}30`,
               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               cursor: 'pointer',
               position: 'relative',
@@ -136,13 +136,13 @@ const Dashboard2BudgetBreakdown = () => {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
-              e.currentTarget.style.boxShadow = `0 20px 40px ${category.color}40, 0 0 30px ${category.color}30`;
-              e.currentTarget.style.borderColor = category.color;
+              e.currentTarget.style.boxShadow = `0 20px 40px ${color}40, 0 0 30px ${color}30`;
+              e.currentTarget.style.borderColor = color;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0) scale(1)';
               e.currentTarget.style.boxShadow = 'none';
-              e.currentTarget.style.borderColor = `${category.color}30`;
+              e.currentTarget.style.borderColor = `${color}30`;
             }}>
               <div style={{
                 position: 'absolute',
@@ -150,7 +150,7 @@ const Dashboard2BudgetBreakdown = () => {
                 right: '-50%',
                 width: '150%',
                 height: '150%',
-                background: `radial-gradient(circle, ${category.color}20 0%, transparent 70%)`,
+                background: `radial-gradient(circle, ${color}20 0%, transparent 70%)`,
                 pointerEvents: 'none',
                 opacity: 0,
                 transition: 'opacity 0.4s ease'
@@ -164,10 +164,10 @@ const Dashboard2BudgetBreakdown = () => {
                 zIndex: 1
               }}>
                 <div style={{ 
-                  background: `linear-gradient(135deg, ${category.color} 0%, ${category.color}cc 100%)`,
+                  background: `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`,
                   padding: '10px',
                   borderRadius: '10px',
-                  boxShadow: `0 0 20px ${category.color}60`
+                  boxShadow: `0 0 20px ${color}60`
                 }}>
                   <Icon name={category.icon} fallback="Tag" size={18} style={{ color: '#fff' }} />
                 </div>
@@ -179,11 +179,11 @@ const Dashboard2BudgetBreakdown = () => {
                 </div>
               </div>
               <div style={{ 
-                color: category.color, 
+                color: color, 
                 fontSize: '18px', 
                 fontWeight: '800',
                 marginBottom: '10px',
-                textShadow: `0 0 20px ${category.color}60`
+                textShadow: `0 0 20px ${color}60`
               }} className="sm:text-xl md:text-2xl">
                 {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(category.amount)}
               </div>
