@@ -1,7 +1,79 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import { useState, useEffect } from 'react';
+import { apiFetch } from '@/utils/api';
+
+interface BudgetCategory {
+  category_id: number;
+  name: string;
+  icon: string;
+  amount: number;
+  percentage: number;
+}
 
 const Dashboard2BudgetBreakdown = () => {
+  const [categories, setCategories] = useState<BudgetCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalBudget, setTotalBudget] = useState(0);
+
+  useEffect(() => {
+    apiFetch('https://functions.poehali.dev/4e358fce-df9e-4b42-9b31-81125bf30d99')
+      .then(res => res.json())
+      .then((data: BudgetCategory[]) => {
+        setCategories(Array.isArray(data) ? data : []);
+        const total = data.reduce((sum, cat) => sum + cat.amount, 0);
+        setTotalBudget(total);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load budget breakdown:', err);
+        setCategories([]);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+        border: '1px solid rgba(117, 81, 233, 0.3)',
+        marginBottom: '30px'
+      }}>
+        <CardContent className="p-4 sm:p-6">
+          <div style={{ textAlign: 'center', color: '#a3aed0', padding: '40px' }}>Загрузка данных бюджета...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (categories.length === 0) {
+    return (
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+        border: '1px solid rgba(117, 81, 233, 0.3)',
+        marginBottom: '30px'
+      }}>
+        <CardContent className="p-4 sm:p-6">
+          <div style={{ textAlign: 'center', color: '#a3aed0', padding: '40px' }}>Нет данных по бюджету</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const colorMap: { [key: string]: string } = {
+    'Серверы': '#7551e9',
+    'SaaS': '#3965ff',
+    'Безопасность': '#01b574',
+    'Оборудование': '#ffb547',
+    'Разработка': '#ff6b6b',
+    'Базы данных': '#a855f7'
+  };
+
+  const getColorForCategory = (index: number): string => {
+    const colors = ['#7551e9', '#3965ff', '#01b574', '#ffb547', '#ff6b6b', '#a855f7', '#ec4899', '#10b981'];
+    return colors[index % colors.length];
+  };
+
   return (
     <Card style={{ 
       background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
@@ -43,18 +115,15 @@ const Dashboard2BudgetBreakdown = () => {
             borderRadius: '10px',
             border: '1px solid rgba(117, 81, 233, 0.3)'
           }} className="sm:px-6 sm:py-3">
-            <span style={{ color: '#7551e9', fontSize: '14px', fontWeight: '700' }} className="sm:text-base">Общий бюджет: ₽1.8М</span>
+            <span style={{ color: '#7551e9', fontSize: '14px', fontWeight: '700' }} className="sm:text-base">
+              Общий бюджет: {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(totalBudget)}
+            </span>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-          {[
-            { icon: 'Server', name: 'Серверы & Хостинг', amount: 540000, percent: 30, color: '#7551e9', details: ['AWS: ₽320K', 'Azure: ₽150K', 'DigitalOcean: ₽70K'] },
-            { icon: 'Cloud', name: 'SaaS Подписки', amount: 360000, percent: 20, color: '#3965ff', details: ['Microsoft 365: ₽140K', 'Slack: ₽120K', 'Adobe: ₽100K'] },
-            { icon: 'Shield', name: 'Безопасность', amount: 324000, percent: 18, color: '#01b574', details: ['Антивирус: ₽150K', 'VPN: ₽100K', 'Firewall: ₽74K'] },
-            { icon: 'Cpu', name: 'Оборудование', amount: 288000, percent: 16, color: '#ffb547', details: ['Ноутбуки: ₽180K', 'Мониторы: ₽68K', 'Сеть: ₽40K'] },
-            { icon: 'Code', name: 'Dev Tools', amount: 180000, percent: 10, color: '#ff6b6b', details: ['GitHub: ₽80K', 'JetBrains: ₽60K', 'Postman: ₽40K'] },
-            { icon: 'Database', name: 'Базы Данных', amount: 108000, percent: 6, color: '#a855f7', details: ['PostgreSQL: ₽50K', 'MongoDB: ₽38K', 'Redis: ₽20K'] }
-          ].map((category, idx) => (
+          {categories.map((category, idx) => {
+            const color = colorMap[category.name] || getColorForCategory(idx);
+            return (
             <div key={idx} style={{ 
               background: `linear-gradient(135deg, ${category.color}15 0%, ${category.color}08 100%)`,
               padding: '16px',
@@ -100,13 +169,13 @@ const Dashboard2BudgetBreakdown = () => {
                   borderRadius: '10px',
                   boxShadow: `0 0 20px ${category.color}60`
                 }}>
-                  <Icon name={category.icon} size={18} style={{ color: '#fff' }} />
+                  <Icon name={category.icon} fallback="Tag" size={18} style={{ color: '#fff' }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ color: '#fff', fontSize: '13px', fontWeight: '600', marginBottom: '2px' }}>
                     {category.name}
                   </div>
-                  <div style={{ color: '#a3aed0', fontSize: '11px' }}>{category.percent}% бюджета</div>
+                  <div style={{ color: '#a3aed0', fontSize: '11px' }}>{category.percentage}% бюджета</div>
                 </div>
               </div>
               <div style={{ 
@@ -123,25 +192,20 @@ const Dashboard2BudgetBreakdown = () => {
                 height: '8px', 
                 background: 'rgba(255, 255, 255, 0.08)', 
                 borderRadius: '10px',
-                overflow: 'hidden',
-                marginBottom: '12px'
+                overflow: 'hidden'
               }}>
                 <div style={{ 
-                  width: `${category.percent * 3.33}%`, 
+                  width: `${Math.min(category.percentage, 100)}%`, 
                   height: '100%', 
-                  background: `linear-gradient(90deg, ${category.color} 0%, ${category.color}aa 100%)`,
+                  background: `linear-gradient(90deg, ${color} 0%, ${color}aa 100%)`,
                   borderRadius: '10px',
-                  boxShadow: `0 0 15px ${category.color}`,
+                  boxShadow: `0 0 15px ${color}`,
                   transition: 'width 1s ease'
                 }} />
               </div>
-              <div style={{ fontSize: '12px', color: '#a3aed0', lineHeight: '1.6' }}>
-                {category.details.map((detail, i) => (
-                  <div key={i} style={{ marginBottom: '4px' }}>• {detail}</div>
-                ))}
-              </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       </CardContent>
     </Card>

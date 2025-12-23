@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "Get budget breakdown by categories",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}
