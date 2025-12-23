@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import MainLayout from '@/components/layout/MainLayout';
+import { useSidebarTouch } from '@/hooks/useSidebarTouch';
+import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { apiFetch } from '@/utils/api';
-import PaymentDetailsModal from '@/components/modals/PaymentDetailsModal';
+import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 
 interface Payment {
   id: number;
@@ -33,6 +34,8 @@ const CategoryPayments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
+  
+  const { sidebarOpen, setSidebarOpen, handleSidebarTouch } = useSidebarTouch();
 
   useEffect(() => {
     if (!categoryId) return;
@@ -50,22 +53,6 @@ const CategoryPayments = () => {
       });
   }, [categoryId]);
 
-  if (loading) {
-    return (
-      <MainLayout>
-        <div style={{ padding: '20px', color: '#a3aed0' }}>Загрузка...</div>
-      </MainLayout>
-    );
-  }
-
-  if (!categoryInfo) {
-    return (
-      <MainLayout>
-        <div style={{ padding: '20px', color: '#a3aed0' }}>Категория не найдена</div>
-      </MainLayout>
-    );
-  }
-
   const statusColors: Record<string, string> = {
     draft: '#6c757d',
     pending: '#ffc107',
@@ -82,8 +69,31 @@ const CategoryPayments = () => {
     paid: 'Оплачено'
   };
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)' }}>
+        <PaymentsSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <div style={{ flex: 1, padding: '20px', color: '#a3aed0' }}>Загрузка...</div>
+      </div>
+    );
+  }
+
+  if (!categoryInfo) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)' }}>
+        <PaymentsSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <div style={{ flex: 1, padding: '20px', color: '#a3aed0' }}>Категория не найдена</div>
+      </div>
+    );
+  }
+
   return (
-    <MainLayout>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)' }}>
+      <PaymentsSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div 
+        style={{ flex: 1, overflow: 'auto' }}
+        onTouchStart={handleSidebarTouch}
+      >
       <div style={{ padding: '20px' }}>
         <div style={{ 
           display: 'flex', 
@@ -192,7 +202,8 @@ const CategoryPayments = () => {
           onClose={() => setSelectedPaymentId(null)}
         />
       )}
-    </MainLayout>
+      </div>
+    </div>
   );
 };
 
