@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '@/utils/api';
 
 interface Payment {
@@ -19,6 +20,7 @@ interface BudgetCategory {
 }
 
 const Dashboard2BudgetBreakdown = () => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<BudgetCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalBudget, setTotalBudget] = useState(0);
@@ -141,6 +143,7 @@ const Dashboard2BudgetBreakdown = () => {
               position: 'relative',
               overflow: 'hidden'
             }}
+            onClick={() => navigate(`/category/${category.category_id}`)}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
               e.currentTarget.style.boxShadow = `0 20px 40px ${color}40, 0 0 30px ${color}30`;
