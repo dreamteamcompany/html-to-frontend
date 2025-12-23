@@ -75,15 +75,30 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         payments_query = f"""
             SELECT 
                 p.id,
+                p.category_id,
+                c.name as category_name,
+                c.icon as category_icon,
                 COALESCE(s.name, p.description) as service,
+                COALESCE(s.name, p.description) as service_name,
                 p.amount,
                 p.status,
                 p.payment_date,
                 p.description,
+                p.contractor_id,
                 COALESCE(contr.name, 'Не указан') as contractor,
+                COALESCE(contr.name, 'Не указан') as contractor_name,
+                p.legal_entity_id,
                 COALESCE(le.name, 'Не указано') as legal_entity,
-                COALESCE(dept.name, 'Не указан') as department
+                COALESCE(le.name, 'Не указано') as legal_entity_name,
+                p.department_id,
+                COALESCE(dept.name, 'Не указан') as department,
+                COALESCE(dept.name, 'Не указан') as department_name,
+                p.service_id,
+                p.invoice_number,
+                p.invoice_date,
+                p.created_at
             FROM {SCHEMA}.payments p
+            LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
             LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
             LEFT JOIN {SCHEMA}.contractors contr ON p.contractor_id = contr.id
             LEFT JOIN {SCHEMA}.legal_entities le ON p.legal_entity_id = le.id
@@ -116,14 +131,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'payments': [
                 {
                     'id': row['id'],
+                    'category_id': row['category_id'],
+                    'category_name': row['category_name'],
+                    'category_icon': row['category_icon'],
                     'service': row['service'],
+                    'service_name': row['service_name'],
+                    'service_id': row['service_id'],
                     'amount': float(row['amount']),
                     'status': row['status'],
                     'payment_date': row['payment_date'],
                     'description': row['description'],
                     'contractor': row['contractor'],
+                    'contractor_name': row['contractor_name'],
+                    'contractor_id': row['contractor_id'],
                     'legal_entity': row['legal_entity'],
-                    'department': row['department']
+                    'legal_entity_name': row['legal_entity_name'],
+                    'legal_entity_id': row['legal_entity_id'],
+                    'department': row['department'],
+                    'department_name': row['department_name'],
+                    'department_id': row['department_id'],
+                    'invoice_number': row['invoice_number'],
+                    'invoice_date': row['invoice_date'],
+                    'created_at': row['created_at']
                 }
                 for row in payments_rows
             ]

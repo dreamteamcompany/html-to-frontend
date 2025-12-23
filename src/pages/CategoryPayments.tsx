@@ -17,6 +17,20 @@ interface Payment {
   contractor: string;
   legal_entity: string;
   department: string;
+  category_id: number;
+  category_name: string;
+  category_icon: string;
+  service_id?: number;
+  service_name?: string;
+  contractor_id?: number;
+  contractor_name?: string;
+  legal_entity_id?: number;
+  legal_entity_name?: string;
+  department_id?: number;
+  department_name?: string;
+  invoice_number?: string;
+  invoice_date?: string;
+  created_at?: string;
 }
 
 interface CategoryInfo {
@@ -33,7 +47,7 @@ const CategoryPayments = () => {
   const [categoryInfo, setCategoryInfo] = useState<CategoryInfo | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   
@@ -146,7 +160,7 @@ const CategoryPayments = () => {
                   {payments.map(payment => (
                     <div
                       key={payment.id}
-                      onClick={() => setSelectedPaymentId(payment.id)}
+                      onClick={() => setSelectedPayment(payment)}
                       className="bg-white/[0.03] p-3 sm:p-4 rounded-xl border border-white/[0.08] cursor-pointer transition-all duration-300 hover:bg-white/[0.05] hover:border-[#7551e9]/50"
                     >
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4 mb-2">
@@ -181,10 +195,10 @@ const CategoryPayments = () => {
           </>
         )}
 
-        {selectedPaymentId && (
+        {selectedPayment && (
           <PaymentDetailsModal
-            paymentId={selectedPaymentId}
-            onClose={() => setSelectedPaymentId(null)}
+            payment={selectedPayment}
+            onClose={() => setSelectedPayment(null)}
           />
         )}
       </main>
