@@ -83,6 +83,12 @@ const PaymentsSidebar = ({
               </Link>
             </li>
             <li>
+              <Link to="/planned-payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/planned-payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+                <Icon name="CalendarClock" size={20} />
+                <span>Запланированные платежи</span>
+              </Link>
+            </li>
+            <li>
               <Link to="/pending-approvals" className={`flex items-center justify-between px-[15px] py-3 rounded-lg ${isActive('/pending-approvals') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
                 <div className="flex items-center gap-3">
                   <Icon name="ClipboardCheck" size={20} />
