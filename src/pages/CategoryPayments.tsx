@@ -34,8 +34,16 @@ const CategoryPayments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
+  const [dictionariesOpen, setDictionariesOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
-  const { sidebarOpen, setSidebarOpen, handleSidebarTouch } = useSidebarTouch();
+  const {
+    menuOpen,
+    setMenuOpen,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useSidebarTouch();
 
   useEffect(() => {
     if (!categoryId) return;
@@ -69,119 +77,117 @@ const CategoryPayments = () => {
     paid: 'Оплачено'
   };
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', height: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)', overflow: 'hidden' }}>
-        <PaymentsSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div style={{ flex: 1, overflow: 'auto', height: '100%', padding: '20px', color: '#a3aed0' }}>Загрузка...</div>
-      </div>
-    );
-  }
-
-  if (!categoryInfo) {
-    return (
-      <div style={{ display: 'flex', height: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)', overflow: 'hidden' }}>
-        <PaymentsSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div style={{ flex: 1, overflow: 'auto', height: '100%', padding: '20px', color: '#a3aed0' }}>Категория не найдена</div>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'linear-gradient(135deg, #0f1729 0%, #1a1f37 100%)', overflow: 'hidden' }}>
-      <PaymentsSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div 
-        style={{ flex: 1, overflow: 'auto', height: '100%' }}
-        onTouchStart={handleSidebarTouch}
-      >
-      <div className="p-4 sm:p-6 md:p-8">
+    <div className="flex min-h-screen">
+      <PaymentsSidebar
+        menuOpen={menuOpen}
+        dictionariesOpen={dictionariesOpen}
+        setDictionariesOpen={setDictionariesOpen}
+        settingsOpen={settingsOpen}
+        setSettingsOpen={setSettingsOpen}
+        handleTouchStart={handleTouchStart}
+        handleTouchMove={handleTouchMove}
+        handleTouchEnd={handleTouchEnd}
+      />
+
+      {menuOpen && (
         <div 
-          className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 cursor-pointer"
-          onClick={() => navigate('/')}
-        >
-          <Icon name="ArrowLeft" className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: '#7551e9' }} />
-          <div style={{ 
-            background: `linear-gradient(135deg, ${categoryInfo.color} 0%, ${categoryInfo.color}cc 100%)`,
-            boxShadow: `0 0 25px ${categoryInfo.color}60`
-          }} className="p-2.5 sm:p-3 rounded-xl">
-            <Icon name={categoryInfo.icon} fallback="Tag" className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: '#fff' }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-1 truncate">
-              {categoryInfo.name}
-            </h1>
-            <p className="text-xs sm:text-sm text-[#a3aed0] truncate">
-              {categoryInfo.payments_count} платежей • {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(categoryInfo.total_amount)}
-            </p>
-          </div>
-        </div>
-
-        <Card style={{ 
-          background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
-          border: '1px solid rgba(117, 81, 233, 0.3)'
-        }}>
-          <CardHeader>
-            <CardTitle style={{ color: '#fff' }}>Все платежи</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {payments.map(payment => (
-                <div
-                  key={payment.id}
-                  onClick={() => setSelectedPaymentId(payment.id)}
-                  className="bg-white/[0.03] p-3 sm:p-4 rounded-xl border border-white/[0.08] cursor-pointer transition-all duration-300 hover:bg-white/[0.05]"
-                  style={{
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.borderColor = categoryInfo.color;
-                    e.currentTarget.style.transform = 'translateX(5px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                    e.currentTarget.style.transform = 'translateX(0)';
-                  }}
-                >
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4 mb-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white text-sm sm:text-base font-semibold mb-1 truncate">
-                        {payment.service}
-                      </div>
-                      <div className="text-[#a3aed0] text-xs sm:text-sm truncate">
-                        {payment.contractor} • {payment.department}
-                      </div>
-                    </div>
-                    <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1">
-                      <div style={{ color: categoryInfo.color }} className="text-base sm:text-lg font-bold">
-                        {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(payment.amount)}
-                      </div>
-                      <div style={{
-                        background: statusColors[payment.status] + '20',
-                        color: statusColors[payment.status]
-                      }} className="inline-block px-2 py-1 rounded-md text-[10px] sm:text-xs font-semibold whitespace-nowrap">
-                        {statusLabels[payment.status] || payment.status}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-[#a3aed0] text-xs sm:text-sm mt-2 pt-2 border-t border-white/5 line-clamp-2">
-                    {payment.description}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {selectedPaymentId && (
-        <PaymentDetailsModal
-          paymentId={selectedPaymentId}
-          onClose={() => setSelectedPaymentId(null)}
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setMenuOpen(false)}
         />
       )}
-      </div>
+
+      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            <Icon name="Menu" size={24} style={{ color: '#fff' }} />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="text-[#a3aed0] p-8">Загрузка...</div>
+        ) : !categoryInfo ? (
+          <div className="text-[#a3aed0] p-8">Категория не найдена</div>
+        ) : (
+          <>
+            <div 
+              className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 cursor-pointer"
+              onClick={() => navigate('/')}
+            >
+              <Icon name="ArrowLeft" className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: '#7551e9' }} />
+              <div style={{ 
+                background: `linear-gradient(135deg, ${categoryInfo.color} 0%, ${categoryInfo.color}cc 100%)`,
+                boxShadow: `0 0 25px ${categoryInfo.color}60`
+              }} className="p-2.5 sm:p-3 rounded-xl">
+                <Icon name={categoryInfo.icon} fallback="Tag" className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: '#fff' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-1 truncate">
+                  {categoryInfo.name}
+                </h1>
+                <p className="text-xs sm:text-sm text-[#a3aed0] truncate">
+                  {categoryInfo.payments_count} платежей • {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(categoryInfo.total_amount)}
+                </p>
+              </div>
+            </div>
+
+            <Card style={{ 
+              background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+              border: '1px solid rgba(117, 81, 233, 0.3)'
+            }}>
+              <CardHeader>
+                <CardTitle style={{ color: '#fff' }}>Все платежи</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-3">
+                  {payments.map(payment => (
+                    <div
+                      key={payment.id}
+                      onClick={() => setSelectedPaymentId(payment.id)}
+                      className="bg-white/[0.03] p-3 sm:p-4 rounded-xl border border-white/[0.08] cursor-pointer transition-all duration-300 hover:bg-white/[0.05] hover:border-[#7551e9]/50"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white text-sm sm:text-base font-semibold mb-1 truncate">
+                            {payment.service}
+                          </div>
+                          <div className="text-[#a3aed0] text-xs sm:text-sm truncate">
+                            {payment.contractor} • {payment.department}
+                          </div>
+                        </div>
+                        <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1">
+                          <div style={{ color: categoryInfo.color }} className="text-base sm:text-lg font-bold whitespace-nowrap">
+                            {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(payment.amount)}
+                          </div>
+                          <div style={{
+                            background: statusColors[payment.status] + '20',
+                            color: statusColors[payment.status]
+                          }} className="inline-block px-2 py-1 rounded-md text-[10px] sm:text-xs font-semibold whitespace-nowrap">
+                            {statusLabels[payment.status] || payment.status}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-[#a3aed0] text-xs sm:text-sm mt-2 pt-2 border-t border-white/5 line-clamp-2">
+                        {payment.description}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {selectedPaymentId && (
+          <PaymentDetailsModal
+            paymentId={selectedPaymentId}
+            onClose={() => setSelectedPaymentId(null)}
+          />
+        )}
+      </main>
     </div>
   );
 };
