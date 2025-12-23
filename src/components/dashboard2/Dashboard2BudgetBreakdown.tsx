@@ -46,7 +46,7 @@ const Dashboard2BudgetBreakdown = () => {
             <span style={{ color: '#7551e9', fontSize: '14px', fontWeight: '700' }} className="sm:text-base">Общий бюджет: ₽1.8М</span>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }} className="sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
           {[
             { icon: 'Server', name: 'Серверы & Хостинг', amount: 540000, percent: 30, color: '#7551e9', details: ['AWS: ₽320K', 'Azure: ₽150K', 'DigitalOcean: ₽70K'] },
             { icon: 'Cloud', name: 'SaaS Подписки', amount: 360000, percent: 20, color: '#3965ff', details: ['Microsoft 365: ₽140K', 'Slack: ₽120K', 'Adobe: ₽100K'] },
