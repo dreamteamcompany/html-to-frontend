@@ -3,12 +3,19 @@ import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 
+interface Payment {
+  description: string;
+  amount: number;
+  status: string;
+}
+
 interface BudgetCategory {
   category_id: number;
   name: string;
   icon: string;
   amount: number;
   percentage: number;
+  payments: Payment[];
 }
 
 const Dashboard2BudgetBreakdown = () => {
@@ -182,11 +189,38 @@ const Dashboard2BudgetBreakdown = () => {
                 color: color, 
                 fontSize: '18px', 
                 fontWeight: '800',
-                marginBottom: '10px',
+                marginBottom: '12px',
                 textShadow: `0 0 20px ${color}60`
               }} className="sm:text-xl md:text-2xl">
                 {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(category.amount)}
               </div>
+              
+              {category.payments && category.payments.length > 0 && (
+                <div style={{ 
+                  marginBottom: '12px',
+                  padding: '8px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.05)'
+                }}>
+                  {category.payments.map((payment, pidx) => (
+                    <div key={pidx} style={{ 
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '4px 0',
+                      fontSize: '11px',
+                      borderBottom: pidx < category.payments.length - 1 ? '1px solid rgba(255, 255, 255, 0.05)' : 'none'
+                    }}>
+                      <span style={{ color: '#a3aed0', flex: 1, paddingRight: '8px' }}>{payment.description}</span>
+                      <span style={{ color: color, fontWeight: '600', whiteSpace: 'nowrap' }}>
+                        {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(payment.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               <div style={{ 
                 width: '100%', 
                 height: '8px', 

@@ -69,12 +69,34 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         result = []
         for row in rows:
+            payments_query = f"""
+                SELECT 
+                    description,
+                    amount,
+                    status
+                FROM {SCHEMA}.payments
+                WHERE category_id = {row['category_id']}
+                    AND status IN ('approved', 'paid')
+                ORDER BY amount DESC
+                LIMIT 5
+            """
+            cur.execute(payments_query)
+            payments = cur.fetchall()
+            
             result.append({
                 'category_id': row['category_id'],
                 'name': row['name'],
                 'icon': row['icon'],
                 'amount': float(row['total_amount']),
-                'percentage': float(row['percentage'])
+                'percentage': float(row['percentage']),
+                'payments': [
+                    {
+                        'description': p['description'],
+                        'amount': float(p['amount']),
+                        'status': p['status']
+                    }
+                    for p in payments
+                ]
             })
         
         cur.close()
