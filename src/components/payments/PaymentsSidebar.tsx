@@ -110,6 +110,12 @@ const PaymentsSidebar = ({
           </>
         )}
         <li>
+          <Link to="/tickets" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/tickets') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+            <Icon name="Ticket" size={20} />
+            <span>Заявки</span>
+          </Link>
+        </li>
+        <li>
           <button 
             onClick={() => setDictionariesOpen(!dictionariesOpen)}
             className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
