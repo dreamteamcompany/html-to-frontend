@@ -1,6 +1,6 @@
 import json
 import os
-import jwt
+import jwt 
 import bcrypt
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -305,6 +305,7 @@ def get_user_role(conn, user_id: int) -> str:
 
 # Main handler
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Главный обработчик всех API эндпоинтов"""
     method = event.get('httpMethod', 'GET')
     params = event.get('queryStringParameters') or {}
     endpoint = params.get('endpoint', '')
@@ -380,6 +381,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not payload:
                 return response(401, {'error': 'Invalid token'})
             return handle_audit_logs(method, event, conn, payload)
+        elif endpoint == 'tickets-api':
+            return handle_tickets_api(method, event, conn)
+        elif endpoint == 'ticket-dictionaries-api':
+            return handle_ticket_dictionaries_api(method, event, conn)
         
         return response(404, {'error': 'Endpoint not found'})
     
@@ -2689,6 +2694,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_comment_likes(method, event, conn, user_data)
         elif endpoint == 'audit-logs':
             result = handle_audit_logs(method, event, conn, payload)
+        elif endpoint == 'tickets-api':
+            result = handle_tickets_api(method, event, conn, payload)
+        elif endpoint == 'ticket-dictionaries-api':
+            result = handle_ticket_dictionaries_api(method, event, conn, payload)
         else:
             result = response(404, {'error': f'Endpoint not found: {endpoint}'})
         
@@ -2702,3 +2711,144 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         print(f"Traceback: {error_details}")
         conn.close()
         return response(500, {'error': str(e), 'details': error_details})
+
+# Tickets handlers
+def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Обработчик для управления заявками"""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    user_id = payload['user_id']
+    
+    try:
+        if method == 'GET':
+            query_params = event.get('queryStringParameters') or {}
+            search = query_params.get('search', '')
+            
+            query = f"""
+                SELECT 
+                    t.id, t.title, t.description, t.due_date,
+                    c.name as category, c.name as category_name,
+                    p.name as priority_name, p.level as priority_level,
+                    s.name as status_name, s.color as status_color,
+                    d.name as department,
+                    t.created_at, t.updated_at,
+                    u.username as creator_name
+                FROM {SCHEMA}.tickets t
+                LEFT JOIN {SCHEMA}.ticket_categories c ON t.category_id = c.id
+                LEFT JOIN {SCHEMA}.ticket_priorities p ON t.priority_id = p.id
+                LEFT JOIN {SCHEMA}.ticket_statuses s ON t.status_id = s.id
+                LEFT JOIN {SCHEMA}.departments d ON t.department_id = d.id
+                LEFT JOIN {SCHEMA}.users u ON t.creator_id = u.id
+                WHERE t.deleted_at IS NULL
+            """
+            
+            params = []
+            if search:
+                query += " AND (t.title ILIKE %s OR t.description ILIKE %s OR c.name ILIKE %s)"
+                search_pattern = f'%{search}%'
+                params.extend([search_pattern, search_pattern, search_pattern])
+            
+            query += " ORDER BY t.created_at DESC"
+            
+            cur.execute(query, params)
+            tickets = []
+            for row in cur.fetchall():
+                tickets.append({
+                    'id': row['id'],
+                    'title': row['title'],
+                    'description': row['description'],
+                    'dueDate': row['due_date'].isoformat() if row['due_date'] else None,
+                    'category': row['category'],
+                    'priority': {'name': row['priority_name'], 'level': row['priority_level']},
+                    'status': {'name': row['status_name'], 'color': row['status_color']},
+                    'department': row['department'],
+                    'createdAt': row['created_at'].isoformat() if row['created_at'] else None,
+                    'updatedAt': row['updated_at'].isoformat() if row['updated_at'] else None,
+                    'creatorName': row['creator_name']
+                })
+            
+            return response(200, {'tickets': tickets})
+        
+        elif method == 'POST':
+            data = json.loads(event.get('body', '{}'))
+            
+            title = data.get('title')
+            description = data.get('description')
+            category_id = data.get('category_id')
+            priority_id = data.get('priority_id')
+            department_id = data.get('department_id')
+            due_date = data.get('due_date')
+            
+            if not title or not description:
+                return response(400, {'error': 'Название и описание обязательны'})
+            
+            cur.execute(f"""
+                INSERT INTO {SCHEMA}.tickets (title, description, category_id, priority_id, department_id, due_date, creator_id, status_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 1)
+                RETURNING id
+            """, (title, description, category_id, priority_id, department_id, due_date, user_id))
+            
+            ticket_id = cur.fetchone()['id']
+            conn.commit()
+            
+            return response(201, {'id': ticket_id, 'message': 'Заявка создана'})
+        
+        elif method == 'PUT':
+            path_params = event.get('pathParameters') or event.get('params') or {}
+            ticket_id = path_params.get('id')
+            
+            if not ticket_id:
+                return response(400, {'error': 'ID заявки не указан'})
+            
+            data = json.loads(event.get('body', '{}'))
+            status_id = data.get('status_id')
+            
+            if status_id:
+                cur.execute(f"""
+                    UPDATE {SCHEMA}.tickets 
+                    SET status_id = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s AND deleted_at IS NULL
+                """, (status_id, ticket_id))
+                conn.commit()
+                
+                return response(200, {'message': 'Статус обновлен'})
+        
+        return response(405, {'error': 'Метод не поддерживается'})
+    
+    except Exception as e:
+        conn.rollback()
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_ticket_dictionaries_api(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Обработчик для получения справочников заявок"""
+    if method != 'GET':
+        return response(405, {'error': 'Только GET запросы'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        cur.execute(f"SELECT id, name FROM {SCHEMA}.ticket_categories WHERE deleted_at IS NULL ORDER BY name")
+        categories = [dict(row) for row in cur.fetchall()]
+        
+        cur.execute(f"SELECT id, name, level FROM {SCHEMA}.ticket_priorities WHERE deleted_at IS NULL ORDER BY level DESC")
+        priorities = [dict(row) for row in cur.fetchall()]
+        
+        cur.execute(f"SELECT id, name, color FROM {SCHEMA}.ticket_statuses WHERE deleted_at IS NULL ORDER BY id")
+        statuses = [dict(row) for row in cur.fetchall()]
+        
+        cur.execute(f"SELECT id, name FROM {SCHEMA}.departments WHERE deleted_at IS NULL ORDER BY name")
+        departments = [dict(row) for row in cur.fetchall()]
+        
+        return response(200, {
+            'categories': categories,
+            'priorities': priorities,
+            'statuses': statuses,
+            'departments': departments,
+            'custom_fields': []
+        })
+    
+    except Exception as e:
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()

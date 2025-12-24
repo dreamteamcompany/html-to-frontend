@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "Get dictionaries",
+      "method": "GET",
+      "path": "/?action=dictionaries",
+      "headers": {
+        "X-Auth-Token": "test-token-123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "categories": "array",
+        "priorities": "array",
+        "statuses": "array",
+        "departments": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get tickets list",
+      "method": "GET",
+      "headers": {
+        "X-Auth-Token": "test-token-123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "tickets": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

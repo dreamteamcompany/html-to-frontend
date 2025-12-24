@@ -1,7 +1,7 @@
 {
   "tests": [
     {
-      "name": "Login Success",
+      "name": "Login Success", 
       "method": "POST",
       "path": "/?endpoint=login",
       "body": {"username": "admin", "password": "admin"},

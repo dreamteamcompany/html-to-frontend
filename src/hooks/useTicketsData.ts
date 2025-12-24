@@ -75,7 +75,8 @@ export const useTicketsData = () => {
     if (!token) return;
 
     try {
-      const response = await fetch('https://functions.poehali.dev/tickets-api', {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
         headers: {
           'X-Auth-Token': token,
         },
@@ -84,6 +85,8 @@ export const useTicketsData = () => {
       if (response.ok) {
         const data = await response.json();
         setTickets(data.tickets || []);
+      } else {
+        console.error('Response not OK:', response.status, await response.text());
       }
     } catch (err) {
       console.error('Failed to load tickets:', err);
@@ -94,7 +97,8 @@ export const useTicketsData = () => {
     if (!token) return;
 
     try {
-      const response = await fetch('https://functions.poehali.dev/ticket-dictionaries-api', {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=ticket-dictionaries-api`, {
         headers: {
           'X-Auth-Token': token,
         },
@@ -107,6 +111,22 @@ export const useTicketsData = () => {
         setStatuses(data.statuses || []);
         setDepartments(data.departments || []);
         setCustomFields(data.custom_fields || []);
+      } else {
+        console.error('Dictionaries response not OK:', response.status, await response.text());
+        // Fallback данные
+        setPriorities([
+          { id: 1, name: 'Низкий', level: 1 },
+          { id: 2, name: 'Средний', level: 2 },
+          { id: 3, name: 'Высокий', level: 3 },
+          { id: 4, name: 'Критический', level: 4 }
+        ]);
+        setStatuses([
+          { id: 1, name: 'Новая', color: 'blue', is_closed: false },
+          { id: 2, name: 'В работе', color: 'orange', is_closed: false },
+          { id: 3, name: 'Ожидание', color: 'yellow', is_closed: false },
+          { id: 4, name: 'Решена', color: 'green', is_closed: true },
+          { id: 5, name: 'Закрыта', color: 'gray', is_closed: true }
+        ]);
       }
     } catch (err) {
       console.error('Failed to load dictionaries:', err);
