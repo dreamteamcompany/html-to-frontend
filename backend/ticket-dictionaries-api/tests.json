@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "Get dictionaries",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "categories": "array",
+        "priorities": "array",
+        "statuses": "array",
+        "departments": "array",
+        "custom_fields": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

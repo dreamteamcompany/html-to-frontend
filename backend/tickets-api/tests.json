@@ -1,0 +1,13 @@
+{
+  "tests": [
+    {
+      "name": "Get all tickets",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "tickets": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
