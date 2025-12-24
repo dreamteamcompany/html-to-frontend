@@ -18,6 +18,12 @@
       "method": "OPTIONS",
       "path": "/",
       "expectedStatus": 200
+    },
+    {
+      "name": "Ticket Dictionaries Unauthorized",
+      "method": "GET",
+      "path": "/?endpoint=ticket-dictionaries-api",
+      "expectedStatus": 401
     }
   ]
 }

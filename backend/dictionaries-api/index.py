@@ -1,9 +1,13 @@
 import json
 import os
+import jwt
 import psycopg2
+from psycopg2.extras import RealDictCursor
+
+SCHEMA = 't_p61788166_html_to_frontend'
 
 def handler(event: dict, context) -> dict:
-    """API для получения справочников заявок (категории, приоритеты, статусы, отделы)"""
+    """API для получения справочников заявок"""
     method = event.get('httpMethod', 'GET')
     
     if method == 'OPTIONS':
@@ -37,30 +41,40 @@ def handler(event: dict, context) -> dict:
             'isBase64Encoded': False
         }
     
-    conn = psycopg2.connect(os.environ['DATABASE_URL'])
-    cur = conn.cursor()
+    secret = os.environ.get('JWT_SECRET')
+    if not secret:
+        return {
+            'statusCode': 500,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Server configuration error'}),
+            'isBase64Encoded': False
+        }
     
     try:
-        cur.execute("SELECT id FROM users WHERE token = %s", (token,))
-        if not cur.fetchone():
-            return {
-                'statusCode': 401,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'Неверный токен'}),
-                'isBase64Encoded': False
-            }
+        payload = jwt.decode(token, secret, algorithms=['HS256'])
+    except:
+        return {
+            'statusCode': 401,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Недействительный токен'}),
+            'isBase64Encoded': False
+        }
+    
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        cur.execute(f"SELECT id, name FROM {SCHEMA}.ticket_categories WHERE deleted_at IS NULL ORDER BY name")
+        categories = [dict(row) for row in cur.fetchall()]
         
-        cur.execute("SELECT id, name FROM ticket_categories WHERE deleted_at IS NULL ORDER BY name")
-        categories = [{'id': row[0], 'name': row[1]} for row in cur.fetchall()]
+        cur.execute(f"SELECT id, name, level FROM {SCHEMA}.ticket_priorities WHERE deleted_at IS NULL ORDER BY level DESC")
+        priorities = [dict(row) for row in cur.fetchall()]
         
-        cur.execute("SELECT id, name, level FROM ticket_priorities WHERE deleted_at IS NULL ORDER BY level DESC")
-        priorities = [{'id': row[0], 'name': row[1], 'level': row[2]} for row in cur.fetchall()]
+        cur.execute(f"SELECT id, name, color FROM {SCHEMA}.ticket_statuses WHERE deleted_at IS NULL ORDER BY id")
+        statuses = [dict(row) for row in cur.fetchall()]
         
-        cur.execute("SELECT id, name, color FROM ticket_statuses WHERE deleted_at IS NULL ORDER BY id")
-        statuses = [{'id': row[0], 'name': row[1], 'color': row[2]} for row in cur.fetchall()]
-        
-        cur.execute("SELECT id, name FROM departments WHERE deleted_at IS NULL ORDER BY name")
-        departments = [{'id': row[0], 'name': row[1]} for row in cur.fetchall()]
+        cur.execute(f"SELECT id, name FROM {SCHEMA}.departments WHERE deleted_at IS NULL ORDER BY name")
+        departments = [dict(row) for row in cur.fetchall()]
         
         return {
             'statusCode': 200,
@@ -69,7 +83,8 @@ def handler(event: dict, context) -> dict:
                 'categories': categories,
                 'priorities': priorities,
                 'statuses': statuses,
-                'departments': departments
+                'departments': departments,
+                'custom_fields': []
             }),
             'isBase64Encoded': False
         }

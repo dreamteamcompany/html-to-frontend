@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
 SCHEMA = 't_p61788166_html_to_frontend'
+VERSION = '2.1.0'
 
 # Pydantic models for validation
 class PaymentRequest(BaseModel):

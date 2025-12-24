@@ -1,8 +1,10 @@
 import json
 import os
+import jwt
 import psycopg2
-from datetime import datetime
+from psycopg2.extras import RealDictCursor
 
+SCHEMA = 't_p61788166_html_to_frontend'
 
 def handler(event: dict, context) -> dict:
     """API для управления заявками в техподдержку"""
@@ -31,42 +33,49 @@ def handler(event: dict, context) -> dict:
             'isBase64Encoded': False
         }
     
-    conn = psycopg2.connect(os.environ['DATABASE_URL'])
-    cur = conn.cursor()
+    secret = os.environ.get('JWT_SECRET')
+    if not secret:
+        return {
+            'statusCode': 500,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Server configuration error'}),
+            'isBase64Encoded': False
+        }
     
     try:
-        cur.execute("SELECT id, username FROM users WHERE token = %s", (token,))
-        user = cur.fetchone()
-        
-        if not user:
-            return {
-                'statusCode': 401,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'Неверный токен'}),
-                'isBase64Encoded': False
-            }
-        
-        user_id, username = user
-        
+        payload = jwt.decode(token, secret, algorithms=['HS256'])
+        user_id = payload['user_id']
+    except:
+        return {
+            'statusCode': 401,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Недействительный токен'}),
+            'isBase64Encoded': False
+        }
+    
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
         if method == 'GET':
             query_params = event.get('queryStringParameters') or {}
             search = query_params.get('search', '')
             
-            query = """
+            query = f"""
                 SELECT 
                     t.id, t.title, t.description, t.due_date,
-                    c.name as category_name,
+                    c.name as category, c.name as category_name,
                     p.name as priority_name, p.level as priority_level,
                     s.name as status_name, s.color as status_color,
-                    d.name as department_name,
+                    d.name as department,
                     t.created_at, t.updated_at,
                     u.username as creator_name
-                FROM tickets t
-                LEFT JOIN ticket_categories c ON t.category_id = c.id
-                LEFT JOIN ticket_priorities p ON t.priority_id = p.id
-                LEFT JOIN ticket_statuses s ON t.status_id = s.id
-                LEFT JOIN departments d ON t.department_id = d.id
-                LEFT JOIN users u ON t.creator_id = u.id
+                FROM {SCHEMA}.tickets t
+                LEFT JOIN {SCHEMA}.ticket_categories c ON t.category_id = c.id
+                LEFT JOIN {SCHEMA}.ticket_priorities p ON t.priority_id = p.id
+                LEFT JOIN {SCHEMA}.ticket_statuses s ON t.status_id = s.id
+                LEFT JOIN {SCHEMA}.departments d ON t.department_id = d.id
+                LEFT JOIN {SCHEMA}.users u ON t.creator_id = u.id
                 WHERE t.deleted_at IS NULL
             """
             
@@ -82,17 +91,17 @@ def handler(event: dict, context) -> dict:
             tickets = []
             for row in cur.fetchall():
                 tickets.append({
-                    'id': row[0],
-                    'title': row[1],
-                    'description': row[2],
-                    'dueDate': row[3].isoformat() if row[3] else None,
-                    'category': row[4],
-                    'priority': {'name': row[5], 'level': row[6]},
-                    'status': {'name': row[7], 'color': row[8]},
-                    'department': row[9],
-                    'createdAt': row[10].isoformat() if row[10] else None,
-                    'updatedAt': row[11].isoformat() if row[11] else None,
-                    'creatorName': row[12]
+                    'id': row['id'],
+                    'title': row['title'],
+                    'description': row['description'],
+                    'dueDate': row['due_date'].isoformat() if row['due_date'] else None,
+                    'category': row['category'],
+                    'priority': {'name': row['priority_name'], 'level': row['priority_level']},
+                    'status': {'name': row['status_name'], 'color': row['status_color']},
+                    'department': row['department'],
+                    'createdAt': row['created_at'].isoformat() if row['created_at'] else None,
+                    'updatedAt': row['updated_at'].isoformat() if row['updated_at'] else None,
+                    'creatorName': row['creator_name']
                 })
             
             return {
@@ -120,13 +129,13 @@ def handler(event: dict, context) -> dict:
                     'isBase64Encoded': False
                 }
             
-            cur.execute("""
-                INSERT INTO tickets (title, description, category_id, priority_id, department_id, due_date, creator_id, status_id)
+            cur.execute(f"""
+                INSERT INTO {SCHEMA}.tickets (title, description, category_id, priority_id, department_id, due_date, creator_id, status_id)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, 1)
                 RETURNING id
             """, (title, description, category_id, priority_id, department_id, due_date, user_id))
             
-            ticket_id = cur.fetchone()[0]
+            ticket_id = cur.fetchone()['id']
             conn.commit()
             
             return {
@@ -152,8 +161,8 @@ def handler(event: dict, context) -> dict:
             status_id = data.get('status_id')
             
             if status_id:
-                cur.execute("""
-                    UPDATE tickets 
+                cur.execute(f"""
+                    UPDATE {SCHEMA}.tickets 
                     SET status_id = %s, updated_at = CURRENT_TIMESTAMP
                     WHERE id = %s AND deleted_at IS NULL
                 """, (status_id, ticket_id))

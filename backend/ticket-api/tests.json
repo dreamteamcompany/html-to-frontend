@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "Unauthorized access",
+      "method": "GET",
+      "expectedStatus": 401
+    },
+    {
+      "name": "OPTIONS check",
+      "method": "OPTIONS",
+      "expectedStatus": 200
+    }
+  ]
+}
