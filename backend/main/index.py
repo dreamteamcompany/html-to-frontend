@@ -2752,7 +2752,7 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                 LEFT JOIN {SCHEMA}.ticket_statuses s ON t.status_id = s.id
                 LEFT JOIN {SCHEMA}.departments d ON t.department_id = d.id
                 LEFT JOIN {SCHEMA}.users u ON t.creator_id = u.id
-                WHERE t.deleted_at IS NULL
+                WHERE 1=1
             """
             
             params = []
@@ -2820,7 +2820,7 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                 cur.execute(f"""
                     UPDATE {SCHEMA}.tickets 
                     SET status_id = %s, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = %s AND deleted_at IS NULL
+                    WHERE id = %s
                 """, (status_id, ticket_id))
                 conn.commit()
                 
@@ -2842,16 +2842,16 @@ def handle_ticket_dictionaries_api(method: str, event: Dict[str, Any], conn, pay
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     try:
-        cur.execute(f"SELECT id, name FROM {SCHEMA}.ticket_categories WHERE deleted_at IS NULL ORDER BY name")
+        cur.execute(f"SELECT id, name, icon FROM {SCHEMA}.ticket_categories ORDER BY name")
         categories = [dict(row) for row in cur.fetchall()]
         
-        cur.execute(f"SELECT id, name, level FROM {SCHEMA}.ticket_priorities WHERE deleted_at IS NULL ORDER BY level DESC")
+        cur.execute(f"SELECT id, name, level FROM {SCHEMA}.ticket_priorities ORDER BY level DESC")
         priorities = [dict(row) for row in cur.fetchall()]
         
-        cur.execute(f"SELECT id, name, color FROM {SCHEMA}.ticket_statuses WHERE deleted_at IS NULL ORDER BY id")
+        cur.execute(f"SELECT id, name, color FROM {SCHEMA}.ticket_statuses ORDER BY id")
         statuses = [dict(row) for row in cur.fetchall()]
         
-        cur.execute(f"SELECT id, name FROM {SCHEMA}.departments WHERE deleted_at IS NULL ORDER BY name")
+        cur.execute(f"SELECT id, name, description FROM {SCHEMA}.departments ORDER BY name")
         departments = [dict(row) for row in cur.fetchall()]
         
         return response(200, {
