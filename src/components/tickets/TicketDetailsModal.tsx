@@ -86,6 +86,7 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
   const [submittingComment, setSubmittingComment] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [updating, setUpdating] = useState(false);
+  const [sendingPing, setSendingPing] = useState(false);
 
   useEffect(() => {
     if (ticket?.id && token) {
@@ -264,6 +265,50 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
     }
   };
 
+  const handleSendPing = async () => {
+    if (!ticket?.id || !token) return;
+
+    setSendingPing(true);
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=ticket-comments-api`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token,
+        },
+        body: JSON.stringify({
+          ticket_id: ticket.id,
+          is_ping: true,
+        }),
+      });
+
+      if (response.ok) {
+        await loadComments();
+        toast({
+          title: 'Успешно',
+          description: 'Запрос отправлен исполнителю',
+        });
+      } else {
+        const data = await response.json();
+        toast({
+          title: 'Ошибка',
+          description: data.error || 'Не удалось отправить запрос',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to send ping:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось отправить запрос',
+        variant: 'destructive',
+      });
+    } finally {
+      setSendingPing(false);
+    }
+  };
+
   if (!ticket) return null;
 
   return (
@@ -288,6 +333,10 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
                   submittingComment={submittingComment}
                   onCommentChange={setNewComment}
                   onSubmitComment={handleSubmitComment}
+                  isCustomer={ticket.created_by === user?.id}
+                  hasAssignee={!!ticket.assigned_to}
+                  sendingPing={sendingPing}
+                  onSendPing={handleSendPing}
                 />
               </div>
             </div>

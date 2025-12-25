@@ -20,6 +20,10 @@ interface TicketCommentsProps {
   submittingComment: boolean;
   onCommentChange: (value: string) => void;
   onSubmitComment: () => void;
+  isCustomer: boolean;
+  hasAssignee: boolean;
+  sendingPing: boolean;
+  onSendPing: () => void;
 }
 
 const TicketComments = ({
@@ -29,6 +33,10 @@ const TicketComments = ({
   submittingComment,
   onCommentChange,
   onSubmitComment,
+  isCustomer,
+  hasAssignee,
+  sendingPing,
+  onSendPing,
 }: TicketCommentsProps) => {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
@@ -83,6 +91,27 @@ const TicketComments = ({
       </div>
 
       <div className="space-y-3">
+        {isCustomer && hasAssignee && (
+          <Button
+            onClick={onSendPing}
+            disabled={sendingPing}
+            variant="outline"
+            className="w-full"
+          >
+            {sendingPing ? (
+              <>
+                <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                Отправка запроса...
+              </>
+            ) : (
+              <>
+                <Icon name="Bell" size={16} className="mr-2" />
+                Запросить статус у исполнителя
+              </>
+            )}
+          </Button>
+        )}
+        
         <Textarea
           placeholder="Добавить комментарий..."
           value={newComment}

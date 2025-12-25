@@ -2971,9 +2971,31 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
             ticket_id = data.get('ticket_id')
             comment_text = data.get('comment')
             is_internal = data.get('is_internal', False)
+            is_ping = data.get('is_ping', False)
             
-            if not ticket_id or not comment_text:
-                return response(400, {'error': 'ticket_id и comment обязательны'})
+            if not ticket_id:
+                return response(400, {'error': 'ticket_id обязателен'})
+            
+            if is_ping:
+                cur.execute(f"""
+                    SELECT assigned_to, created_by 
+                    FROM {SCHEMA}.tickets 
+                    WHERE id = %s
+                """, (ticket_id,))
+                
+                ticket_info = cur.fetchone()
+                if not ticket_info:
+                    return response(404, {'error': 'Заявка не найдена'})
+                
+                if ticket_info['created_by'] != user_id:
+                    return response(403, {'error': 'Только заказчик может запросить статус'})
+                
+                if not ticket_info['assigned_to']:
+                    return response(400, {'error': 'У заявки нет назначенного исполнителя'})
+                
+                comment_text = '🔔 Заказчик запросил обновление статуса заявки'
+            elif not comment_text:
+                return response(400, {'error': 'comment обязателен'})
             
             cur.execute(f"""
                 INSERT INTO {SCHEMA}.ticket_comments (ticket_id, user_id, comment, is_internal)
@@ -2994,7 +3016,7 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
             return response(201, {
                 'id': result['id'],
                 'created_at': result['created_at'].isoformat() if result['created_at'] else None,
-                'message': 'Комментарий добавлен'
+                'message': 'Пинг отправлен' if is_ping else 'Комментарий добавлен'
             })
         
         return response(405, {'error': 'Метод не поддерживается'})
