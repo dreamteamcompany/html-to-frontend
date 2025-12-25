@@ -8,6 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -56,24 +63,61 @@ interface Comment {
   created_at?: string;
 }
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface Status {
+  id: number;
+  name: string;
+  color: string;
+  is_closed: boolean;
+}
+
 interface TicketDetailsModalProps {
   ticket: Ticket | null;
   onClose: () => void;
+  statuses?: Status[];
+  onTicketUpdate?: () => void;
 }
 
-const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
+const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: TicketDetailsModalProps) => {
   const { token, user } = useAuth();
   const { toast } = useToast();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     if (ticket?.id && token) {
       loadComments();
+      loadUsers();
     }
   }, [ticket?.id, token]);
+
+  const loadUsers = async () => {
+    if (!token) return;
+
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=users-list`, {
+        headers: { 'X-Auth-Token': token },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      }
+    } catch (err) {
+      console.error('Failed to load users:', err);
+    }
+  };
 
   const loadComments = async () => {
     if (!ticket?.id || !token) return;
@@ -141,6 +185,92 @@ const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
     }
   };
 
+  const handleUpdateStatus = async (statusId: string) => {
+    if (!ticket?.id || !token) return;
+
+    setUpdating(true);
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token,
+        },
+        body: JSON.stringify({
+          ticket_id: ticket.id,
+          status_id: parseInt(statusId),
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Успешно',
+          description: 'Статус заявки обновлён',
+        });
+        onTicketUpdate?.();
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось обновить статус',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to update status:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось обновить статус',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleAssignUser = async (userId: string) => {
+    if (!ticket?.id || !token) return;
+
+    setUpdating(true);
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token,
+        },
+        body: JSON.stringify({
+          ticket_id: ticket.id,
+          assigned_to: userId === 'unassign' ? null : parseInt(userId),
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Успешно',
+          description: userId === 'unassign' ? 'Исполнитель снят' : 'Исполнитель назначен',
+        });
+        onTicketUpdate?.();
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось назначить исполнителя',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to assign user:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось назначить исполнителя',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   if (!ticket) return null;
 
   const getDeadlineInfo = (dueDate?: string) => {
@@ -197,7 +327,35 @@ const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
+                <Icon name="CheckCircle" size={16} />
+                Статус
+              </h3>
+              <Select
+                value={ticket.status_id?.toString()}
+                onValueChange={handleUpdateStatus}
+                disabled={updating}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите статус" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statuses.map((status) => (
+                    <SelectItem key={status.id} value={status.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: status.color }}
+                        />
+                        {status.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {ticket.creator_name && (
               <div className="p-4 rounded-lg bg-muted/50 border border-border">
                 <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
@@ -218,40 +376,37 @@ const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
               </div>
             )}
 
-            {ticket.assignee_name ? (
-              <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-                  <Icon name="UserCheck" size={16} />
-                  Исполнитель
-                </h3>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <Icon name="UserCheck" size={20} className="text-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{ticket.assignee_name}</p>
-                    {ticket.assignee_email && (
-                      <p className="text-sm text-muted-foreground">{ticket.assignee_email}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 rounded-lg bg-muted/50 border border-border border-dashed">
-                <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-                  <Icon name="UserX" size={16} />
-                  Исполнитель
-                </h3>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                    <Icon name="UserX" size={20} className="text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Не назначен</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
+                <Icon name="UserCheck" size={16} />
+                Исполнитель
+              </h3>
+              <Select
+                value={ticket.assigned_to?.toString() || 'unassign'}
+                onValueChange={handleAssignUser}
+                disabled={updating}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите исполнителя" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassign">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Icon name="UserX" size={14} />
+                      Не назначен
+                    </div>
+                  </SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      <div className="flex flex-col">
+                        <span>{u.name}</span>
+                        <span className="text-xs text-muted-foreground">{u.email}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {ticket.description && (

@@ -2720,6 +2720,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_tickets_api(method, event, conn, payload)
         elif endpoint == 'ticket-dictionaries-api':
             result = handle_ticket_dictionaries_api(method, event, conn, payload)
+        elif endpoint == 'ticket-comments-api':
+            result = handle_ticket_comments_api(method, event, conn, payload)
+        elif endpoint == 'users-list':
+            result = handle_users_list(method, event, conn, payload)
         else:
             result = response(404, {'error': f'Endpoint not found: {endpoint}'})
         
@@ -2829,24 +2833,40 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
             return response(201, {'id': ticket_id, 'message': 'Заявка создана'})
         
         elif method == 'PUT':
-            path_params = event.get('pathParameters') or event.get('params') or {}
-            ticket_id = path_params.get('id')
+            data = json.loads(event.get('body', '{}'))
+            ticket_id = data.get('ticket_id')
             
             if not ticket_id:
                 return response(400, {'error': 'ID заявки не указан'})
             
-            data = json.loads(event.get('body', '{}'))
             status_id = data.get('status_id')
+            assigned_to = data.get('assigned_to')
             
-            if status_id:
-                cur.execute(f"""
-                    UPDATE {SCHEMA}.tickets 
-                    SET status_id = %s, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = %s
-                """, (status_id, ticket_id))
-                conn.commit()
-                
-                return response(200, {'message': 'Статус обновлен'})
+            update_parts = []
+            params = []
+            
+            if status_id is not None:
+                update_parts.append('status_id = %s')
+                params.append(status_id)
+            
+            if 'assigned_to' in data:
+                update_parts.append('assigned_to = %s')
+                params.append(assigned_to)
+            
+            if not update_parts:
+                return response(400, {'error': 'Нет данных для обновления'})
+            
+            update_parts.append('updated_at = CURRENT_TIMESTAMP')
+            params.append(ticket_id)
+            
+            cur.execute(f"""
+                UPDATE {SCHEMA}.tickets 
+                SET {', '.join(update_parts)}
+                WHERE id = %s
+            """, tuple(params))
+            conn.commit()
+            
+            return response(200, {'message': 'Заявка обновлена'})
         
         return response(405, {'error': 'Метод не поддерживается'})
     
@@ -2883,6 +2903,24 @@ def handle_ticket_dictionaries_api(method: str, event: Dict[str, Any], conn, pay
             'departments': departments,
             'custom_fields': []
         })
+    
+    except Exception as e:
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_users_list(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Обработчик для получения списка пользователей"""
+    if method != 'GET':
+        return response(405, {'error': 'Только GET запросы'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        cur.execute(f"SELECT id, username as name, email, role FROM {SCHEMA}.users ORDER BY username")
+        users = [dict(row) for row in cur.fetchall()]
+        
+        return response(200, {'users': users})
     
     except Exception as e:
         return response(500, {'error': str(e)})

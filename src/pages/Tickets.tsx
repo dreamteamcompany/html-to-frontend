@@ -145,6 +145,16 @@ const Tickets = () => {
           <TicketDetailsModal
             ticket={selectedTicket}
             onClose={() => setSelectedTicket(null)}
+            statuses={statuses}
+            onTicketUpdate={() => {
+              loadTickets();
+              if (selectedTicket) {
+                const updatedTicket = tickets.find(t => t.id === selectedTicket.id);
+                if (updatedTicket) {
+                  setSelectedTicket(updatedTicket);
+                }
+              }
+            }}
           />
         </div>
       </main>
