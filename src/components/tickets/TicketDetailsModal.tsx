@@ -96,20 +96,31 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
   }, [ticket?.id, token]);
 
   const loadUsers = async () => {
-    if (!token) return;
+    if (!token) {
+      console.log('[loadUsers] No token available');
+      return;
+    }
 
+    console.log('[loadUsers] Starting to load users...');
     try {
       const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
       const response = await fetch(`${mainUrl}?endpoint=users-list`, {
         headers: { 'X-Auth-Token': token },
       });
 
+      console.log('[loadUsers] Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('[loadUsers] Received data:', data);
+        console.log('[loadUsers] Users count:', data.users?.length || 0);
         setUsers(data.users || []);
+      } else {
+        const errorText = await response.text();
+        console.error('[loadUsers] Error response:', errorText);
       }
     } catch (err) {
-      console.error('Failed to load users:', err);
+      console.error('[loadUsers] Failed to load users:', err);
     }
   };
 
