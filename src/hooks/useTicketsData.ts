@@ -74,49 +74,25 @@ export const useTicketsData = () => {
   const loadTickets = async () => {
     if (!token) return;
 
-    // Временные моковые данные пока бэкенд не задеплоился
-    const mockTickets: Ticket[] = [
-      {
-        id: 1,
-        title: 'Не работает авторизация',
-        description: 'Пользователи не могут войти в систему',
-        category_id: 1,
-        category_name: 'Техническая проблема',
-        category_icon: 'AlertCircle',
-        priority_id: 4,
-        priority_name: 'Критический',
-        priority_color: 'red',
-        status_id: 1,
-        status_name: 'Новая',
-        status_color: 'blue',
-        department_id: 1,
-        department_name: 'IT',
-        created_by: 'admin',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: 2,
-        title: 'Запрос на добавление функции',
-        description: 'Нужно добавить экспорт отчетов в Excel',
-        category_id: 2,
-        category_name: 'Запрос функции',
-        category_icon: 'Sparkles',
-        priority_id: 2,
-        priority_name: 'Средний',
-        priority_color: 'yellow',
-        status_id: 2,
-        status_name: 'В работе',
-        status_color: 'orange',
-        department_id: 2,
-        department_name: 'Разработка',
-        created_by: 'admin',
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        updated_at: new Date(Date.now() - 3600000).toISOString(),
-      },
-    ];
-    
-    setTickets(mockTickets);
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
+        headers: {
+          'X-Auth-Token': token,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTickets(data.tickets || []);
+      } else {
+        console.error('Tickets response not OK:', response.status, await response.text());
+        setTickets([]);
+      }
+    } catch (err) {
+      console.error('Failed to load tickets:', err);
+      setTickets([]);
+    }
   };
 
   const loadDictionaries = async () => {
