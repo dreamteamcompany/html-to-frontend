@@ -2740,12 +2740,12 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
             query = f"""
                 SELECT 
                     t.id, t.title, t.description, t.due_date,
-                    c.name as category, c.name as category_name,
-                    p.name as priority_name, p.level as priority_level,
-                    s.name as status_name, s.color as status_color,
-                    d.name as department,
-                    t.created_at, t.updated_at,
-                    u.username as creator_name
+                    t.category_id, c.name as category_name, c.icon as category_icon,
+                    t.priority_id, p.name as priority_name, p.level as priority_level, p.color as priority_color,
+                    t.status_id, s.name as status_name, s.color as status_color,
+                    t.department_id, d.name as department_name,
+                    t.created_by, u.username as creator_name, u.email as creator_email,
+                    t.created_at, t.updated_at
                 FROM {SCHEMA}.tickets t
                 LEFT JOIN {SCHEMA}.ticket_categories c ON t.category_id = c.id
                 LEFT JOIN {SCHEMA}.ticket_priorities p ON t.priority_id = p.id
@@ -2770,14 +2770,23 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                     'id': row['id'],
                     'title': row['title'],
                     'description': row['description'],
-                    'dueDate': row['due_date'].isoformat() if row['due_date'] else None,
-                    'category': row['category'],
-                    'priority': {'name': row['priority_name'], 'level': row['priority_level']},
-                    'status': {'name': row['status_name'], 'color': row['status_color']},
-                    'department': row['department'],
-                    'createdAt': row['created_at'].isoformat() if row['created_at'] else None,
-                    'updatedAt': row['updated_at'].isoformat() if row['updated_at'] else None,
-                    'creatorName': row['creator_name']
+                    'due_date': row['due_date'].isoformat() if row['due_date'] else None,
+                    'category_id': row['category_id'],
+                    'category_name': row['category_name'],
+                    'category_icon': row['category_icon'],
+                    'priority_id': row['priority_id'],
+                    'priority_name': row['priority_name'],
+                    'priority_color': row['priority_color'],
+                    'status_id': row['status_id'],
+                    'status_name': row['status_name'],
+                    'status_color': row['status_color'],
+                    'department_id': row['department_id'],
+                    'department_name': row['department_name'],
+                    'created_by': row['created_by'],
+                    'creator_name': row['creator_name'],
+                    'creator_email': row['creator_email'],
+                    'created_at': row['created_at'].isoformat() if row['created_at'] else None,
+                    'updated_at': row['updated_at'].isoformat() if row['updated_at'] else None
                 })
             
             return response(200, {'tickets': tickets})

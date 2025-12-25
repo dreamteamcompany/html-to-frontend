@@ -21,11 +21,17 @@ interface Ticket {
   description?: string;
   category_name?: string;
   category_icon?: string;
+  priority_id?: number;
   priority_name?: string;
   priority_color?: string;
+  status_id?: number;
   status_name?: string;
   status_color?: string;
   department_name?: string;
+  created_by: number;
+  creator_name?: string;
+  creator_email?: string;
+  assigned_to?: number;
   due_date?: string;
   created_at?: string;
   updated_at?: string;
@@ -40,6 +46,33 @@ interface TicketDetailsModalProps {
 
 const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
   if (!ticket) return null;
+
+  const getDeadlineInfo = (dueDate?: string) => {
+    if (!dueDate) return null;
+    
+    const now = new Date().getTime();
+    const due = new Date(dueDate).getTime();
+    const timeLeft = due - now;
+    
+    if (timeLeft < 0) {
+      return { color: '#ef4444', label: 'Просрочена', urgent: true };
+    }
+    
+    const oneDay = 24 * 60 * 60 * 1000;
+    const daysLeft = Math.ceil(timeLeft / oneDay);
+    
+    if (daysLeft <= 1) {
+      return { color: '#ef4444', label: `Остался ${daysLeft} день`, urgent: true };
+    } else if (daysLeft <= 3) {
+      return { color: '#f97316', label: `Осталось ${daysLeft} дня`, urgent: true };
+    } else if (daysLeft <= 7) {
+      return { color: '#eab308', label: `Осталось ${daysLeft} дней`, urgent: false };
+    } else {
+      return { color: '#22c55e', label: `Осталось ${daysLeft} дней`, urgent: false };
+    }
+  };
+
+  const deadlineInfo = getDeadlineInfo(ticket.due_date);
 
   return (
     <Dialog open={!!ticket} onOpenChange={onClose}>
@@ -68,6 +101,26 @@ const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
+          {ticket.creator_name && (
+            <div className="p-4 rounded-lg bg-muted/50 border border-border">
+              <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
+                <Icon name="User" size={16} />
+                Заказчик
+              </h3>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Icon name="User" size={20} className="text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">{ticket.creator_name}</p>
+                  {ticket.creator_email && (
+                    <p className="text-sm text-muted-foreground">{ticket.creator_email}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {ticket.description && (
             <div>
               <h3 className="text-sm font-semibold mb-2 text-muted-foreground">Описание</h3>
@@ -89,13 +142,20 @@ const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
             {ticket.priority_name && (
               <div>
                 <h3 className="text-sm font-semibold mb-2 text-muted-foreground">Приоритет</h3>
-                <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className="flex items-center gap-2 w-fit"
+                  style={{
+                    borderColor: ticket.priority_color,
+                    color: ticket.priority_color,
+                  }}
+                >
                   <div
-                    className="w-3 h-3 rounded-full"
+                    className="w-2 h-2 rounded-full"
                     style={{ backgroundColor: ticket.priority_color }}
                   />
-                  <span>{ticket.priority_name}</span>
-                </div>
+                  {ticket.priority_name}
+                </Badge>
               </div>
             )}
 
@@ -110,17 +170,40 @@ const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
             )}
 
             {ticket.due_date && (
-              <div>
+              <div className="col-span-2">
                 <h3 className="text-sm font-semibold mb-2 text-muted-foreground">Желаемый срок</h3>
-                <div className="flex items-center gap-2">
-                  <Icon name="Calendar" size={16} />
-                  <span>
-                    {new Date(ticket.due_date).toLocaleDateString('ru-RU', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon name="Calendar" size={16} />
+                      <span>
+                        {new Date(ticket.due_date).toLocaleDateString('ru-RU', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                    {deadlineInfo && (
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: deadlineInfo.color }}
+                      >
+                        {deadlineInfo.label}
+                      </span>
+                    )}
+                  </div>
+                  {deadlineInfo && (
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full transition-all duration-300"
+                        style={{
+                          width: deadlineInfo.urgent ? '100%' : '40%',
+                          backgroundColor: deadlineInfo.color,
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
