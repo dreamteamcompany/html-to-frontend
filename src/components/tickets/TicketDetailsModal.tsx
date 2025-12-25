@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import TicketDetailsHeader from './TicketDetailsHeader';
 import TicketDetailsInfo from './TicketDetailsInfo';
+import TicketDetailsSidebar from './TicketDetailsSidebar';
 import TicketComments from './TicketComments';
 
 interface CustomField {
@@ -267,10 +268,33 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
 
   return (
     <Dialog open={!!ticket} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
-            <TicketDetailsHeader
+            <TicketDetailsHeader ticket={ticket} />
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden flex-1 min-h-0">
+          <div className="lg:col-span-2 flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto pr-2">
+              <div className="space-y-6">
+                <TicketDetailsInfo ticket={ticket} />
+                
+                <TicketComments
+                  comments={comments}
+                  loadingComments={loadingComments}
+                  newComment={newComment}
+                  submittingComment={submittingComment}
+                  onCommentChange={setNewComment}
+                  onSubmitComment={handleSubmitComment}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-1 overflow-y-auto pr-2">
+            <TicketDetailsSidebar
               ticket={ticket}
               statuses={statuses}
               users={users}
@@ -278,19 +302,8 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
               onUpdateStatus={handleUpdateStatus}
               onAssignUser={handleAssignUser}
             />
-          </DialogTitle>
-        </DialogHeader>
-
-        <TicketDetailsInfo ticket={ticket} />
-
-        <TicketComments
-          comments={comments}
-          loadingComments={loadingComments}
-          newComment={newComment}
-          submittingComment={submittingComment}
-          onCommentChange={setNewComment}
-          onSubmitComment={handleSubmitComment}
-        />
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
