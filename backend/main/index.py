@@ -2751,7 +2751,7 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                 LEFT JOIN {SCHEMA}.ticket_priorities p ON t.priority_id = p.id
                 LEFT JOIN {SCHEMA}.ticket_statuses s ON t.status_id = s.id
                 LEFT JOIN {SCHEMA}.departments d ON t.department_id = d.id
-                LEFT JOIN {SCHEMA}.users u ON t.creator_id = u.id
+                LEFT JOIN {SCHEMA}.users u ON t.created_by = u.id
                 WHERE 1=1
             """
             
@@ -2796,7 +2796,7 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                 return response(400, {'error': 'Название и описание обязательны'})
             
             cur.execute(f"""
-                INSERT INTO {SCHEMA}.tickets (title, description, category_id, priority_id, department_id, due_date, creator_id, status_id)
+                INSERT INTO {SCHEMA}.tickets (title, description, category_id, priority_id, department_id, due_date, created_by, status_id)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, 1)
                 RETURNING id
             """, (title, description, category_id, priority_id, department_id, due_date, user_id))
