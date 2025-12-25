@@ -399,6 +399,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not payload:
                 return response(401, {'error': 'Invalid token'})
             return handle_ticket_dictionaries_api(method, event, conn, payload)
+        elif endpoint == 'ticket-comments-api':
+            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+            if not token:
+                return response(401, {'error': 'Authentication required'})
+            payload = verify_jwt_token(token)
+            if not payload:
+                return response(401, {'error': 'Invalid token'})
+            return handle_ticket_comments_api(method, event, conn, payload)
         
         return response(404, {'error': 'Endpoint not found'})
     
@@ -2745,6 +2753,7 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                     t.status_id, s.name as status_name, s.color as status_color,
                     t.department_id, d.name as department_name,
                     t.created_by, u.username as creator_name, u.email as creator_email,
+                    t.assigned_to, ua.username as assignee_name, ua.email as assignee_email,
                     t.created_at, t.updated_at
                 FROM {SCHEMA}.tickets t
                 LEFT JOIN {SCHEMA}.ticket_categories c ON t.category_id = c.id
@@ -2752,6 +2761,7 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                 LEFT JOIN {SCHEMA}.ticket_statuses s ON t.status_id = s.id
                 LEFT JOIN {SCHEMA}.departments d ON t.department_id = d.id
                 LEFT JOIN {SCHEMA}.users u ON t.created_by = u.id
+                LEFT JOIN {SCHEMA}.users ua ON t.assigned_to = ua.id
                 WHERE 1=1
             """
             
@@ -2785,6 +2795,9 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                     'created_by': row['created_by'],
                     'creator_name': row['creator_name'],
                     'creator_email': row['creator_email'],
+                    'assigned_to': row['assigned_to'],
+                    'assignee_name': row['assignee_name'],
+                    'assignee_email': row['assignee_email'],
                     'created_at': row['created_at'].isoformat() if row['created_at'] else None,
                     'updated_at': row['updated_at'].isoformat() if row['updated_at'] else None
                 })
@@ -2872,6 +2885,84 @@ def handle_ticket_dictionaries_api(method: str, event: Dict[str, Any], conn, pay
         })
     
     except Exception as e:
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Обработчик для комментариев к заявкам"""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    user_id = payload['user_id']
+    
+    try:
+        if method == 'GET':
+            query_params = event.get('queryStringParameters') or {}
+            ticket_id = query_params.get('ticket_id')
+            
+            if not ticket_id:
+                return response(400, {'error': 'ticket_id обязателен'})
+            
+            cur.execute(f"""
+                SELECT 
+                    tc.id, tc.ticket_id, tc.user_id, tc.comment, tc.is_internal, tc.created_at,
+                    u.username as user_name, u.email as user_email
+                FROM {SCHEMA}.ticket_comments tc
+                LEFT JOIN {SCHEMA}.users u ON tc.user_id = u.id
+                WHERE tc.ticket_id = %s
+                ORDER BY tc.created_at ASC
+            """, (ticket_id,))
+            
+            comments = []
+            for row in cur.fetchall():
+                comments.append({
+                    'id': row['id'],
+                    'ticket_id': row['ticket_id'],
+                    'user_id': row['user_id'],
+                    'user_name': row['user_name'],
+                    'user_email': row['user_email'],
+                    'comment': row['comment'],
+                    'is_internal': row['is_internal'],
+                    'created_at': row['created_at'].isoformat() if row['created_at'] else None
+                })
+            
+            return response(200, {'comments': comments})
+        
+        elif method == 'POST':
+            data = json.loads(event.get('body', '{}'))
+            
+            ticket_id = data.get('ticket_id')
+            comment_text = data.get('comment')
+            is_internal = data.get('is_internal', False)
+            
+            if not ticket_id or not comment_text:
+                return response(400, {'error': 'ticket_id и comment обязательны'})
+            
+            cur.execute(f"""
+                INSERT INTO {SCHEMA}.ticket_comments (ticket_id, user_id, comment, is_internal)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id, created_at
+            """, (ticket_id, user_id, comment_text, is_internal))
+            
+            result = cur.fetchone()
+            conn.commit()
+            
+            cur.execute(f"""
+                UPDATE {SCHEMA}.tickets 
+                SET updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, (ticket_id,))
+            conn.commit()
+            
+            return response(201, {
+                'id': result['id'],
+                'created_at': result['created_at'].isoformat() if result['created_at'] else None,
+                'message': 'Комментарий добавлен'
+            })
+        
+        return response(405, {'error': 'Метод не поддерживается'})
+    
+    except Exception as e:
+        conn.rollback()
         return response(500, {'error': str(e)})
     finally:
         cur.close()

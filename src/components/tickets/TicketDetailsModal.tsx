@@ -7,6 +7,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface CustomField {
   id: number;
@@ -32,11 +36,24 @@ interface Ticket {
   creator_name?: string;
   creator_email?: string;
   assigned_to?: number;
+  assignee_name?: string;
+  assignee_email?: string;
   due_date?: string;
   created_at?: string;
   updated_at?: string;
   closed_at?: string;
   custom_fields?: CustomField[];
+}
+
+interface Comment {
+  id: number;
+  ticket_id: number;
+  user_id: number;
+  user_name?: string;
+  user_email?: string;
+  comment: string;
+  is_internal: boolean;
+  created_at?: string;
 }
 
 interface TicketDetailsModalProps {
@@ -45,6 +62,85 @@ interface TicketDetailsModalProps {
 }
 
 const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
+  const { token, user } = useAuth();
+  const { toast } = useToast();
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [submittingComment, setSubmittingComment] = useState(false);
+
+  useEffect(() => {
+    if (ticket?.id && token) {
+      loadComments();
+    }
+  }, [ticket?.id, token]);
+
+  const loadComments = async () => {
+    if (!ticket?.id || !token) return;
+
+    setLoadingComments(true);
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=ticket-comments-api&ticket_id=${ticket.id}`, {
+        headers: { 'X-Auth-Token': token },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data.comments || []);
+      }
+    } catch (err) {
+      console.error('Failed to load comments:', err);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !ticket?.id || !token) return;
+
+    setSubmittingComment(true);
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=ticket-comments-api`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token,
+        },
+        body: JSON.stringify({
+          ticket_id: ticket.id,
+          comment: newComment,
+          is_internal: false,
+        }),
+      });
+
+      if (response.ok) {
+        setNewComment('');
+        await loadComments();
+        toast({
+          title: 'Успешно',
+          description: 'Комментарий добавлен',
+        });
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось добавить комментарий',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to submit comment:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось добавить комментарий',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
   if (!ticket) return null;
 
   const getDeadlineInfo = (dueDate?: string) => {
@@ -101,25 +197,62 @@ const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          {ticket.creator_name && (
-            <div className="p-4 rounded-lg bg-muted/50 border border-border">
-              <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-                <Icon name="User" size={16} />
-                Заказчик
-              </h3>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Icon name="User" size={20} className="text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium">{ticket.creator_name}</p>
-                  {ticket.creator_email && (
-                    <p className="text-sm text-muted-foreground">{ticket.creator_email}</p>
-                  )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {ticket.creator_name && (
+              <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
+                  <Icon name="User" size={16} />
+                  Заказчик
+                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Icon name="User" size={20} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{ticket.creator_name}</p>
+                    {ticket.creator_email && (
+                      <p className="text-sm text-muted-foreground">{ticket.creator_email}</p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {ticket.assignee_name ? (
+              <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
+                  <Icon name="UserCheck" size={16} />
+                  Исполнитель
+                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <Icon name="UserCheck" size={20} className="text-green-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{ticket.assignee_name}</p>
+                    {ticket.assignee_email && (
+                      <p className="text-sm text-muted-foreground">{ticket.assignee_email}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-lg bg-muted/50 border border-border border-dashed">
+                <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
+                  <Icon name="UserX" size={16} />
+                  Исполнитель
+                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                    <Icon name="UserX" size={20} className="text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Не назначен</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {ticket.description && (
             <div>
@@ -263,8 +396,83 @@ const TicketDetailsModal = ({ ticket, onClose }: TicketDetailsModalProps) => {
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button onClick={onClose} className="flex-1">
+          <div className="border-t border-white/10 pt-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Icon name="MessageSquare" size={20} />
+              Комментарии ({comments.length})
+            </h3>
+
+            <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto">
+              {loadingComments ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : comments.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Icon name="MessageSquare" size={32} className="mx-auto mb-2 opacity-50" />
+                  <p>Комментариев пока нет</p>
+                </div>
+              ) : (
+                comments.map((comment) => (
+                  <div key={comment.id} className="p-3 rounded-lg bg-muted/30 border border-border">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <Icon name="User" size={16} className="text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <p className="font-medium text-sm">{comment.user_name}</p>
+                          {comment.created_at && (
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(comment.created_at).toLocaleString('ru-RU', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                          )}
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap break-words">{comment.comment}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <Textarea
+                placeholder="Добавить комментарий..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                rows={3}
+                className="resize-none"
+              />
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleSubmitComment}
+                  disabled={!newComment.trim() || submittingComment}
+                  className="flex-1"
+                >
+                  {submittingComment ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Отправка...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="Send" size={16} className="mr-2" />
+                      Отправить
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t border-white/10">
+            <Button onClick={onClose} variant="outline" className="flex-1">
               Закрыть
             </Button>
           </div>

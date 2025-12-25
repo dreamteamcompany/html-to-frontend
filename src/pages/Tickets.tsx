@@ -33,7 +33,11 @@ interface Ticket {
   department_id?: number;
   department_name?: string;
   created_by: number;
+  creator_name?: string;
+  creator_email?: string;
   assigned_to?: number;
+  assignee_name?: string;
+  assignee_email?: string;
   due_date?: string;
   created_at?: string;
   updated_at?: string;
