@@ -1,4 +1,10 @@
 {
+  "tickets-api": "https://functions.poehali.dev/6449784c-2d77-4ecc-a698-1276452afb92",
+  "ticket-dictionaries-api": "https://functions.poehali.dev/036d3f82-2540-423d-bc5e-8826ff7256f9",
+  "dictionaries-api": "https://functions.poehali.dev/b3ad2f9d-7ef7-471b-a7fc-2ff1e0855ff8",
+  "ticket-api": "https://functions.poehali.dev/1ff0eefd-d444-4443-9d6d-97d33fc7e089",
+  "test-deploy": "https://functions.poehali.dev/e50e0008-e6b6-4c27-9969-a5dc77bd5f99",
+  "ticket-management": "https://functions.poehali.dev/dd013935-c7f3-46d2-a49d-65dc83d4f4da",
   "process-scheduled-payments": "https://functions.poehali.dev/eeefc720-2351-43cd-804d-44fbd748ab8f",
   "planned-payments": "https://functions.poehali.dev/a0000b1e-3d3e-4094-b08e-2893df500d3f",
   "category-payments": "https://functions.poehali.dev/20167b17-c827-4e24-b1a1-2ca1571d5bab",

@@ -384,9 +384,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(401, {'error': 'Invalid token'})
             return handle_audit_logs(method, event, conn, payload)
         elif endpoint == 'tickets-api':
-            return handle_tickets_api(method, event, conn)
+            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+            if not token:
+                return response(401, {'error': 'Authentication required'})
+            payload = verify_jwt_token(token)
+            if not payload:
+                return response(401, {'error': 'Invalid token'})
+            return handle_tickets_api(method, event, conn, payload)
         elif endpoint == 'ticket-dictionaries-api':
-            return handle_ticket_dictionaries_api(method, event, conn)
+            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+            if not token:
+                return response(401, {'error': 'Authentication required'})
+            payload = verify_jwt_token(token)
+            if not payload:
+                return response(401, {'error': 'Invalid token'})
+            return handle_ticket_dictionaries_api(method, event, conn, payload)
         
         return response(404, {'error': 'Endpoint not found'})
     
