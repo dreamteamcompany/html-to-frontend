@@ -101,7 +101,7 @@ const TicketDetailsSidebar = ({
   const deadlineInfo = getDeadlineInfo(ticket.due_date);
 
   return (
-    <div className="space-y-3">
+    <div className="w-[400px] space-y-3 flex-shrink-0">
       {isCustomer && hasAssignee && onSendPing && (
         <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary">
           <Button

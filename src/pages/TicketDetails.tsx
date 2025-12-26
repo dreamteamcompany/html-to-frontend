@@ -142,14 +142,20 @@ const TicketDetails = () => {
   const loadUsers = async () => {
     try {
       const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
-      const response = await fetch(`${mainUrl}?endpoint=users-list`, {
+      const response = await fetch(`${mainUrl}?endpoint=users`, {
         headers: {
           'X-Auth-Token': token,
         },
       });
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.users || []);
+        const adaptedUsers = Array.isArray(data) ? data.map((u: any) => ({
+          id: u.id,
+          name: u.full_name || u.username,
+          email: u.username,
+          role: ''
+        })) : [];
+        setUsers(adaptedUsers);
       }
     } catch (error) {
       console.error('Error loading users:', error);
