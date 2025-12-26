@@ -344,7 +344,7 @@ const TicketComments = ({
             
             {showEmojiPicker && (
               <div ref={emojiPickerRef} className="absolute bottom-full right-0 mb-2 z-50">
-                <EmojiPicker onEmojiClick={handleEmojiClick} emojiStyle="native" />
+                <EmojiPicker onEmojiClick={handleEmojiClick} />
               </div>
             )}
           </div>
@@ -411,6 +411,20 @@ const TicketComments = ({
                             <Icon name="Paperclip" size={14} className="text-muted-foreground" />
                             <span className="text-xs flex-1 group-hover:text-primary transition-colors">{file.filename}</span>
                           </a>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {comment.reactions && comment.reactions.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-3">
+                        {comment.reactions.map((reaction, idx) => (
+                          <button
+                            key={idx}
+                            className="flex items-center gap-1 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted transition-colors text-xs"
+                          >
+                            <span style={{ fontSize: '1.5em' }}>{reaction.emoji}</span>
+                            <span className="text-muted-foreground">{reaction.count}</span>
+                          </button>
                         ))}
                       </div>
                     )}
