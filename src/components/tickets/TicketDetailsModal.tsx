@@ -100,7 +100,7 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
   const [users, setUsers] = useState<User[]>([]);
   const [updating, setUpdating] = useState(false);
   const [sendingPing, setSendingPing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'comments'>('details');
+  const [activeTab, setActiveTab] = useState<'info' | 'tasks' | 'related' | 'sla'>('info');
 
   useEffect(() => {
     if (ticket?.id && token) {
@@ -415,167 +415,248 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
 
   return (
     <Dialog open={!!ticket} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[92vh] p-0 gap-0 overflow-hidden flex flex-col">
-        {/* Шапка с минимальной информацией */}
-        <div className="px-6 py-3 border-b bg-gradient-to-r from-background to-muted/30 flex-shrink-0">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="text-xs font-mono text-muted-foreground">#{ticket.id}</span>
-              {ticket.category_name && (
-                <Badge variant="outline" className="text-xs">
-                  {ticket.category_icon && <span className="mr-1">{ticket.category_icon}</span>}
-                  {ticket.category_name}
-                </Badge>
-              )}
-              <h2 className="text-base font-semibold truncate flex-1">{ticket.title}</h2>
-            </div>
-            <div className="flex items-center gap-2">
-              {ticket.status_name && (
-                <Badge
-                  style={{ 
-                    backgroundColor: `${ticket.status_color}20`,
-                    color: ticket.status_color,
-                    borderColor: ticket.status_color
-                  }}
-                  className="border"
-                >
-                  {ticket.status_name}
-                </Badge>
-              )}
-            </div>
-          </div>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 gap-0 overflow-hidden flex flex-col">
+        {/* Заголовок заявки */}
+        <div className="px-6 py-4 border-b bg-muted/20">
+          <h1 className="text-xl font-semibold">Запрос на обслуживание "{ticket.id}"</h1>
         </div>
 
-        {/* Вкладки навигации */}
-        <div className="border-b bg-muted/10 flex-shrink-0">
-          <div className="flex px-6">
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'details'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Icon name="FileText" size={16} />
-                Детали
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('comments')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'comments'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Icon name="MessageSquare" size={16} />
-                Комментарии
-                {comments.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-primary/10 text-primary font-medium">
-                    {comments.length}
-                  </span>
-                )}
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Основное содержание: двухколоночный макет */}
-        <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] h-full">
-            {/* Левая колонка - Контент вкладок */}
-            <div className="flex flex-col h-full overflow-y-auto">
-              <div className="p-6">
-                {/* Вкладка: Детали */}
-                {activeTab === 'details' && (
-                  <div className="space-y-6 max-w-3xl">
-                    {ticket.description && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Icon name="FileText" size={16} className="text-muted-foreground" />
-                          <h3 className="text-sm font-semibold text-muted-foreground">Описание</h3>
-                        </div>
-                        <div className="prose prose-sm max-w-none">
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{ticket.description}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {ticket.custom_fields && ticket.custom_fields.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Icon name="Settings" size={16} className="text-muted-foreground" />
-                          <h3 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h3>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          {ticket.custom_fields.map((field) => (
-                            <div key={field.id} className="p-3 rounded-lg bg-muted/40 border">
-                              <p className="text-xs text-muted-foreground mb-1">{field.name}</p>
-                              <p className="text-sm font-medium">{field.value || '—'}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {ticket.priority_name && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Icon name="Flag" size={16} className="text-muted-foreground" />
-                          <h3 className="text-sm font-semibold text-muted-foreground">Приоритет</h3>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          style={{ 
-                            borderColor: ticket.priority_color,
-                            color: ticket.priority_color
-                          }}
-                        >
-                          <Icon name="Flag" size={14} className="mr-1" />
-                          {ticket.priority_name}
-                        </Badge>
-                      </div>
-                    )}
+        {/* Основное содержание */}
+        <div className="flex-1 overflow-hidden flex">
+          {/* Левая колонка - Суть заявки и комментарии */}
+          <div className="flex-1 overflow-y-auto bg-background">
+            <div className="p-6">
+              {/* Суть заявки */}
+              <div className="mb-6 border rounded-lg p-5 bg-card">
+                <button className="flex items-center gap-2 text-sm font-semibold mb-4 w-full">
+                  <Icon name="ChevronDown" size={16} />
+                  Суть заявки
+                </button>
+                
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm text-muted-foreground">Тема:</span>
+                    <p className="text-sm font-medium">{ticket.title}</p>
                   </div>
-                )}
-
-                {/* Вкладка: Комментарии */}
-                {activeTab === 'comments' && (
-                  <div className="max-w-3xl">
-                    <TicketComments
-                      comments={comments}
-                      loadingComments={loadingComments}
-                      newComment={newComment}
-                      submittingComment={submittingComment}
-                      onCommentChange={setNewComment}
-                      onSubmitComment={handleSubmitComment}
-                      isCustomer={ticket.created_by === user?.id}
-                      hasAssignee={!!ticket.assigned_to}
-                      sendingPing={sendingPing}
-                      onSendPing={handleSendPing}
-                      currentUserId={user?.id}
-                      onReaction={handleReaction}
-                    />
-                  </div>
-                )}
+                  
+                  {ticket.description && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Описание:</span>
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed mt-1">{ticket.description}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Правая колонка - Метаданные (сайдбар) */}
-            <div className="border-l bg-muted/10 overflow-y-auto">
-              <div className="p-5">
-                <TicketDetailsSidebar
-                  ticket={ticket}
-                  statuses={statuses}
-                  users={users}
-                  updating={updating}
-                  onUpdateStatus={handleUpdateStatus}
-                  onAssignUser={handleAssignUser}
+              {/* Комментарии и Файлы (вкладки) */}
+              <div className="border-b mb-4">
+                <div className="flex gap-6">
+                  <button className="pb-2 border-b-2 border-primary text-sm font-medium">
+                    Комментарии ({comments.length})
+                  </button>
+                  <button className="pb-2 border-b-2 border-transparent text-sm text-muted-foreground hover:text-foreground">
+                    Файлы (0)
+                  </button>
+                </div>
+              </div>
+
+              {/* Форма комментария */}
+              <div className="mb-6">
+                <TicketComments
+                  comments={comments}
+                  loadingComments={loadingComments}
+                  newComment={newComment}
+                  submittingComment={submittingComment}
+                  onCommentChange={setNewComment}
+                  onSubmitComment={handleSubmitComment}
+                  isCustomer={ticket.created_by === user?.id}
+                  hasAssignee={!!ticket.assigned_to}
+                  sendingPing={sendingPing}
+                  onSendPing={handleSendPing}
+                  currentUserId={user?.id}
+                  onReaction={handleReaction}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Правая колонка - Информация с вкладками */}
+          <div className="w-[400px] border-l bg-muted/10 overflow-y-auto flex flex-col">
+            {/* Вкладки */}
+            <div className="border-b bg-background">
+              <div className="flex">
+                <button
+                  onClick={() => setActiveTab('info')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'info'
+                      ? 'border-primary text-primary bg-muted/20'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Информация
+                </button>
+                <button
+                  onClick={() => setActiveTab('tasks')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'tasks'
+                      ? 'border-primary text-primary bg-muted/20'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Задачи (0)
+                </button>
+                <button
+                  onClick={() => setActiveTab('related')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'related'
+                      ? 'border-primary text-primary bg-muted/20'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Связи (0)
+                </button>
+                <button
+                  onClick={() => setActiveTab('sla')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'sla'
+                      ? 'border-primary text-primary bg-muted/20'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  SLA
+                </button>
+              </div>
+            </div>
+
+            {/* Контент вкладок */}
+            <div className="flex-1 overflow-y-auto p-5">
+              {activeTab === 'info' && (
+                <div className="space-y-6">
+                  {/* Статус */}
+                  <div>
+                    <button className="flex items-center gap-2 text-sm font-semibold mb-3 w-full">
+                      <Icon name="ChevronDown" size={16} />
+                      Статус
+                    </button>
+                    <div className="space-y-3 pl-6">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Ответственный:</p>
+                        <p className="text-sm">{ticket.assignee_name || 'Не назначен'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Статус:</p>
+                        <Badge
+                          style={{ 
+                            backgroundColor: `${ticket.status_color}20`,
+                            color: ticket.status_color,
+                            borderColor: ticket.status_color
+                          }}
+                          className="border"
+                        >
+                          {ticket.status_name}
+                        </Badge>
+                      </div>
+                      {ticket.due_date && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Решить до:</p>
+                          <p className="text-sm">{new Date(ticket.due_date).toLocaleString('ru-RU')}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Информация */}
+                  <div>
+                    <button className="flex items-center gap-2 text-sm font-semibold mb-3 w-full">
+                      <Icon name="ChevronDown" size={16} />
+                      Информация
+                    </button>
+                    <div className="space-y-3 pl-6">
+                      {ticket.category_name && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Категория:</p>
+                          <p className="text-sm">{ticket.category_name}</p>
+                        </div>
+                      )}
+                      {ticket.priority_name && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Приоритет:</p>
+                          <Badge
+                            variant="outline"
+                            style={{ 
+                              borderColor: ticket.priority_color,
+                              color: ticket.priority_color
+                            }}
+                          >
+                            {ticket.priority_name}
+                          </Badge>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Создано:</p>
+                        <p className="text-sm">{ticket.created_at ? new Date(ticket.created_at).toLocaleString('ru-RU') : '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Данные о контрагенте */}
+                  <div>
+                    <button className="flex items-center gap-2 text-sm font-semibold mb-3 w-full">
+                      <Icon name="ChevronDown" size={16} />
+                      Данные о контрагенте
+                    </button>
+                    <div className="space-y-3 pl-6">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Имя:</p>
+                        <p className="text-sm">{ticket.creator_name || 'Не указано'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Email:</p>
+                        <p className="text-sm">{ticket.creator_email || 'Не указано'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Дополнительные поля */}
+                  {ticket.custom_fields && ticket.custom_fields.length > 0 && (
+                    <div>
+                      <button className="flex items-center gap-2 text-sm font-semibold mb-3 w-full">
+                        <Icon name="ChevronDown" size={16} />
+                        ИТ-активы
+                      </button>
+                      <div className="space-y-2 pl-6">
+                        {ticket.custom_fields.map((field) => (
+                          <div key={field.id}>
+                            <p className="text-xs text-muted-foreground mb-1">{field.name}:</p>
+                            <p className="text-sm">{field.value || '—'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'tasks' && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Icon name="ListTodo" size={48} className="mx-auto mb-4 opacity-50" />
+                  <p className="text-sm">Задач пока нет</p>
+                </div>
+              )}
+
+              {activeTab === 'related' && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Icon name="Link" size={48} className="mx-auto mb-4 opacity-50" />
+                  <p className="text-sm">Связанных заявок нет</p>
+                </div>
+              )}
+
+              {activeTab === 'sla' && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Icon name="Clock" size={48} className="mx-auto mb-4 opacity-50" />
+                  <p className="text-sm">SLA метрики не настроены</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
