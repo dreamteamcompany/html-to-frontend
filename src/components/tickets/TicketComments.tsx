@@ -394,7 +394,7 @@ const TicketComments = ({
                         {formatDate(comment.created_at)}
                       </p>
                     </div>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-foreground/90" style={{ fontSize: '1.5em' }}>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-foreground/90">
                       {renderCommentText(comment.comment, comment.mentioned_user_ids)}
                     </p>
                     
