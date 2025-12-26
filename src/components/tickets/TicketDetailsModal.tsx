@@ -412,46 +412,114 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
 
   return (
     <Dialog open={!!ticket} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle>
-            <TicketDetailsHeader ticket={ticket} />
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-7xl max-h-[92vh] p-0 gap-0 overflow-hidden flex flex-col">
+        {/* Компактный header с ключевой информацией */}
+        <div className="px-6 py-4 border-b bg-muted/30 flex-shrink-0">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              {ticket.category_icon && (
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Icon name={ticket.category_icon} size={18} className="text-primary" />
+                </div>
+              )}
+              <h2 className="text-lg font-semibold truncate flex-1">{ticket.title}</h2>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {ticket.priority_name && (
+                <Badge
+                  variant="outline"
+                  className="flex items-center gap-1"
+                  style={{ 
+                    borderColor: ticket.priority_color,
+                    color: ticket.priority_color
+                  }}
+                >
+                  <Icon name="Flag" size={12} />
+                  {ticket.priority_name}
+                </Badge>
+              )}
+              {ticket.status_name && (
+                <Badge
+                  style={{ 
+                    backgroundColor: `${ticket.status_color}`,
+                    color: 'white'
+                  }}
+                >
+                  {ticket.status_name}
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden flex-1 min-h-0">
-          <div className="lg:col-span-2 flex flex-col min-h-0">
-            <div className="flex-1 overflow-y-auto pr-2">
-              <div className="space-y-6">
-                <TicketDetailsInfo ticket={ticket} />
-                
-                <TicketComments
-                  comments={comments}
-                  loadingComments={loadingComments}
-                  newComment={newComment}
-                  submittingComment={submittingComment}
-                  onCommentChange={setNewComment}
-                  onSubmitComment={handleSubmitComment}
-                  isCustomer={ticket.created_by === user?.id}
-                  hasAssignee={!!ticket.assigned_to}
-                  sendingPing={sendingPing}
-                  onSendPing={handleSendPing}
-                  currentUserId={user?.id}
-                  onReaction={handleReaction}
+        {/* Основное содержание: двухколоночный макет */}
+        <div className="flex-1 overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] h-full">
+            {/* Левая колонка - Контент и комментарии */}
+            <div className="flex flex-col h-full overflow-y-auto border-r">
+              <div className="px-6 py-5 space-y-6">
+                {/* Описание */}
+                {ticket.description && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Icon name="FileText" size={16} className="text-muted-foreground" />
+                      <h3 className="text-sm font-semibold text-muted-foreground">Описание</h3>
+                    </div>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{ticket.description}</p>
+                  </div>
+                )}
+
+                {/* Дополнительные поля */}
+                {ticket.custom_fields && ticket.custom_fields.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Icon name="Settings" size={16} className="text-muted-foreground" />
+                      <h3 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {ticket.custom_fields.map((field) => (
+                        <div key={field.id} className="p-3 rounded-lg bg-muted/40 border">
+                          <p className="text-xs text-muted-foreground mb-1">{field.name}</p>
+                          <p className="text-sm font-medium">{field.value || '—'}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Комментарии */}
+                <div className="border-t pt-6">
+                  <TicketComments
+                    comments={comments}
+                    loadingComments={loadingComments}
+                    newComment={newComment}
+                    submittingComment={submittingComment}
+                    onCommentChange={setNewComment}
+                    onSubmitComment={handleSubmitComment}
+                    isCustomer={ticket.created_by === user?.id}
+                    hasAssignee={!!ticket.assigned_to}
+                    sendingPing={sendingPing}
+                    onSendPing={handleSendPing}
+                    currentUserId={user?.id}
+                    onReaction={handleReaction}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Правая колонка - Метаданные (сайдбар) */}
+            <div className="bg-muted/20 overflow-y-auto">
+              <div className="px-5 py-5 sticky top-0">
+                <TicketDetailsSidebar
+                  ticket={ticket}
+                  statuses={statuses}
+                  users={users}
+                  updating={updating}
+                  onUpdateStatus={handleUpdateStatus}
+                  onAssignUser={handleAssignUser}
                 />
               </div>
             </div>
-          </div>
-
-          <div className="lg:col-span-1 overflow-y-auto pr-2">
-            <TicketDetailsSidebar
-              ticket={ticket}
-              statuses={statuses}
-              users={users}
-              updating={updating}
-              onUpdateStatus={handleUpdateStatus}
-              onAssignUser={handleAssignUser}
-            />
           </div>
         </div>
       </DialogContent>

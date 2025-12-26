@@ -92,10 +92,10 @@ const TicketDetailsSidebar = ({
   const deadlineInfo = getDeadlineInfo(ticket.due_date);
 
   return (
-    <div className="space-y-4">
-      <div className="p-4 rounded-lg bg-muted/50 border border-border">
-        <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-          <Icon name="CheckCircle" size={16} />
+    <div className="space-y-3">
+      <div className="p-3 rounded-lg bg-background border">
+        <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+          <Icon name="CheckCircle" size={14} />
           Статус
         </h3>
         <Select
@@ -123,28 +123,28 @@ const TicketDetailsSidebar = ({
       </div>
 
       {ticket.creator_name && (
-        <div className="p-4 rounded-lg bg-muted/50 border border-border">
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-            <Icon name="User" size={16} />
+        <div className="p-3 rounded-lg bg-background border">
+          <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <Icon name="User" size={14} />
             Заказчик
           </h3>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <Icon name="User" size={20} className="text-primary" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <Icon name="User" size={16} className="text-primary" />
             </div>
-            <div>
-              <p className="font-medium text-sm">{ticket.creator_name}</p>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-sm truncate">{ticket.creator_name}</p>
               {ticket.creator_email && (
-                <p className="text-xs text-muted-foreground">{ticket.creator_email}</p>
+                <p className="text-xs text-muted-foreground truncate">{ticket.creator_email}</p>
               )}
             </div>
           </div>
         </div>
       )}
 
-      <div className="p-4 rounded-lg bg-muted/50 border border-border">
-        <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-          <Icon name="UserCheck" size={16} />
+      <div className="p-3 rounded-lg bg-background border">
+        <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+          <Icon name="UserCheck" size={14} />
           Исполнитель
         </h3>
         <Select
@@ -175,71 +175,71 @@ const TicketDetailsSidebar = ({
       </div>
 
       {ticket.due_date && deadlineInfo && (
-        <div className="p-4 rounded-lg border" style={{ 
+        <div className="p-3 rounded-lg border" style={{ 
           backgroundColor: `${deadlineInfo.color}10`,
           borderColor: deadlineInfo.color
         }}>
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ 
+          <div className="flex items-start gap-2">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ 
               backgroundColor: `${deadlineInfo.color}20`
             }}>
-              <Icon name={deadlineInfo.urgent ? 'AlertCircle' : 'Clock'} size={20} style={{ color: deadlineInfo.color }} />
+              <Icon name={deadlineInfo.urgent ? 'AlertCircle' : 'Clock'} size={16} style={{ color: deadlineInfo.color }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm mb-1" style={{ color: deadlineInfo.color }}>
+              <p className="font-semibold text-sm mb-0.5" style={{ color: deadlineInfo.color }}>
                 {deadlineInfo.label}
               </p>
-              <p className="text-xs" style={{ color: deadlineInfo.color, opacity: 0.8 }}>
+              <p className="text-xs" style={{ color: deadlineInfo.color, opacity: 0.75 }}>
                 {new Date(ticket.due_date).toLocaleDateString('ru-RU', {
                   day: 'numeric',
-                  month: 'long',
-                  year: 'numeric'
+                  month: 'long'
                 })}
               </p>
-              {deadlineInfo.urgent && (
-                <Badge 
-                  className="mt-2"
-                  variant="secondary"
-                  style={{ 
-                    backgroundColor: deadlineInfo.color,
-                    color: 'white'
-                  }}
-                >
-                  Срочно
-                </Badge>
-              )}
             </div>
+            {deadlineInfo.urgent && (
+              <Badge 
+                variant="secondary"
+                className="flex-shrink-0"
+                style={{ 
+                  backgroundColor: deadlineInfo.color,
+                  color: 'white',
+                  fontSize: '10px',
+                  padding: '2px 6px'
+                }}
+              >
+                Срочно
+              </Badge>
+            )}
           </div>
         </div>
       )}
 
       {ticket.category_name && (
-        <div className="p-4 rounded-lg bg-muted/50 border border-border">
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-            <Icon name="Tag" size={16} />
+        <div className="p-3 rounded-lg bg-background border">
+          <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <Icon name="Tag" size={14} />
             Категория
           </h3>
           <div className="flex items-center gap-2">
             {ticket.category_icon && (
-              <Icon name={ticket.category_icon} size={16} className="text-primary" />
+              <Icon name={ticket.category_icon} size={14} className="text-primary" />
             )}
-            <p className="text-sm font-medium">{ticket.category_name}</p>
+            <p className="text-sm">{ticket.category_name}</p>
           </div>
         </div>
       )}
 
       {ticket.priority_name && (
-        <div className="p-4 rounded-lg bg-muted/50 border border-border">
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-            <Icon name="Flag" size={16} />
+        <div className="p-3 rounded-lg bg-background border">
+          <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <Icon name="Flag" size={14} />
             Приоритет
           </h3>
           <Badge
-            variant="secondary"
+            variant="outline"
             style={{ 
-              backgroundColor: `${ticket.priority_color}20`,
-              color: ticket.priority_color,
-              borderColor: ticket.priority_color
+              borderColor: ticket.priority_color,
+              color: ticket.priority_color
             }}
           >
             {ticket.priority_name}
@@ -248,9 +248,9 @@ const TicketDetailsSidebar = ({
       )}
 
       {ticket.department_name && (
-        <div className="p-4 rounded-lg bg-muted/50 border border-border">
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-            <Icon name="Building2" size={16} />
+        <div className="p-3 rounded-lg bg-background border">
+          <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <Icon name="Building2" size={14} />
             Департамент
           </h3>
           <p className="text-sm">{ticket.department_name}</p>
@@ -258,16 +258,15 @@ const TicketDetailsSidebar = ({
       )}
 
       {ticket.created_at && (
-        <div className="p-4 rounded-lg bg-muted/50 border border-border">
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground flex items-center gap-2">
-            <Icon name="Calendar" size={16} />
+        <div className="p-3 rounded-lg bg-background border">
+          <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <Icon name="Calendar" size={14} />
             Создана
           </h3>
-          <p className="text-sm">
+          <p className="text-xs text-muted-foreground">
             {new Date(ticket.created_at).toLocaleDateString('ru-RU', {
               day: 'numeric',
               month: 'long',
-              year: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
             })}
