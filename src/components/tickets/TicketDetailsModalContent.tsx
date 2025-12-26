@@ -45,6 +45,10 @@ const TicketDetailsModalContent = ({
   onSendPing,
   onReaction,
 }: TicketDetailsModalContentProps) => {
+  const handleAssignUser = (userId: string) => {
+    console.log('Assign user:', userId);
+  };
+
   return (
     <div className="flex gap-6 max-h-[80vh] overflow-hidden">
       <div className="flex-1 overflow-y-auto pr-4">
@@ -91,8 +95,11 @@ const TicketDetailsModalContent = ({
 
       <TicketDetailsSidebar
         ticket={ticket}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
+        statuses={statuses}
+        users={users}
+        updating={updating}
+        onUpdateStatus={onUpdateStatus}
+        onAssignUser={handleAssignUser}
       />
     </div>
   );
