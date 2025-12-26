@@ -104,7 +104,7 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
     console.log('[loadUsers] Starting to load users...');
     try {
       const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
-      const response = await fetch(`${mainUrl}?endpoint=users-list`, {
+      const response = await fetch(`${mainUrl}?endpoint=users`, {
         headers: { 'X-Auth-Token': token },
       });
 
@@ -113,8 +113,17 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
       if (response.ok) {
         const data = await response.json();
         console.log('[loadUsers] Received data:', data);
-        console.log('[loadUsers] Users count:', data.users?.length || 0);
-        setUsers(data.users || []);
+        console.log('[loadUsers] Users count:', data?.length || 0);
+        
+        // Адаптируем данные из формата Users API (username, full_name) в локальный формат (name, email)
+        const adaptedUsers = Array.isArray(data) ? data.map((u: any) => ({
+          id: u.id,
+          name: u.full_name || u.username,
+          email: u.username,
+          role: ''
+        })) : [];
+        
+        setUsers(adaptedUsers);
       } else {
         const errorText = await response.text();
         console.error('[loadUsers] Error response:', errorText);
