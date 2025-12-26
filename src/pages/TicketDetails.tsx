@@ -390,6 +390,7 @@ const TicketDetails = () => {
               onSendPing={handleSendPing}
             />
           </div>
+        </div>
       </div>
     </div>
   );
