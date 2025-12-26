@@ -1,7 +1,8 @@
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 
 interface Comment {
   id: number;
@@ -12,6 +13,8 @@ interface Comment {
   comment: string;
   is_internal: boolean;
   created_at?: string;
+  parent_comment_id?: number;
+  mentioned_user_ids?: number[];
   attachments?: {
     id: number;
     filename: string;
@@ -25,19 +28,26 @@ interface Comment {
   }[];
 }
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
 interface TicketCommentsProps {
   comments: Comment[];
   loadingComments: boolean;
   newComment: string;
   submittingComment: boolean;
   onCommentChange: (value: string) => void;
-  onSubmitComment: (files?: File[]) => void;
+  onSubmitComment: (parentCommentId?: number, mentionedUserIds?: number[]) => void;
   isCustomer: boolean;
   hasAssignee: boolean;
   sendingPing: boolean;
   onSendPing: () => void;
   currentUserId?: number;
   onReaction?: (commentId: number, emoji: string) => void;
+  availableUsers?: User[];
 }
 
 const TicketComments = ({
@@ -52,13 +62,17 @@ const TicketComments = ({
   sendingPing,
   onSendPing,
   currentUserId,
-  onReaction,
+  availableUsers = [],
 }: TicketCommentsProps) => {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [showEmojiPicker, setShowEmojiPicker] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [replyToComment, setReplyToComment] = useState<Comment | null>(null);
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionSearch, setMentionSearch] = useState('');
+  const [mentionedUsers, setMentionedUsers] = useState<User[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const mentionsRef = useRef<HTMLDivElement>(null);
   
-  const emojis = ['👍', '❤️', '😊', '🎉', '🚀', '👀', '✅', '❌'];
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -69,26 +83,93 @@ const TicketComments = ({
       minute: '2-digit',
     });
   };
-  
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+      if (mentionsRef.current && !mentionsRef.current.contains(event.target as Node)) {
+        setShowMentions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    onCommentChange(newComment + emojiData.emoji);
+    setShowEmojiPicker(false);
   };
-  
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
+
+  const handleReply = (comment: Comment) => {
+    setReplyToComment(comment);
+    textareaRef.current?.focus();
   };
-  
-  const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+
+  const handleCancelReply = () => {
+    setReplyToComment(null);
   };
-  
+
+  const handleMention = (user: User) => {
+    const beforeCursor = newComment.substring(0, textareaRef.current?.selectionStart || 0);
+    const afterCursor = newComment.substring(textareaRef.current?.selectionStart || 0);
+    const mentionText = `@${user.name} `;
+    
+    onCommentChange(beforeCursor.replace(/@\w*$/, mentionText) + afterCursor);
+    setMentionedUsers([...mentionedUsers, user]);
+    setShowMentions(false);
+    setMentionSearch('');
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    onCommentChange(value);
+
+    const cursorPosition = e.target.selectionStart;
+    const textBeforeCursor = value.substring(0, cursorPosition);
+    const match = textBeforeCursor.match(/@(\w*)$/);
+
+    if (match) {
+      setMentionSearch(match[1]);
+      setShowMentions(true);
+    } else {
+      setShowMentions(false);
+    }
+  };
+
+  const filteredUsers = availableUsers.filter(user =>
+    user.name.toLowerCase().includes(mentionSearch.toLowerCase()) &&
+    user.id !== currentUserId
+  );
+
   const handleSubmit = () => {
-    onSubmitComment(selectedFiles.length > 0 ? selectedFiles : undefined);
-    setSelectedFiles([]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    const mentionedUserIds = mentionedUsers.map(u => u.id);
+    onSubmitComment(replyToComment?.id, mentionedUserIds);
+    setReplyToComment(null);
+    setMentionedUsers([]);
+  };
+
+  const getParentComment = (parentId?: number) => {
+    if (!parentId) return null;
+    return comments.find(c => c.id === parentId);
+  };
+
+  const renderCommentText = (text: string, mentioned?: number[]) => {
+    if (!mentioned || mentioned.length === 0) return text;
+    
+    let result = text;
+    mentioned.forEach(userId => {
+      const user = availableUsers.find(u => u.id === userId);
+      if (user) {
+        result = result.replace(new RegExp(`@${user.name}`, 'g'), 
+          `<span class="text-primary font-semibold">@${user.name}</span>`
+        );
+      }
+    });
+    
+    return <span dangerouslySetInnerHTML={{ __html: result }} />;
   };
 
   return (
@@ -99,7 +180,7 @@ const TicketComments = ({
         <span className="text-sm text-muted-foreground">({comments.length})</span>
       </div>
 
-      {/* Форма добавления комментария СНАЧАЛА */}
+      {/* Форма добавления комментария */}
       <div className="space-y-3 mb-6 pb-4 border-b">
         {isCustomer && hasAssignee && (
           <Button
@@ -122,53 +203,79 @@ const TicketComments = ({
             )}
           </Button>
         )}
-        
-        <Textarea
-          placeholder="Напишите комментарий..."
-          value={newComment}
-          onChange={(e) => onCommentChange(e.target.value)}
-          disabled={submittingComment}
-          className="min-h-[90px] resize-none"
-        />
-        
-        {selectedFiles.length > 0 && (
-          <div className="space-y-2">
-            {selectedFiles.map((file, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 rounded bg-muted/50 border">
-                <Icon name="Paperclip" size={14} className="text-muted-foreground" />
-                <span className="text-xs flex-1 truncate">{file.name}</span>
-                <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
-                <button
-                  onClick={() => removeFile(index)}
-                  className="p-1 hover:bg-destructive/20 rounded transition-colors"
-                >
-                  <Icon name="X" size={12} className="text-destructive" />
-                </button>
+
+        {replyToComment && (
+          <div className="p-3 bg-muted/50 rounded-lg border border-primary/20">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon name="CornerDownRight" size={14} className="text-primary" />
+                  <span className="text-xs font-medium text-primary">Ответ на комментарий</span>
+                  <span className="text-xs text-muted-foreground">{replyToComment.user_name}</span>
+                </div>
+                <p className="text-xs text-muted-foreground line-clamp-2">{replyToComment.comment}</p>
               </div>
-            ))}
+              <button
+                onClick={handleCancelReply}
+                className="p-1 hover:bg-destructive/20 rounded transition-colors"
+              >
+                <Icon name="X" size={14} className="text-muted-foreground" />
+              </button>
+            </div>
           </div>
         )}
         
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          onChange={handleFileSelect}
-          className="hidden"
-          id="comment-file-input"
-        />
+        <div className="relative">
+          <Textarea
+            ref={textareaRef}
+            placeholder="Напишите комментарий... (используйте @ для упоминания)"
+            value={newComment}
+            onChange={handleTextChange}
+            disabled={submittingComment}
+            className="min-h-[90px] resize-none pr-10"
+          />
+          
+          {showMentions && filteredUsers.length > 0 && (
+            <div 
+              ref={mentionsRef}
+              className="absolute bottom-full left-0 mb-2 w-full max-w-xs bg-popover border rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto"
+            >
+              {filteredUsers.map(user => (
+                <button
+                  key={user.id}
+                  onClick={() => handleMention(user)}
+                  className="w-full px-3 py-2 text-left hover:bg-accent transition-colors flex items-center gap-2"
+                >
+                  <Icon name="User" size={14} className="text-muted-foreground" />
+                  <div>
+                    <div className="text-sm font-medium">{user.name}</div>
+                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         
         <div className="flex gap-2 items-center">
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={submittingComment}
-            variant="ghost"
-            size="sm"
-            className="flex-shrink-0"
-          >
-            <Icon name="Paperclip" size={16} className="mr-1" />
-            Файлы
-          </Button>
+          <div className="relative">
+            <Button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              disabled={submittingComment}
+              variant="ghost"
+              size="sm"
+              className="flex-shrink-0"
+            >
+              <Icon name="Smile" size={16} className="mr-1" />
+              Эмодзи
+            </Button>
+            
+            {showEmojiPicker && (
+              <div ref={emojiPickerRef} className="absolute bottom-full left-0 mb-2 z-50">
+                <EmojiPicker onEmojiClick={handleEmojiClick} />
+              </div>
+            )}
+          </div>
           
           <Button
             onClick={handleSubmit}
@@ -184,14 +291,14 @@ const TicketComments = ({
             ) : (
               <>
                 <Icon name="Send" size={16} className="mr-2" />
-                Отправить
+                {replyToComment ? 'Ответить' : 'Отправить'}
               </>
             )}
           </Button>
         </div>
       </div>
 
-      {/* Список комментариев ПОСЛЕ формы */}
+      {/* Список комментариев */}
       <div className="space-y-3">
         {loadingComments ? (
           <div className="flex items-center justify-center py-8">
@@ -203,92 +310,72 @@ const TicketComments = ({
             <p className="text-sm">Пока нет комментариев</p>
           </div>
         ) : (
-          comments.map((comment) => (
-            <div key={comment.id} className="p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Icon name="User" size={14} className="text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <p className="font-semibold text-sm">{comment.user_name || 'Пользователь'}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(comment.created_at)}
-                    </p>
-                  </div>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-foreground/90">
-                    {comment.comment}
-                  </p>
-                  
-                  {comment.attachments && comment.attachments.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      {comment.attachments.map((file) => (
-                        <a
-                          key={file.id}
-                          href={file.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 p-2 rounded bg-background/50 hover:bg-background transition-colors group"
-                        >
-                          <Icon name="Paperclip" size={14} className="text-muted-foreground" />
-                          <span className="text-xs flex-1 group-hover:text-primary transition-colors">{file.filename}</span>
-                          <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
-                        </a>
-                      ))}
+          comments.map((comment) => {
+            const parentComment = getParentComment(comment.parent_comment_id);
+            
+            return (
+              <div 
+                key={comment.id} 
+                className={`p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors ${
+                  comment.parent_comment_id ? 'ml-8 border-l-2 border-primary/30' : ''
+                }`}
+              >
+                {parentComment && (
+                  <div className="mb-2 p-2 bg-muted/30 rounded text-xs border-l-2 border-primary/50">
+                    <div className="flex items-center gap-1 mb-1">
+                      <Icon name="CornerDownRight" size={12} className="text-primary" />
+                      <span className="font-medium">{parentComment.user_name}</span>
                     </div>
-                  )}
-                  
-                  <div className="mt-3 flex items-center gap-2">
-                    {comment.reactions && comment.reactions.length > 0 && (
-                      <div className="flex gap-1">
-                        {comment.reactions.map((reaction, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => onReaction?.(comment.id, reaction.emoji)}
-                            className={`px-2 py-1 rounded-full text-xs flex items-center gap-1 transition-all hover:scale-110 ${
-                              currentUserId && reaction.users.includes(currentUserId)
-                                ? 'bg-primary/20 ring-1 ring-primary/50'
-                                : 'bg-muted hover:bg-muted/70'
-                            }`}
+                    <p className="text-muted-foreground line-clamp-2">{parentComment.comment}</p>
+                  </div>
+                )}
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon name="User" size={14} className="text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <p className="font-semibold text-sm">{comment.user_name || 'Пользователь'}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(comment.created_at)}
+                      </p>
+                    </div>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-foreground/90">
+                      {renderCommentText(comment.comment, comment.mentioned_user_ids)}
+                    </p>
+                    
+                    {comment.attachments && comment.attachments.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {comment.attachments.map((file) => (
+                          <a
+                            key={file.id}
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 p-2 rounded bg-background/50 hover:bg-background transition-colors group"
                           >
-                            <span>{reaction.emoji}</span>
-                            <span className="text-[10px] text-muted-foreground">{reaction.count}</span>
-                          </button>
+                            <Icon name="Paperclip" size={14} className="text-muted-foreground" />
+                            <span className="text-xs flex-1 group-hover:text-primary transition-colors">{file.filename}</span>
+                          </a>
                         ))}
                       </div>
                     )}
                     
-                    <div className="relative">
+                    <div className="flex items-center gap-2 mt-2">
                       <button
-                        onClick={() => setShowEmojiPicker(showEmojiPicker === comment.id ? null : comment.id)}
-                        className="p-1 rounded hover:bg-muted transition-colors"
-                        title="Добавить реакцию"
+                        onClick={() => handleReply(comment)}
+                        className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
                       >
-                        <Icon name="Smile" size={14} className="text-muted-foreground" />
+                        <Icon name="Reply" size={12} />
+                        Ответить
                       </button>
-                      
-                      {showEmojiPicker === comment.id && (
-                        <div className="absolute left-0 top-full mt-1 p-2 bg-popover border rounded-lg shadow-lg z-10 flex gap-1">
-                          {emojis.map((emoji) => (
-                            <button
-                              key={emoji}
-                              onClick={() => {
-                                onReaction?.(comment.id, emoji);
-                                setShowEmojiPicker(null);
-                              }}
-                              className="p-1 hover:bg-muted rounded transition-colors text-lg"
-                            >
-                              {emoji}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

@@ -67,9 +67,10 @@ interface TicketDetailsContentProps {
   sendingPing: boolean;
   userId?: number;
   onCommentChange: (value: string) => void;
-  onSubmitComment: () => void;
+  onSubmitComment: (parentCommentId?: number, mentionedUserIds?: number[]) => void;
   onSendPing: () => void;
   onReaction: (commentId: number, emoji: string) => void;
+  availableUsers?: Array<{id: number; name: string; email: string}>;
 }
 
 const TicketDetailsContent = ({
@@ -84,6 +85,7 @@ const TicketDetailsContent = ({
   onSubmitComment,
   onSendPing,
   onReaction,
+  availableUsers,
 }: TicketDetailsContentProps) => {
   return (
     <div className="flex-1 p-6">
@@ -136,6 +138,7 @@ const TicketDetailsContent = ({
           onSendPing={onSendPing}
           currentUserId={userId}
           onReaction={onReaction}
+          availableUsers={availableUsers}
         />
       </div>
     </div>

@@ -85,6 +85,7 @@ const TicketDetails = () => {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [sendingPing, setSendingPing] = useState(false);
+  const [users, setUsers] = useState<Array<{id: number; name: string; email: string}>>([]);
 
   useEffect(() => {
     if (id) {
@@ -93,6 +94,7 @@ const TicketDetails = () => {
       }
       loadStatuses();
       loadComments();
+      loadUsers();
     }
   }, [id]);
 
@@ -136,6 +138,23 @@ const TicketDetails = () => {
     }
   };
 
+  const loadUsers = async () => {
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=users-list`, {
+        headers: {
+          'X-Auth-Token': token,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
   const loadComments = async () => {
     try {
       setLoadingComments(true);
@@ -156,7 +175,7 @@ const TicketDetails = () => {
     }
   };
 
-  const handleSubmitComment = async () => {
+  const handleSubmitComment = async (parentCommentId?: number, mentionedUserIds?: number[]) => {
     if (!newComment.trim()) return;
     
     try {
@@ -168,7 +187,13 @@ const TicketDetails = () => {
           'Content-Type': 'application/json',
           'X-Auth-Token': token,
         },
-        body: JSON.stringify({ ticket_id: id, comment: newComment, is_internal: false }),
+        body: JSON.stringify({ 
+          ticket_id: id, 
+          comment: newComment, 
+          is_internal: false,
+          parent_comment_id: parentCommentId,
+          mentioned_user_ids: mentionedUserIds || []
+        }),
       });
       
       if (response.ok) {
@@ -281,6 +306,7 @@ const TicketDetails = () => {
             onSubmitComment={handleSubmitComment}
             onSendPing={handleSendPing}
             onReaction={handleReaction}
+            availableUsers={users}
           />
 
           <TicketDetailsSidebarTabs ticket={ticket} />

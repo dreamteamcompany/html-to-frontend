@@ -2982,6 +2982,7 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
             cur.execute(f"""
                 SELECT 
                     tc.id, tc.ticket_id, tc.user_id, tc.comment, tc.is_internal, tc.created_at,
+                    tc.parent_comment_id, tc.mentioned_user_ids,
                     u.username as user_name, u.email as user_email
                 FROM {SCHEMA}.ticket_comments tc
                 LEFT JOIN {SCHEMA}.users u ON tc.user_id = u.id
@@ -3020,6 +3021,8 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
                     'comment': row['comment'],
                     'is_internal': row['is_internal'],
                     'created_at': row['created_at'].isoformat() if row['created_at'] else None,
+                    'parent_comment_id': row['parent_comment_id'],
+                    'mentioned_user_ids': row['mentioned_user_ids'] or [],
                     'attachments': attachments,
                     'reactions': reactions
                 })
@@ -3034,6 +3037,8 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
             is_internal = data.get('is_internal', False)
             is_ping = data.get('is_ping', False)
             attachments = data.get('attachments', [])
+            parent_comment_id = data.get('parent_comment_id')
+            mentioned_user_ids = data.get('mentioned_user_ids', [])
             
             if not ticket_id:
                 return response(400, {'error': 'ticket_id обязателен'})
@@ -3060,10 +3065,10 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
                 return response(400, {'error': 'comment обязателен'})
             
             cur.execute(f"""
-                INSERT INTO {SCHEMA}.ticket_comments (ticket_id, user_id, comment, is_internal)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO {SCHEMA}.ticket_comments (ticket_id, user_id, comment, is_internal, parent_comment_id, mentioned_user_ids)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 RETURNING id, created_at
-            """, (ticket_id, user_id, comment_text, is_internal))
+            """, (ticket_id, user_id, comment_text, is_internal, parent_comment_id, mentioned_user_ids))
             
             result = cur.fetchone()
             comment_id = result['id']
