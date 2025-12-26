@@ -2987,7 +2987,7 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
                 FROM {SCHEMA}.ticket_comments tc
                 LEFT JOIN {SCHEMA}.users u ON tc.user_id = u.id
                 WHERE tc.ticket_id = %s
-                ORDER BY tc.created_at ASC
+                ORDER BY tc.created_at DESC
             """, (ticket_id,))
             
             comments = []
