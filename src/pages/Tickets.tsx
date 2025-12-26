@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTicketsData } from '@/hooks/useTicketsData';
 import { useTicketForm } from '@/hooks/useTicketForm';
@@ -8,7 +9,6 @@ import TicketsHeader from '@/components/tickets/TicketsHeader';
 import TicketsSearch from '@/components/tickets/TicketsSearch';
 import TicketForm from '@/components/tickets/TicketForm';
 import TicketsList from '@/components/tickets/TicketsList';
-import TicketDetailsModal from '@/components/tickets/TicketDetailsModal';
 
 interface CustomField {
   id: number;
@@ -47,9 +47,9 @@ interface Ticket {
 
 const Tickets = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const {
@@ -139,22 +139,7 @@ const Tickets = () => {
           <TicketsList
             tickets={filteredTickets}
             loading={loading}
-            onTicketClick={setSelectedTicket}
-          />
-
-          <TicketDetailsModal
-            ticket={selectedTicket}
-            onClose={() => setSelectedTicket(null)}
-            statuses={statuses}
-            onTicketUpdate={() => {
-              loadTickets();
-              if (selectedTicket) {
-                const updatedTicket = tickets.find(t => t.id === selectedTicket.id);
-                if (updatedTicket) {
-                  setSelectedTicket(updatedTicket);
-                }
-              }
-            }}
+            onTicketClick={(ticket) => navigate(`/tickets/${ticket.id}`)}
           />
         </div>
       </main>
