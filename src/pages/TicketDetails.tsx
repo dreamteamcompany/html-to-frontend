@@ -162,7 +162,7 @@ const TicketDetails = () => {
     try {
       setSubmittingComment(true);
       const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
-      const response = await fetch(`${mainUrl}?endpoint=add-comment-api`, {
+      const response = await fetch(`${mainUrl}?endpoint=ticket-comments-api`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,8 +186,8 @@ const TicketDetails = () => {
     try {
       setUpdating(true);
       const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
-      const response = await fetch(`${mainUrl}?endpoint=update-ticket-api`, {
-        method: 'POST',
+      const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'X-Auth-Token': token,
@@ -209,14 +209,15 @@ const TicketDetails = () => {
     try {
       setSendingPing(true);
       const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
-      await fetch(`${mainUrl}?endpoint=ping-ticket-api`, {
+      await fetch(`${mainUrl}?endpoint=ticket-comments-api`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Auth-Token': token,
         },
-        body: JSON.stringify({ ticket_id: id }),
+        body: JSON.stringify({ ticket_id: id, is_ping: true }),
       });
+      loadComments();
     } catch (error) {
       console.error('Error sending ping:', error);
     } finally {
@@ -227,7 +228,7 @@ const TicketDetails = () => {
   const handleReaction = async (commentId: number, emoji: string) => {
     try {
       const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
-      await fetch(`${mainUrl}?endpoint=comment-reaction-api`, {
+      await fetch(`${mainUrl}?endpoint=comment-reactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
