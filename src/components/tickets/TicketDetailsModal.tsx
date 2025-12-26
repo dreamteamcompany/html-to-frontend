@@ -100,6 +100,7 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
   const [users, setUsers] = useState<User[]>([]);
   const [updating, setUpdating] = useState(false);
   const [sendingPing, setSendingPing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'details' | 'comments'>('details');
 
   useEffect(() => {
     if (ticket?.id && token) {
@@ -415,37 +416,28 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
   return (
     <Dialog open={!!ticket} onOpenChange={onClose}>
       <DialogContent className="max-w-7xl max-h-[92vh] p-0 gap-0 overflow-hidden flex flex-col">
-        {/* Компактный header с ключевой информацией */}
-        <div className="px-6 py-4 border-b bg-muted/30 flex-shrink-0">
+        {/* Шапка с минимальной информацией */}
+        <div className="px-6 py-3 border-b bg-gradient-to-r from-background to-muted/30 flex-shrink-0">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              {ticket.category_icon && (
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Icon name={ticket.category_icon} size={18} className="text-primary" />
-                </div>
-              )}
-              <h2 className="text-lg font-semibold truncate flex-1">{ticket.title}</h2>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {ticket.priority_name && (
-                <Badge
-                  variant="outline"
-                  className="flex items-center gap-1"
-                  style={{ 
-                    borderColor: ticket.priority_color,
-                    color: ticket.priority_color
-                  }}
-                >
-                  <Icon name="Flag" size={12} />
-                  {ticket.priority_name}
+              <span className="text-xs font-mono text-muted-foreground">#{ticket.id}</span>
+              {ticket.category_name && (
+                <Badge variant="outline" className="text-xs">
+                  {ticket.category_icon && <span className="mr-1">{ticket.category_icon}</span>}
+                  {ticket.category_name}
                 </Badge>
               )}
+              <h2 className="text-base font-semibold truncate flex-1">{ticket.title}</h2>
+            </div>
+            <div className="flex items-center gap-2">
               {ticket.status_name && (
                 <Badge
                   style={{ 
-                    backgroundColor: `${ticket.status_color}`,
-                    color: 'white'
+                    backgroundColor: `${ticket.status_color}20`,
+                    color: ticket.status_color,
+                    borderColor: ticket.status_color
                   }}
+                  className="border"
                 >
                   {ticket.status_name}
                 </Badge>
@@ -454,64 +446,127 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
           </div>
         </div>
 
+        {/* Вкладки навигации */}
+        <div className="border-b bg-muted/10 flex-shrink-0">
+          <div className="flex px-6">
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'details'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Icon name="FileText" size={16} />
+                Детали
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('comments')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'comments'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Icon name="MessageSquare" size={16} />
+                Комментарии
+                {comments.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-primary/10 text-primary font-medium">
+                    {comments.length}
+                  </span>
+                )}
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* Основное содержание: двухколоночный макет */}
         <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] h-full">
-            {/* Левая колонка - Контент и комментарии */}
-            <div className="flex flex-col h-full overflow-y-auto border-r">
-              <div className="px-6 py-5 space-y-6">
-                {/* Описание */}
-                {ticket.description && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Icon name="FileText" size={16} className="text-muted-foreground" />
-                      <h3 className="text-sm font-semibold text-muted-foreground">Описание</h3>
-                    </div>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{ticket.description}</p>
-                  </div>
-                )}
-
-                {/* Дополнительные поля */}
-                {ticket.custom_fields && ticket.custom_fields.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Icon name="Settings" size={16} className="text-muted-foreground" />
-                      <h3 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      {ticket.custom_fields.map((field) => (
-                        <div key={field.id} className="p-3 rounded-lg bg-muted/40 border">
-                          <p className="text-xs text-muted-foreground mb-1">{field.name}</p>
-                          <p className="text-sm font-medium">{field.value || '—'}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] h-full">
+            {/* Левая колонка - Контент вкладок */}
+            <div className="flex flex-col h-full overflow-y-auto">
+              <div className="p-6">
+                {/* Вкладка: Детали */}
+                {activeTab === 'details' && (
+                  <div className="space-y-6 max-w-3xl">
+                    {ticket.description && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Icon name="FileText" size={16} className="text-muted-foreground" />
+                          <h3 className="text-sm font-semibold text-muted-foreground">Описание</h3>
                         </div>
-                      ))}
-                    </div>
+                        <div className="prose prose-sm max-w-none">
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{ticket.description}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {ticket.custom_fields && ticket.custom_fields.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Icon name="Settings" size={16} className="text-muted-foreground" />
+                          <h3 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h3>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {ticket.custom_fields.map((field) => (
+                            <div key={field.id} className="p-3 rounded-lg bg-muted/40 border">
+                              <p className="text-xs text-muted-foreground mb-1">{field.name}</p>
+                              <p className="text-sm font-medium">{field.value || '—'}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {ticket.priority_name && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Icon name="Flag" size={16} className="text-muted-foreground" />
+                          <h3 className="text-sm font-semibold text-muted-foreground">Приоритет</h3>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          style={{ 
+                            borderColor: ticket.priority_color,
+                            color: ticket.priority_color
+                          }}
+                        >
+                          <Icon name="Flag" size={14} className="mr-1" />
+                          {ticket.priority_name}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* Комментарии */}
-                <div className="border-t pt-6">
-                  <TicketComments
-                    comments={comments}
-                    loadingComments={loadingComments}
-                    newComment={newComment}
-                    submittingComment={submittingComment}
-                    onCommentChange={setNewComment}
-                    onSubmitComment={handleSubmitComment}
-                    isCustomer={ticket.created_by === user?.id}
-                    hasAssignee={!!ticket.assigned_to}
-                    sendingPing={sendingPing}
-                    onSendPing={handleSendPing}
-                    currentUserId={user?.id}
-                    onReaction={handleReaction}
-                  />
-                </div>
+                {/* Вкладка: Комментарии */}
+                {activeTab === 'comments' && (
+                  <div className="max-w-3xl">
+                    <TicketComments
+                      comments={comments}
+                      loadingComments={loadingComments}
+                      newComment={newComment}
+                      submittingComment={submittingComment}
+                      onCommentChange={setNewComment}
+                      onSubmitComment={handleSubmitComment}
+                      isCustomer={ticket.created_by === user?.id}
+                      hasAssignee={!!ticket.assigned_to}
+                      sendingPing={sendingPing}
+                      onSendPing={handleSendPing}
+                      currentUserId={user?.id}
+                      onReaction={handleReaction}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Правая колонка - Метаданные (сайдбар) */}
-            <div className="bg-muted/20 overflow-y-auto">
-              <div className="px-5 py-5 sticky top-0">
+            <div className="border-l bg-muted/10 overflow-y-auto">
+              <div className="p-5">
                 <TicketDetailsSidebar
                   ticket={ticket}
                   statuses={statuses}
