@@ -99,7 +99,180 @@ const TicketComments = ({
         <span className="text-sm text-muted-foreground">({comments.length})</span>
       </div>
 
-      <div className="space-y-3 mb-6">
+      {/* Форма добавления комментария СНАЧАЛА */}
+      <div className="space-y-3 mb-6 pb-4 border-b">
+        {isCustomer && hasAssignee && (
+          <Button
+            onClick={onSendPing}
+            disabled={sendingPing}
+            variant="outline"
+            size="sm"
+            className="w-full"
+          >
+            {sendingPing ? (
+              <>
+                <Icon name="Loader2" size={14} className="mr-2 animate-spin" />
+                Отправка запроса...
+              </>
+            ) : (
+              <>
+                <Icon name="Bell" size={14} className="mr-2" />
+                Запросить статус
+              </>
+            )}
+          </Button>
+        )}
+        
+        <Textarea
+          placeholder="Напишите комментарий..."
+          value={newComment}
+          onChange={(e) => onCommentChange(e.target.value)}
+          disabled={submittingComment}
+          className="min-h-[90px] resize-none"
+        />
+        
+        {selectedFiles.length > 0 && (
+          <div className="space-y-2">
+            {selectedFiles.map((file, index) => (
+              <div key={index} className="flex items-center gap-2 p-2 rounded bg-muted/50 border">
+                <Icon name="Paperclip" size={14} className="text-muted-foreground" />
+                <span className="text-xs flex-1 truncate">{file.name}</span>
+                <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
+                <button
+                  onClick={() => removeFile(index)}
+                  className="p-1 hover:bg-destructive/20 rounded transition-colors"
+                >
+                  <Icon name="X" size={12} className="text-destructive" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          onChange={handleFileSelect}
+          className="hidden"
+          id="comment-file-input"
+        />
+        
+        <div className="flex gap-2 items-center">
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={submittingComment}
+            variant="ghost"
+            size="sm"
+            className="flex-shrink-0"
+          >
+            <Icon name="Paperclip" size={16} className="mr-1" />
+            Файлы
+          </Button>
+          
+          <Button
+            onClick={handleSubmit}
+            disabled={!newComment.trim() || submittingComment}
+            size="sm"
+            className="flex-1"
+          >
+            {submittingComment ? (
+              <>
+                <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                Отправка...
+              </>
+            ) : (
+              <>
+                <Icon name="Send" size={16} className="mr-2" />
+                Отправить
+              </>
+            )}
+          </Button>
+        </div>
+        {isCustomer && hasAssignee && (
+          <Button
+            onClick={onSendPing}
+            disabled={sendingPing}
+            variant="outline"
+            size="sm"
+            className="w-full"
+          >
+            {sendingPing ? (
+              <>
+                <Icon name="Loader2" size={14} className="mr-2 animate-spin" />
+                Отправка запроса...
+              </>
+            ) : (
+              <>
+                <Icon name="Bell" size={14} className="mr-2" />
+                Запросить ответ
+              </>
+            )}
+          </Button>
+        )}
+
+        <Textarea
+          value={newComment}
+          onChange={(e) => onCommentChange(e.target.value)}
+          placeholder="Введите комментарий..."
+          className="min-h-[80px] resize-none"
+        />
+        
+        {selectedFiles.length > 0 && (
+          <div className="space-y-1">
+            {selectedFiles.map((file, idx) => (
+              <div key={idx} className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm">
+                <Icon name="File" size={14} className="text-muted-foreground" />
+                <span className="flex-1 truncate">{file.name}</span>
+                <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
+                <button
+                  onClick={() => removeFile(idx)}
+                  className="p-1 hover:bg-background rounded transition-colors"
+                >
+                  <Icon name="X" size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <Button
+            onClick={handleSubmit}
+            disabled={submittingComment || !newComment.trim()}
+            size="sm"
+          >
+            {submittingComment ? (
+              <>
+                <Icon name="Loader2" size={14} className="mr-2 animate-spin" />
+                Отправка...
+              </>
+            ) : (
+              'Отправить'
+            )}
+          </Button>
+          
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            variant="outline"
+            size="sm"
+          >
+            <Icon name="Paperclip" size={14} className="mr-2" />
+            Файл
+          </Button>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        </div>
+      </div>
+
+      {/* Список комментариев ПОСЛЕ формы */}
+      <div className="space-y-3">
         {loadingComments ? (
           <div className="flex items-center justify-center py-8">
             <Icon name="Loader2" size={24} className="animate-spin text-muted-foreground" />
@@ -197,97 +370,6 @@ const TicketComments = ({
             </div>
           ))
         )}
-      </div>
-
-      <div className="space-y-3 pt-4 border-t">
-        {isCustomer && hasAssignee && (
-          <Button
-            onClick={onSendPing}
-            disabled={sendingPing}
-            variant="outline"
-            size="sm"
-            className="w-full"
-          >
-            {sendingPing ? (
-              <>
-                <Icon name="Loader2" size={14} className="mr-2 animate-spin" />
-                Отправка запроса...
-              </>
-            ) : (
-              <>
-                <Icon name="Bell" size={14} className="mr-2" />
-                Запросить статус
-              </>
-            )}
-          </Button>
-        )}
-        
-        <Textarea
-          placeholder="Напишите комментарий..."
-          value={newComment}
-          onChange={(e) => onCommentChange(e.target.value)}
-          disabled={submittingComment}
-          className="min-h-[90px] resize-none"
-        />
-        
-        {selectedFiles.length > 0 && (
-          <div className="space-y-2">
-            {selectedFiles.map((file, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 rounded bg-muted/50 border">
-                <Icon name="Paperclip" size={14} className="text-muted-foreground" />
-                <span className="text-xs flex-1 truncate">{file.name}</span>
-                <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
-                <button
-                  onClick={() => removeFile(index)}
-                  className="p-1 hover:bg-destructive/20 rounded transition-colors"
-                >
-                  <Icon name="X" size={12} className="text-destructive" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          onChange={handleFileSelect}
-          className="hidden"
-          id="comment-file-input"
-        />
-        
-        <div className="flex gap-2 items-center">
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={submittingComment}
-            variant="ghost"
-            size="sm"
-            className="flex-shrink-0"
-          >
-            <Icon name="Paperclip" size={16} className="mr-1" />
-            Файлы
-          </Button>
-          
-          <Button
-            onClick={handleSubmit}
-            disabled={!newComment.trim() || submittingComment}
-            size="sm"
-            className="flex-1"
-          >
-            {submittingComment ? (
-              <>
-                <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
-                Отправка...
-              </>
-            ) : (
-              <>
-                <Icon name="Send" size={16} className="mr-2" />
-                Отправить
-              </>
-            )}
-          </Button>
-        </div>
       </div>
     </div>
   );
