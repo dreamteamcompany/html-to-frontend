@@ -96,8 +96,11 @@ const TicketDetails = () => {
   const loadTicket = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`https://poehali.ylab.io/api/tickets/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=ticket-details-api&ticket_id=${id}`, {
+        headers: {
+          'X-Auth-Token': token,
+        },
       });
       if (response.ok) {
         const data = await response.json();
@@ -112,12 +115,15 @@ const TicketDetails = () => {
 
   const loadStatuses = async () => {
     try {
-      const response = await fetch('https://poehali.ylab.io/api/ticket-statuses', {
-        headers: { Authorization: `Bearer ${token}` },
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=ticket-dictionaries-api`, {
+        headers: {
+          'X-Auth-Token': token,
+        },
       });
       if (response.ok) {
         const data = await response.json();
-        setStatuses(data);
+        setStatuses(data.statuses || []);
       }
     } catch (error) {
       console.error('Error loading statuses:', error);
@@ -127,12 +133,15 @@ const TicketDetails = () => {
   const loadComments = async () => {
     try {
       setLoadingComments(true);
-      const response = await fetch(`https://poehali.ylab.io/api/tickets/${id}/comments`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=ticket-comments-api&ticket_id=${id}`, {
+        headers: {
+          'X-Auth-Token': token,
+        },
       });
       if (response.ok) {
         const data = await response.json();
-        setComments(data);
+        setComments(data.comments || []);
       }
     } catch (error) {
       console.error('Error loading comments:', error);
@@ -146,13 +155,14 @@ const TicketDetails = () => {
     
     try {
       setSubmittingComment(true);
-      const response = await fetch(`https://poehali.ylab.io/api/tickets/${id}/comments`, {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=add-comment-api`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'X-Auth-Token': token,
         },
-        body: JSON.stringify({ comment: newComment, is_internal: false }),
+        body: JSON.stringify({ ticket_id: id, comment: newComment, is_internal: false }),
       });
       
       if (response.ok) {
@@ -169,13 +179,14 @@ const TicketDetails = () => {
   const handleUpdateStatus = async (statusId: number) => {
     try {
       setUpdating(true);
-      const response = await fetch(`https://poehali.ylab.io/api/tickets/${id}`, {
-        method: 'PUT',
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=update-ticket-api`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'X-Auth-Token': token,
         },
-        body: JSON.stringify({ status_id: statusId }),
+        body: JSON.stringify({ ticket_id: id, status_id: statusId }),
       });
       
       if (response.ok) {
@@ -191,9 +202,14 @@ const TicketDetails = () => {
   const handleSendPing = async () => {
     try {
       setSendingPing(true);
-      await fetch(`https://poehali.ylab.io/api/tickets/${id}/ping`, {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      await fetch(`${mainUrl}?endpoint=ping-ticket-api`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token,
+        },
+        body: JSON.stringify({ ticket_id: id }),
       });
     } catch (error) {
       console.error('Error sending ping:', error);
@@ -204,13 +220,14 @@ const TicketDetails = () => {
 
   const handleReaction = async (commentId: number, emoji: string) => {
     try {
-      await fetch(`https://poehali.ylab.io/api/comments/${commentId}/reactions`, {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      await fetch(`${mainUrl}?endpoint=comment-reaction-api`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'X-Auth-Token': token,
         },
-        body: JSON.stringify({ emoji }),
+        body: JSON.stringify({ comment_id: commentId, emoji }),
       });
       loadComments();
     } catch (error) {
