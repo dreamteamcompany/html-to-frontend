@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import {
   Select,
@@ -52,8 +53,12 @@ interface TicketDetailsSidebarProps {
   statuses: Status[];
   users: User[];
   updating: boolean;
+  sendingPing?: boolean;
+  isCustomer?: boolean;
+  hasAssignee?: boolean;
   onUpdateStatus: (statusId: string) => void;
   onAssignUser: (userId: string) => void;
+  onSendPing?: () => void;
 }
 
 const TicketDetailsSidebar = ({
@@ -61,8 +66,12 @@ const TicketDetailsSidebar = ({
   statuses,
   users,
   updating,
+  sendingPing = false,
+  isCustomer = false,
+  hasAssignee = false,
   onUpdateStatus,
   onAssignUser,
+  onSendPing,
 }: TicketDetailsSidebarProps) => {
   const getDeadlineInfo = (dueDate?: string) => {
     if (!dueDate) return null;
@@ -93,6 +102,33 @@ const TicketDetailsSidebar = ({
 
   return (
     <div className="space-y-3">
+      {isCustomer && hasAssignee && onSendPing && (
+        <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary">
+          <Button
+            onClick={onSendPing}
+            disabled={sendingPing}
+            variant="default"
+            size="lg"
+            className="w-full font-semibold"
+          >
+            {sendingPing ? (
+              <>
+                <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
+                Отправка запроса...
+              </>
+            ) : (
+              <>
+                <Icon name="Bell" size={18} className="mr-2" />
+                Запросить статус
+              </>
+            )}
+          </Button>
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            Уведомить исполнителя о необходимости обновить статус
+          </p>
+        </div>
+      )}
+      
       <div className="p-3 rounded-lg bg-background border">
         <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
           <Icon name="CheckCircle" size={14} />
@@ -231,15 +267,11 @@ const TicketDetailsSidebar = ({
 
       {ticket.priority_name && (
         <div 
-          className={`p-3 rounded-lg border ${
-            ticket.priority_name.toLowerCase().includes('высок') 
-              ? 'animate-pulse' 
-              : 'bg-background'
-          }`}
+          className="p-3 rounded-lg border bg-background"
           style={
             ticket.priority_name.toLowerCase().includes('высок')
               ? {
-                  backgroundColor: `${ticket.priority_color}15`,
+                  backgroundColor: `${ticket.priority_color}10`,
                   borderColor: ticket.priority_color,
                   borderWidth: '2px'
                 }

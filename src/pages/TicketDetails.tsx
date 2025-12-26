@@ -5,7 +5,7 @@ import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import TicketDetailsPageHeader from '@/components/tickets/TicketDetailsPageHeader';
 import TicketDetailsContent from '@/components/tickets/TicketDetailsContent';
-import TicketDetailsSidebarTabs from '@/components/tickets/TicketDetailsSidebarTabs';
+import TicketDetailsSidebar from '@/components/tickets/TicketDetailsSidebar';
 
 interface CustomField {
   id: number;
@@ -355,7 +355,18 @@ const TicketDetails = () => {
             uploadingFile={uploadingFile}
           />
 
-          <TicketDetailsSidebarTabs ticket={ticket} />
+          <TicketDetailsSidebar 
+            ticket={ticket}
+            statuses={statuses}
+            users={users}
+            updating={updating}
+            sendingPing={sendingPing}
+            isCustomer={ticket.created_by === user?.id}
+            hasAssignee={!!ticket.assigned_to}
+            onUpdateStatus={(statusId) => handleUpdateStatus(Number(statusId))}
+            onAssignUser={(userId) => console.log('Assign user:', userId)}
+            onSendPing={handleSendPing}
+          />
         </div>
       </div>
     </div>
