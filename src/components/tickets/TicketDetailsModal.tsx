@@ -54,6 +54,17 @@ interface Comment {
   comment: string;
   is_internal: boolean;
   created_at?: string;
+  attachments?: {
+    id: number;
+    filename: string;
+    url: string;
+    size: number;
+  }[];
+  reactions?: {
+    emoji: string;
+    count: number;
+    users: number[];
+  }[];
 }
 
 interface User {
@@ -154,11 +165,53 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
     }
   };
 
-  const handleSubmitComment = async () => {
+  const handleSubmitComment = async (files?: File[]) => {
     if (!newComment.trim() || !ticket?.id || !token) return;
 
     setSubmittingComment(true);
     try {
+      let fileUrls: { filename: string; url: string; size: number }[] = [];
+      
+      // Загружаем файлы, если они есть (конвертируем в base64)
+      if (files && files.length > 0) {
+        const uploadPromises = files.map(async (file) => {
+          // Конвертируем файл в base64
+          const reader = new FileReader();
+          const base64Data = await new Promise<string>((resolve) => {
+            reader.onload = () => {
+              const result = reader.result as string;
+              resolve(result.split(',')[1]); // Убираем prefix 'data:...'
+            };
+            reader.readAsDataURL(file);
+          });
+          
+          const uploadResponse = await fetch(
+            'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=upload-file',
+            {
+              method: 'POST',
+              headers: { 
+                'X-Auth-Token': token,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                filename: file.name,
+                data: base64Data,
+                content_type: file.type
+              }),
+            }
+          );
+          
+          if (uploadResponse.ok) {
+            const data = await uploadResponse.json();
+            return { filename: file.name, url: data.url, size: file.size };
+          }
+          return null;
+        });
+        
+        const results = await Promise.all(uploadPromises);
+        fileUrls = results.filter((r): r is { filename: string; url: string; size: number } => r !== null);
+      }
+      
       const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
       const response = await fetch(`${mainUrl}?endpoint=ticket-comments-api`, {
         method: 'POST',
@@ -170,6 +223,7 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
           ticket_id: ticket.id,
           comment: newComment,
           is_internal: false,
+          attachments: fileUrls.length > 0 ? fileUrls : undefined,
         }),
       });
 
@@ -285,6 +339,31 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
     }
   };
 
+  const handleReaction = async (commentId: number, emoji: string) => {
+    if (!token || !user?.id) return;
+
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=comment-reactions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token,
+        },
+        body: JSON.stringify({
+          comment_id: commentId,
+          emoji,
+        }),
+      });
+
+      if (response.ok) {
+        await loadComments();
+      }
+    } catch (err) {
+      console.error('Failed to add reaction:', err);
+    }
+  };
+  
   const handleSendPing = async () => {
     if (!ticket?.id || !token) return;
 
@@ -357,6 +436,8 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
                   hasAssignee={!!ticket.assigned_to}
                   sendingPing={sendingPing}
                   onSendPing={handleSendPing}
+                  currentUserId={user?.id}
+                  onReaction={handleReaction}
                 />
               </div>
             </div>

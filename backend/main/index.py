@@ -407,6 +407,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not payload:
                 return response(401, {'error': 'Invalid token'})
             return handle_ticket_comments_api(method, event, conn, payload)
+        elif endpoint == 'comment-reactions':
+            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+            if not token:
+                return response(401, {'error': 'Authentication required'})
+            payload = verify_jwt_token(token)
+            if not payload:
+                return response(401, {'error': 'Invalid token'})
+            return handle_comment_reactions(method, event, conn, payload)
+        elif endpoint == 'upload-file':
+            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+            if not token:
+                return response(401, {'error': 'Authentication required'})
+            payload = verify_jwt_token(token)
+            if not payload:
+                return response(401, {'error': 'Invalid token'})
+            return handle_upload_file(event, conn, payload)
         
         return response(404, {'error': 'Endpoint not found'})
     
@@ -2975,6 +2991,26 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
             
             comments = []
             for row in cur.fetchall():
+                comment_id = row['id']
+                
+                # Загружаем вложения
+                cur.execute(f"""
+                    SELECT id, filename, url, size
+                    FROM {SCHEMA}.comment_attachments
+                    WHERE comment_id = %s
+                    ORDER BY created_at ASC
+                """, (comment_id,))
+                attachments = [dict(a) for a in cur.fetchall()]
+                
+                # Загружаем реакции с агрегацией
+                cur.execute(f"""
+                    SELECT emoji, COUNT(*) as count, ARRAY_AGG(user_id) as users
+                    FROM {SCHEMA}.comment_reactions
+                    WHERE comment_id = %s
+                    GROUP BY emoji
+                """, (comment_id,))
+                reactions = [{'emoji': r['emoji'], 'count': r['count'], 'users': r['users']} for r in cur.fetchall()]
+                
                 comments.append({
                     'id': row['id'],
                     'ticket_id': row['ticket_id'],
@@ -2983,7 +3019,9 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
                     'user_email': row['user_email'],
                     'comment': row['comment'],
                     'is_internal': row['is_internal'],
-                    'created_at': row['created_at'].isoformat() if row['created_at'] else None
+                    'created_at': row['created_at'].isoformat() if row['created_at'] else None,
+                    'attachments': attachments,
+                    'reactions': reactions
                 })
             
             return response(200, {'comments': comments})
@@ -2995,6 +3033,7 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
             comment_text = data.get('comment')
             is_internal = data.get('is_internal', False)
             is_ping = data.get('is_ping', False)
+            attachments = data.get('attachments', [])
             
             if not ticket_id:
                 return response(400, {'error': 'ticket_id обязателен'})
@@ -3027,6 +3066,15 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
             """, (ticket_id, user_id, comment_text, is_internal))
             
             result = cur.fetchone()
+            comment_id = result['id']
+            
+            # Сохраняем вложения
+            for attachment in attachments:
+                cur.execute(f"""
+                    INSERT INTO {SCHEMA}.comment_attachments (comment_id, filename, url, size)
+                    VALUES (%s, %s, %s, %s)
+                """, (comment_id, attachment['filename'], attachment['url'], attachment['size']))
+            
             conn.commit()
             
             cur.execute(f"""
@@ -3049,3 +3097,96 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
         return response(500, {'error': str(e)})
     finally:
         cur.close()
+
+def handle_comment_reactions(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Обработчик для реакций на комментарии"""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    user_id = payload['user_id']
+    
+    try:
+        if method == 'POST':
+            data = json.loads(event.get('body', '{}'))
+            comment_id = data.get('comment_id')
+            emoji = data.get('emoji')
+            
+            if not comment_id or not emoji:
+                return response(400, {'error': 'comment_id и emoji обязательны'})
+            
+            # Проверяем, есть ли уже такая реакция от этого пользователя
+            cur.execute(f"""
+                SELECT id FROM {SCHEMA}.comment_reactions
+                WHERE comment_id = %s AND user_id = %s AND emoji = %s
+            """, (comment_id, user_id, emoji))
+            
+            existing = cur.fetchone()
+            
+            if existing:
+                # Удаляем реакцию (toggle)
+                cur.execute(f"""
+                    DELETE FROM {SCHEMA}.comment_reactions
+                    WHERE id = %s
+                """, (existing['id'],))
+                conn.commit()
+                return response(200, {'message': 'Реакция удалена'})
+            else:
+                # Добавляем реакцию
+                cur.execute(f"""
+                    INSERT INTO {SCHEMA}.comment_reactions (comment_id, user_id, emoji)
+                    VALUES (%s, %s, %s)
+                """, (comment_id, user_id, emoji))
+                conn.commit()
+                return response(201, {'message': 'Реакция добавлена'})
+        
+        return response(405, {'error': 'Метод не поддерживается'})
+    
+    except Exception as e:
+        conn.rollback()
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_upload_file(event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Загрузка файла в S3"""
+    import boto3
+    import base64
+    from datetime import datetime
+    
+    try:
+        # Получаем данные из JSON body
+        data = json.loads(event.get('body', '{}'))
+        filename = data.get('filename', 'file')
+        base64_data = data.get('data', '')
+        content_type = data.get('content_type', 'application/octet-stream')
+        
+        if not base64_data:
+            return response(400, {'error': 'Файл не предоставлен'})
+        
+        # Декодируем base64
+        file_data = base64.b64decode(base64_data)
+        
+        # Генерируем безопасное имя файла
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+        safe_filename = f"{timestamp}_{filename}"
+        
+        # Загружаем в S3
+        s3 = boto3.client('s3',
+            endpoint_url='https://bucket.poehali.dev',
+            aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+            aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
+        )
+        
+        s3_key = f"attachments/{safe_filename}"
+        s3.put_object(
+            Bucket='files', 
+            Key=s3_key, 
+            Body=file_data,
+            ContentType=content_type
+        )
+        
+        # Формируем URL
+        cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
+        
+        return response(200, {'url': cdn_url})
+    
+    except Exception as e:
+        return response(500, {'error': str(e)})
