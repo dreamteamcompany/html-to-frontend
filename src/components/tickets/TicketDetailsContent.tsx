@@ -92,9 +92,9 @@ const TicketDetailsContent = ({
   uploadingFile,
 }: TicketDetailsContentProps) => {
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-4 lg:p-6">
       {/* Суть заявки */}
-      <div className="mb-6 border rounded-lg p-5 bg-card">
+      <div className="mb-4 lg:mb-6 border rounded-lg p-4 lg:p-5 bg-card">
         <button className="flex items-center gap-2 text-sm font-semibold mb-4 w-full">
           <Icon name="ChevronDown" size={16} />
           Суть заявки

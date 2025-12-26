@@ -262,7 +262,7 @@ const TicketComments = ({
             value={newComment}
             onChange={handleTextChange}
             disabled={submittingComment}
-            className="min-h-[90px] resize-none pr-10"
+            className="min-h-[90px] lg:min-h-[120px] resize-none pr-10 text-sm"
           />
           
           {showMentions && filteredUsers.length > 0 && (
@@ -287,12 +287,12 @@ const TicketComments = ({
           )}
         </div>
         
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
           <Button
             onClick={handleSubmit}
             disabled={!newComment.trim() || submittingComment}
             size="sm"
-            className="flex-1"
+            className="flex-1 min-w-[120px]"
           >
             {submittingComment ? (
               <>
@@ -370,7 +370,7 @@ const TicketComments = ({
               <div 
                 key={comment.id} 
                 className={`p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors ${
-                  comment.parent_comment_id ? 'ml-8 border-l-2 border-primary/30' : ''
+                  comment.parent_comment_id ? 'ml-4 lg:ml-8 border-l-2 border-primary/30' : ''
                 }`}
               >
                 {parentComment && (
@@ -383,8 +383,8 @@ const TicketComments = ({
                   </div>
                 )}
                 
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="flex items-start gap-2 lg:gap-3">
+                  <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Icon name="User" size={14} className="text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">

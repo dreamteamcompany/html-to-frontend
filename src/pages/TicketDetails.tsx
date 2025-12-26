@@ -342,8 +342,8 @@ const TicketDetails = () => {
         onBack={() => navigate('/tickets')}
       />
 
-      <div className="container max-w-[1600px] mx-auto">
-        <div className="flex">
+      <div className="container max-w-[1600px] mx-auto px-4 lg:px-6">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-0">
           <TicketDetailsContent
             ticket={ticket}
             comments={comments}
@@ -361,19 +361,35 @@ const TicketDetails = () => {
             uploadingFile={uploadingFile}
           />
 
-          <TicketDetailsSidebar 
-            ticket={ticket}
-            statuses={statuses}
-            users={users}
-            updating={updating}
-            sendingPing={sendingPing}
-            isCustomer={ticket.created_by === user?.id}
-            hasAssignee={!!ticket.assigned_to}
-            onUpdateStatus={(statusId) => handleUpdateStatus(Number(statusId))}
-            onAssignUser={(userId) => console.log('Assign user:', userId)}
-            onSendPing={handleSendPing}
-          />
-        </div>
+          <div className="lg:hidden">
+            <TicketDetailsSidebar 
+              ticket={ticket}
+              statuses={statuses}
+              users={users}
+              updating={updating}
+              sendingPing={sendingPing}
+              isCustomer={ticket.created_by === user?.id}
+              hasAssignee={!!ticket.assigned_to}
+              onUpdateStatus={(statusId) => handleUpdateStatus(Number(statusId))}
+              onAssignUser={(userId) => console.log('Assign user:', userId)}
+              onSendPing={handleSendPing}
+            />
+          </div>
+
+          <div className="hidden lg:block">
+            <TicketDetailsSidebar 
+              ticket={ticket}
+              statuses={statuses}
+              users={users}
+              updating={updating}
+              sendingPing={sendingPing}
+              isCustomer={ticket.created_by === user?.id}
+              hasAssignee={!!ticket.assigned_to}
+              onUpdateStatus={(statusId) => handleUpdateStatus(Number(statusId))}
+              onAssignUser={(userId) => console.log('Assign user:', userId)}
+              onSendPing={handleSendPing}
+            />
+          </div>
       </div>
     </div>
   );
