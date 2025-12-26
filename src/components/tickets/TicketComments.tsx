@@ -190,59 +190,6 @@ const TicketComments = ({
           </Button>
         </div>
       </div>
-        
-        {selectedFiles.length > 0 && (
-          <div className="space-y-1">
-            {selectedFiles.map((file, idx) => (
-              <div key={idx} className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm">
-                <Icon name="File" size={14} className="text-muted-foreground" />
-                <span className="flex-1 truncate">{file.name}</span>
-                <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
-                <button
-                  onClick={() => removeFile(idx)}
-                  className="p-1 hover:bg-background rounded transition-colors"
-                >
-                  <Icon name="X" size={12} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="flex gap-2">
-          <Button
-            onClick={handleSubmit}
-            disabled={submittingComment || !newComment.trim()}
-            size="sm"
-          >
-            {submittingComment ? (
-              <>
-                <Icon name="Loader2" size={14} className="mr-2 animate-spin" />
-                Отправка...
-              </>
-            ) : (
-              'Отправить'
-            )}
-          </Button>
-          
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            variant="outline"
-            size="sm"
-          >
-            <Icon name="Paperclip" size={14} className="mr-2" />
-            Файл
-          </Button>
-          
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-        </div>
-      </div>
 
       {/* Список комментариев ПОСЛЕ формы */}
       <div className="space-y-3">
