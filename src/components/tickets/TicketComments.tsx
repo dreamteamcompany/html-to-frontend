@@ -258,25 +258,6 @@ const TicketComments = ({
         </div>
         
         <div className="flex gap-2 items-center">
-          <div className="relative">
-            <Button
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              disabled={submittingComment}
-              variant="ghost"
-              size="sm"
-              className="flex-shrink-0"
-            >
-              <Icon name="Smile" size={16} className="mr-1" />
-              Эмодзи
-            </Button>
-            
-            {showEmojiPicker && (
-              <div ref={emojiPickerRef} className="absolute bottom-full left-0 mb-2 z-50">
-                <EmojiPicker onEmojiClick={handleEmojiClick} />
-              </div>
-            )}
-          </div>
-          
           <Button
             onClick={handleSubmit}
             disabled={!newComment.trim() || submittingComment}
@@ -295,6 +276,24 @@ const TicketComments = ({
               </>
             )}
           </Button>
+          
+          <div className="relative">
+            <Button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              disabled={submittingComment}
+              variant="ghost"
+              size="sm"
+              className="flex-shrink-0"
+            >
+              <Icon name="Smile" size={16} />
+            </Button>
+            
+            {showEmojiPicker && (
+              <div ref={emojiPickerRef} className="absolute bottom-full right-0 mb-2 z-50">
+                <EmojiPicker onEmojiClick={handleEmojiClick} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
