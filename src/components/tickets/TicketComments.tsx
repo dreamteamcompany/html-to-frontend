@@ -48,6 +48,8 @@ interface TicketCommentsProps {
   currentUserId?: number;
   onReaction?: (commentId: number, emoji: string) => void;
   availableUsers?: User[];
+  onFileUpload?: (file: File) => Promise<void>;
+  uploadingFile?: boolean;
 }
 
 const TicketComments = ({
@@ -63,6 +65,8 @@ const TicketComments = ({
   onSendPing,
   currentUserId,
   availableUsers = [],
+  onFileUpload,
+  uploadingFile = false,
 }: TicketCommentsProps) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [replyToComment, setReplyToComment] = useState<Comment | null>(null);
@@ -72,6 +76,7 @@ const TicketComments = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const mentionsRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
@@ -113,14 +118,29 @@ const TicketComments = ({
   };
 
   const handleMention = (user: User) => {
-    const beforeCursor = newComment.substring(0, textareaRef.current?.selectionStart || 0);
-    const afterCursor = newComment.substring(textareaRef.current?.selectionStart || 0);
+    const cursorPos = textareaRef.current?.selectionStart || 0;
+    const beforeCursor = newComment.substring(0, cursorPos);
+    const afterCursor = newComment.substring(cursorPos);
     const mentionText = `@${user.name} `;
     
-    onCommentChange(beforeCursor.replace(/@\w*$/, mentionText) + afterCursor);
-    setMentionedUsers([...mentionedUsers, user]);
+    const newText = beforeCursor.replace(/@\w*$/, mentionText) + afterCursor;
+    onCommentChange(newText);
+    
+    if (!mentionedUsers.find(u => u.id === user.id)) {
+      setMentionedUsers([...mentionedUsers, user]);
+    }
+    
     setShowMentions(false);
     setMentionSearch('');
+    
+    setTimeout(() => {
+      if (textareaRef.current) {
+        const newCursorPos = beforeCursor.replace(/@\w*$/, mentionText).length;
+        textareaRef.current.selectionStart = newCursorPos;
+        textareaRef.current.selectionEnd = newCursorPos;
+        textareaRef.current.focus();
+      }
+    }, 0);
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -149,6 +169,16 @@ const TicketComments = ({
     onSubmitComment(replyToComment?.id, mentionedUserIds);
     setReplyToComment(null);
     setMentionedUsers([]);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onFileUpload) {
+      await onFileUpload(file);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const getParentComment = (parentId?: number) => {
@@ -277,6 +307,29 @@ const TicketComments = ({
             )}
           </Button>
           
+          <input
+            ref={fileInputRef}
+            type="file"
+            onChange={handleFileSelect}
+            className="hidden"
+            disabled={uploadingFile}
+          />
+          
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingFile || submittingComment}
+            variant="ghost"
+            size="sm"
+            className="flex-shrink-0"
+            title="Прикрепить файл"
+          >
+            {uploadingFile ? (
+              <Icon name="Loader2" size={16} className="animate-spin" />
+            ) : (
+              <Icon name="Paperclip" size={16} />
+            )}
+          </Button>
+          
           <div className="relative">
             <Button
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -284,6 +337,7 @@ const TicketComments = ({
               variant="ghost"
               size="sm"
               className="flex-shrink-0"
+              title="Добавить эмодзи"
             >
               <Icon name="Smile" size={16} />
             </Button>

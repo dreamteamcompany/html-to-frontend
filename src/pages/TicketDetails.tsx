@@ -86,6 +86,7 @@ const TicketDetails = () => {
   const [updating, setUpdating] = useState(false);
   const [sendingPing, setSendingPing] = useState(false);
   const [users, setUsers] = useState<Array<{id: number; name: string; email: string}>>([]);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -267,6 +268,49 @@ const TicketDetails = () => {
     }
   };
 
+  const handleFileUpload = async (file: File) => {
+    try {
+      setUploadingFile(true);
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      await new Promise((resolve, reject) => {
+        reader.onload = async () => {
+          try {
+            const base64 = (reader.result as string).split(',')[1];
+            const response = await fetch(`${mainUrl}?endpoint=upload-file`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Auth-Token': token,
+              },
+              body: JSON.stringify({
+                file_data: base64,
+                filename: file.name,
+                content_type: file.type,
+              }),
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              setNewComment(prev => prev + `\n[Файл: ${file.name}](${data.url})`);
+            }
+            resolve(null);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = reject;
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -307,6 +351,8 @@ const TicketDetails = () => {
             onSendPing={handleSendPing}
             onReaction={handleReaction}
             availableUsers={users}
+            onFileUpload={handleFileUpload}
+            uploadingFile={uploadingFile}
           />
 
           <TicketDetailsSidebarTabs ticket={ticket} />

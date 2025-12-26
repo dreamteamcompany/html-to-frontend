@@ -71,6 +71,8 @@ interface TicketDetailsContentProps {
   onSendPing: () => void;
   onReaction: (commentId: number, emoji: string) => void;
   availableUsers?: Array<{id: number; name: string; email: string}>;
+  onFileUpload?: (file: File) => Promise<void>;
+  uploadingFile?: boolean;
 }
 
 const TicketDetailsContent = ({
@@ -86,6 +88,8 @@ const TicketDetailsContent = ({
   onSendPing,
   onReaction,
   availableUsers,
+  onFileUpload,
+  uploadingFile,
 }: TicketDetailsContentProps) => {
   return (
     <div className="flex-1 p-6">
@@ -139,6 +143,8 @@ const TicketDetailsContent = ({
           currentUserId={userId}
           onReaction={onReaction}
           availableUsers={availableUsers}
+          onFileUpload={onFileUpload}
+          uploadingFile={uploadingFile}
         />
       </div>
     </div>
