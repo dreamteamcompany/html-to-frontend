@@ -753,13 +753,11 @@ def handle_users_list(method: str, event: Dict[str, Any], conn, payload: Dict[st
     if method != 'GET':
         return response(405, {'error': 'Метод не поддерживается'})
     
-    print(f"[handle_users_list] Fetching users list for user_id={payload.get('user_id')}")
-    
     cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        cur.execute("""
-            SELECT id, username, full_name, email
-            FROM users
+        cur.execute(f"""
+            SELECT id, username, full_name
+            FROM {SCHEMA}.users
             WHERE is_active = true
             ORDER BY full_name
         """)
@@ -767,11 +765,8 @@ def handle_users_list(method: str, event: Dict[str, Any], conn, payload: Dict[st
         users_data = cur.fetchall()
         users = [dict(row) for row in users_data]
         
-        print(f"[handle_users_list] Found {len(users)} users")
-        
         return response(200, {'users': users})
     except Exception as e:
-        print(f"[handle_users_list] Error: {e}")
         return response(500, {'error': str(e)})
     finally:
         cur.close()
