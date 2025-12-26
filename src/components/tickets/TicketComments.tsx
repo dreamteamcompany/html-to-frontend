@@ -189,34 +189,7 @@ const TicketComments = ({
             )}
           </Button>
         </div>
-        {isCustomer && hasAssignee && (
-          <Button
-            onClick={onSendPing}
-            disabled={sendingPing}
-            variant="outline"
-            size="sm"
-            className="w-full"
-          >
-            {sendingPing ? (
-              <>
-                <Icon name="Loader2" size={14} className="mr-2 animate-spin" />
-                Отправка запроса...
-              </>
-            ) : (
-              <>
-                <Icon name="Bell" size={14} className="mr-2" />
-                Запросить ответ
-              </>
-            )}
-          </Button>
-        )}
-
-        <Textarea
-          value={newComment}
-          onChange={(e) => onCommentChange(e.target.value)}
-          placeholder="Введите комментарий..."
-          className="min-h-[80px] resize-none"
-        />
+      </div>
         
         {selectedFiles.length > 0 && (
           <div className="space-y-1">
