@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
@@ -74,12 +74,13 @@ interface Status {
 const TicketDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { token, user } = useAuth();
-  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [ticket, setTicket] = useState<Ticket | null>(location.state?.ticket || null);
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!location.state?.ticket);
   const [loadingComments, setLoadingComments] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -87,7 +88,9 @@ const TicketDetails = () => {
 
   useEffect(() => {
     if (id) {
-      loadTicket();
+      if (!ticket) {
+        loadTicket();
+      }
       loadStatuses();
       loadComments();
     }
@@ -97,14 +100,17 @@ const TicketDetails = () => {
     try {
       setLoading(true);
       const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
-      const response = await fetch(`${mainUrl}?endpoint=ticket-details-api&ticket_id=${id}`, {
+      const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
         headers: {
           'X-Auth-Token': token,
         },
       });
       if (response.ok) {
         const data = await response.json();
-        setTicket(data);
+        const foundTicket = data.tickets?.find((t: Ticket) => t.id === Number(id));
+        if (foundTicket) {
+          setTicket(foundTicket);
+        }
       }
     } catch (error) {
       console.error('Error loading ticket:', error);

@@ -139,7 +139,7 @@ const Tickets = () => {
           <TicketsList
             tickets={filteredTickets}
             loading={loading}
-            onTicketClick={(ticket) => navigate(`/tickets/${ticket.id}`)}
+            onTicketClick={(ticket) => navigate(`/tickets/${ticket.id}`, { state: { ticket } })}
           />
         </div>
       </main>
