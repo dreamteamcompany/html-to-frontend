@@ -45,7 +45,7 @@ const TicketDetailsSidebarTabs = ({ ticket }: TicketDetailsSidebarTabsProps) => 
   const [activeTab, setActiveTab] = useState<'info' | 'tasks' | 'related' | 'sla'>('info');
 
   return (
-    <div className="w-[400px] border-l bg-muted/10">
+    <div className="w-[600px] border-l bg-muted/10">
       {/* Вкладки */}
       <div className="border-b bg-background sticky top-[73px]">
         <div className="flex">
