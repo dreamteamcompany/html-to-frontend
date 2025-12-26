@@ -344,7 +344,7 @@ const TicketComments = ({
             
             {showEmojiPicker && (
               <div ref={emojiPickerRef} className="absolute bottom-full right-0 mb-2 z-50">
-                <EmojiPicker onEmojiClick={handleEmojiClick} />
+                <EmojiPicker onEmojiClick={handleEmojiClick} emojiStyle="native" />
               </div>
             )}
           </div>
