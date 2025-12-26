@@ -99,17 +99,10 @@ const TicketDetailsSidebar = ({
   };
 
   const deadlineInfo = getDeadlineInfo(ticket.due_date);
-  
-  console.log('[TicketDetailsSidebar] Ping button visibility:', {
-    isCustomer,
-    hasAssignee,
-    hasOnSendPing: !!onSendPing,
-    shouldShow: isCustomer && hasAssignee && !!onSendPing
-  });
 
   return (
     <div className="w-[400px] space-y-3 flex-shrink-0">
-      {isCustomer && hasAssignee && onSendPing && (
+      {onSendPing && (
         <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary">
           <Button
             onClick={onSendPing}
