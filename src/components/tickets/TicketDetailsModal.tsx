@@ -7,6 +7,8 @@ import {
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import Icon from '@/components/ui/icon';
 import TicketDetailsHeader from './TicketDetailsHeader';
 import TicketDetailsInfo from './TicketDetailsInfo';
 import TicketDetailsSidebar from './TicketDetailsSidebar';
