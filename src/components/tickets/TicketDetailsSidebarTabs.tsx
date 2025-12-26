@@ -93,22 +93,22 @@ const TicketDetailsSidebarTabs = ({ ticket }: TicketDetailsSidebarTabsProps) => 
       </div>
 
       {/* Контент вкладок */}
-      <div className="p-5 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 73px - 53px)' }}>
+      <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 73px - 53px)' }}>
         {activeTab === 'info' && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Статус */}
-            <div>
-              <button className="flex items-center gap-2 text-sm font-semibold mb-3 w-full">
+            <div className="pb-6 border-b">
+              <button className="flex items-center gap-2 text-sm font-semibold mb-4 w-full">
                 <Icon name="ChevronDown" size={16} />
                 Статус
               </button>
-              <div className="space-y-3 pl-6">
+              <div className="space-y-4 pl-6">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Ответственный:</p>
-                  <p className="text-sm">{ticket.assignee_name || 'Не назначен'}</p>
+                  <p className="text-xs text-muted-foreground mb-2">Ответственный:</p>
+                  <p className="text-sm font-medium">{ticket.assignee_name || 'Не назначен'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Статус:</p>
+                  <p className="text-xs text-muted-foreground mb-2">Статус:</p>
                   <Badge
                     style={{ 
                       backgroundColor: `${ticket.status_color}20`,
@@ -122,29 +122,29 @@ const TicketDetailsSidebarTabs = ({ ticket }: TicketDetailsSidebarTabsProps) => 
                 </div>
                 {ticket.due_date && (
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Решить до:</p>
-                    <p className="text-sm">{new Date(ticket.due_date).toLocaleString('ru-RU')}</p>
+                    <p className="text-xs text-muted-foreground mb-2">Решить до:</p>
+                    <p className="text-sm font-medium">{new Date(ticket.due_date).toLocaleString('ru-RU')}</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Информация */}
-            <div>
-              <button className="flex items-center gap-2 text-sm font-semibold mb-3 w-full">
+            <div className="pb-6 border-b">
+              <button className="flex items-center gap-2 text-sm font-semibold mb-4 w-full">
                 <Icon name="ChevronDown" size={16} />
                 Информация
               </button>
-              <div className="space-y-3 pl-6">
+              <div className="space-y-4 pl-6">
                 {ticket.category_name && (
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Категория:</p>
-                    <p className="text-sm">{ticket.category_name}</p>
+                    <p className="text-xs text-muted-foreground mb-2">Категория:</p>
+                    <p className="text-sm font-medium">{ticket.category_name}</p>
                   </div>
                 )}
                 {ticket.priority_name && (
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Приоритет:</p>
+                    <p className="text-xs text-muted-foreground mb-2">Приоритет:</p>
                     <Badge
                       variant="outline"
                       style={{ 
@@ -157,26 +157,26 @@ const TicketDetailsSidebarTabs = ({ ticket }: TicketDetailsSidebarTabsProps) => 
                   </div>
                 )}
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Создано:</p>
-                  <p className="text-sm">{ticket.created_at ? new Date(ticket.created_at).toLocaleString('ru-RU') : '—'}</p>
+                  <p className="text-xs text-muted-foreground mb-2">Создано:</p>
+                  <p className="text-sm font-medium">{ticket.created_at ? new Date(ticket.created_at).toLocaleString('ru-RU') : '—'}</p>
                 </div>
               </div>
             </div>
 
             {/* Данные о контрагенте */}
-            <div>
-              <button className="flex items-center gap-2 text-sm font-semibold mb-3 w-full">
+            <div className="pb-6 border-b">
+              <button className="flex items-center gap-2 text-sm font-semibold mb-4 w-full">
                 <Icon name="ChevronDown" size={16} />
                 Данные о контрагенте
               </button>
-              <div className="space-y-3 pl-6">
+              <div className="space-y-4 pl-6">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Имя:</p>
-                  <p className="text-sm">{ticket.creator_name || 'Не указано'}</p>
+                  <p className="text-xs text-muted-foreground mb-2">Имя:</p>
+                  <p className="text-sm font-medium">{ticket.creator_name || 'Не указано'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Email:</p>
-                  <p className="text-sm">{ticket.creator_email || 'Не указано'}</p>
+                  <p className="text-xs text-muted-foreground mb-2">Email:</p>
+                  <p className="text-sm font-medium">{ticket.creator_email || 'Не указано'}</p>
                 </div>
               </div>
             </div>
@@ -184,15 +184,15 @@ const TicketDetailsSidebarTabs = ({ ticket }: TicketDetailsSidebarTabsProps) => 
             {/* Дополнительные поля */}
             {ticket.custom_fields && ticket.custom_fields.length > 0 && (
               <div>
-                <button className="flex items-center gap-2 text-sm font-semibold mb-3 w-full">
+                <button className="flex items-center gap-2 text-sm font-semibold mb-4 w-full">
                   <Icon name="ChevronDown" size={16} />
                   ИТ-активы
                 </button>
-                <div className="space-y-2 pl-6">
+                <div className="space-y-4 pl-6">
                   {ticket.custom_fields.map((field) => (
                     <div key={field.id}>
-                      <p className="text-xs text-muted-foreground mb-1">{field.name}:</p>
-                      <p className="text-sm">{field.value || '—'}</p>
+                      <p className="text-xs text-muted-foreground mb-2">{field.name}:</p>
+                      <p className="text-sm font-medium">{field.value || '—'}</p>
                     </div>
                   ))}
                 </div>
