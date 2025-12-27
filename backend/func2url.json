@@ -1,5 +1,4 @@
 {
-  "push-notifications": "https://functions.poehali.dev/cc67e884-8946-4bcd-939d-ea3c195a6598",
   "notifications": "https://functions.poehali.dev/b8959866-7c71-4f31-8b2f-706302a7dd60",
   "ticket-approvals": "https://functions.poehali.dev/f1de2a37-a195-4b2c-9bae-c49c06b56326",
   "tickets-api": "https://functions.poehali.dev/6449784c-2d77-4ecc-a698-1276452afb92",

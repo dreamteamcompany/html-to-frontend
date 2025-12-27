@@ -47,27 +47,3 @@ self.addEventListener('activate', (event) => {
     })
   );
 });
-
-self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Новое уведомление';
-  const options = {
-    body: data.body || 'У вас новое уведомление',
-    icon: 'https://cdn.poehali.dev/projects/f80fd906-4206-41c6-bbee-1ea450433e49/files/favicon-1766477326634.svg',
-    badge: 'https://cdn.poehali.dev/projects/f80fd906-4206-41c6-bbee-1ea450433e49/files/favicon-1766477326634.svg',
-    data: data.url || '/',
-    tag: data.tag || 'notification',
-    requireInteraction: true,
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(
-    clients.openWindow(event.notification.data || '/')
-  );
-});

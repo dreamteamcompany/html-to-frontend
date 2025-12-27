@@ -123,24 +123,6 @@ def submit_for_approval(event: dict, user_id: str):
         """, (approver['id'], ticket_id, f'Заявка #{ticket_id} требует вашего согласования'))
     
     conn.commit()
-    
-    # Отправляем push-уведомления всем согласующим
-    import requests
-    for approver in approvers:
-        try:
-            requests.post(
-                'https://functions.poehali.dev/cc67e884-8946-4bcd-939d-ea3c195a6598?endpoint=send-push',
-                json={
-                    'user_id': approver['id'],
-                    'title': 'Новая заявка на согласование',
-                    'body': f'Заявка #{ticket_id} требует вашего согласования',
-                    'url': f'/tickets/{ticket_id}',
-                    'tag': f'approval-{ticket_id}'
-                }
-            )
-        except:
-            pass
-    
     cur.close()
     conn.close()
     
