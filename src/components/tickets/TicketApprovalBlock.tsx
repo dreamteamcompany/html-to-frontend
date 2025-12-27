@@ -221,7 +221,7 @@ const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange, availableUs
                     onCheckedChange={() => toggleApprover(u.id)}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{u.name}</p>
+                    <p className="text-sm font-medium truncate text-foreground">{u.name}</p>
                     <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                   </div>
                 </label>
