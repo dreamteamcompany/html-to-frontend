@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import Icon from '@/components/ui/icon';
 import TicketComments from '@/components/tickets/TicketComments';
+import TicketHistory from '@/components/tickets/TicketHistory';
 
 interface CustomField {
   id: number;
@@ -58,6 +60,17 @@ interface Comment {
   }[];
 }
 
+interface AuditLog {
+  id: number;
+  action: string;
+  username: string;
+  changed_fields?: any;
+  old_values?: any;
+  new_values?: any;
+  metadata?: any;
+  created_at: string;
+}
+
 interface TicketDetailsContentProps {
   ticket: Ticket;
   comments: Comment[];
@@ -73,6 +86,8 @@ interface TicketDetailsContentProps {
   availableUsers?: Array<{id: number; name: string; email: string}>;
   onFileUpload?: (file: File) => Promise<void>;
   uploadingFile?: boolean;
+  auditLogs?: AuditLog[];
+  loadingHistory?: boolean;
 }
 
 const TicketDetailsContent = ({
@@ -90,7 +105,10 @@ const TicketDetailsContent = ({
   availableUsers,
   onFileUpload,
   uploadingFile,
+  auditLogs = [],
+  loadingHistory = false,
 }: TicketDetailsContentProps) => {
+  const [activeTab, setActiveTab] = useState<'comments' | 'files' | 'history'>('comments');
   return (
     <div className="flex-1 p-4 lg:p-6">
       {/* Суть заявки */}
@@ -115,37 +133,77 @@ const TicketDetailsContent = ({
         </div>
       </div>
 
-      {/* Комментарии и Файлы (вкладки) */}
+      {/* Комментарии, Файлы и История (вкладки) */}
       <div className="border-b mb-4">
         <div className="flex gap-6">
-          <button className="pb-2 border-b-2 border-primary text-sm font-medium">
+          <button 
+            onClick={() => setActiveTab('comments')}
+            className={`pb-2 border-b-2 text-sm font-medium transition-colors ${
+              activeTab === 'comments' 
+                ? 'border-primary text-foreground' 
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
             Комментарии ({comments.length})
           </button>
-          <button className="pb-2 border-b-2 border-transparent text-sm text-muted-foreground hover:text-foreground">
+          <button 
+            onClick={() => setActiveTab('files')}
+            className={`pb-2 border-b-2 text-sm transition-colors ${
+              activeTab === 'files' 
+                ? 'border-primary text-foreground font-medium' 
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
             Файлы (0)
+          </button>
+          <button 
+            onClick={() => setActiveTab('history')}
+            className={`pb-2 border-b-2 text-sm transition-colors ${
+              activeTab === 'history' 
+                ? 'border-primary text-foreground font-medium' 
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            История ({auditLogs.length})
           </button>
         </div>
       </div>
 
-      {/* Форма комментария */}
+      {/* Контент вкладок */}
       <div className="mb-6">
-        <TicketComments
-          comments={comments}
-          loadingComments={loadingComments}
-          newComment={newComment}
-          submittingComment={submittingComment}
-          onCommentChange={onCommentChange}
-          onSubmitComment={onSubmitComment}
-          isCustomer={ticket.created_by === userId}
-          hasAssignee={!!ticket.assigned_to}
-          sendingPing={sendingPing}
-          onSendPing={onSendPing}
-          currentUserId={userId}
-          onReaction={onReaction}
-          availableUsers={availableUsers}
-          onFileUpload={onFileUpload}
-          uploadingFile={uploadingFile}
-        />
+        {activeTab === 'comments' && (
+          <TicketComments
+            comments={comments}
+            loadingComments={loadingComments}
+            newComment={newComment}
+            submittingComment={submittingComment}
+            onCommentChange={onCommentChange}
+            onSubmitComment={onSubmitComment}
+            isCustomer={ticket.created_by === userId}
+            hasAssignee={!!ticket.assigned_to}
+            sendingPing={sendingPing}
+            onSendPing={onSendPing}
+            currentUserId={userId}
+            onReaction={onReaction}
+            availableUsers={availableUsers}
+            onFileUpload={onFileUpload}
+            uploadingFile={uploadingFile}
+          />
+        )}
+        
+        {activeTab === 'files' && (
+          <div className="text-center py-8 text-muted-foreground">
+            <Icon name="FileText" size={48} className="mx-auto mb-2 opacity-30" />
+            <p>Файлы пока не загружены</p>
+          </div>
+        )}
+        
+        {activeTab === 'history' && (
+          <TicketHistory 
+            logs={auditLogs} 
+            loading={loadingHistory}
+          />
+        )}
       </div>
     </div>
   );

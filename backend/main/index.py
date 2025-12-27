@@ -2761,6 +2761,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_ticket_dictionaries_api(method, event, conn, payload)
         elif endpoint == 'ticket-comments-api':
             result = handle_ticket_comments_api(method, event, conn, payload)
+        elif endpoint == 'ticket-history':
+            result = handle_ticket_history(method, event, conn, payload)
         elif endpoint == 'users-list':
             result = handle_users_list(method, event, conn, payload)
         else:
@@ -2869,6 +2871,19 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
             ticket_id = cur.fetchone()['id']
             conn.commit()
             
+            # Записываем в audit_logs
+            cur.execute(f"""
+                SELECT username FROM {SCHEMA}.users WHERE id = %s
+            """, (user_id,))
+            username = cur.fetchone()['username']
+            
+            cur.execute(f"""
+                INSERT INTO {SCHEMA}.audit_logs 
+                (entity_type, entity_id, action, user_id, username, new_values)
+                VALUES ('ticket', %s, 'created', %s, %s, %s::jsonb)
+            """, (ticket_id, user_id, username, json.dumps({'title': title, 'description': description})))
+            conn.commit()
+            
             return response(201, {'id': ticket_id, 'message': 'Заявка создана'})
         
         elif method == 'PUT':
@@ -2878,19 +2893,55 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
             if not ticket_id:
                 return response(400, {'error': 'ID заявки не указан'})
             
+            # Получаем текущие значения для сравнения
+            cur.execute(f"""
+                SELECT status_id, assigned_to FROM {SCHEMA}.tickets WHERE id = %s
+            """, (ticket_id,))
+            old_data = cur.fetchone()
+            
             status_id = data.get('status_id')
             assigned_to = data.get('assigned_to')
             
             update_parts = []
             params = []
+            changed_fields = {}
             
-            if status_id is not None:
+            if status_id is not None and status_id != old_data['status_id']:
                 update_parts.append('status_id = %s')
                 params.append(status_id)
+                
+                # Получаем названия статусов
+                cur.execute(f"SELECT name FROM {SCHEMA}.ticket_statuses WHERE id = %s", (old_data['status_id'],))
+                old_status = cur.fetchone()
+                cur.execute(f"SELECT name FROM {SCHEMA}.ticket_statuses WHERE id = %s", (status_id,))
+                new_status = cur.fetchone()
+                
+                changed_fields['status'] = {
+                    'old': old_status['name'] if old_status else None,
+                    'new': new_status['name'] if new_status else None
+                }
             
-            if 'assigned_to' in data:
+            if 'assigned_to' in data and assigned_to != old_data['assigned_to']:
                 update_parts.append('assigned_to = %s')
                 params.append(assigned_to)
+                
+                # Получаем имена пользователей
+                if old_data['assigned_to']:
+                    cur.execute(f"SELECT username FROM {SCHEMA}.users WHERE id = %s", (old_data['assigned_to'],))
+                    old_assignee = cur.fetchone()
+                else:
+                    old_assignee = None
+                
+                if assigned_to:
+                    cur.execute(f"SELECT username FROM {SCHEMA}.users WHERE id = %s", (assigned_to,))
+                    new_assignee = cur.fetchone()
+                else:
+                    new_assignee = None
+                
+                changed_fields['assigned_to'] = {
+                    'old': old_assignee['username'] if old_assignee else None,
+                    'new': new_assignee['username'] if new_assignee else None
+                }
             
             if not update_parts:
                 return response(400, {'error': 'Нет данных для обновления'})
@@ -2904,6 +2955,22 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                 WHERE id = %s
             """, tuple(params))
             conn.commit()
+            
+            # Записываем в audit_logs
+            if changed_fields:
+                cur.execute(f"""
+                    SELECT username FROM {SCHEMA}.users WHERE id = %s
+                """, (user_id,))
+                username = cur.fetchone()['username']
+                
+                action = 'status_changed' if 'status' in changed_fields else 'assigned' if 'assigned_to' in changed_fields else 'updated'
+                
+                cur.execute(f"""
+                    INSERT INTO {SCHEMA}.audit_logs 
+                    (entity_type, entity_id, action, user_id, username, changed_fields)
+                    VALUES ('ticket', %s, %s, %s, %s, %s::jsonb)
+                """, (ticket_id, action, user_id, username, json.dumps(changed_fields)))
+                conn.commit()
             
             return response(200, {'message': 'Заявка обновлена'})
         
@@ -3080,6 +3147,18 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
                     VALUES (%s, %s, %s, %s)
                 """, (comment_id, attachment['filename'], attachment['url'], attachment['size']))
             
+            # Записываем в audit_logs
+            cur.execute(f"""
+                SELECT username FROM {SCHEMA}.users WHERE id = %s
+            """, (user_id,))
+            username = cur.fetchone()['username']
+            
+            cur.execute(f"""
+                INSERT INTO {SCHEMA}.audit_logs 
+                (entity_type, entity_id, action, user_id, username, metadata)
+                VALUES ('ticket', %s, 'comment_added', %s, %s, %s::jsonb)
+            """, (ticket_id, user_id, username, json.dumps({'is_ping': is_ping})))
+            
             conn.commit()
             
             cur.execute(f"""
@@ -3195,3 +3274,41 @@ def handle_upload_file(event: Dict[str, Any], conn, payload: Dict[str, Any]) -> 
     
     except Exception as e:
         return response(500, {'error': str(e)})
+
+def handle_ticket_history(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Получение истории изменений заявки из audit_logs"""
+    if method != 'GET':
+        return response(405, {'error': 'Метод не поддерживается'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        ticket_id = query_params.get('ticket_id')
+        
+        if not ticket_id:
+            return response(400, {'error': 'ticket_id обязателен'})
+        
+        cur.execute(f"""
+            SELECT 
+                id,
+                action,
+                username,
+                changed_fields,
+                old_values,
+                new_values,
+                metadata,
+                created_at
+            FROM {SCHEMA}.audit_logs
+            WHERE entity_type = 'ticket' AND entity_id = %s
+            ORDER BY created_at DESC
+        """, (ticket_id,))
+        
+        logs = cur.fetchall()
+        
+        return response(200, {'logs': logs if logs else []})
+    
+    except Exception as e:
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()

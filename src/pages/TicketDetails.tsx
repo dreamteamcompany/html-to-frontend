@@ -64,6 +64,17 @@ interface Comment {
   }[];
 }
 
+interface AuditLog {
+  id: number;
+  action: string;
+  username: string;
+  changed_fields?: any;
+  old_values?: any;
+  new_values?: any;
+  metadata?: any;
+  created_at: string;
+}
+
 interface Status {
   id: number;
   name: string;
@@ -87,6 +98,8 @@ const TicketDetails = () => {
   const [sendingPing, setSendingPing] = useState(false);
   const [users, setUsers] = useState<Array<{id: number; name: string; email: string}>>([]);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -96,6 +109,7 @@ const TicketDetails = () => {
       loadStatuses();
       loadComments();
       loadUsers();
+      loadHistory();
     }
   }, [id]);
 
@@ -159,6 +173,26 @@ const TicketDetails = () => {
       }
     } catch (error) {
       console.error('Error loading users:', error);
+    }
+  };
+
+  const loadHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=ticket-history&ticket_id=${id}`, {
+        headers: {
+          'X-Auth-Token': token,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAuditLogs(data.logs || []);
+      }
+    } catch (error) {
+      console.error('Error loading history:', error);
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -357,6 +391,8 @@ const TicketDetails = () => {
             onSendPing={handleSendPing}
             onReaction={handleReaction}
             availableUsers={users}
+            auditLogs={auditLogs}
+            loadingHistory={loadingHistory}
             onFileUpload={handleFileUpload}
             uploadingFile={uploadingFile}
           />
