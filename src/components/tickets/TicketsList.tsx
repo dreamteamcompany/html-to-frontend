@@ -99,15 +99,29 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3 flex-1 min-w-0">
-                {ticket.category_icon && (
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Icon name={ticket.category_icon} size={20} className="text-primary" />
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  {(ticket.status_name === 'На согласовании' || ticket.status_name === 'Одобрена' || ticket.status_name === 'Отклонена') && (
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      ticket.status_name === 'На согласовании' ? 'bg-green-500' :
+                      ticket.status_name === 'Отклонена' ? 'bg-red-500' :
+                      'bg-blue-500'
+                    } animate-pulse`} />
+                  )}
+                  {ticket.category_icon && (
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Icon name={ticket.category_icon} size={20} className="text-primary" />
+                    </div>
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-lg mb-1 line-clamp-1">
-                    {ticket.title}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-lg line-clamp-1">
+                      {ticket.status_name === 'На согласовании' && '🔔 '}
+                      {ticket.status_name === 'Отклонена' && '❌ '}
+                      {ticket.status_name === 'Одобрена' && '✅ '}
+                      {ticket.title}
+                    </h3>
+                  </div>
                   {ticket.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                       {ticket.description}

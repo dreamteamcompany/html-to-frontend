@@ -1,0 +1,25 @@
+{
+  "tests": [
+    {
+      "name": "Get approval history",
+      "method": "GET",
+      "path": "/?ticket_id=1",
+      "headers": {
+        "X-User-Id": "1"
+      },
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Submit for approval without auth",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "ticket_id": 1
+      },
+      "expectedStatus": 401,
+      "bodyMatcher": "partial"
+    }
+  ]
+}

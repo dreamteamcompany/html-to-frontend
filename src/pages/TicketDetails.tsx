@@ -373,6 +373,7 @@ const TicketDetails = () => {
               onUpdateStatus={(statusId) => handleUpdateStatus(Number(statusId))}
               onAssignUser={(userId) => console.log('Assign user:', userId)}
               onSendPing={handleSendPing}
+              onApprovalChange={loadTicket}
             />
           </div>
 
@@ -388,6 +389,7 @@ const TicketDetails = () => {
               onUpdateStatus={(statusId) => handleUpdateStatus(Number(statusId))}
               onAssignUser={(userId) => console.log('Assign user:', userId)}
               onSendPing={handleSendPing}
+              onApprovalChange={loadTicket}
             />
           </div>
         </div>

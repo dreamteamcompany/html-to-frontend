@@ -1,5 +1,6 @@
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 interface PaymentsHeaderProps {
   menuOpen: boolean;
@@ -23,13 +24,16 @@ const PaymentsHeader = ({ menuOpen, setMenuOpen }: PaymentsHeaderProps) => {
           className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
         />
       </div>
-      <div className="flex items-center gap-2 md:gap-3 px-3 md:px-[15px] py-2 md:py-[10px] rounded-[12px] bg-white/5 border border-white/10">
-        <div className="w-8 h-8 md:w-9 md:h-9 rounded-[10px] bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold text-white text-sm md:text-base">
-          А
-        </div>
-        <div className="hidden sm:block">
-          <div className="text-sm font-medium">Администратор</div>
-          <div className="text-xs text-muted-foreground">Администратор</div>
+      <div className="flex items-center gap-2 md:gap-3">
+        <NotificationBell />
+        <div className="flex items-center gap-2 md:gap-3 px-3 md:px-[15px] py-2 md:py-[10px] rounded-[12px] bg-white/5 border border-white/10">
+          <div className="w-8 h-8 md:w-9 md:h-9 rounded-[10px] bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold text-white text-sm md:text-base">
+            А
+          </div>
+          <div className="hidden sm:block">
+            <div className="text-sm font-medium">Администратор</div>
+            <div className="text-xs text-muted-foreground">Администратор</div>
+          </div>
         </div>
       </div>
     </header>

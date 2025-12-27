@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import TicketApprovalBlock from './TicketApprovalBlock';
 
 interface User {
   id: number;
@@ -59,6 +60,7 @@ interface TicketDetailsSidebarProps {
   onUpdateStatus: (statusId: string) => void;
   onAssignUser: (userId: string) => void;
   onSendPing?: () => void;
+  onApprovalChange?: () => void;
 }
 
 const TicketDetailsSidebar = ({
@@ -72,6 +74,7 @@ const TicketDetailsSidebar = ({
   onUpdateStatus,
   onAssignUser,
   onSendPing,
+  onApprovalChange,
 }: TicketDetailsSidebarProps) => {
   const getDeadlineInfo = (dueDate?: string) => {
     if (!dueDate) return null;
@@ -157,6 +160,12 @@ const TicketDetailsSidebar = ({
           </SelectContent>
         </Select>
       </div>
+
+      <TicketApprovalBlock
+        ticketId={ticket.id}
+        statusName={ticket.status_name || ''}
+        onStatusChange={onApprovalChange || (() => {})}
+      />
 
       {ticket.creator_name && (
         <div className="p-3 rounded-lg bg-background border">
