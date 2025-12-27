@@ -9,6 +9,9 @@ import TicketsHeader from '@/components/tickets/TicketsHeader';
 import TicketsSearch from '@/components/tickets/TicketsSearch';
 import TicketForm from '@/components/tickets/TicketForm';
 import TicketsList from '@/components/tickets/TicketsList';
+import TicketsKanban from '@/components/tickets/TicketsKanban';
+import { Button } from '@/components/ui/button';
+import Icon from '@/components/ui/icon';
 
 interface CustomField {
   id: number;
@@ -51,6 +54,7 @@ const Tickets = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
 
   const {
     tickets,
@@ -123,6 +127,27 @@ const Tickets = () => {
 
           <TicketsSearch searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
+          <div className="flex items-center gap-2 mb-4">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="flex items-center gap-2"
+            >
+              <Icon name="List" size={16} />
+              Список
+            </Button>
+            <Button
+              variant={viewMode === 'kanban' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('kanban')}
+              className="flex items-center gap-2"
+            >
+              <Icon name="LayoutGrid" size={16} />
+              Канбан
+            </Button>
+          </div>
+
           <TicketForm
             dialogOpen={dialogOpen}
             setDialogOpen={setDialogOpen}
@@ -136,11 +161,35 @@ const Tickets = () => {
             handleSubmit={handleSubmit}
           />
 
-          <TicketsList
-            tickets={filteredTickets}
-            loading={loading}
-            onTicketClick={(ticket) => navigate(`/tickets/${ticket.id}`, { state: { ticket } })}
-          />
+          {viewMode === 'list' ? (
+            <TicketsList
+              tickets={filteredTickets}
+              loading={loading}
+              onTicketClick={(ticket) => navigate(`/tickets/${ticket.id}`, { state: { ticket } })}
+            />
+          ) : (
+            <TicketsKanban
+              tickets={filteredTickets}
+              statuses={statuses}
+              loading={loading}
+              onUpdateStatus={async (ticketId, statusId) => {
+                try {
+                  const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+                  await fetch(`${mainUrl}?endpoint=tickets-api`, {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-Auth-Token': token,
+                    },
+                    body: JSON.stringify({ ticket_id: ticketId, status_id: statusId }),
+                  });
+                  loadTickets();
+                } catch (error) {
+                  console.error('Error updating status:', error);
+                }
+              }}
+            />
+          )}
         </div>
       </main>
     </div>

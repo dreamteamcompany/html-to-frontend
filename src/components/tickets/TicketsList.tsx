@@ -88,12 +88,28 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
     );
   }
 
+  const sortedTickets = [...tickets].sort((a, b) => {
+    const aIsCritical = a.priority_name?.toLowerCase().includes('критич') || a.priority_name?.toLowerCase().includes('высок');
+    const bIsCritical = b.priority_name?.toLowerCase().includes('критич') || b.priority_name?.toLowerCase().includes('высок');
+    
+    if (aIsCritical && !bIsCritical) return -1;
+    if (!aIsCritical && bIsCritical) return 1;
+    
+    return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
+  });
+
   return (
     <div className="grid gap-4">
-      {tickets.map((ticket) => (
+      {sortedTickets.map((ticket) => {
+        const isCritical = ticket.priority_name?.toLowerCase().includes('критич') || ticket.priority_name?.toLowerCase().includes('высок');
+        
+        return (
         <Card
           key={ticket.id}
-          className="p-5 hover:shadow-lg transition-all cursor-pointer hover:border-primary/50"
+          className={`
+            p-5 hover:shadow-lg transition-all cursor-pointer hover:border-primary/50
+            ${isCritical ? 'border-2 border-red-500 bg-red-50/50 dark:bg-red-950/20' : ''}
+          `}
           onClick={() => onTicketClick(ticket)}
         >
           <div className="space-y-3">
@@ -115,6 +131,12 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
+                    {isCritical && (
+                      <Badge variant="destructive" className="text-xs font-bold uppercase flex items-center gap-1">
+                        <Icon name="AlertTriangle" size={12} />
+                        Критично
+                      </Badge>
+                    )}
                     <h3 className="font-semibold text-lg line-clamp-1">
                       {ticket.status_name === 'На согласовании' && '🔔 '}
                       {ticket.status_name === 'Отклонена' && '❌ '}
@@ -223,7 +245,8 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
             </div>
           </div>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 };
