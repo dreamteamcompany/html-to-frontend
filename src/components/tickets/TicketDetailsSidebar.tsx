@@ -169,6 +169,7 @@ const TicketDetailsSidebar = ({
         ticketId={ticket.id}
         statusName={ticket.status_name || ''}
         onStatusChange={onApprovalChange || (() => {})}
+        availableUsers={users}
       />
 
       {ticket.creator_name && (

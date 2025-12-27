@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface ApprovalHistory {
   id: number;
@@ -12,15 +13,24 @@ interface ApprovalHistory {
   comment?: string;
   created_at: string;
   approver_id: number;
+  approver_name?: string;
+  approver_email?: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
 }
 
 interface TicketApprovalBlockProps {
   ticketId: number;
   statusName: string;
   onStatusChange: () => void;
+  availableUsers?: User[];
 }
 
-const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange }: TicketApprovalBlockProps) => {
+const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange, availableUsers = [] }: TicketApprovalBlockProps) => {
   const { token, user } = useAuth();
   const [approvalHistory, setApprovalHistory] = useState<ApprovalHistory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,6 +38,8 @@ const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange }: TicketApp
   const [comment, setComment] = useState('');
   const [showCommentField, setShowCommentField] = useState(false);
   const [actionType, setActionType] = useState<'approved' | 'rejected' | null>(null);
+  const [showApproverSelect, setShowApproverSelect] = useState(false);
+  const [selectedApprovers, setSelectedApprovers] = useState<number[]>([]);
 
   const loadApprovalHistory = async () => {
     if (!token) return;
@@ -60,7 +72,7 @@ const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange }: TicketApp
   }, [ticketId, token]);
 
   const handleSubmitForApproval = async () => {
-    if (!token || !user) return;
+    if (!token || !user || selectedApprovers.length === 0) return;
 
     setSubmitting(true);
     try {
@@ -73,19 +85,32 @@ const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange }: TicketApp
             'X-User-Id': user.id.toString(),
             'Authorization': `Bearer ${token}`,
           },
-          body: JSON.stringify({ ticket_id: ticketId }),
+          body: JSON.stringify({ 
+            ticket_id: ticketId,
+            approver_ids: selectedApprovers
+          }),
         }
       );
 
       if (response.ok) {
         await loadApprovalHistory();
         onStatusChange();
+        setShowApproverSelect(false);
+        setSelectedApprovers([]);
       }
     } catch (error) {
       console.error('Failed to submit for approval:', error);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const toggleApprover = (userId: number) => {
+    setSelectedApprovers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
   };
 
   const handleApprovalAction = async () => {
@@ -169,14 +194,60 @@ const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange }: TicketApp
         Согласование
       </h3>
 
-      {canSubmit && (
+      {canSubmit && !showApproverSelect && (
         <Button
-          onClick={handleSubmitForApproval}
-          disabled={submitting}
+          onClick={() => setShowApproverSelect(true)}
           className="w-full"
         >
-          {submitting ? 'Отправка...' : 'Отправить на согласование'}
+          Отправить на согласование
         </Button>
+      )}
+
+      {canSubmit && showApproverSelect && (
+        <div className="space-y-3">
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
+              <Icon name="Users" size={16} />
+              Выберите согласующих:
+            </p>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {availableUsers.map((u) => (
+                <label
+                  key={u.id}
+                  className="flex items-center gap-2 p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded cursor-pointer"
+                >
+                  <Checkbox
+                    checked={selectedApprovers.includes(u.id)}
+                    onCheckedChange={() => toggleApprover(u.id)}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{u.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSubmitForApproval}
+              disabled={submitting || selectedApprovers.length === 0}
+              className="flex-1"
+            >
+              {submitting ? 'Отправка...' : `Отправить (${selectedApprovers.length})`}
+            </Button>
+            <Button
+              onClick={() => {
+                setShowApproverSelect(false);
+                setSelectedApprovers([]);
+              }}
+              variant="outline"
+              disabled={submitting}
+            >
+              Отмена
+            </Button>
+          </div>
+        </div>
       )}
 
       {isAwaitingApproval && (
@@ -188,7 +259,7 @@ const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange }: TicketApp
             </p>
             <ul className="mt-2 space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
               {pendingApprovals.map((approval) => (
-                <li key={approval.id}>• Согласующий #{approval.approver_id}</li>
+                <li key={approval.id}>• {approval.approver_name || `Пользователь #${approval.approver_id}`}</li>
               ))}
             </ul>
           </div>

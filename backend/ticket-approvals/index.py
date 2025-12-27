@@ -52,6 +52,7 @@ def submit_for_approval(event: dict, user_id: str):
     """Отправка заявки на согласование"""
     data = json.loads(event.get('body', '{}'))
     ticket_id = data.get('ticket_id')
+    approver_ids = data.get('approver_ids', [])
     
     if not ticket_id:
         return {
@@ -60,17 +61,23 @@ def submit_for_approval(event: dict, user_id: str):
             'body': json.dumps({'error': 'ticket_id is required'})
         }
     
+    if not approver_ids or len(approver_ids) == 0:
+        return {
+            'statusCode': 400,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'approver_ids is required'})
+        }
+    
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
-    # Получаем список согласующих (заказчик и его помощники)
-    cur.execute("""
-        SELECT u.id, u.name, u.email
+    # Получаем список выбранных согласующих
+    placeholders = ','.join(['%s'] * len(approver_ids))
+    cur.execute(f"""
+        SELECT u.id, u.full_name as name, u.username as email
         FROM t_p61788166_html_to_frontend.users u
-        JOIN t_p61788166_html_to_frontend.user_roles ur ON u.id = ur.user_id
-        JOIN t_p61788166_html_to_frontend.roles r ON ur.role_id = r.id
-        WHERE r.name IN ('Заказчик', 'Помощник заказчика')
-    """)
+        WHERE u.id IN ({placeholders}) AND u.is_active = true
+    """, tuple(approver_ids))
     approvers = cur.fetchall()
     
     # Обновляем статус заявки на "На согласовании"
@@ -264,8 +271,11 @@ def get_approval_history(event: dict):
             ta.action,
             ta.comment,
             ta.created_at,
-            ta.approver_id
+            ta.approver_id,
+            u.full_name as approver_name,
+            u.username as approver_email
         FROM t_p61788166_html_to_frontend.ticket_approvals ta
+        LEFT JOIN t_p61788166_html_to_frontend.users u ON ta.approver_id = u.id
         WHERE ta.ticket_id = %s
         ORDER BY ta.created_at DESC
     """, (ticket_id,))
