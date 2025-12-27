@@ -349,6 +349,30 @@ const TicketDetails = () => {
     }
   };
 
+  const handleUpdateDueDate = async (dueDate: string | null) => {
+    try {
+      setUpdating(true);
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token,
+        },
+        body: JSON.stringify({ ticket_id: id, due_date: dueDate }),
+      });
+      
+      if (response.ok) {
+        loadTicket();
+        loadHistory();
+      }
+    } catch (error) {
+      console.error('Error updating due date:', error);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -408,6 +432,7 @@ const TicketDetails = () => {
               onAssignUser={(userId) => console.log('Assign user:', userId)}
               onSendPing={handleSendPing}
               onApprovalChange={loadTicket}
+              onUpdateDueDate={handleUpdateDueDate}
             />
           </div>
 
@@ -424,6 +449,7 @@ const TicketDetails = () => {
               onAssignUser={(userId) => console.log('Assign user:', userId)}
               onSendPing={handleSendPing}
               onApprovalChange={loadTicket}
+              onUpdateDueDate={handleUpdateDueDate}
             />
           </div>
         </div>

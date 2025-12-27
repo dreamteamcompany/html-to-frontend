@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -61,6 +62,7 @@ interface TicketDetailsSidebarProps {
   onAssignUser: (userId: string) => void;
   onSendPing?: () => void;
   onApprovalChange?: () => void;
+  onUpdateDueDate?: (dueDate: string | null) => void;
 }
 
 const TicketDetailsSidebar = ({
@@ -75,7 +77,10 @@ const TicketDetailsSidebar = ({
   onAssignUser,
   onSendPing,
   onApprovalChange,
+  onUpdateDueDate,
 }: TicketDetailsSidebarProps) => {
+  const [isEditingDueDate, setIsEditingDueDate] = useState(false);
+  const [dueDateValue, setDueDateValue] = useState(ticket.due_date || '');
   const getDeadlineInfo = (dueDate?: string) => {
     if (!dueDate) return null;
     
@@ -219,43 +224,103 @@ const TicketDetailsSidebar = ({
         </Select>
       </div>
 
-      {ticket.due_date && deadlineInfo && (
-        <div className="p-3 rounded-lg border" style={{ 
+      {(ticket.due_date || isCustomer) && (
+        <div className="p-3 rounded-lg border" style={deadlineInfo ? { 
           backgroundColor: `${deadlineInfo.color}10`,
           borderColor: deadlineInfo.color
-        }}>
-          <div className="flex items-start gap-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ 
-              backgroundColor: `${deadlineInfo.color}20`
-            }}>
-              <Icon name={deadlineInfo.urgent ? 'AlertCircle' : 'Clock'} size={16} style={{ color: deadlineInfo.color }} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm mb-0.5" style={{ color: deadlineInfo.color }}>
-                {deadlineInfo.label}
-              </p>
-              <p className="text-xs" style={{ color: deadlineInfo.color, opacity: 0.75 }}>
-                {new Date(ticket.due_date).toLocaleDateString('ru-RU', {
-                  day: 'numeric',
-                  month: 'long'
-                })}
-              </p>
-            </div>
-            {deadlineInfo.urgent && (
-              <Badge 
-                variant="secondary"
-                className="flex-shrink-0"
-                style={{ 
-                  backgroundColor: deadlineInfo.color,
-                  color: 'white',
-                  fontSize: '10px',
-                  padding: '2px 6px'
+        } : {}}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+              <Icon name="Calendar" size={14} />
+              Дедлайн
+            </h3>
+            {isCustomer && onUpdateDueDate && (
+              <button
+                onClick={() => {
+                  setIsEditingDueDate(!isEditingDueDate);
+                  if (!isEditingDueDate) {
+                    setDueDateValue(ticket.due_date || '');
+                  }
                 }}
+                className="text-xs text-primary hover:underline flex items-center gap-1"
               >
-                Срочно
-              </Badge>
+                <Icon name={isEditingDueDate ? 'X' : 'Edit'} size={12} />
+                {isEditingDueDate ? 'Отмена' : 'Изменить'}
+              </button>
             )}
           </div>
+          
+          {isEditingDueDate ? (
+            <div className="space-y-2">
+              <input
+                type="date"
+                value={dueDateValue}
+                onChange={(e) => setDueDateValue(e.target.value)}
+                className="w-full px-3 py-2 text-sm border rounded-md"
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    onUpdateDueDate(dueDateValue || null);
+                    setIsEditingDueDate(false);
+                  }}
+                  className="flex-1"
+                >
+                  Сохранить
+                </Button>
+                {ticket.due_date && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      onUpdateDueDate(null);
+                      setDueDateValue('');
+                      setIsEditingDueDate(false);
+                    }}
+                  >
+                    <Icon name="Trash2" size={14} />
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : ticket.due_date && deadlineInfo ? (
+            <div className="flex items-start gap-2">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ 
+                backgroundColor: `${deadlineInfo.color}20`
+              }}>
+                <Icon name={deadlineInfo.urgent ? 'AlertCircle' : 'Clock'} size={16} style={{ color: deadlineInfo.color }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm mb-0.5" style={{ color: deadlineInfo.color }}>
+                  {deadlineInfo.label}
+                </p>
+                <p className="text-xs" style={{ color: deadlineInfo.color, opacity: 0.75 }}>
+                  {new Date(ticket.due_date).toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </p>
+              </div>
+              {deadlineInfo.urgent && (
+                <Badge 
+                  variant="secondary"
+                  className="flex-shrink-0"
+                  style={{ 
+                    backgroundColor: deadlineInfo.color,
+                    color: 'white',
+                    fontSize: '10px',
+                    padding: '2px 6px'
+                  }}
+                >
+                  Срочно
+                </Badge>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Не установлен</p>
+          )}
         </div>
       )}
 
