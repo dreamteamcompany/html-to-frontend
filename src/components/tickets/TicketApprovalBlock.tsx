@@ -51,7 +51,6 @@ const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange, availableUs
         {
           headers: {
             'X-User-Id': user?.id.toString() || '',
-            'Authorization': `Bearer ${token}`,
           },
         }
       );
@@ -83,7 +82,6 @@ const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange, availableUs
           headers: {
             'Content-Type': 'application/json',
             'X-User-Id': user.id.toString(),
-            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({ 
             ticket_id: ticketId,
@@ -125,7 +123,6 @@ const TicketApprovalBlock = ({ ticketId, statusName, onStatusChange, availableUs
           headers: {
             'Content-Type': 'application/json',
             'X-User-Id': user.id.toString(),
-            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             ticket_id: ticketId,
