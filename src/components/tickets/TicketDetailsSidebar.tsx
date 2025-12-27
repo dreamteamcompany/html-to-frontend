@@ -111,7 +111,7 @@ const TicketDetailsSidebar = ({
   return (
     <div className="w-full lg:w-[400px] space-y-3 flex-shrink-0">
       {onSendPing && (
-        <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-950/20 border-2 border-orange-500">
+        <div className="p-4 rounded-lg bg-orange-500/10 border-2 border-orange-500">
           <Button
             onClick={onSendPing}
             disabled={sendingPing}
