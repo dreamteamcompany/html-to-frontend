@@ -111,13 +111,12 @@ const TicketDetailsSidebar = ({
   return (
     <div className="w-full lg:w-[400px] space-y-3 flex-shrink-0">
       {onSendPing && (
-        <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary">
+        <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-950/20 border-2 border-orange-500">
           <Button
             onClick={onSendPing}
             disabled={sendingPing}
-            variant="default"
             size="lg"
-            className="w-full font-semibold"
+            className="w-full font-semibold bg-orange-500 hover:bg-orange-600 text-white"
           >
             {sendingPing ? (
               <>
@@ -131,7 +130,7 @@ const TicketDetailsSidebar = ({
               </>
             )}
           </Button>
-          <p className="text-xs text-muted-foreground mt-2 text-center">
+          <p className="text-xs text-orange-700 dark:text-orange-400 mt-2 text-center">
             Уведомить исполнителя о необходимости обновить статус
           </p>
         </div>
