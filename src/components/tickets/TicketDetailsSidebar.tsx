@@ -256,7 +256,7 @@ const TicketDetailsSidebar = ({
                 type="date"
                 value={dueDateValue}
                 onChange={(e) => setDueDateValue(e.target.value)}
-                className="w-full px-3 py-2 text-sm border rounded-md"
+                className="w-full px-3 py-2 text-sm border rounded-md bg-background text-foreground"
               />
               <div className="flex gap-2">
                 <Button
