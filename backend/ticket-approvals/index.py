@@ -88,6 +88,19 @@ def submit_for_approval(event: dict, user_id: str):
         VALUES (%s, %s, 'submitted', 'Отправлено на согласование')
     """, (ticket_id, user_id))
     
+    # Логируем в audit_logs
+    cur.execute("""
+        SELECT username FROM t_p61788166_html_to_frontend.users WHERE id = %s
+    """, (user_id,))
+    username = cur.fetchone()['username']
+    
+    approver_names = ', '.join([a['name'] for a in approvers])
+    cur.execute("""
+        INSERT INTO t_p61788166_html_to_frontend.audit_logs 
+        (entity_type, entity_id, action, user_id, username, metadata)
+        VALUES ('ticket', %s, 'approval_sent', %s, %s, %s::jsonb)
+    """, (ticket_id, user_id, username, json.dumps({'approvers': approver_names})))
+    
     for approver in approvers:
         cur.execute("""
             INSERT INTO t_p61788166_html_to_frontend.ticket_approvals
@@ -186,6 +199,13 @@ def process_approval(event: dict, user_id: str):
             VALUES (%s, %s, 'approval_approved', %s)
         """, (creator_id, ticket_id, f'Заявка #{ticket_id} одобрена ({approver_name})'))
         
+        # Логируем в audit_logs
+        cur.execute("""
+            INSERT INTO t_p61788166_html_to_frontend.audit_logs 
+            (entity_type, entity_id, action, user_id, username, metadata)
+            VALUES ('ticket', %s, 'approved', %s, %s, %s::jsonb)
+        """, (ticket_id, user_id, approver_name, json.dumps({'comment': comment if comment else None})))
+        
     else:  # rejected
         # Обновляем статус заявки на "Отклонена"
         cur.execute("""
@@ -197,6 +217,13 @@ def process_approval(event: dict, user_id: str):
         
         # Уведомление исполнителю с причиной
         message = f'Заявка #{ticket_id} отклонена ({approver_name})'
+        
+        # Логируем в audit_logs
+        cur.execute("""
+            INSERT INTO t_p61788166_html_to_frontend.audit_logs 
+            (entity_type, entity_id, action, user_id, username, metadata)
+            VALUES ('ticket', %s, 'rejected', %s, %s, %s::jsonb)
+        """, (ticket_id, user_id, approver_name, json.dumps({'comment': comment})))
         if comment:
             message += f'. Причина: {comment}'
         

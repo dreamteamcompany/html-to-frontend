@@ -2895,16 +2895,98 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
             
             # Получаем текущие значения для сравнения
             cur.execute(f"""
-                SELECT status_id, assigned_to FROM {SCHEMA}.tickets WHERE id = %s
+                SELECT title, description, status_id, assigned_to, priority_id, category_id, department_id, due_date 
+                FROM {SCHEMA}.tickets WHERE id = %s
             """, (ticket_id,))
             old_data = cur.fetchone()
             
+            title = data.get('title')
+            description = data.get('description')
             status_id = data.get('status_id')
             assigned_to = data.get('assigned_to')
+            priority_id = data.get('priority_id')
+            category_id = data.get('category_id')
+            department_id = data.get('department_id')
+            due_date = data.get('due_date')
             
             update_parts = []
             params = []
             changed_fields = {}
+            
+            # Проверяем изменение заголовка
+            if title is not None and title != old_data['title']:
+                update_parts.append('title = %s')
+                params.append(title)
+                changed_fields['title'] = {'old': old_data['title'], 'new': title}
+            
+            # Проверяем изменение описания
+            if description is not None and description != old_data['description']:
+                update_parts.append('description = %s')
+                params.append(description)
+                changed_fields['description'] = {'old': old_data['description'], 'new': description}
+            
+            # Проверяем изменение приоритета
+            if priority_id is not None and priority_id != old_data['priority_id']:
+                update_parts.append('priority_id = %s')
+                params.append(priority_id)
+                
+                if old_data['priority_id']:
+                    cur.execute(f"SELECT name FROM {SCHEMA}.ticket_priorities WHERE id = %s", (old_data['priority_id'],))
+                    old_priority = cur.fetchone()
+                else:
+                    old_priority = None
+                    
+                cur.execute(f"SELECT name FROM {SCHEMA}.ticket_priorities WHERE id = %s", (priority_id,))
+                new_priority = cur.fetchone()
+                
+                changed_fields['priority'] = {
+                    'old': old_priority['name'] if old_priority else None,
+                    'new': new_priority['name'] if new_priority else None
+                }
+            
+            # Проверяем изменение категории
+            if category_id is not None and category_id != old_data['category_id']:
+                update_parts.append('category_id = %s')
+                params.append(category_id)
+                
+                if old_data['category_id']:
+                    cur.execute(f"SELECT name FROM {SCHEMA}.ticket_categories WHERE id = %s", (old_data['category_id'],))
+                    old_category = cur.fetchone()
+                else:
+                    old_category = None
+                    
+                cur.execute(f"SELECT name FROM {SCHEMA}.ticket_categories WHERE id = %s", (category_id,))
+                new_category = cur.fetchone()
+                
+                changed_fields['category'] = {
+                    'old': old_category['name'] if old_category else None,
+                    'new': new_category['name'] if new_category else None
+                }
+            
+            # Проверяем изменение отдела
+            if department_id is not None and department_id != old_data['department_id']:
+                update_parts.append('department_id = %s')
+                params.append(department_id)
+                
+                if old_data['department_id']:
+                    cur.execute(f"SELECT name FROM {SCHEMA}.departments WHERE id = %s", (old_data['department_id'],))
+                    old_dept = cur.fetchone()
+                else:
+                    old_dept = None
+                    
+                cur.execute(f"SELECT name FROM {SCHEMA}.departments WHERE id = %s", (department_id,))
+                new_dept = cur.fetchone()
+                
+                changed_fields['department'] = {
+                    'old': old_dept['name'] if old_dept else None,
+                    'new': new_dept['name'] if new_dept else None
+                }
+            
+            # Проверяем изменение дедлайна
+            if due_date is not None and str(due_date) != str(old_data['due_date']):
+                update_parts.append('due_date = %s')
+                params.append(due_date)
+                changed_fields['due_date'] = {'old': str(old_data['due_date']) if old_data['due_date'] else None, 'new': str(due_date)}
             
             if status_id is not None and status_id != old_data['status_id']:
                 update_parts.append('status_id = %s')

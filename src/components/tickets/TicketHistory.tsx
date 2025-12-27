@@ -60,6 +60,22 @@ const TicketHistory = ({ logs, loading }: TicketHistoryProps) => {
       case 'created':
         return 'создал заявку';
       case 'updated':
+        if (log.changed_fields) {
+          const fields = Object.keys(log.changed_fields);
+          if (fields.length === 1) {
+            const field = fields[0];
+            const fieldNames: Record<string, string> = {
+              title: 'заголовок',
+              description: 'описание',
+              priority: 'приоритет',
+              category: 'категорию',
+              department: 'отдел',
+              due_date: 'дедлайн'
+            };
+            return `изменил ${fieldNames[field] || field}`;
+          }
+          return `изменил ${fields.length} ${fields.length === 2 ? 'поля' : 'полей'}`;
+        }
         return 'изменил заявку';
       case 'status_changed':
         if (log.changed_fields?.status) {
@@ -74,7 +90,7 @@ const TicketHistory = ({ logs, loading }: TicketHistoryProps) => {
       case 'comment_added':
         return 'добавил комментарий';
       case 'approval_sent':
-        return `отправил на согласование: ${log.metadata?.approver_name || ''}`;
+        return `отправил на согласование${log.metadata?.approvers ? ' (' + log.metadata.approvers + ')' : ''}`;
       case 'approved':
         return 'согласовал заявку';
       case 'rejected':
@@ -89,17 +105,31 @@ const TicketHistory = ({ logs, loading }: TicketHistoryProps) => {
       return null;
     }
 
+    const fieldNames: Record<string, string> = {
+      title: 'Заголовок',
+      description: 'Описание',
+      priority: 'Приоритет',
+      category: 'Категория',
+      department: 'Отдел',
+      due_date: 'Дедлайн',
+      status: 'Статус',
+      assigned_to: 'Исполнитель'
+    };
+
     return (
       <div className="mt-2 ml-8 space-y-1">
         {Object.entries(log.changed_fields).map(([field, change]: [string, any]) => {
           if (field === 'status' || field === 'assigned_to') return null;
           
+          const oldValue = change.old || '—';
+          const newValue = change.new || '—';
+          
           return (
             <div key={field} className="text-xs text-muted-foreground">
-              <span className="font-medium">{field}:</span>{' '}
-              <span className="line-through opacity-60">{change.old || '—'}</span>
+              <span className="font-medium">{fieldNames[field] || field}:</span>{' '}
+              <span className="line-through opacity-60">{oldValue}</span>
               {' → '}
-              <span className="font-medium">{change.new || '—'}</span>
+              <span className="font-medium">{newValue}</span>
             </div>
           );
         })}
