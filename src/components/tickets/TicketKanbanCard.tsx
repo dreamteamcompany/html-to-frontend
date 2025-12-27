@@ -77,7 +77,7 @@ const TicketKanbanCard = ({ ticket, onClick, isDragging = false }: TicketKanbanC
       onClick={onClick}
       className={`
         bg-background rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-pointer
-        ${isCritical ? 'border-2 border-red-500 bg-red-50/50 dark:bg-red-950/20' : 'border border-border'}
+        ${isCritical ? 'border-2 border-red-500' : 'border border-border'}
         ${isDragging ? 'opacity-50' : ''}
       `}
     >

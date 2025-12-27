@@ -108,7 +108,7 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
           key={ticket.id}
           className={`
             p-5 hover:shadow-lg transition-all cursor-pointer hover:border-primary/50
-            ${isCritical ? 'border-2 border-red-500 bg-red-50/50 dark:bg-red-950/20' : ''}
+            ${isCritical ? 'border-2 border-red-500' : ''}
           `}
           onClick={() => onTicketClick(ticket)}
         >
