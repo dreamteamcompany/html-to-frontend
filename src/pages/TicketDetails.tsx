@@ -103,9 +103,7 @@ const TicketDetails = () => {
 
   useEffect(() => {
     if (id) {
-      if (!ticket) {
-        loadTicket();
-      }
+      loadTicket();
       loadStatuses();
       loadComments();
       loadUsers();
