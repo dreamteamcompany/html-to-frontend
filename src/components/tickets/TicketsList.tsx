@@ -25,6 +25,8 @@ interface Ticket {
   due_date?: string;
   created_at?: string;
   custom_fields?: CustomField[];
+  customer_name?: string;
+  assigned_to_name?: string;
 }
 
 interface TicketsListProps {
@@ -133,8 +135,21 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">#{ticket.id}</span>
+                    {ticket.status_name && (
+                      <Badge
+                        variant="secondary"
+                        className="text-xs"
+                        style={{ 
+                          backgroundColor: `${ticket.status_color}20`,
+                          color: ticket.status_color,
+                          borderColor: ticket.status_color
+                        }}
+                      >
+                        {ticket.status_name}
+                      </Badge>
+                    )}
                     {isCritical && (
                       <Badge variant="destructive" className="text-xs font-bold uppercase flex items-center gap-1 animate-pulse">
                         <Icon name="AlertTriangle" size={12} />
@@ -155,23 +170,27 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
                   )}
                 </div>
               </div>
-              
-              {ticket.status_name && (
-                <Badge
-                  variant="secondary"
-                  className="flex-shrink-0"
-                  style={{ 
-                    backgroundColor: `${ticket.status_color}20`,
-                    color: ticket.status_color,
-                    borderColor: ticket.status_color
-                  }}
-                >
-                  {ticket.status_name}
-                </Badge>
-              )}
             </div>
 
             <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                {ticket.customer_name && (
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Icon name="User" size={14} />
+                    <span className="font-medium">Заказчик:</span>
+                    <span>{ticket.customer_name}</span>
+                  </div>
+                )}
+
+                {ticket.assigned_to_name && (
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Icon name="UserCheck" size={14} />
+                    <span className="font-medium">Исполнитель:</span>
+                    <span>{ticket.assigned_to_name}</span>
+                  </div>
+                )}
+              </div>
+
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 {ticket.category_name && (
                   <div className="flex items-center gap-1.5 text-muted-foreground">
