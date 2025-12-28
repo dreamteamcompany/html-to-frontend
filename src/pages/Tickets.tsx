@@ -148,27 +148,27 @@ const Tickets = () => {
             </Button>
           </div>
 
-          <div className="mb-6">
-            <TicketForm
-              dialogOpen={dialogOpen}
-              setDialogOpen={setDialogOpen}
-              formData={formData}
-              setFormData={setFormData}
-              categories={categories}
-              priorities={priorities}
-              statuses={statuses}
-              departments={departments}
-              customFields={customFields}
-              handleSubmit={handleSubmit}
-            />
-          </div>
+          <TicketForm
+            dialogOpen={dialogOpen}
+            setDialogOpen={setDialogOpen}
+            formData={formData}
+            setFormData={setFormData}
+            categories={categories}
+            priorities={priorities}
+            statuses={statuses}
+            departments={departments}
+            customFields={customFields}
+            handleSubmit={handleSubmit}
+          />
 
           {viewMode === 'list' ? (
-            <TicketsList
-              tickets={filteredTickets}
-              loading={loading}
-              onTicketClick={(ticket) => navigate(`/tickets/${ticket.id}`, { state: { ticket } })}
-            />
+            <div className="mt-6">
+              <TicketsList
+                tickets={filteredTickets}
+                loading={loading}
+                onTicketClick={(ticket) => navigate(`/tickets/${ticket.id}`, { state: { ticket } })}
+              />
+            </div>
           ) : (
             <TicketsKanban
               tickets={filteredTickets}
