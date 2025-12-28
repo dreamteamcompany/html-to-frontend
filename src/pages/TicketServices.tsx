@@ -109,7 +109,7 @@ const TicketServices = () => {
 
   const loadCategories = async () => {
     try {
-      const response = await apiFetch(`${BACKEND_URL}?endpoint=ticket-service-categories`);
+      const response = await apiFetch(`${BACKEND_URL}?endpoint=ticket_service_categories`);
       const data = await response.json();
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {

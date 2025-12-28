@@ -337,7 +337,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_payments(method, event, conn)
         elif endpoint == 'categories':
             return handle_categories(method, event, conn)
-        elif endpoint == 'ticket-service-categories':
+        elif endpoint == 'ticket_service_categories':
             return handle_ticket_service_categories(method, event, conn)
         elif endpoint == 'stats':
             return handle_stats(event, conn)
