@@ -148,18 +148,20 @@ const Tickets = () => {
             </Button>
           </div>
 
-          <TicketForm
-            dialogOpen={dialogOpen}
-            setDialogOpen={setDialogOpen}
-            formData={formData}
-            setFormData={setFormData}
-            categories={categories}
-            priorities={priorities}
-            statuses={statuses}
-            departments={departments}
-            customFields={customFields}
-            handleSubmit={handleSubmit}
-          />
+          <div className="mb-6">
+            <TicketForm
+              dialogOpen={dialogOpen}
+              setDialogOpen={setDialogOpen}
+              formData={formData}
+              setFormData={setFormData}
+              categories={categories}
+              priorities={priorities}
+              statuses={statuses}
+              departments={departments}
+              customFields={customFields}
+              handleSubmit={handleSubmit}
+            />
+          </div>
 
           {viewMode === 'list' ? (
             <TicketsList
