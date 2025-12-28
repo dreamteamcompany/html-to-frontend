@@ -41,8 +41,6 @@ const TicketKanbanCard = ({ ticket, onClick, isDragging = false }: TicketKanbanC
     transition,
   };
 
-  const isCritical = ticket.priority_name?.toLowerCase().includes('критич') || ticket.priority_name?.toLowerCase().includes('высок');
-
   const getDueDateInfo = (dueDate?: string) => {
     if (!dueDate) return null;
     
@@ -76,18 +74,10 @@ const TicketKanbanCard = ({ ticket, onClick, isDragging = false }: TicketKanbanC
       {...listeners}
       onClick={onClick}
       className={`
-        bg-background rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-pointer
-        ${isCritical ? 'border-2 border-red-500' : 'border border-border'}
+        bg-background rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-pointer border border-border
         ${isDragging ? 'opacity-50' : ''}
       `}
     >
-      {isCritical && (
-        <div className="flex items-center gap-1 mb-2 text-red-600 dark:text-red-400">
-          <Icon name="AlertTriangle" size={14} />
-          <span className="text-xs font-bold uppercase">Критично</span>
-        </div>
-      )}
-
       <h4 className="font-semibold text-sm mb-2 line-clamp-2">{ticket.title}</h4>
 
       {ticket.description && (
@@ -107,10 +97,9 @@ const TicketKanbanCard = ({ ticket, onClick, isDragging = false }: TicketKanbanC
         {ticket.priority_name && (
           <Badge
             style={{
-              backgroundColor: isCritical ? ticket.priority_color : `${ticket.priority_color}20`,
-              color: isCritical ? 'white' : ticket.priority_color,
-              borderColor: ticket.priority_color,
-              fontWeight: isCritical ? '600' : '400'
+              backgroundColor: `${ticket.priority_color}20`,
+              color: ticket.priority_color,
+              borderColor: ticket.priority_color
             }}
             className="text-xs border"
           >

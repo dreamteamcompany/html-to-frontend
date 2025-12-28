@@ -89,27 +89,15 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
   }
 
   const sortedTickets = [...tickets].sort((a, b) => {
-    const aIsCritical = a.priority_name?.toLowerCase().includes('критич') || a.priority_name?.toLowerCase().includes('высок');
-    const bIsCritical = b.priority_name?.toLowerCase().includes('критич') || b.priority_name?.toLowerCase().includes('высок');
-    
-    if (aIsCritical && !bIsCritical) return -1;
-    if (!aIsCritical && bIsCritical) return 1;
-    
     return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
   });
 
   return (
     <div className="grid gap-4">
-      {sortedTickets.map((ticket) => {
-        const isCritical = ticket.priority_name?.toLowerCase().includes('критич') || ticket.priority_name?.toLowerCase().includes('высок');
-        
-        return (
+      {sortedTickets.map((ticket) => (
         <Card
           key={ticket.id}
-          className={`
-            p-5 hover:shadow-lg transition-all cursor-pointer hover:border-primary/50
-            ${isCritical ? 'border-2 border-red-500' : ''}
-          `}
+          className="p-5 hover:shadow-lg transition-all cursor-pointer hover:border-primary/50"
           onClick={() => onTicketClick(ticket)}
         >
           <div className="space-y-3">
@@ -130,20 +118,12 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    {isCritical && (
-                      <Badge variant="destructive" className="text-xs font-bold uppercase flex items-center gap-1">
-                        <Icon name="AlertTriangle" size={12} />
-                        Критично
-                      </Badge>
-                    )}
-                    <h3 className="font-semibold text-lg line-clamp-1">
+                  <h3 className="font-semibold text-lg line-clamp-1 mb-1">
                       {ticket.status_name === 'На согласовании' && '🔔 '}
                       {ticket.status_name === 'Отклонена' && '❌ '}
                       {ticket.status_name === 'Одобрена' && '✅ '}
-                      {ticket.title}
-                    </h3>
-                  </div>
+                    {ticket.title}
+                  </h3>
                   {ticket.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                       {ticket.description}
@@ -245,8 +225,7 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
             </div>
           </div>
         </Card>
-        );
-      })}
+      ))}
     </div>
   );
 };
