@@ -55,12 +55,6 @@ const TicketsKanban = ({ tickets, statuses, loading, onUpdateStatus }: TicketsKa
 
   const sortTickets = (tickets: Ticket[]) => {
     return [...tickets].sort((a, b) => {
-      const aIsCritical = a.priority_name?.toLowerCase().includes('критич') || a.priority_name?.toLowerCase().includes('высок');
-      const bIsCritical = b.priority_name?.toLowerCase().includes('критич') || b.priority_name?.toLowerCase().includes('высок');
-      
-      if (aIsCritical && !bIsCritical) return -1;
-      if (!aIsCritical && bIsCritical) return 1;
-      
       return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
     });
   };

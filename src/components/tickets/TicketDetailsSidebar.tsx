@@ -340,36 +340,17 @@ const TicketDetailsSidebar = ({
       )}
 
       {ticket.priority_name && (
-        <div 
-          className="p-3 rounded-lg border bg-background"
-          style={
-            ticket.priority_name.toLowerCase().includes('высок')
-              ? {
-                  backgroundColor: `${ticket.priority_color}10`,
-                  borderColor: ticket.priority_color,
-                  borderWidth: '2px'
-                }
-              : undefined
-          }
-        >
+        <div className="p-3 rounded-lg border bg-background">
           <h3 className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
             <Icon name="Flag" size={14} />
             Приоритет
           </h3>
           <div className="flex items-center gap-2">
-            {ticket.priority_name.toLowerCase().includes('высок') && (
-              <Icon name="AlertCircle" size={16} style={{ color: ticket.priority_color }} />
-            )}
             <Badge
               style={{ 
-                backgroundColor: ticket.priority_name.toLowerCase().includes('высок')
-                  ? ticket.priority_color
-                  : `${ticket.priority_color}20`,
-                color: ticket.priority_name.toLowerCase().includes('высок')
-                  ? 'white'
-                  : ticket.priority_color,
-                borderColor: ticket.priority_color,
-                fontWeight: ticket.priority_name.toLowerCase().includes('высок') ? '600' : '400'
+                backgroundColor: `${ticket.priority_color}20`,
+                color: ticket.priority_color,
+                borderColor: ticket.priority_color
               }}
               className="border"
             >
