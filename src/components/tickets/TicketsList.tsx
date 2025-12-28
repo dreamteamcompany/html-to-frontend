@@ -89,15 +89,30 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
   }
 
   const sortedTickets = [...tickets].sort((a, b) => {
+    const aIsCritical = a.priority_name?.toLowerCase().includes('критич');
+    const bIsCritical = b.priority_name?.toLowerCase().includes('критич');
+    
+    if (aIsCritical && !bIsCritical) return -1;
+    if (!aIsCritical && bIsCritical) return 1;
+    
     return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
   });
 
   return (
     <div className="grid gap-4">
-      {sortedTickets.map((ticket) => (
+      {sortedTickets.map((ticket) => {
+        const isCritical = ticket.priority_name?.toLowerCase().includes('критич');
+        
+        return (
         <Card
           key={ticket.id}
-          className="p-5 hover:shadow-lg transition-all cursor-pointer hover:border-primary/50"
+          className={`p-5 hover:shadow-lg transition-all cursor-pointer hover:border-primary/50 relative ${
+            isCritical ? 'border-red-500 border-2' : ''
+          }`}
+          style={isCritical ? {
+            boxShadow: '0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2)',
+            animation: 'pulse-glow 2s ease-in-out infinite'
+          } : {}}
           onClick={() => onTicketClick(ticket)}
         >
           <div className="space-y-3">
@@ -118,6 +133,15 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">#{ticket.id}</span>
+                    {isCritical && (
+                      <Badge variant="destructive" className="text-xs font-bold uppercase flex items-center gap-1 animate-pulse">
+                        <Icon name="AlertTriangle" size={12} />
+                        Критично
+                      </Badge>
+                    )}
+                  </div>
                   <h3 className="font-semibold text-lg line-clamp-1 mb-1">
                       {ticket.status_name === 'На согласовании' && '🔔 '}
                       {ticket.status_name === 'Отклонена' && '❌ '}
@@ -225,7 +249,8 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
             </div>
           </div>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 };
