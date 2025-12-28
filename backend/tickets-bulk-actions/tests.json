@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS для CORS",
+      "method": "OPTIONS",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Отказ без токена",
+      "method": "POST",
+      "body": {
+        "ticket_ids": [1],
+        "action": "change_status",
+        "status_id": 2
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "Токен авторизации не предоставлен"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

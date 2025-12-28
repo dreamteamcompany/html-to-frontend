@@ -1,5 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/icon';
 
 interface CustomField {
@@ -33,9 +34,21 @@ interface TicketsListProps {
   tickets: Ticket[];
   loading: boolean;
   onTicketClick: (ticket: Ticket) => void;
+  selectedTicketIds?: number[];
+  onToggleTicket?: (ticketId: number) => void;
+  onToggleAll?: (ticketIds: number[], allSelected: boolean) => void;
+  bulkMode?: boolean;
 }
 
-const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
+const TicketsList = ({ 
+  tickets, 
+  loading, 
+  onTicketClick,
+  selectedTicketIds = [],
+  onToggleTicket,
+  onToggleAll,
+  bulkMode = false
+}: TicketsListProps) => {
   const getDeadlineProgress = (dueDate?: string) => {
     if (!dueDate) return null;
     
@@ -100,9 +113,26 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
     return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
   });
 
+  const allSelected = bulkMode && sortedTickets.length > 0 && sortedTickets.every(t => selectedTicketIds.includes(t.id));
+
   return (
-    <div className="grid gap-4">
-      {sortedTickets.map((ticket) => {
+    <div className="space-y-4">
+      {bulkMode && sortedTickets.length > 0 && (
+        <Card className="p-3 bg-muted/50">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={() => onToggleAll?.(sortedTickets.map(t => t.id), allSelected)}
+            />
+            <span className="text-sm font-medium">
+              Выбрать все ({sortedTickets.length})
+            </span>
+          </div>
+        </Card>
+      )}
+      
+      <div className="grid gap-4">
+        {sortedTickets.map((ticket) => {
         const isCritical = ticket.priority_name?.toLowerCase().includes('критич');
         
         return (
@@ -110,16 +140,35 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
           key={ticket.id}
           className={`p-5 hover:shadow-lg transition-all cursor-pointer hover:border-primary/50 relative ${
             isCritical ? 'border-red-500 border-2' : ''
+          } ${
+            selectedTicketIds.includes(ticket.id) ? 'ring-2 ring-primary' : ''
           }`}
           style={isCritical ? {
             boxShadow: '0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2)',
             animation: 'pulse-glow 2s ease-in-out infinite'
           } : {}}
-          onClick={() => onTicketClick(ticket)}
+          onClick={(e) => {
+            if (bulkMode && onToggleTicket) {
+              e.stopPropagation();
+              onToggleTicket(ticket.id);
+            } else {
+              onTicketClick(ticket);
+            }
+          }}
         >
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3 flex-1 min-w-0">
+                {bulkMode && onToggleTicket && (
+                  <Checkbox
+                    checked={selectedTicketIds.includes(ticket.id)}
+                    onCheckedChange={(e) => {
+                      e && onToggleTicket(ticket.id);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="mt-1"
+                  />
+                )}
                 <div className="flex items-center gap-2">
                   {(ticket.status_name === 'На согласовании' || ticket.status_name === 'Одобрена' || ticket.status_name === 'Отклонена') && (
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
@@ -270,6 +319,7 @@ const TicketsList = ({ tickets, loading, onTicketClick }: TicketsListProps) => {
         </Card>
         );
       })}
+      </div>
     </div>
   );
 };
