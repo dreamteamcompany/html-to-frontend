@@ -33,6 +33,7 @@ import PlannedPayments from "./pages/PlannedPayments";
 import Tickets from "./pages/Tickets";
 import TicketDetails from "./pages/TicketDetails";
 import TicketServices from "./pages/TicketServices";
+import ServiceProviders from "./pages/ServiceProviders";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
             <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetails /></ProtectedRoute>} />
             <Route path="/ticket-services" element={<ProtectedRoute><TicketServices /></ProtectedRoute>} />
+            <Route path="/service-providers" element={<ProtectedRoute><ServiceProviders /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
