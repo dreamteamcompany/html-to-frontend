@@ -312,6 +312,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     params = event.get('queryStringParameters') or {}
     endpoint = params.get('endpoint', '')
     
+    print(f"[DEBUG] Method: {method}, Endpoint: {endpoint}")
+    
     if method == 'OPTIONS':
         return response(200, {})
     
