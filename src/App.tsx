@@ -32,6 +32,7 @@ import CategoryPayments from "./pages/CategoryPayments";
 import PlannedPayments from "./pages/PlannedPayments";
 import Tickets from "./pages/Tickets";
 import TicketDetails from "./pages/TicketDetails";
+import TicketServices from "./pages/TicketServices";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/planned-payments" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><PlannedPayments /></ProtectedRoute>} />
             <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
             <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetails /></ProtectedRoute>} />
+            <Route path="/ticket-services" element={<ProtectedRoute><TicketServices /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
