@@ -892,7 +892,7 @@ def handle_ticket_service_categories(method: str, event: Dict[str, Any], conn) -
     
     try:
         if method == 'GET':
-            cur.execute('SELECT id, name, icon, created_at FROM ticket_service_categories ORDER BY name')
+            cur.execute(f'SELECT id, name, icon, created_at FROM {SCHEMA}.ticket_service_categories ORDER BY name')
             rows = cur.fetchall()
             categories = [
                 {
@@ -910,7 +910,7 @@ def handle_ticket_service_categories(method: str, event: Dict[str, Any], conn) -
             cat_req = CategoryRequest(**body)
             
             cur.execute(
-                "INSERT INTO ticket_service_categories (name, icon) VALUES (%s, %s) RETURNING id, name, icon, created_at",
+                f"INSERT INTO {SCHEMA}.ticket_service_categories (name, icon) VALUES (%s, %s) RETURNING id, name, icon, created_at",
                 (cat_req.name, cat_req.icon)
             )
             row = cur.fetchone()
@@ -932,7 +932,7 @@ def handle_ticket_service_categories(method: str, event: Dict[str, Any], conn) -
                 return response(400, {'error': 'ID is required'})
             
             cur.execute(
-                "UPDATE ticket_service_categories SET name = %s, icon = %s WHERE id = %s RETURNING id, name, icon, created_at",
+                f"UPDATE {SCHEMA}.ticket_service_categories SET name = %s, icon = %s WHERE id = %s RETURNING id, name, icon, created_at",
                 (cat_req.name, cat_req.icon, category_id)
             )
             row = cur.fetchone()
@@ -956,7 +956,7 @@ def handle_ticket_service_categories(method: str, event: Dict[str, Any], conn) -
             if not category_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute('DELETE FROM ticket_service_categories WHERE id = %s', (category_id,))
+            cur.execute(f'DELETE FROM {SCHEMA}.ticket_service_categories WHERE id = %s', (category_id,))
             conn.commit()
             
             return response(200, {'success': True})
