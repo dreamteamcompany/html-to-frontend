@@ -335,6 +335,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_payments(method, event, conn)
         elif endpoint == 'categories':
             return handle_categories(method, event, conn)
+        elif endpoint == 'ticket-service-categories':
+            return handle_ticket_service_categories(method, event, conn)
         elif endpoint == 'stats':
             return handle_stats(event, conn)
         elif endpoint == 'legal-entities':
@@ -876,6 +878,85 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
                 return response(400, {'error': 'Cannot delete category with existing payments'})
             
             cur.execute('DELETE FROM categories WHERE id = %s', (category_id,))
+            conn.commit()
+            
+            return response(200, {'success': True})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
+def handle_ticket_service_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            cur.execute('SELECT id, name, icon, created_at FROM ticket_service_categories ORDER BY name')
+            rows = cur.fetchall()
+            categories = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'icon': row[2],
+                    'created_at': row[3].isoformat() if row[3] else None
+                }
+                for row in rows
+            ]
+            return response(200, categories)
+        
+        elif method == 'POST':
+            body = json.loads(event.get('body', '{}'))
+            cat_req = CategoryRequest(**body)
+            
+            cur.execute(
+                "INSERT INTO ticket_service_categories (name, icon) VALUES (%s, %s) RETURNING id, name, icon, created_at",
+                (cat_req.name, cat_req.icon)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'icon': row[2],
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'PUT':
+            body = json.loads(event.get('body', '{}'))
+            category_id = body.get('id')
+            cat_req = CategoryRequest(**body)
+            
+            if not category_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(
+                "UPDATE ticket_service_categories SET name = %s, icon = %s WHERE id = %s RETURNING id, name, icon, created_at",
+                (cat_req.name, cat_req.icon, category_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Category not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'icon': row[2],
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'DELETE':
+            params = event.get('queryStringParameters', {})
+            category_id = params.get('id')
+            
+            if not category_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute('DELETE FROM ticket_service_categories WHERE id = %s', (category_id,))
             conn.commit()
             
             return response(200, {'success': True})
@@ -2236,7 +2317,7 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 LEFT JOIN {SCHEMA}.users u1 ON s.intermediate_approver_id = u1.id
                 LEFT JOIN {SCHEMA}.users u2 ON s.final_approver_id = u2.id
                 LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
-                LEFT JOIN {SCHEMA}.categories c ON s.category_id = c.id
+                LEFT JOIN {SCHEMA}.ticket_service_categories c ON s.category_id = c.id
                 ORDER BY s.created_at DESC
             """)
             rows = cur.fetchall()

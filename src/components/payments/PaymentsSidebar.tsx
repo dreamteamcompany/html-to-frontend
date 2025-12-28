@@ -148,6 +148,13 @@ const PaymentsSidebar = ({
                 <Icon name="Network" size={18} />
                 <span>Сервисы услуг</span>
               </Link>
+              <Link 
+                to="/ticket-service-categories" 
+                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/ticket-service-categories') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+              >
+                <Icon name="FolderTree" size={18} />
+                <span>Категории услуг (заявки)</span>
+              </Link>
             </div>
           )}
         </li>

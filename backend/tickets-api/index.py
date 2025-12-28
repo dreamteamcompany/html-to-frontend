@@ -82,6 +82,18 @@ def handler(event: dict, context) -> dict:
         elif method == 'POST':
             body = json.loads(event.get('body', '{}'))
             
+            created_by = body.get('created_by')
+            department_id = body.get('department_id')
+            
+            if created_by and not department_id:
+                cur.execute('''
+                    SELECT department_id FROM "t_p61788166_html_to_frontend"."users"
+                    WHERE id = %s
+                ''', (created_by,))
+                user_result = cur.fetchone()
+                if user_result and user_result['department_id']:
+                    department_id = user_result['department_id']
+            
             cur.execute('''
                 INSERT INTO "t_p61788166_html_to_frontend"."tickets" 
                 (title, description, status_id, priority_id, category_id, department_id, service_id, created_by, assigned_to, due_date)
@@ -93,9 +105,9 @@ def handler(event: dict, context) -> dict:
                 body.get('status_id', 1),
                 body.get('priority_id'),
                 body.get('category_id'),
-                body.get('department_id'),
+                department_id,
                 body.get('service_id'),
-                body.get('created_by'),
+                created_by,
                 body.get('assigned_to'),
                 body.get('due_date')
             ))

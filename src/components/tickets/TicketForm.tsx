@@ -63,7 +63,6 @@ interface TicketFormProps {
     category_id: string;
     priority_id: string;
     status_id: string;
-    department_id: string;
     service_id: string;
     due_date: string;
     custom_fields: Record<string, string>;
@@ -190,48 +189,25 @@ const TicketForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="department_id">Отдел</Label>
-              <Select
-                value={formData.department_id}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, department_id: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите отдел" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id.toString()}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="service_id">Услуга</Label>
-              <Select
-                value={formData.service_id}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, service_id: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите услугу" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id.toString()}>
-                      {service.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="service_id">Услуга</Label>
+            <Select
+              value={formData.service_id}
+              onValueChange={(value) =>
+                setFormData({ ...formData, service_id: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите услугу" />
+              </SelectTrigger>
+              <SelectContent>
+                {services.map((service) => (
+                  <SelectItem key={service.id} value={service.id.toString()}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
