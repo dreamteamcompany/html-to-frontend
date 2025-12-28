@@ -7,10 +7,10 @@ from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
-# Deploy version: v2.0 - tickets support enabled
+# Deploy version: v2.2 - ticket service categories added
 
 SCHEMA = 't_p61788166_html_to_frontend'
-VERSION = '2.1.0'
+VERSION = '2.2.0'
 
 # Pydantic models for validation
 class PaymentRequest(BaseModel):
@@ -312,7 +312,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     params = event.get('queryStringParameters') or {}
     endpoint = params.get('endpoint', '')
     
-    print(f"[DEBUG] Method: {method}, Endpoint: {endpoint}")
+    print(f"[DEBUG v2.2] Method={method} Endpoint={endpoint} Params={params}")
     
     if method == 'OPTIONS':
         return response(200, {})
