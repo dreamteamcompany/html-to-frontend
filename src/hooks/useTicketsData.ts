@@ -53,7 +53,9 @@ interface Ticket {
   department_id?: number;
   department_name?: string;
   created_by: number;
+  customer_name?: string;
   assigned_to?: number;
+  assigned_to_name?: string;
   due_date?: string;
   created_at?: string;
   updated_at?: string;
@@ -75,8 +77,8 @@ export const useTicketsData = () => {
     if (!token) return;
 
     try {
-      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
-      const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
+      const apiUrl = 'https://functions.poehali.dev/6449784c-2d77-4ecc-a698-1276452afb92';
+      const response = await fetch(apiUrl, {
         headers: {
           'X-Auth-Token': token,
         },

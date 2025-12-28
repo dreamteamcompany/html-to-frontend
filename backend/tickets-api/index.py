@@ -41,22 +41,27 @@ def handler(event: dict, context) -> dict:
                     t.description,
                     t.status_id,
                     s.name as status_name,
+                    s.color as status_color,
                     t.priority_id,
                     p.name as priority_name,
+                    p.color as priority_color,
                     t.category_id,
                     c.name as category_name,
+                    c.icon as category_icon,
                     t.department_id,
-                    d.name as department_name,
                     t.assigned_to,
+                    u_assigned.full_name as assigned_to_name,
                     t.created_by,
+                    u_creator.full_name as customer_name,
                     t.created_at,
                     t.updated_at,
-                    t.custom_fields
-                FROM tickets t
-                LEFT JOIN ticket_statuses s ON t.status_id = s.id
-                LEFT JOIN ticket_priorities p ON t.priority_id = p.id
-                LEFT JOIN ticket_categories c ON t.category_id = c.id
-                LEFT JOIN ticket_departments d ON t.department_id = d.id
+                    t.due_date
+                FROM "t_p61788166_html_to_frontend"."tickets" t
+                LEFT JOIN "t_p61788166_html_to_frontend"."ticket_statuses" s ON t.status_id = s.id
+                LEFT JOIN "t_p61788166_html_to_frontend"."ticket_priorities" p ON t.priority_id = p.id
+                LEFT JOIN "t_p61788166_html_to_frontend"."ticket_categories" c ON t.category_id = c.id
+                LEFT JOIN "t_p61788166_html_to_frontend"."users" u_assigned ON t.assigned_to = u_assigned.id
+                LEFT JOIN "t_p61788166_html_to_frontend"."users" u_creator ON t.created_by = u_creator.id
                 ORDER BY t.created_at DESC
             ''')
             tickets = cur.fetchall()
@@ -75,10 +80,10 @@ def handler(event: dict, context) -> dict:
             body = json.loads(event.get('body', '{}'))
             
             cur.execute('''
-                INSERT INTO tickets 
-                (title, description, status_id, priority_id, category_id, department_id, created_by, custom_fields)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id, title, description, status_id, priority_id, category_id, department_id, created_by, created_at, custom_fields
+                INSERT INTO "t_p61788166_html_to_frontend"."tickets" 
+                (title, description, status_id, priority_id, category_id, department_id, created_by, assigned_to, due_date)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, title, description, status_id, priority_id, category_id, department_id, created_by, assigned_to, created_at, due_date
             ''', (
                 body.get('title'),
                 body.get('description'),
@@ -87,7 +92,8 @@ def handler(event: dict, context) -> dict:
                 body.get('category_id'),
                 body.get('department_id'),
                 body.get('created_by'),
-                json.dumps(body.get('custom_fields', {}))
+                body.get('assigned_to'),
+                body.get('due_date')
             ))
             
             ticket = cur.fetchone()
@@ -115,12 +121,12 @@ def handler(event: dict, context) -> dict:
                 }
             
             cur.execute('''
-                UPDATE tickets 
+                UPDATE "t_p61788166_html_to_frontend"."tickets" 
                 SET title = %s, description = %s, status_id = %s, priority_id = %s, 
-                    category_id = %s, department_id = %s, assigned_to = %s, custom_fields = %s,
+                    category_id = %s, department_id = %s, assigned_to = %s, due_date = %s,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = %s
-                RETURNING id, title, description, status_id, priority_id, category_id, department_id, assigned_to, updated_at, custom_fields
+                RETURNING id, title, description, status_id, priority_id, category_id, department_id, assigned_to, updated_at, due_date
             ''', (
                 body.get('title'),
                 body.get('description'),
@@ -129,7 +135,7 @@ def handler(event: dict, context) -> dict:
                 body.get('category_id'),
                 body.get('department_id'),
                 body.get('assigned_to'),
-                json.dumps(body.get('custom_fields', {})),
+                body.get('due_date'),
                 ticket_id
             ))
             
