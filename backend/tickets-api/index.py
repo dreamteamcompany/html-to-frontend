@@ -49,6 +49,8 @@ def handler(event: dict, context) -> dict:
                     c.name as category_name,
                     c.icon as category_icon,
                     t.department_id,
+                    t.service_id,
+                    srv.name as service_name,
                     t.assigned_to,
                     u_assigned.full_name as assigned_to_name,
                     t.created_by,
@@ -60,6 +62,7 @@ def handler(event: dict, context) -> dict:
                 LEFT JOIN "t_p61788166_html_to_frontend"."ticket_statuses" s ON t.status_id = s.id
                 LEFT JOIN "t_p61788166_html_to_frontend"."ticket_priorities" p ON t.priority_id = p.id
                 LEFT JOIN "t_p61788166_html_to_frontend"."ticket_categories" c ON t.category_id = c.id
+                LEFT JOIN "t_p61788166_html_to_frontend"."services" srv ON t.service_id = srv.id
                 LEFT JOIN "t_p61788166_html_to_frontend"."users" u_assigned ON t.assigned_to = u_assigned.id
                 LEFT JOIN "t_p61788166_html_to_frontend"."users" u_creator ON t.created_by = u_creator.id
                 ORDER BY t.created_at DESC
@@ -81,9 +84,9 @@ def handler(event: dict, context) -> dict:
             
             cur.execute('''
                 INSERT INTO "t_p61788166_html_to_frontend"."tickets" 
-                (title, description, status_id, priority_id, category_id, department_id, created_by, assigned_to, due_date)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id, title, description, status_id, priority_id, category_id, department_id, created_by, assigned_to, created_at, due_date
+                (title, description, status_id, priority_id, category_id, department_id, service_id, created_by, assigned_to, due_date)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, title, description, status_id, priority_id, category_id, department_id, service_id, created_by, assigned_to, created_at, due_date
             ''', (
                 body.get('title'),
                 body.get('description'),
@@ -91,6 +94,7 @@ def handler(event: dict, context) -> dict:
                 body.get('priority_id'),
                 body.get('category_id'),
                 body.get('department_id'),
+                body.get('service_id'),
                 body.get('created_by'),
                 body.get('assigned_to'),
                 body.get('due_date')
@@ -123,10 +127,10 @@ def handler(event: dict, context) -> dict:
             cur.execute('''
                 UPDATE "t_p61788166_html_to_frontend"."tickets" 
                 SET title = %s, description = %s, status_id = %s, priority_id = %s, 
-                    category_id = %s, department_id = %s, assigned_to = %s, due_date = %s,
+                    category_id = %s, department_id = %s, service_id = %s, assigned_to = %s, due_date = %s,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = %s
-                RETURNING id, title, description, status_id, priority_id, category_id, department_id, assigned_to, updated_at, due_date
+                RETURNING id, title, description, status_id, priority_id, category_id, department_id, service_id, assigned_to, updated_at, due_date
             ''', (
                 body.get('title'),
                 body.get('description'),
@@ -134,6 +138,7 @@ def handler(event: dict, context) -> dict:
                 body.get('priority_id'),
                 body.get('category_id'),
                 body.get('department_id'),
+                body.get('service_id'),
                 body.get('assigned_to'),
                 body.get('due_date'),
                 ticket_id

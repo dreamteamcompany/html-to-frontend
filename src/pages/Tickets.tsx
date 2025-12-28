@@ -38,6 +38,8 @@ interface Ticket {
   status_color?: string;
   department_id?: number;
   department_name?: string;
+  service_id?: number;
+  service_name?: string;
   created_by: number;
   creator_name?: string;
   creator_email?: string;
@@ -68,6 +70,7 @@ const Tickets = () => {
     statuses,
     departments,
     customFields,
+    services,
     loading,
     loadTickets,
   } = useTicketsData();
@@ -189,6 +192,7 @@ const Tickets = () => {
             statuses={statuses}
             departments={departments}
             customFields={customFields}
+            services={services}
             handleSubmit={handleSubmit}
           />
 

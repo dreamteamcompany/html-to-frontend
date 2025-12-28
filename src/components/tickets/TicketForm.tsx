@@ -48,6 +48,12 @@ interface CustomField {
   is_required: boolean;
 }
 
+interface Service {
+  id: number;
+  name: string;
+  description: string;
+}
+
 interface TicketFormProps {
   dialogOpen: boolean;
   setDialogOpen: (open: boolean) => void;
@@ -58,6 +64,7 @@ interface TicketFormProps {
     priority_id: string;
     status_id: string;
     department_id: string;
+    service_id: string;
     due_date: string;
     custom_fields: Record<string, string>;
   };
@@ -67,6 +74,7 @@ interface TicketFormProps {
   statuses: Status[];
   departments: Department[];
   customFields: CustomField[];
+  services: Service[];
   handleSubmit: (e: React.FormEvent) => void;
 }
 
@@ -80,6 +88,7 @@ const TicketForm = ({
   statuses,
   departments,
   customFields,
+  services,
   handleSubmit,
 }: TicketFormProps) => {
   return (
@@ -204,16 +213,37 @@ const TicketForm = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="due_date">Желаемый срок</Label>
-              <Input
-                id="due_date"
-                type="date"
-                value={formData.due_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, due_date: e.target.value })
+              <Label htmlFor="service_id">Услуга</Label>
+              <Select
+                value={formData.service_id}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, service_id: value })
                 }
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите услугу" />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.map((service) => (
+                    <SelectItem key={service.id} value={service.id.toString()}>
+                      {service.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="due_date">Желаемый срок</Label>
+            <Input
+              id="due_date"
+              type="date"
+              value={formData.due_date}
+              onChange={(e) =>
+                setFormData({ ...formData, due_date: e.target.value })
+              }
+            />
           </div>
 
           {customFields.length > 0 && (

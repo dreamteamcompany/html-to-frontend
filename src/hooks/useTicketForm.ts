@@ -21,6 +21,7 @@ export const useTicketForm = (customFields: CustomField[], loadTickets: () => vo
     priority_id: '',
     status_id: '1',
     department_id: '',
+    service_id: '',
     due_date: '',
     custom_fields: {} as Record<string, string>,
   };
@@ -54,6 +55,7 @@ export const useTicketForm = (customFields: CustomField[], loadTickets: () => vo
           priority_id: formData.priority_id ? parseInt(formData.priority_id) : null,
           status_id: 1,
           department_id: formData.department_id ? parseInt(formData.department_id) : null,
+          service_id: formData.service_id ? parseInt(formData.service_id) : null,
           due_date: formData.due_date || null,
         }),
       });

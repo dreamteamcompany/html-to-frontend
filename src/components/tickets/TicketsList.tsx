@@ -23,6 +23,7 @@ interface Ticket {
   status_name?: string;
   status_color?: string;
   department_name?: string;
+  service_name?: string;
   due_date?: string;
   created_at?: string;
   custom_fields?: CustomField[];
@@ -236,6 +237,14 @@ const TicketsList = ({
                     <Icon name="UserCheck" size={14} />
                     <span className="font-medium">Исполнитель:</span>
                     <span>{ticket.assigned_to_name}</span>
+                  </div>
+                )}
+
+                {ticket.service_name && (
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Icon name="Wrench" size={14} />
+                    <span className="font-medium">Услуга:</span>
+                    <span>{ticket.service_name}</span>
                   </div>
                 )}
               </div>

@@ -37,6 +37,12 @@ interface CustomField {
   value?: string;
 }
 
+interface Service {
+  id: number;
+  name: string;
+  description: string;
+}
+
 interface Ticket {
   id: number;
   title: string;
@@ -71,6 +77,7 @@ export const useTicketsData = () => {
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadTickets = async () => {
@@ -94,6 +101,26 @@ export const useTicketsData = () => {
     } catch (err) {
       console.error('Failed to load tickets:', err);
       setTickets([]);
+    }
+  };
+
+  const loadServices = async () => {
+    if (!token) return;
+
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const response = await fetch(`${mainUrl}?endpoint=services`, {
+        headers: {
+          'X-Auth-Token': token,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setServices(data.services || []);
+      }
+    } catch (err) {
+      console.error('Failed to load services:', err);
     }
   };
 
@@ -140,7 +167,7 @@ export const useTicketsData = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([loadTickets(), loadDictionaries()]);
+      await Promise.all([loadTickets(), loadDictionaries(), loadServices()]);
       setLoading(false);
     };
 
@@ -154,6 +181,7 @@ export const useTicketsData = () => {
     statuses,
     departments,
     customFields,
+    services,
     loading,
     loadTickets,
   };
