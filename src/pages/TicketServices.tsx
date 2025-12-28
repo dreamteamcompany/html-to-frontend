@@ -34,45 +34,17 @@ import { useToast } from '@/hooks/use-toast';
 
 const BACKEND_URL = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
 
-interface User {
-  id: number;
-  full_name: string;
-  role: string;
-}
-
-interface CustomerDepartment {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  icon: string;
-}
-
 interface Service {
   id: number;
   name: string;
   description: string;
   intermediate_approver_id: number;
   final_approver_id: number;
-  intermediate_approver_name?: string;
-  final_approver_name?: string;
-  customer_department_id?: number;
-  customer_department_name?: string;
-  category_id?: number;
-  category_name?: string;
-  category_icon?: string;
   created_at: string;
 }
 
 const TicketServices = () => {
   const [services, setServices] = useState<Service[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [departments, setDepartments] = useState<CustomerDepartment[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -86,9 +58,6 @@ const TicketServices = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    final_approver_id: '',
-    customer_department_id: '',
-    category_id: '',
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -107,9 +76,6 @@ const TicketServices = () => {
 
   useEffect(() => {
     loadServices();
-    loadUsers();
-    loadDepartments();
-    loadCategories();
   }, []);
 
   const loadServices = async () => {
@@ -130,46 +96,13 @@ const TicketServices = () => {
     }
   };
 
-  const loadUsers = async () => {
-    try {
-      const response = await apiFetch(`${BACKEND_URL}?endpoint=users`);
-      const data = await response.json();
-      setUsers(Array.isArray(data) ? data : data.users || []);
-    } catch (error) {
-      console.error('Failed to load users:', error);
-      setUsers([]);
-    }
-  };
-
-  const loadDepartments = async () => {
-    try {
-      const response = await apiFetch(`${BACKEND_URL}?endpoint=customer-departments`);
-      const data = await response.json();
-      setDepartments(Array.isArray(data) ? data : data.departments || []);
-    } catch (error) {
-      console.error('Failed to load departments:', error);
-      setDepartments([]);
-    }
-  };
-
-  const loadCategories = async () => {
-    try {
-      const response = await apiFetch(`${BACKEND_URL}?endpoint=categories`);
-      const data = await response.json();
-      setCategories(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Failed to load categories:', error);
-      setCategories([]);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.final_approver_id) {
+    if (!formData.name) {
       toast({
         title: 'Ошибка',
-        description: 'Заполните все обязательные поля',
+        description: 'Заполните название услуги',
         variant: 'destructive',
       });
       return;
@@ -186,10 +119,10 @@ const TicketServices = () => {
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
-          intermediate_approver_id: parseInt(formData.final_approver_id),
-          final_approver_id: parseInt(formData.final_approver_id),
-          customer_department_id: formData.customer_department_id ? parseInt(formData.customer_department_id) : null,
-          category_id: formData.category_id ? parseInt(formData.category_id) : null,
+          intermediate_approver_id: 1,
+          final_approver_id: 1,
+          customer_department_id: null,
+          category_id: null,
         }),
       });
 
@@ -219,9 +152,6 @@ const TicketServices = () => {
     setFormData({
       name: service.name,
       description: service.description || '',
-      final_approver_id: service.final_approver_id.toString(),
-      customer_department_id: service.customer_department_id ? service.customer_department_id.toString() : '',
-      category_id: service.category_id ? service.category_id.toString() : '',
     });
     setDialogOpen(true);
   };
@@ -257,9 +187,6 @@ const TicketServices = () => {
     setFormData({
       name: '',
       description: '',
-      final_approver_id: '',
-      customer_department_id: '',
-      category_id: '',
     });
     setEditingService(null);
   };
@@ -338,60 +265,6 @@ const TicketServices = () => {
                       rows={3}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="approver">Согласующий *</Label>
-                    <Select
-                      value={formData.final_approver_id}
-                      onValueChange={(value) => setFormData({ ...formData, final_approver_id: value })}
-                    >
-                      <SelectTrigger id="approver">
-                        <SelectValue placeholder="Выберите согласующего" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            {user.full_name} ({user.role})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="department">Отдел-заказчик</Label>
-                    <Select
-                      value={formData.customer_department_id}
-                      onValueChange={(value) => setFormData({ ...formData, customer_department_id: value })}
-                    >
-                      <SelectTrigger id="department">
-                        <SelectValue placeholder="Выберите отдел" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departments.map((dept) => (
-                          <SelectItem key={dept.id} value={dept.id.toString()}>
-                            {dept.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Категория</Label>
-                    <Select
-                      value={formData.category_id}
-                      onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-                    >
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder="Выберите категорию" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id.toString()}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
                   <div className="flex gap-2 justify-end">
                     <Button type="button" variant="outline" onClick={() => handleDialogClose(false)}>
                       Отмена
@@ -424,9 +297,6 @@ const TicketServices = () => {
                     <TableRow>
                       <TableHead>Название</TableHead>
                       <TableHead>Описание</TableHead>
-                      <TableHead>Согласующий</TableHead>
-                      <TableHead>Отдел</TableHead>
-                      <TableHead>Категория</TableHead>
                       <TableHead className="text-right">Действия</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -434,19 +304,7 @@ const TicketServices = () => {
                     {services.map((service) => (
                       <TableRow key={service.id}>
                         <TableCell className="font-medium">{service.name}</TableCell>
-                        <TableCell className="max-w-xs truncate">{service.description}</TableCell>
-                        <TableCell>{service.final_approver_name}</TableCell>
-                        <TableCell>{service.customer_department_name || '—'}</TableCell>
-                        <TableCell>
-                          {service.category_name ? (
-                            <div className="flex items-center gap-2">
-                              {service.category_icon && <span>{service.category_icon}</span>}
-                              <span>{service.category_name}</span>
-                            </div>
-                          ) : (
-                            '—'
-                          )}
-                        </TableCell>
+                        <TableCell className="max-w-md">{service.description || '—'}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-2 justify-end">
                             <Button
