@@ -84,7 +84,7 @@ export const useTicketsData = () => {
     if (!token) return;
 
     try {
-      const apiUrl = 'https://functions.poehali.dev/6449784c-2d77-4ecc-a698-1276452afb92';
+      const apiUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=tickets';
       const response = await fetch(apiUrl, {
         headers: {
           'X-Auth-Token': token,
