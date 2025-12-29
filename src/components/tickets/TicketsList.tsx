@@ -221,7 +221,7 @@ const TicketsList = ({
                       {ticket.title}
                     </h3>
                     {ticket.has_response && ticket.created_by === currentUserId && (
-                      <Badge variant="default" className="flex items-center gap-1 bg-green-500 hover:bg-green-600">
+                      <Badge variant="default" className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600">
                         <Icon name="MessageSquareReply" size={12} />
                         Есть ответ
                       </Badge>

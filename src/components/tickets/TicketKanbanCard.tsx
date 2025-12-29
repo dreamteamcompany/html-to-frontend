@@ -110,7 +110,7 @@ const TicketKanbanCard = ({ ticket, onClick, isDragging = false }: TicketKanbanC
         )}
 
         {ticket.has_response && (
-          <Badge variant="default" className="text-xs flex items-center gap-1 bg-green-500">
+          <Badge variant="default" className="text-xs flex items-center gap-1 bg-blue-500">
             <Icon name="MessageSquareReply" size={12} />
             Ответ
           </Badge>
