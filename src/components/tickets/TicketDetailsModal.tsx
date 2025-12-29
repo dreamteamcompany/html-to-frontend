@@ -25,6 +25,7 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
     handleUpdateStatus,
     handleSendPing,
     handleReaction,
+    handleAssignUser,
   } = useTicketDetailsLogic(ticket, onTicketUpdate);
 
   if (!ticket) return null;
@@ -57,6 +58,7 @@ const TicketDetailsModal = ({ ticket, onClose, statuses = [], onTicketUpdate }: 
             onUpdateStatus={handleUpdateStatus}
             onSendPing={handleSendPing}
             onReaction={handleReaction}
+            onAssignUser={handleAssignUser}
           />
         </div>
       </DialogContent>

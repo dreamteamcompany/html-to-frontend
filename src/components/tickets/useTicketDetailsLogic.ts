@@ -261,6 +261,53 @@ export const useTicketDetailsLogic = (ticket: Ticket | null, onTicketUpdate?: ()
     }
   };
 
+  const handleAssignUser = async (userId: string) => {
+    if (!ticket?.id || !token) return;
+
+    setUpdating(true);
+    try {
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const assignedUserId = userId === 'unassign' ? null : Number(userId);
+      
+      const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token,
+        },
+        body: JSON.stringify({ 
+          ticket_id: ticket.id, 
+          assigned_to: assignedUserId 
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Успешно',
+          description: 'Исполнитель назначен',
+        });
+        if (onTicketUpdate) {
+          onTicketUpdate();
+        }
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось назначить исполнителя',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to assign user:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось назначить исполнителя',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   return {
     comments,
     newComment,
@@ -277,5 +324,6 @@ export const useTicketDetailsLogic = (ticket: Ticket | null, onTicketUpdate?: ()
     handleUpdateStatus,
     handleSendPing,
     handleReaction,
+    handleAssignUser,
   };
 };

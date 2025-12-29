@@ -24,6 +24,7 @@ interface TicketDetailsModalContentProps {
   onUpdateStatus: (statusId: string) => void;
   onSendPing: () => void;
   onReaction: (commentId: number, emoji: string) => void;
+  onAssignUser: (userId: string) => void;
 }
 
 const TicketDetailsModalContent = ({
@@ -44,10 +45,8 @@ const TicketDetailsModalContent = ({
   onUpdateStatus,
   onSendPing,
   onReaction,
+  onAssignUser,
 }: TicketDetailsModalContentProps) => {
-  const handleAssignUser = (userId: string) => {
-    console.log('Assign user:', userId);
-  };
 
   return (
     <div className="flex gap-6 max-h-[80vh] overflow-hidden">
@@ -99,7 +98,7 @@ const TicketDetailsModalContent = ({
         users={users}
         updating={updating}
         onUpdateStatus={onUpdateStatus}
-        onAssignUser={handleAssignUser}
+        onAssignUser={onAssignUser}
       />
     </div>
   );
