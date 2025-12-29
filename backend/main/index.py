@@ -2838,7 +2838,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_comment_likes(method, event, conn, user_data)
         elif endpoint == 'audit-logs':
             result = handle_audit_logs(method, event, conn, payload)
-        elif endpoint == 'tickets-api':
+        elif endpoint == 'tickets' or endpoint == 'tickets-api':
             result = handle_tickets_api(method, event, conn, payload)
         elif endpoint == 'ticket-dictionaries-api':
             result = handle_ticket_dictionaries_api(method, event, conn, payload)
