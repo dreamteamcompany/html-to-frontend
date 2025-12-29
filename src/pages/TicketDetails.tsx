@@ -350,10 +350,13 @@ const TicketDetails = () => {
   };
 
   const handleAssignUser = async (userId: string) => {
+    console.log('Assign user:', userId);
     try {
       setUpdating(true);
       const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
       const assignedUserId = userId === 'unassign' ? null : Number(userId);
+      
+      console.log('Sending assign request:', { ticket_id: id, assigned_to: assignedUserId });
       
       const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
         method: 'PUT',
@@ -363,6 +366,8 @@ const TicketDetails = () => {
         },
         body: JSON.stringify({ ticket_id: id, assigned_to: assignedUserId }),
       });
+      
+      console.log('Assign response:', response.status, await response.text());
       
       if (response.ok) {
         loadTicket();
