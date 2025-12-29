@@ -29,6 +29,7 @@ interface Ticket {
   custom_fields?: CustomField[];
   customer_name?: string;
   assigned_to_name?: string;
+  unread_comments?: number;
 }
 
 interface TicketsListProps {
@@ -207,12 +208,20 @@ const TicketsList = ({
                       </Badge>
                     )}
                   </div>
-                  <h3 className="font-semibold text-lg line-clamp-1 mb-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg line-clamp-1 mb-1 flex-1">
                       {ticket.status_name === 'На согласовании' && '🔔 '}
                       {ticket.status_name === 'Отклонена' && '❌ '}
                       {ticket.status_name === 'Одобрена' && '✅ '}
-                    {ticket.title}
-                  </h3>
+                      {ticket.title}
+                    </h3>
+                    {ticket.unread_comments && ticket.unread_comments > 0 && (
+                      <Badge variant="destructive" className="flex items-center gap-1 animate-pulse">
+                        <Icon name="MessageCircle" size={12} />
+                        {ticket.unread_comments}
+                      </Badge>
+                    )}
+                  </div>
                   {ticket.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                       {ticket.description}

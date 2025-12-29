@@ -51,6 +51,7 @@ interface Ticket {
   updated_at?: string;
   closed_at?: string;
   custom_fields?: CustomField[];
+  unread_comments?: number;
 }
 
 const Tickets = () => {

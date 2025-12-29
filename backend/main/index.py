@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 # Deploy version: v2.2 - ticket service categories added
 
 SCHEMA = 't_p61788166_html_to_frontend'
-VERSION = '2.2.0'
+VERSION = '2.3.0'
 
 # Pydantic models for validation
 class PaymentRequest(BaseModel):
@@ -2882,7 +2882,14 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                     t.department_id, d.name as department_name,
                     t.created_by, u.username as creator_name, u.email as creator_email,
                     t.assigned_to, ua.username as assignee_name, ua.email as assignee_email,
-                    t.created_at, t.updated_at
+                    t.created_at, t.updated_at,
+                    COALESCE((
+                        SELECT COUNT(*) 
+                        FROM {SCHEMA}.ticket_comments tc 
+                        WHERE tc.ticket_id = t.id 
+                        AND tc.is_read = FALSE 
+                        AND tc.user_id != %s
+                    ), 0) as unread_comments
                 FROM {SCHEMA}.tickets t
                 LEFT JOIN {SCHEMA}.ticket_categories c ON t.category_id = c.id
                 LEFT JOIN {SCHEMA}.ticket_priorities p ON t.priority_id = p.id
@@ -2893,7 +2900,7 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                 WHERE 1=1
             """
             
-            params = []
+            params = [user_id]
             if search:
                 query += " AND (t.title ILIKE %s OR t.description ILIKE %s OR c.name ILIKE %s)"
                 search_pattern = f'%{search}%'
@@ -2927,7 +2934,8 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                     'assignee_name': row['assignee_name'],
                     'assignee_email': row['assignee_email'],
                     'created_at': row['created_at'].isoformat() if row['created_at'] else None,
-                    'updated_at': row['updated_at'].isoformat() if row['updated_at'] else None
+                    'updated_at': row['updated_at'].isoformat() if row['updated_at'] else None,
+                    'unread_comments': row['unread_comments']
                 })
             
             return response(200, {'tickets': tickets})
@@ -3210,6 +3218,14 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
             
             if not ticket_id:
                 return response(400, {'error': 'ticket_id обязателен'})
+            
+            # Помечаем все комментарии в заявке как прочитанные для текущего пользователя
+            cur.execute(f"""
+                UPDATE {SCHEMA}.ticket_comments 
+                SET is_read = TRUE
+                WHERE ticket_id = %s AND user_id != %s AND is_read = FALSE
+            """, (ticket_id, user_id))
+            conn.commit()
             
             cur.execute(f"""
                 SELECT 
