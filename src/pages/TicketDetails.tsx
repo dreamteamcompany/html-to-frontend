@@ -349,6 +349,32 @@ const TicketDetails = () => {
     }
   };
 
+  const handleAssignUser = async (userId: string) => {
+    try {
+      setUpdating(true);
+      const mainUrl = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+      const assignedUserId = userId === 'unassign' ? null : Number(userId);
+      
+      const response = await fetch(`${mainUrl}?endpoint=tickets-api`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token,
+        },
+        body: JSON.stringify({ ticket_id: id, assigned_to: assignedUserId }),
+      });
+      
+      if (response.ok) {
+        loadTicket();
+        loadHistory();
+      }
+    } catch (error) {
+      console.error('Error assigning user:', error);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleUpdateDueDate = async (dueDate: string | null) => {
     try {
       setUpdating(true);
@@ -429,7 +455,7 @@ const TicketDetails = () => {
               isCustomer={ticket.created_by === user?.id}
               hasAssignee={!!ticket.assigned_to}
               onUpdateStatus={(statusId) => handleUpdateStatus(Number(statusId))}
-              onAssignUser={(userId) => console.log('Assign user:', userId)}
+              onAssignUser={handleAssignUser}
               onSendPing={handleSendPing}
               onApprovalChange={loadTicket}
               onUpdateDueDate={handleUpdateDueDate}
@@ -446,7 +472,7 @@ const TicketDetails = () => {
               isCustomer={ticket.created_by === user?.id}
               hasAssignee={!!ticket.assigned_to}
               onUpdateStatus={(statusId) => handleUpdateStatus(Number(statusId))}
-              onAssignUser={(userId) => console.log('Assign user:', userId)}
+              onAssignUser={handleAssignUser}
               onSendPing={handleSendPing}
               onApprovalChange={loadTicket}
               onUpdateDueDate={handleUpdateDueDate}
