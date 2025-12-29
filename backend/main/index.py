@@ -2883,6 +2883,7 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                     t.created_by, u.username as creator_name, u.email as creator_email,
                     t.assigned_to, ua.username as assignee_name, ua.email as assignee_email,
                     t.created_at, t.updated_at,
+                    t.has_response,
                     COALESCE((
                         SELECT COUNT(*) 
                         FROM {SCHEMA}.ticket_comments tc 

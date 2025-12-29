@@ -52,10 +52,11 @@ interface Ticket {
   closed_at?: string;
   custom_fields?: CustomField[];
   unread_comments?: number;
+  has_response?: boolean;
 }
 
 const Tickets = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
@@ -207,6 +208,7 @@ const Tickets = () => {
                 onToggleTicket={toggleTicketSelection}
                 onToggleAll={toggleAllTickets}
                 bulkMode={bulkMode}
+                currentUserId={user?.id}
               />
               
               {bulkMode && selectedCount > 0 && (

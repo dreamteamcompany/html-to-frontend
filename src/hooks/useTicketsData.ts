@@ -67,6 +67,7 @@ interface Ticket {
   updated_at?: string;
   closed_at?: string;
   custom_fields?: CustomField[];
+  has_response?: boolean;
 }
 
 export const useTicketsData = () => {

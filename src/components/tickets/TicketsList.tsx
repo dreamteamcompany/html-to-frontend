@@ -43,6 +43,7 @@ interface TicketsListProps {
   onToggleTicket?: (ticketId: number) => void;
   onToggleAll?: (ticketIds: number[], allSelected: boolean) => void;
   bulkMode?: boolean;
+  currentUserId?: number;
 }
 
 const TicketsList = ({ 
@@ -52,7 +53,8 @@ const TicketsList = ({
   selectedTicketIds = [],
   onToggleTicket,
   onToggleAll,
-  bulkMode = false
+  bulkMode = false,
+  currentUserId
 }: TicketsListProps) => {
   const getDeadlineProgress = (dueDate?: string) => {
     if (!dueDate) return null;
@@ -218,7 +220,7 @@ const TicketsList = ({
                       {ticket.status_name === 'Одобрена' && '✅ '}
                       {ticket.title}
                     </h3>
-                    {ticket.has_response && (
+                    {ticket.has_response && ticket.created_by === currentUserId && (
                       <Badge variant="default" className="flex items-center gap-1 bg-green-500 hover:bg-green-600">
                         <Icon name="MessageSquareReply" size={12} />
                         Есть ответ
