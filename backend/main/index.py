@@ -2911,11 +2911,23 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
             cur.execute(query, params)
             tickets = []
             for row in cur.fetchall():
+                # Безопасная обработка дат с проверкой на корректность
+                def safe_date_format(date_value):
+                    if not date_value:
+                        return None
+                    try:
+                        # Проверяем, что год в разумных пределах (1900-2100)
+                        if hasattr(date_value, 'year') and (date_value.year < 1900 or date_value.year > 2100):
+                            return None
+                        return date_value.isoformat()
+                    except:
+                        return None
+                
                 tickets.append({
                     'id': row['id'],
                     'title': row['title'],
                     'description': row['description'],
-                    'due_date': row['due_date'].isoformat() if row['due_date'] else None,
+                    'due_date': safe_date_format(row['due_date']),
                     'category_id': row['category_id'],
                     'category_name': row['category_name'],
                     'category_icon': row['category_icon'],
@@ -2933,8 +2945,8 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
                     'assigned_to': row['assigned_to'],
                     'assignee_name': row['assignee_name'],
                     'assignee_email': row['assignee_email'],
-                    'created_at': row['created_at'].isoformat() if row['created_at'] else None,
-                    'updated_at': row['updated_at'].isoformat() if row['updated_at'] else None,
+                    'created_at': safe_date_format(row['created_at']),
+                    'updated_at': safe_date_format(row['updated_at']),
                     'unread_comments': row['unread_comments']
                 })
             
