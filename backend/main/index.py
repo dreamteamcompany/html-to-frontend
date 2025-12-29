@@ -3354,11 +3354,16 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
             
             conn.commit()
             
+            # Обновляем has_response если комментарий от исполнителя (не от заказчика)
             cur.execute(f"""
                 UPDATE {SCHEMA}.tickets 
-                SET updated_at = CURRENT_TIMESTAMP
+                SET updated_at = CURRENT_TIMESTAMP,
+                    has_response = CASE 
+                        WHEN assigned_to = %s AND created_by != %s THEN TRUE
+                        ELSE has_response
+                    END
                 WHERE id = %s
-            """, (ticket_id,))
+            """, (user_id, user_id, ticket_id,))
             conn.commit()
             
             return response(201, {

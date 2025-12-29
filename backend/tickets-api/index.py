@@ -57,7 +57,8 @@ def handler(event: dict, context) -> dict:
                     u_creator.full_name as customer_name,
                     t.created_at,
                     t.updated_at,
-                    t.due_date
+                    t.due_date,
+                    t.has_response
                 FROM "t_p61788166_html_to_frontend"."tickets" t
                 LEFT JOIN "t_p61788166_html_to_frontend"."ticket_statuses" s ON t.status_id = s.id
                 LEFT JOIN "t_p61788166_html_to_frontend"."ticket_priorities" p ON t.priority_id = p.id

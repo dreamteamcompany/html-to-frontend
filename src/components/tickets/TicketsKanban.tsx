@@ -21,8 +21,10 @@ interface Ticket {
   department_name?: string;
   assigned_to?: number;
   assignee_name?: string;
+  created_by?: number;
   due_date?: string;
   created_at?: string;
+  has_response?: boolean;
 }
 
 interface Status {

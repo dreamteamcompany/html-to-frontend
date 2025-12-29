@@ -29,7 +29,10 @@ interface Ticket {
   custom_fields?: CustomField[];
   customer_name?: string;
   assigned_to_name?: string;
+  assigned_to?: number;
+  created_by?: number;
   unread_comments?: number;
+  has_response?: boolean;
 }
 
 interface TicketsListProps {
@@ -215,6 +218,12 @@ const TicketsList = ({
                       {ticket.status_name === 'Одобрена' && '✅ '}
                       {ticket.title}
                     </h3>
+                    {ticket.has_response && (
+                      <Badge variant="default" className="flex items-center gap-1 bg-green-500 hover:bg-green-600">
+                        <Icon name="MessageSquareReply" size={12} />
+                        Есть ответ
+                      </Badge>
+                    )}
                     {ticket.unread_comments && ticket.unread_comments > 0 && (
                       <Badge variant="destructive" className="flex items-center gap-1 animate-pulse">
                         <Icon name="MessageCircle" size={12} />
