@@ -24,7 +24,7 @@ const AnnualSavingsStatCard = () => {
 
   const loadSavingsData = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/963e9d85-88b5-47ad-8bb7-363b31ed7a49', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=savings-dashboard', {
         headers: {
           'X-Auth-Token': token || '',
         },

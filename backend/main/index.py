@@ -2856,6 +2856,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_dashboard_layout(method, event, conn, payload)
         elif endpoint == 'dashboard-stats':
             result = handle_dashboard_stats(method, event, conn, payload)
+        elif endpoint == 'budget-breakdown':
+            result = handle_budget_breakdown(method, event, conn, payload)
+        elif endpoint == 'savings-dashboard':
+            result = handle_savings_dashboard(method, event, conn, payload)
         else:
             result = response(404, {'error': f'Endpoint not found: {endpoint}'})
         
@@ -3767,6 +3771,112 @@ def handle_dashboard_stats(method: str, event: Dict[str, Any], conn, payload: Di
             'total_count': total_count,
             'change_percent': abs(change_percent),
             'is_increase': is_increase
+        })
+    
+    except Exception as e:
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_budget_breakdown(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Детальная разбивка IT бюджета по категориям"""
+    if method != 'GET':
+        return response(405, {'error': 'Метод не поддерживается'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        cur.execute(f"""
+            SELECT 
+                c.id as category_id,
+                c.name,
+                c.icon,
+                COALESCE(SUM(p.amount), 0) as amount,
+                COUNT(p.id) as payment_count
+            FROM {SCHEMA}.categories c
+            LEFT JOIN {SCHEMA}.payments p ON c.id = p.category_id
+            GROUP BY c.id, c.name, c.icon
+            HAVING COALESCE(SUM(p.amount), 0) > 0
+            ORDER BY amount DESC
+        """)
+        
+        categories = cur.fetchall()
+        total_budget = sum(float(cat['amount']) for cat in categories)
+        
+        result = []
+        for cat in categories:
+            amount = float(cat['amount'])
+            percentage = round((amount / total_budget * 100), 1) if total_budget > 0 else 0
+            
+            cur.execute(f"""
+                SELECT 
+                    COALESCE(s.name, 'Без сервиса') as service,
+                    p.amount,
+                    p.status
+                FROM {SCHEMA}.payments p
+                LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+                WHERE p.category_id = %s
+                ORDER BY p.amount DESC
+                LIMIT 5
+            """, (cat['category_id'],))
+            
+            payments = [{'service': row['service'], 'amount': float(row['amount']), 'status': row['status']} 
+                       for row in cur.fetchall()]
+            
+            result.append({
+                'category_id': cat['category_id'],
+                'name': cat['name'],
+                'icon': cat['icon'],
+                'amount': amount,
+                'percentage': percentage,
+                'payments': payments
+            })
+        
+        return response(200, result)
+    
+    except Exception as e:
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Статистика экономии для дашборда"""
+    if method != 'GET':
+        return response(405, {'error': 'Метод не поддерживается'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        cur.execute(f"""
+            SELECT 
+                COUNT(*) as count,
+                COALESCE(SUM(amount), 0) as total_amount
+            FROM {SCHEMA}.savings
+        """)
+        
+        stats = cur.fetchone()
+        
+        cur.execute(f"""
+            SELECT 
+                cd.name as department_name,
+                SUM(s.amount) as total_saved
+            FROM {SCHEMA}.savings s
+            JOIN {SCHEMA}.services srv ON s.service_id = srv.id
+            LEFT JOIN {SCHEMA}.customer_departments cd ON srv.customer_department_id = cd.id
+            GROUP BY cd.name
+            ORDER BY total_saved DESC
+            LIMIT 3
+        """)
+        
+        top_departments = [dict(row) for row in cur.fetchall()]
+        
+        return response(200, {
+            'total_amount': float(stats['total_amount']),
+            'count': stats['count'],
+            'top_departments': [{
+                'department_name': dept['department_name'] or 'Не указан',
+                'total_saved': float(dept['total_saved'])
+            } for dept in top_departments]
         })
     
     except Exception as e:

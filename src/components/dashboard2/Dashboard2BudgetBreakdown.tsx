@@ -26,7 +26,7 @@ const Dashboard2BudgetBreakdown = () => {
   const [totalBudget, setTotalBudget] = useState(0);
 
   useEffect(() => {
-    apiFetch('https://functions.poehali.dev/4e358fce-df9e-4b42-9b31-81125bf30d99')
+    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=budget-breakdown')
       .then(res => res.json())
       .then((data: BudgetCategory[]) => {
         setCategories(Array.isArray(data) ? data : []);
