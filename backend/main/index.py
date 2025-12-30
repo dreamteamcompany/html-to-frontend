@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import jwt 
 import bcrypt
 import psycopg2
@@ -7,10 +8,13 @@ from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
-# Deploy version: v2.3 - ticket service categories endpoint fixed
+# Deploy version: v2.4 - using stderr for logging
 
 SCHEMA = 't_p61788166_html_to_frontend'
-VERSION = '2.3.1'
+VERSION = '2.4.0'
+
+def log(msg):
+    print(msg, file=sys.stderr, flush=True)
 
 # Pydantic models for validation
 class PaymentRequest(BaseModel):
@@ -308,12 +312,12 @@ def get_user_role(conn, user_id: int) -> str:
 # Main handler
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """Главный обработчик всех API эндпоинтов"""
-    print(f"[HANDLER START] Event keys: {list(event.keys())}")
+    log(f"[HANDLER START] Event keys: {list(event.keys())}")
     method = event.get('httpMethod', 'GET')
     params = event.get('queryStringParameters') or {}
     endpoint = params.get('endpoint', '')
     
-    print(f"[DEBUG v2.3] Method={method} Endpoint={endpoint} Params={params}")
+    log(f"[DEBUG v2.4] Method={method} Endpoint={endpoint} Params={params}")
     
     if method == 'OPTIONS':
         return response(200, {})
