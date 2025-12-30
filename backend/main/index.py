@@ -7,10 +7,10 @@ from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
-# Deploy version: v2.2 - ticket service categories added
+# Deploy version: v2.3 - ticket service categories endpoint fixed
 
 SCHEMA = 't_p61788166_html_to_frontend'
-VERSION = '2.3.0'
+VERSION = '2.3.1'
 
 # Pydantic models for validation
 class PaymentRequest(BaseModel):
