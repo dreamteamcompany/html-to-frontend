@@ -2854,6 +2854,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_notifications(method, event, conn, payload)
         elif endpoint == 'dashboard-layout':
             result = handle_dashboard_layout(method, event, conn, payload)
+        elif endpoint == 'dashboard-stats':
+            result = handle_dashboard_stats(method, event, conn, payload)
         else:
             result = response(404, {'error': f'Endpoint not found: {endpoint}'})
         
@@ -3716,6 +3718,58 @@ def handle_dashboard_layout(method: str, event: Dict[str, Any], conn, payload: D
     
     except Exception as e:
         conn.rollback()
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_dashboard_stats(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Статистика для главной карточки дашборда"""
+    if method != 'GET':
+        return response(405, {'error': 'Метод не поддерживается'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        cur.execute(f"""
+            SELECT 
+                COALESCE(SUM(amount), 0) as total_amount,
+                COUNT(*) as total_count
+            FROM {SCHEMA}.payments
+            WHERE EXTRACT(MONTH FROM payment_date) = EXTRACT(MONTH FROM CURRENT_DATE)
+                AND EXTRACT(YEAR FROM payment_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+        """)
+        
+        current_month = cur.fetchone()
+        
+        cur.execute(f"""
+            SELECT 
+                COALESCE(SUM(amount), 0) as total_amount
+            FROM {SCHEMA}.payments
+            WHERE EXTRACT(MONTH FROM payment_date) = EXTRACT(MONTH FROM CURRENT_DATE - INTERVAL '1 month')
+                AND EXTRACT(YEAR FROM payment_date) = EXTRACT(YEAR FROM CURRENT_DATE - INTERVAL '1 month')
+        """)
+        
+        previous_month = cur.fetchone()
+        
+        total_amount = float(current_month['total_amount'])
+        total_count = current_month['total_count']
+        previous_amount = float(previous_month['total_amount'])
+        
+        if previous_amount > 0:
+            change_percent = round(((total_amount - previous_amount) / previous_amount) * 100, 1)
+            is_increase = change_percent > 0
+        else:
+            change_percent = 0
+            is_increase = False
+        
+        return response(200, {
+            'total_amount': total_amount,
+            'total_count': total_count,
+            'change_percent': abs(change_percent),
+            'is_increase': is_increase
+        })
+    
+    except Exception as e:
         return response(500, {'error': str(e)})
     finally:
         cur.close()

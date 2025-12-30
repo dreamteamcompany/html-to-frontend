@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardStats {
   total_amount: number;
@@ -10,13 +11,23 @@ interface DashboardStats {
 }
 
 const TotalExpensesCard = () => {
+  const { token } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
+      if (!token) return;
+      
       try {
-        const response = await fetch('https://functions.poehali.dev/4c572eb4-70f6-460c-b2ba-6f15f83abed6');
+        const response = await fetch(
+          'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=dashboard-stats',
+          {
+            headers: {
+              'X-Auth-Token': token,
+            },
+          }
+        );
         const data = await response.json();
         setStats(data);
       } catch (error) {
@@ -27,7 +38,7 @@ const TotalExpensesCard = () => {
     };
 
     fetchStats();
-  }, []);
+  }, [token]);
 
   const formatAmount = (amount: number) => {
     return amount.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' ₽';

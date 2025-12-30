@@ -31,11 +31,10 @@ const NotificationBell = () => {
 
     try {
       const response = await fetch(
-        'https://functions.poehali.dev/b8959866-7c71-4f31-8b2f-706302a7dd60',
+        'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=notifications',
         {
           headers: {
-            'X-User-Id': user.id.toString(),
-            'Authorization': `Bearer ${token}`,
+            'X-Auth-Token': token,
           },
         }
       );
@@ -61,13 +60,12 @@ const NotificationBell = () => {
 
     try {
       await fetch(
-        'https://functions.poehali.dev/b8959866-7c71-4f31-8b2f-706302a7dd60',
+        'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=notifications',
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'X-User-Id': user.id.toString(),
-            'Authorization': `Bearer ${token}`,
+            'X-Auth-Token': token,
           },
           body: JSON.stringify({ notification_ids: [notificationId] }),
         }
@@ -85,13 +83,12 @@ const NotificationBell = () => {
     setLoading(true);
     try {
       await fetch(
-        'https://functions.poehali.dev/b8959866-7c71-4f31-8b2f-706302a7dd60',
+        'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=notifications',
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'X-User-Id': user.id.toString(),
-            'Authorization': `Bearer ${token}`,
+            'X-Auth-Token': token,
           },
           body: JSON.stringify({ mark_all: true }),
         }
