@@ -2848,6 +2848,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_ticket_history(method, event, conn, payload)
         elif endpoint == 'users-list':
             result = handle_users_list(method, event, conn, payload)
+        elif endpoint == 'tickets-bulk-actions':
+            result = handle_tickets_bulk_actions(method, event, conn, payload)
+        elif endpoint == 'notifications':
+            result = handle_notifications(method, event, conn, payload)
+        elif endpoint == 'dashboard-layout':
+            result = handle_dashboard_layout(method, event, conn, payload)
         else:
             result = response(404, {'error': f'Endpoint not found: {endpoint}'})
         
@@ -3508,6 +3514,208 @@ def handle_ticket_history(method: str, event: Dict[str, Any], conn, payload: Dic
         return response(200, {'logs': logs if logs else []})
     
     except Exception as e:
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_tickets_bulk_actions(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Массовые операции над заявками"""
+    if method != 'POST':
+        return response(405, {'error': 'Метод не поддерживается'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    user_id = payload['user_id']
+    
+    try:
+        body = json.loads(event.get('body', '{}'))
+        ticket_ids = body.get('ticket_ids', [])
+        action = body.get('action')
+        
+        if not ticket_ids or not action:
+            return response(400, {'error': 'Не указаны ticket_ids или action'})
+        
+        results = []
+        
+        if action == 'change_status':
+            status_id = body.get('status_id')
+            if not status_id:
+                return response(400, {'error': 'Не указан status_id'})
+            
+            for ticket_id in ticket_ids:
+                try:
+                    cur.execute(
+                        f'UPDATE {SCHEMA}.tickets SET status_id = %s, updated_at = NOW() WHERE id = %s',
+                        (status_id, ticket_id)
+                    )
+                    results.append({'ticket_id': ticket_id, 'success': True})
+                except Exception as e:
+                    results.append({'ticket_id': ticket_id, 'success': False, 'error': str(e)})
+        
+        elif action == 'change_priority':
+            priority_id = body.get('priority_id')
+            if not priority_id:
+                return response(400, {'error': 'Не указан priority_id'})
+            
+            for ticket_id in ticket_ids:
+                try:
+                    cur.execute(
+                        f'UPDATE {SCHEMA}.tickets SET priority_id = %s, updated_at = NOW() WHERE id = %s',
+                        (priority_id, ticket_id)
+                    )
+                    results.append({'ticket_id': ticket_id, 'success': True})
+                except Exception as e:
+                    results.append({'ticket_id': ticket_id, 'success': False, 'error': str(e)})
+        
+        elif action == 'delete':
+            for ticket_id in ticket_ids:
+                try:
+                    cur.execute(f'DELETE FROM {SCHEMA}.ticket_comments WHERE ticket_id = %s', (ticket_id,))
+                    cur.execute(f'DELETE FROM {SCHEMA}.tickets WHERE id = %s', (ticket_id,))
+                    results.append({'ticket_id': ticket_id, 'success': True})
+                except Exception as e:
+                    results.append({'ticket_id': ticket_id, 'success': False, 'error': str(e)})
+        
+        else:
+            return response(400, {'error': f'Неизвестное действие: {action}'})
+        
+        conn.commit()
+        
+        success_count = sum(1 for r in results if r['success'])
+        
+        return response(200, {
+            'success': True,
+            'total': len(ticket_ids),
+            'successful': success_count,
+            'failed': len(ticket_ids) - success_count,
+            'results': results
+        })
+    
+    except Exception as e:
+        conn.rollback()
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_notifications(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Управление уведомлениями пользователей"""
+    user_id = payload['user_id']
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        if method == 'GET':
+            params = event.get('queryStringParameters') or {}
+            unread_only = params.get('unread_only') == 'true'
+            limit = int(params.get('limit', 50))
+            
+            query = f"""
+                SELECT 
+                    n.id,
+                    n.ticket_id,
+                    n.type,
+                    n.message,
+                    n.is_read,
+                    n.created_at,
+                    t.title as ticket_title
+                FROM {SCHEMA}.notifications n
+                LEFT JOIN {SCHEMA}.tickets t ON n.ticket_id = t.id
+                WHERE n.user_id = %s
+            """
+            
+            if unread_only:
+                query += " AND n.is_read = false"
+            
+            query += " ORDER BY n.created_at DESC LIMIT %s"
+            
+            cur.execute(query, (user_id, limit))
+            notifications = cur.fetchall()
+            
+            cur.execute(f"""
+                SELECT COUNT(*) as unread_count
+                FROM {SCHEMA}.notifications
+                WHERE user_id = %s AND is_read = false
+            """, (user_id,))
+            
+            unread_count = cur.fetchone()['unread_count']
+            
+            return response(200, {
+                'notifications': [dict(n) for n in notifications],
+                'unread_count': unread_count
+            })
+        
+        elif method == 'PUT':
+            body = json.loads(event.get('body', '{}'))
+            notification_ids = body.get('notification_ids', [])
+            mark_all = body.get('mark_all', False)
+            
+            if mark_all:
+                cur.execute(f"""
+                    UPDATE {SCHEMA}.notifications
+                    SET is_read = true
+                    WHERE user_id = %s AND is_read = false
+                """, (user_id,))
+            elif notification_ids:
+                cur.execute(f"""
+                    UPDATE {SCHEMA}.notifications
+                    SET is_read = true
+                    WHERE id = ANY(%s) AND user_id = %s
+                """, (notification_ids, user_id))
+            else:
+                return response(400, {'error': 'notification_ids or mark_all is required'})
+            
+            conn.commit()
+            affected_rows = cur.rowcount
+            
+            return response(200, {'message': f'Отмечено как прочитанные: {affected_rows}'})
+        
+        else:
+            return response(405, {'error': 'Метод не поддерживается'})
+    
+    except Exception as e:
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_dashboard_layout(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Сохранение и загрузка расположения карточек дашборда"""
+    user_id = payload['user_id']
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        if method == 'GET':
+            cur.execute(
+                f"SELECT card_id, x, y, width, height FROM {SCHEMA}.dashboard_layouts WHERE user_id = %s",
+                (user_id,)
+            )
+            rows = cur.fetchall()
+            layouts = [dict(row) for row in rows]
+            
+            return response(200, {'layouts': layouts})
+        
+        elif method == 'POST':
+            body_data = json.loads(event.get('body', '{}'))
+            layouts = body_data.get('layouts', [])
+            
+            for layout in layouts:
+                cur.execute(
+                    f"""
+                    INSERT INTO {SCHEMA}.dashboard_layouts (user_id, card_id, x, y, width, height, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT (user_id, card_id)
+                    DO UPDATE SET x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, 
+                                  height = EXCLUDED.height, updated_at = CURRENT_TIMESTAMP
+                    """,
+                    (user_id, layout['id'], layout['x'], layout['y'], layout['width'], layout['height'])
+                )
+            
+            conn.commit()
+            
+            return response(200, {'success': True, 'message': 'Расположение сохранено'})
+        
+        else:
+            return response(405, {'error': 'Метод не поддерживается'})
+    
+    except Exception as e:
+        conn.rollback()
         return response(500, {'error': str(e)})
     finally:
         cur.close()
