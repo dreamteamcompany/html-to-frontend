@@ -308,11 +308,12 @@ def get_user_role(conn, user_id: int) -> str:
 # Main handler
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """Главный обработчик всех API эндпоинтов"""
+    print(f"[HANDLER START] Event keys: {list(event.keys())}")
     method = event.get('httpMethod', 'GET')
     params = event.get('queryStringParameters') or {}
     endpoint = params.get('endpoint', '')
     
-    print(f"[DEBUG v2.2] Method={method} Endpoint={endpoint} Params={params}")
+    print(f"[DEBUG v2.3] Method={method} Endpoint={endpoint} Params={params}")
     
     if method == 'OPTIONS':
         return response(200, {})
