@@ -2428,20 +2428,39 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 
                 log(f"[DELETE SERVICE] Dependencies: payments={payment_count}, savings={saving_count}")
                 
-                if payment_count > 0 or saving_count > 0:
-                    return response(400, {
-                        'error': f'Невозможно удалить услугу. С ней связано платежей: {payment_count}, экономий: {saving_count}'
-                    })
+                if payment_count > 0:
+                    cur.execute(f"UPDATE {SCHEMA}.payments SET service_id = NULL WHERE service_id = %s", (service_id,))
+                    log(f"[DELETE SERVICE] Detached {payment_count} payments")
                 
-                cur.execute(f"DELETE FROM {SCHEMA}.services WHERE id = %s RETURNING id", (service_id,))
+                if saving_count > 0:
+                    cur.execute(f"UPDATE {SCHEMA}.savings SET service_id = NULL WHERE service_id = %s", (service_id,))
+                    log(f"[DELETE SERVICE] Detached {saving_count} savings")
+                
+                cur.execute(f"DELETE FROM {SCHEMA}.services WHERE id = %s RETURNING id, name", (service_id,))
                 row = cur.fetchone()
                 
                 if not row:
                     return response(404, {'error': 'Service not found'})
                 
+                create_audit_log(
+                    conn,
+                    entity_type='service',
+                    entity_id=service_id,
+                    action='delete',
+                    user_id=payload['user_id'],
+                    username=payload.get('email', 'unknown'),
+                    old_values={'id': row['id'], 'name': row['name']},
+                    metadata={'detached_payments': payment_count, 'detached_savings': saving_count}
+                )
+                
                 conn.commit()
                 log(f"[DELETE SERVICE] Successfully deleted service_id={service_id}")
-                return response(200, {'message': 'Service deleted successfully'})
+                
+                message = f"Услуга удалена"
+                if payment_count > 0 or saving_count > 0:
+                    message += f" (отвязано: платежей {payment_count}, экономий {saving_count})"
+                
+                return response(200, {'message': message, 'detached_payments': payment_count, 'detached_savings': saving_count})
             except Exception as e:
                 conn.rollback()
                 log(f"[DELETE SERVICE ERROR] {str(e)}")
