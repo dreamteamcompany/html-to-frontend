@@ -96,6 +96,8 @@ const TicketForm = ({
   handleSubmit,
 }: TicketFormProps) => {
   const [step, setStep] = useState(1);
+  
+  console.log('[TicketForm] Current step:', step, 'Dialog open:', dialogOpen);
 
   const handleNext = () => {
     if (!formData.title.trim()) {
@@ -139,12 +141,12 @@ const TicketForm = ({
           <DialogTitle className="flex items-center gap-2">
             <Icon name="TicketPlus" size={24} />
             Новая заявка
-            <Badge variant="outline" className="ml-auto">
+            <Badge variant="secondary" className="ml-auto text-xs">
               Шаг {step} из 2
             </Badge>
           </DialogTitle>
-          <DialogDescription>
-            {step === 1 ? 'Заполните основную информацию о заявке' : 'Выберите услугу для вашей заявки'}
+          <DialogDescription className="text-sm">
+            {step === 1 ? '📝 Заполните основную информацию о заявке' : '🎯 Выберите услугу для вашей заявки'}
           </DialogDescription>
         </DialogHeader>
 
