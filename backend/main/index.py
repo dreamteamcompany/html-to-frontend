@@ -2407,27 +2407,51 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             })
         
         elif method == 'DELETE':
-            payload, error = verify_token_and_permission(event, conn, 'services.delete')
-            if error:
-                return error
-            
-            params = event.get('queryStringParameters') or {}
-            service_id = params.get('id')
-            
-            if not service_id:
-                return response(400, {'error': 'ID is required'})
-            
-            cur.execute(f"DELETE FROM {SCHEMA}.services WHERE id = %s RETURNING id", (service_id,))
-            row = cur.fetchone()
-            
-            if not row:
-                return response(404, {'error': 'Service not found'})
-            
-            conn.commit()
-            return response(200, {'message': 'Service deleted'})
+            try:
+                payload, error = verify_token_and_permission(event, conn, 'services.delete')
+                if error:
+                    return error
+                
+                params = event.get('queryStringParameters') or {}
+                service_id = params.get('id')
+                
+                log(f"[DELETE SERVICE] Attempting to delete service_id={service_id}")
+                
+                if not service_id:
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(f"SELECT COUNT(*) as cnt FROM {SCHEMA}.payments WHERE service_id = %s", (service_id,))
+                payment_count = cur.fetchone()['cnt']
+                
+                cur.execute(f"SELECT COUNT(*) as cnt FROM {SCHEMA}.savings WHERE service_id = %s", (service_id,))
+                saving_count = cur.fetchone()['cnt']
+                
+                log(f"[DELETE SERVICE] Dependencies: payments={payment_count}, savings={saving_count}")
+                
+                if payment_count > 0 or saving_count > 0:
+                    return response(400, {
+                        'error': f'Невозможно удалить услугу. С ней связано платежей: {payment_count}, экономий: {saving_count}'
+                    })
+                
+                cur.execute(f"DELETE FROM {SCHEMA}.services WHERE id = %s RETURNING id", (service_id,))
+                row = cur.fetchone()
+                
+                if not row:
+                    return response(404, {'error': 'Service not found'})
+                
+                conn.commit()
+                log(f"[DELETE SERVICE] Successfully deleted service_id={service_id}")
+                return response(200, {'message': 'Service deleted successfully'})
+            except Exception as e:
+                conn.rollback()
+                log(f"[DELETE SERVICE ERROR] {str(e)}")
+                return response(500, {'error': f'Ошибка при удалении услуги: {str(e)}'})
         
         return response(405, {'error': 'Method not allowed'})
     
+    except Exception as e:
+        log(f"[HANDLE_SERVICES ERROR] {str(e)}")
+        return response(500, {'error': str(e)})
     finally:
         cur.close()
 
