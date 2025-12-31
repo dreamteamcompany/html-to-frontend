@@ -194,7 +194,12 @@ const TicketServices = () => {
         });
         loadServices();
       } else {
-        throw new Error('Failed to delete service');
+        const errorData = await response.json();
+        toast({
+          title: 'Ошибка',
+          description: errorData.error || 'Не удалось удалить услугу',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Failed to delete service:', error);
