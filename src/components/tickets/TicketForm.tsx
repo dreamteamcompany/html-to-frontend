@@ -79,7 +79,7 @@ interface TicketFormProps {
   departments: Department[];
   customFields: CustomField[];
   services: Service[];
-  handleSubmit: (e: React.FormEvent) => void;
+  handleSubmit: (e: React.FormEvent) => Promise<void>;
 }
 
 const TicketForm = ({
@@ -115,14 +115,15 @@ const TicketForm = ({
   const handleDialogChange = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setStep(1);
+      // Сбросить на первый шаг при закрытии
+      setTimeout(() => setStep(1), 300);
     }
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    handleSubmit(e);
-    setStep(1);
+    await handleSubmit(e);
+    // Форма закроется в handleSubmit, шаг сбросится в handleDialogChange
   };
 
   return (

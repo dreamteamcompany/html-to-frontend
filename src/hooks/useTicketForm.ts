@@ -27,7 +27,11 @@ export const useTicketForm = (customFields: CustomField[], loadTickets: () => vo
 
   const [formData, setFormData] = useState(initialFormData);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setFormData(initialFormData);
+  };
+
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
 
     if (!token) {
@@ -90,5 +94,6 @@ export const useTicketForm = (customFields: CustomField[], loadTickets: () => vo
     formData,
     setFormData,
     handleSubmit,
+    resetForm,
   };
 };
