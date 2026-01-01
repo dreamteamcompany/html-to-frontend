@@ -144,11 +144,18 @@ const TicketForm = ({
             <Badge variant="secondary" className="ml-auto text-xs">
               Шаг {step} из 2
             </Badge>
+            <Badge variant="destructive" className="text-xs">
+              step={step}
+            </Badge>
           </DialogTitle>
           <DialogDescription className="text-sm">
             {step === 1 ? '📝 Заполните основную информацию о заявке' : '🎯 Выберите услугу для вашей заявки'}
           </DialogDescription>
         </DialogHeader>
+
+        <div className="p-4 bg-yellow-100 dark:bg-yellow-900 rounded text-sm mb-4">
+          DEBUG: Текущий шаг = {step}, Показываю {step === 1 ? 'ФОРМУ' : 'УСЛУГИ'}
+        </div>
 
         {step === 1 ? (
           <div className="space-y-4 mt-4">
