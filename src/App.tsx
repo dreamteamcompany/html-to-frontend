@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -37,9 +38,10 @@ import ServiceProviders from "./pages/ServiceProviders";
 import TicketServiceCategories from "./pages/TicketServiceCategories";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
-const App = () => (
+const App = () => {
+  const [queryClient] = useState(() => new QueryClient());
+  
+  return (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -82,6 +84,7 @@ const App = () => (
       </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>
-);
+  );
+};
 
 export default App;
