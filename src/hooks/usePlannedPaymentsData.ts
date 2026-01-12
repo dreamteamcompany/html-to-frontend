@@ -89,7 +89,7 @@ export const usePlannedPaymentsData = () => {
 
   const loadPayments = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/a0000b1e-3d3e-4094-b08e-2893df500d3f', {
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=planned-payments', {
         headers: {
           'X-Auth-Token': token || '',
         },
