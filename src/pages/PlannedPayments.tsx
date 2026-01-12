@@ -64,7 +64,22 @@ const PlannedPayments = () => {
     services,
     loading,
     loadPayments,
+    loadCategories,
+    loadLegalEntities,
+    loadContractors,
+    loadCustomerDepartments,
+    loadCustomFields,
+    loadServices,
   } = usePlannedPaymentsData();
+
+  const handleFormOpen = () => {
+    loadCategories();
+    loadLegalEntities();
+    loadContractors();
+    loadCustomerDepartments();
+    loadCustomFields();
+    loadServices();
+  };
 
   const {
     dialogOpen,
@@ -170,6 +185,7 @@ const PlannedPayments = () => {
           customFields={customFields}
           services={services}
           handleSubmit={handleSubmit}
+          onDialogOpen={handleFormOpen}
         />
 
         <PaymentsList 

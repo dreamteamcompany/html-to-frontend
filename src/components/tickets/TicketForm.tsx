@@ -80,6 +80,7 @@ interface TicketFormProps {
   customFields: CustomField[];
   services: Service[];
   handleSubmit: (e: React.FormEvent) => Promise<void>;
+  onDialogOpen?: () => void;
 }
 
 const TicketForm = ({
@@ -94,8 +95,11 @@ const TicketForm = ({
   customFields,
   services,
   handleSubmit,
+  onDialogOpen,
 }: TicketFormProps) => {
   const [step, setStep] = useState(1);
+
+
   
   console.log('[TicketForm] Current step:', step, 'Dialog open:', dialogOpen);
 
@@ -115,9 +119,11 @@ const TicketForm = ({
   };
 
   const handleDialogChange = (open: boolean) => {
+    if (open && onDialogOpen) {
+      onDialogOpen();
+    }
     setDialogOpen(open);
     if (!open) {
-      // Сбросить на первый шаг при закрытии
       setTimeout(() => setStep(1), 300);
     }
   };

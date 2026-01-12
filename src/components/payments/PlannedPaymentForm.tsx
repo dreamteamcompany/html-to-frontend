@@ -80,6 +80,7 @@ interface PlannedPaymentFormProps {
   customFields: CustomField[];
   services: Service[];
   handleSubmit: (e: React.FormEvent) => void;
+  onDialogOpen?: () => void;
 }
 
 const PlannedPaymentForm = ({
@@ -94,9 +95,17 @@ const PlannedPaymentForm = ({
   customFields,
   services,
   handleSubmit,
+  onDialogOpen,
 }: PlannedPaymentFormProps) => {
+  const handleOpenChange = (open: boolean) => {
+    if (open && onDialogOpen) {
+      onDialogOpen();
+    }
+    setDialogOpen(open);
+  };
+
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="lg" className="gap-2 shadow-lg">
           <Icon name="Plus" size={20} />

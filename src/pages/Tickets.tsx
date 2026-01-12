@@ -75,7 +75,14 @@ const Tickets = () => {
     services,
     loading,
     loadTickets,
+    loadDictionaries,
+    loadServices,
   } = useTicketsData();
+
+  const handleFormOpen = () => {
+    loadDictionaries();
+    loadServices();
+  };
 
   const {
     dialogOpen,
@@ -196,6 +203,7 @@ const Tickets = () => {
             customFields={customFields}
             services={services}
             handleSubmit={handleSubmit}
+            onDialogOpen={handleFormOpen}
           />
 
           {viewMode === 'list' ? (

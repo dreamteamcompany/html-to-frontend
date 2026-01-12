@@ -166,13 +166,10 @@ export const useTicketsData = () => {
   };
 
   useEffect(() => {
-    const loadData = async () => {
+    if (token) {
       setLoading(true);
-      await Promise.all([loadTickets(), loadDictionaries(), loadServices()]);
-      setLoading(false);
-    };
-
-    loadData();
+      loadTickets().finally(() => setLoading(false));
+    }
   }, [token]);
 
   return {
@@ -185,5 +182,7 @@ export const useTicketsData = () => {
     services,
     loading,
     loadTickets,
+    loadDictionaries,
+    loadServices,
   };
 };

@@ -86,6 +86,14 @@ export const usePlannedPaymentsData = () => {
   const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState({
+    categories: false,
+    legalEntities: false,
+    contractors: false,
+    customerDepartments: false,
+    customFields: false,
+    services: false,
+  });
 
   const loadPayments = async () => {
     try {
@@ -105,6 +113,7 @@ export const usePlannedPaymentsData = () => {
   };
 
   const loadCategories = async () => {
+    if (dataLoaded.categories) return;
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories', {
         headers: {
@@ -115,6 +124,7 @@ export const usePlannedPaymentsData = () => {
       if (response.ok) {
         const data = await response.json();
         setCategories(data);
+        setDataLoaded(prev => ({ ...prev, categories: true }));
       }
     } catch (err) {
       console.error('Failed to load categories:', err);
@@ -122,6 +132,7 @@ export const usePlannedPaymentsData = () => {
   };
 
   const loadLegalEntities = async () => {
+    if (dataLoaded.legalEntities) return;
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities', {
         headers: {
@@ -132,6 +143,7 @@ export const usePlannedPaymentsData = () => {
       if (response.ok) {
         const data = await response.json();
         setLegalEntities(data);
+        setDataLoaded(prev => ({ ...prev, legalEntities: true }));
       }
     } catch (err) {
       console.error('Failed to load legal entities:', err);
@@ -139,6 +151,7 @@ export const usePlannedPaymentsData = () => {
   };
 
   const loadContractors = async () => {
+    if (dataLoaded.contractors) return;
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors', {
         headers: {
@@ -149,6 +162,7 @@ export const usePlannedPaymentsData = () => {
       if (response.ok) {
         const data = await response.json();
         setContractors(data);
+        setDataLoaded(prev => ({ ...prev, contractors: true }));
       }
     } catch (err) {
       console.error('Failed to load contractors:', err);
@@ -156,6 +170,7 @@ export const usePlannedPaymentsData = () => {
   };
 
   const loadCustomerDepartments = async () => {
+    if (dataLoaded.customerDepartments) return;
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=customer-departments', {
         headers: {
@@ -166,6 +181,7 @@ export const usePlannedPaymentsData = () => {
       if (response.ok) {
         const data = await response.json();
         setCustomerDepartments(data);
+        setDataLoaded(prev => ({ ...prev, customerDepartments: true }));
       }
     } catch (err) {
       console.error('Failed to load customer departments:', err);
@@ -173,6 +189,7 @@ export const usePlannedPaymentsData = () => {
   };
 
   const loadCustomFields = async () => {
+    if (dataLoaded.customFields) return;
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields', {
         headers: {
@@ -183,6 +200,7 @@ export const usePlannedPaymentsData = () => {
       if (response.ok) {
         const data = await response.json();
         setCustomFields(data);
+        setDataLoaded(prev => ({ ...prev, customFields: true }));
       }
     } catch (err) {
       console.error('Failed to load custom fields:', err);
@@ -190,6 +208,7 @@ export const usePlannedPaymentsData = () => {
   };
 
   const loadServices = async () => {
+    if (dataLoaded.services) return;
     try {
       const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=services', {
         headers: {
@@ -200,6 +219,7 @@ export const usePlannedPaymentsData = () => {
       if (response.ok) {
         const data = await response.json();
         setServices(data);
+        setDataLoaded(prev => ({ ...prev, services: true }));
       }
     } catch (err) {
       console.error('Failed to load services:', err);
@@ -207,22 +227,9 @@ export const usePlannedPaymentsData = () => {
   };
 
   useEffect(() => {
-    const loadAllData = async () => {
-      setLoading(true);
-      await Promise.all([
-        loadPayments(),
-        loadCategories(),
-        loadLegalEntities(),
-        loadContractors(),
-        loadCustomerDepartments(),
-        loadCustomFields(),
-        loadServices(),
-      ]);
-      setLoading(false);
-    };
-
     if (token) {
-      loadAllData();
+      setLoading(true);
+      loadPayments().finally(() => setLoading(false));
     }
   }, [token]);
 
@@ -236,5 +243,11 @@ export const usePlannedPaymentsData = () => {
     services,
     loading,
     loadPayments,
+    loadCategories,
+    loadLegalEntities,
+    loadContractors,
+    loadCustomerDepartments,
+    loadCustomFields,
+    loadServices,
   };
 };
