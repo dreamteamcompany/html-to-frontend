@@ -107,10 +107,8 @@ const NotificationBell = () => {
       handleMarkAsRead(notification.id);
     }
     
-    if (notification.ticket_id) {
-      navigate(`/tickets/${notification.ticket_id}`);
-      setOpen(false);
-    }
+    // Removed ticket navigation as tickets pages are deleted
+    setOpen(false);
   };
 
   const getNotificationIcon = (type: string) => {

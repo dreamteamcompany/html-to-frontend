@@ -31,7 +31,6 @@ const PaymentsSidebar = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [ticketsOpen, setTicketsOpen] = useState(true);
   const { pendingCount } = usePendingApprovals();
 
   useEffect(() => {
@@ -110,54 +109,7 @@ const PaymentsSidebar = ({
             </li>
           </>
         )}
-        <li>
-          <button 
-            onClick={() => setTicketsOpen((prev: boolean) => !prev)}
-            className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <Icon name="Ticket" size={20} />
-              <span>Заявки</span>
-            </div>
-            <Icon 
-              name="ChevronDown" 
-              size={16} 
-              className={`transition-transform ${ticketsOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {ticketsOpen && (
-            <div className="mt-1 space-y-1">
-              <Link 
-                to="/tickets" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/tickets') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="List" size={18} />
-                <span>Список заявок</span>
-              </Link>
-              <Link 
-                to="/ticket-services" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/ticket-services') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Wrench" size={18} />
-                <span>Услуги заявок</span>
-              </Link>
-              <Link 
-                to="/service-providers" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/service-providers') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Network" size={18} />
-                <span>Сервисы услуг</span>
-              </Link>
-              <Link 
-                to="/ticket-service-categories" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/ticket-service-categories') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="FolderTree" size={18} />
-                <span>Категории услуг (заявки)</span>
-              </Link>
-            </div>
-          )}
-        </li>
+
         <li>
           <button 
             onClick={() => setDictionariesOpen(!dictionariesOpen)}
