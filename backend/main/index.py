@@ -194,6 +194,22 @@ def get_user_with_permissions(conn, user_id: int) -> Optional[Dict[str, Any]]:
         'permissions': permissions
     }
 
+def authenticate_request(event: Dict[str, Any], conn) -> tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    """Извлекает токен, проверяет и возвращает payload и user. Возвращает (payload, user) или (None, None)"""
+    token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+    if not token:
+        return None, None
+    
+    payload = verify_jwt_token(token)
+    if not payload:
+        return None, None
+    
+    user = get_user_with_permissions(conn, payload['user_id'])
+    if not user:
+        return None, None
+    
+    return payload, user
+
 def verify_token_and_permission(event: Dict[str, Any], conn, required_permission: str):
     token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
     if not token:
@@ -362,76 +378,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_approvals(method, event, conn)
         elif endpoint == 'services':
             return handle_services(method, event, conn)
-        elif endpoint == 'comments':
-            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
-            if not token:
+        # Endpoints requiring auth
+        auth_endpoints = {
+            'comments': lambda p, u: handle_comments(method, event, conn, u),
+            'comment-likes': lambda p, u: handle_comment_likes(method, event, conn, u),
+            'audit-logs': lambda p, u: handle_audit_logs(method, event, conn, p),
+            'tickets-api': lambda p, u: handle_tickets_api(method, event, conn, p),
+            'ticket-dictionaries-api': lambda p, u: handle_ticket_dictionaries_api(method, event, conn, p),
+            'ticket-comments-api': lambda p, u: handle_ticket_comments_api(method, event, conn, p),
+            'comment-reactions': lambda p, u: handle_comment_reactions(method, event, conn, p),
+            'upload-file': lambda p, u: handle_upload_file(event, conn, p),
+            'notifications': lambda p, u: handle_notifications(method, event, conn, p),
+            'dashboard-layout': lambda p, u: handle_dashboard_layout(method, event, conn, p),
+            'dashboard-stats': lambda p, u: handle_dashboard_stats(method, event, conn, p),
+            'budget-breakdown': lambda p, u: handle_budget_breakdown(method, event, conn, p),
+            'savings-dashboard': lambda p, u: handle_savings_dashboard(method, event, conn, p),
+        }
+        
+        if endpoint in auth_endpoints:
+            payload, user = authenticate_request(event, conn)
+            if not payload or not user:
                 return response(401, {'error': 'Authentication required'})
-            payload = verify_jwt_token(token)
-            if not payload:
-                return response(401, {'error': 'Invalid token'})
-            current_user = get_user_with_permissions(conn, payload['user_id'])
-            if not current_user:
-                return response(401, {'error': 'User not found'})
-            return handle_comments(method, event, conn, current_user)
-        elif endpoint == 'comment-likes':
-            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
-            if not token:
-                return response(401, {'error': 'Authentication required'})
-            payload = verify_jwt_token(token)
-            if not payload:
-                return response(401, {'error': 'Invalid token'})
-            current_user = get_user_with_permissions(conn, payload['user_id'])
-            if not current_user:
-                return response(401, {'error': 'User not found'})
-            return handle_comment_likes(method, event, conn, current_user)
-        elif endpoint == 'audit-logs':
-            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
-            if not token:
-                return response(401, {'error': 'Authentication required'})
-            payload = verify_jwt_token(token)
-            if not payload:
-                return response(401, {'error': 'Invalid token'})
-            return handle_audit_logs(method, event, conn, payload)
-        elif endpoint == 'tickets-api':
-            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
-            if not token:
-                return response(401, {'error': 'Authentication required'})
-            payload = verify_jwt_token(token)
-            if not payload:
-                return response(401, {'error': 'Invalid token'})
-            return handle_tickets_api(method, event, conn, payload)
-        elif endpoint == 'ticket-dictionaries-api':
-            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
-            if not token:
-                return response(401, {'error': 'Authentication required'})
-            payload = verify_jwt_token(token)
-            if not payload:
-                return response(401, {'error': 'Invalid token'})
-            return handle_ticket_dictionaries_api(method, event, conn, payload)
-        elif endpoint == 'ticket-comments-api':
-            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
-            if not token:
-                return response(401, {'error': 'Authentication required'})
-            payload = verify_jwt_token(token)
-            if not payload:
-                return response(401, {'error': 'Invalid token'})
-            return handle_ticket_comments_api(method, event, conn, payload)
-        elif endpoint == 'comment-reactions':
-            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
-            if not token:
-                return response(401, {'error': 'Authentication required'})
-            payload = verify_jwt_token(token)
-            if not payload:
-                return response(401, {'error': 'Invalid token'})
-            return handle_comment_reactions(method, event, conn, payload)
-        elif endpoint == 'upload-file':
-            token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
-            if not token:
-                return response(401, {'error': 'Authentication required'})
-            payload = verify_jwt_token(token)
-            if not payload:
-                return response(401, {'error': 'Invalid token'})
-            return handle_upload_file(event, conn, payload)
+            return auth_endpoints[endpoint](payload, user)
         
         return response(404, {'error': 'Endpoint not found'})
     
