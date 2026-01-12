@@ -31,11 +31,7 @@ import LogAnalyzer from "./pages/LogAnalyzer";
 import Settings from "./pages/Settings";
 import CategoryPayments from "./pages/CategoryPayments";
 import PlannedPayments from "./pages/PlannedPayments";
-import Tickets from "./pages/Tickets";
-import TicketDetails from "./pages/TicketDetails";
-import TicketServices from "./pages/TicketServices";
-import ServiceProviders from "./pages/ServiceProviders";
-import TicketServiceCategories from "./pages/TicketServiceCategories";
+
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -72,11 +68,7 @@ const App = () => {
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/category/:categoryId" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><CategoryPayments /></ProtectedRoute>} />
             <Route path="/planned-payments" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><PlannedPayments /></ProtectedRoute>} />
-            <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
-            <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetails /></ProtectedRoute>} />
-            <Route path="/ticket-services" element={<ProtectedRoute><TicketServices /></ProtectedRoute>} />
-            <Route path="/service-providers" element={<ProtectedRoute><ServiceProviders /></ProtectedRoute>} />
-            <Route path="/ticket-service-categories" element={<ProtectedRoute><TicketServiceCategories /></ProtectedRoute>} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
