@@ -34,7 +34,7 @@ const Monitoring = () => {
   const [services, setServices] = useState<ServiceBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addServiceType, setAddServiceType] = useState<'timeweb' | 'smsru' | 'mango' | 'plusofon' | null>(null);
+  const [addServiceType, setAddServiceType] = useState<'timeweb' | 'timeweb-hosting' | 'smsru' | 'mango' | 'plusofon' | null>(null);
   const [adding, setAdding] = useState(false);
   const { token } = useAuth();
   const { toast } = useToast();
@@ -181,7 +181,7 @@ const Monitoring = () => {
     loadServices();
   }, [token]);
 
-  const addService = async (type: 'timeweb' | 'smsru' | 'mango' | 'plusofon') => {
+  const addService = async (type: 'timeweb' | 'timeweb-hosting' | 'smsru' | 'mango' | 'plusofon') => {
     const serviceConfigs = {
       timeweb: {
         service_name: 'Timeweb Cloud',
@@ -190,6 +190,14 @@ const Monitoring = () => {
         threshold_warning: 500,
         threshold_critical: 100,
         description: 'Timeweb Cloud успешно добавлен в мониторинг'
+      },
+      'timeweb-hosting': {
+        service_name: 'Timeweb Hosting',
+        api_endpoint: 'https://api.timeweb.ru/v1.1/finances/accounts',
+        api_key_secret_name: 'TIMEWEB_HOSTING_API_TOKEN',
+        threshold_warning: 500,
+        threshold_critical: 100,
+        description: 'Timeweb Hosting успешно добавлен в мониторинг'
       },
       smsru: {
         service_name: 'sms.ru',
@@ -339,6 +347,10 @@ const Monitoring = () => {
                       <Icon name="PhoneCall" className="mr-2 h-4 w-4" />
                       Plusofon
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setAddServiceType('timeweb-hosting'); setShowAddForm(true); }}>
+                      <Icon name="Globe" className="mr-2 h-4 w-4" />
+                      Timeweb Hosting
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Button onClick={refreshAllBalances} variant="outline" size="sm" disabled={loading || services.length === 0}>
@@ -354,6 +366,7 @@ const Monitoring = () => {
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-1">
                       {addServiceType === 'timeweb' ? 'Добавить Timeweb Cloud' : 
+                       addServiceType === 'timeweb-hosting' ? 'Добавить Timeweb Hosting' :
                        addServiceType === 'smsru' ? 'Добавить sms.ru' : 
                        addServiceType === 'mango' ? 'Добавить Mango Office' :
                        'Добавить Plusofon'}
@@ -373,7 +386,7 @@ const Monitoring = () => {
                   <div className="flex items-start gap-2 text-sm text-white/70">
                     <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
                     <span>
-                      {addServiceType === 'timeweb' || addServiceType === 'plusofon'
+                      {addServiceType === 'timeweb' || addServiceType === 'timeweb-hosting' || addServiceType === 'plusofon'
                         ? 'Уведомления при низком балансе (< 500₽ - warning, < 100₽ - critical)'
                         : addServiceType === 'mango'
                         ? 'Уведомления при низком балансе (< 1000₽ - warning, < 200₽ - critical)'
@@ -385,6 +398,8 @@ const Monitoring = () => {
                     <span>
                       {addServiceType === 'timeweb'
                         ? 'Требуется токен TIMEWEB_API_TOKEN'
+                        : addServiceType === 'timeweb-hosting'
+                        ? 'Требуется TIMEWEB_HOSTING_API_TOKEN, APP_KEY и LOGIN'
                         : addServiceType === 'smsru'
                         ? 'Требуется API ID SMSRU_API_ID'
                         : addServiceType === 'mango'

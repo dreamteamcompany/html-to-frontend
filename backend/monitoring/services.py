@@ -30,6 +30,37 @@ def fetch_timeweb_balance() -> Dict[str, any]:
         'currency': currency
     }
 
+def fetch_timeweb_hosting_balance() -> Dict[str, any]:
+    """Получение баланса из Timeweb Hosting API (виртуальный хостинг/домены)"""
+    api_token = os.environ.get('TIMEWEB_HOSTING_API_TOKEN')
+    app_key = os.environ.get('TIMEWEB_HOSTING_APP_KEY')
+    login = os.environ.get('TIMEWEB_HOSTING_LOGIN')
+    
+    if not api_token or not app_key or not login:
+        raise ValueError('TIMEWEB_HOSTING_API_TOKEN, TIMEWEB_HOSTING_APP_KEY and TIMEWEB_HOSTING_LOGIN not configured')
+    
+    response = requests.get(
+        f'https://api.timeweb.ru/v1.1/finances/accounts/{login}',
+        headers={
+            'Accept': 'application/json',
+            'x-app-key': app_key,
+            'Authorization': f'Bearer {api_token}'
+        },
+        timeout=10
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f'Timeweb Hosting API error: {response.status_code} - {response.text}')
+    
+    data = response.json()
+    balance = float(data.get('available_balance', 0))
+    currency = data.get('currency', 'RUB')
+    
+    return {
+        'balance': balance,
+        'currency': currency
+    }
+
 def fetch_smsru_balance() -> Dict[str, any]:
     """Получение баланса из sms.ru API"""
     api_id = os.environ.get('SMSRU_API_ID')
@@ -151,8 +182,11 @@ def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None,
                          api_key_secret_name: Optional[str] = None) -> Dict[str, any]:
     """Универсальная функция для получения баланса сервиса"""
     
-    if service_name.lower() == 'timeweb cloud' or (api_endpoint and 'timeweb' in api_endpoint):
+    if service_name.lower() == 'timeweb cloud' or (api_endpoint and 'api.timeweb.cloud' in api_endpoint):
         return fetch_timeweb_balance()
+    
+    if service_name.lower() == 'timeweb hosting' or (api_endpoint and 'api.timeweb.ru' in api_endpoint):
+        return fetch_timeweb_hosting_balance()
     
     if service_name.lower() == 'sms.ru' or (api_endpoint and 'sms.ru' in api_endpoint):
         return fetch_smsru_balance()
