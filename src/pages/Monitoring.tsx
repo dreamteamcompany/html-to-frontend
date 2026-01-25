@@ -12,6 +12,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ServiceBalance {
   id: number;
@@ -23,6 +32,7 @@ interface ServiceBalance {
   api_endpoint?: string;
   threshold_warning?: number;
   threshold_critical?: number;
+  description?: string;
 }
 
 const Monitoring = () => {
@@ -36,6 +46,14 @@ const Monitoring = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [addServiceType, setAddServiceType] = useState<'timeweb' | 'timeweb-hosting' | 'smsru' | 'mango' | 'plusofon' | null>(null);
   const [adding, setAdding] = useState(false);
+  const [editingService, setEditingService] = useState<ServiceBalance | null>(null);
+  const [editForm, setEditForm] = useState({
+    service_name: '',
+    description: '',
+    threshold_warning: 0,
+    threshold_critical: 0,
+  });
+  const [saving, setSaving] = useState(false);
   const { token } = useAuth();
   const { toast } = useToast();
 
@@ -136,12 +154,9 @@ const Monitoring = () => {
   };
 
   const deleteService = async (serviceId: number, serviceName: string) => {
-    console.log('Delete clicked:', serviceId, serviceName);
     const confirmed = window.confirm(`Удалить "${serviceName}" из мониторинга?`);
-    console.log('Confirmation result:', confirmed);
     if (!confirmed) return;
     
-    console.log('Sending DELETE request...');
     try {
       const response = await fetch(`https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d?serviceId=${serviceId}`, {
         method: 'DELETE',
@@ -149,8 +164,6 @@ const Monitoring = () => {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
-      console.log('DELETE response:', response.status, response.ok);
       
       if (response.ok) {
         await loadServices();
@@ -160,7 +173,6 @@ const Monitoring = () => {
         });
       } else {
         const error = await response.json();
-        console.error('DELETE failed:', error);
         toast({
           title: 'Ошибка',
           description: error.error || 'Не удалось удалить сервис',
@@ -174,6 +186,61 @@ const Monitoring = () => {
         description: 'Не удалось удалить сервис',
         variant: 'destructive',
       });
+    }
+  };
+
+  const openEditDialog = (service: ServiceBalance) => {
+    setEditingService(service);
+    setEditForm({
+      service_name: service.service_name,
+      description: service.description || '',
+      threshold_warning: service.threshold_warning || 0,
+      threshold_critical: service.threshold_critical || 0,
+    });
+  };
+
+  const saveServiceSettings = async () => {
+    if (!editingService) return;
+
+    try {
+      setSaving(true);
+      const response = await fetch(`https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d?serviceId=${editingService.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          service_name: editForm.service_name,
+          description: editForm.description,
+          threshold_warning: editForm.threshold_warning,
+          threshold_critical: editForm.threshold_critical,
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Сохранено',
+          description: 'Настройки сервиса обновлены',
+        });
+        setEditingService(null);
+        await loadServices();
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось сохранить настройки',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to save service settings:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось сохранить настройки',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -475,6 +542,14 @@ const Monitoring = () => {
                         <Button 
                           variant="ghost" 
                           size="icon"
+                          onClick={() => openEditDialog(service)}
+                          className="text-white/60 hover:text-white"
+                        >
+                          <Icon name="Settings" className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
                           onClick={() => deleteService(service.id, service.service_name)}
                           className="text-white/60 hover:text-red-500"
                         >
@@ -484,6 +559,10 @@ const Monitoring = () => {
                     </div>
 
                     <div className="space-y-2">
+                      {service.description && (
+                        <p className="text-sm text-white/60">{service.description}</p>
+                      )}
+                      
                       <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-bold text-white">
                           {service.balance.toLocaleString('ru-RU')}
@@ -507,6 +586,92 @@ const Monitoring = () => {
                   </Card>
                 ))}
               </div>
+            )}
+
+            {editingService && (
+              <Dialog open={!!editingService} onOpenChange={(open) => !open && setEditingService(null)}>
+                <DialogContent className="bg-[#0f1535] border-white/10 text-white">
+                  <DialogHeader>
+                    <DialogTitle>Настройки сервиса</DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="service_name">Название</Label>
+                      <Input
+                        id="service_name"
+                        value={editForm.service_name}
+                        onChange={(e) => setEditForm({ ...editForm, service_name: e.target.value })}
+                        className="bg-white/5 border-white/10 text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="description">Описание</Label>
+                      <Textarea
+                        id="description"
+                        value={editForm.description}
+                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                        placeholder="Добавьте описание для этого сервиса..."
+                        className="bg-white/5 border-white/10 text-white"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="threshold_warning">Порог предупреждения</Label>
+                        <Input
+                          id="threshold_warning"
+                          type="number"
+                          value={editForm.threshold_warning}
+                          onChange={(e) => setEditForm({ ...editForm, threshold_warning: Number(e.target.value) })}
+                          className="bg-white/5 border-white/10 text-white"
+                        />
+                        <p className="text-xs text-yellow-500 mt-1">Покажет предупреждение</p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="threshold_critical">Критический порог</Label>
+                        <Input
+                          id="threshold_critical"
+                          type="number"
+                          value={editForm.threshold_critical}
+                          onChange={(e) => setEditForm({ ...editForm, threshold_critical: Number(e.target.value) })}
+                          className="bg-white/5 border-white/10 text-white"
+                        />
+                        <p className="text-xs text-red-500 mt-1">Покажет критическую ошибку</p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => setEditingService(null)}
+                        disabled={saving}
+                      >
+                        Отмена
+                      </Button>
+                      <Button
+                        onClick={saveServiceSettings}
+                        disabled={saving}
+                      >
+                        {saving ? (
+                          <>
+                            <Icon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
+                            Сохранение...
+                          </>
+                        ) : (
+                          <>
+                            <Icon name="Save" className="mr-2 h-4 w-4" />
+                            Сохранить
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             )}
           </div>
         </main>

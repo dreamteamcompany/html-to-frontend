@@ -60,7 +60,7 @@ def get_all_services(conn) -> dict:
             SELECT 
                 id, service_name, balance, currency, status, 
                 last_updated, api_endpoint, threshold_warning, 
-                threshold_critical, auto_refresh, refresh_interval_minutes
+                threshold_critical, auto_refresh, refresh_interval_minutes, description
             FROM service_balances
             ORDER BY service_name
         ''')
@@ -121,9 +121,9 @@ def create_service(conn, event: dict) -> dict:
                 service_name, balance, currency, status, 
                 api_endpoint, api_key_secret_name, 
                 threshold_warning, threshold_critical,
-                auto_refresh, refresh_interval_minutes
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING id, service_name, balance, currency, status, last_updated
+                auto_refresh, refresh_interval_minutes, description
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, service_name, balance, currency, status, last_updated, description
         ''', (
             body['service_name'],
             body.get('balance', 0),
@@ -134,7 +134,8 @@ def create_service(conn, event: dict) -> dict:
             body.get('threshold_warning'),
             body.get('threshold_critical'),
             body.get('auto_refresh', False),
-            body.get('refresh_interval_minutes', 60)
+            body.get('refresh_interval_minutes', 60),
+            body.get('description')
         ))
         
         service = cur.fetchone()
@@ -227,6 +228,9 @@ def update_service(conn, service_id: int, event: dict) -> dict:
         if 'refresh_interval_minutes' in body:
             fields.append('refresh_interval_minutes = %s')
             values.append(body['refresh_interval_minutes'])
+        if 'description' in body:
+            fields.append('description = %s')
+            values.append(body['description'])
         
         fields.append('updated_at = CURRENT_TIMESTAMP')
         values.append(service_id)
