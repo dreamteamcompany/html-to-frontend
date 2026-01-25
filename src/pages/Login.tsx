@@ -110,11 +110,6 @@ const Login = () => {
               )}
             </Button>
           </form>
-
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Тестовый доступ:</p>
-            <p className="text-xs mt-1">Логин: <b>admin</b> / Пароль: <b>admin</b></p>
-          </div>
         </CardContent>
       </Card>
     </div>
