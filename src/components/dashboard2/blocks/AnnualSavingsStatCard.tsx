@@ -52,69 +52,52 @@ const AnnualSavingsStatCard = () => {
   };
 
   return (
-    <Card style={{ 
+    <Card className="h-full" style={{ 
       background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
       border: '1px solid rgba(1, 181, 116, 0.3)',
       boxShadow: '0 0 30px rgba(1, 181, 116, 0.15)',
       position: 'relative',
       overflow: 'hidden'
     }}>
-      <CardContent className="p-6" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+      <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between" style={{ position: 'relative', zIndex: 1 }}>
+        <div className="flex justify-between items-start mb-4 sm:mb-5">
           <div>
-            <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px', color: '#fff' }}>Экономия</div>
-            <div style={{ color: '#a3aed0', fontSize: '13px', fontWeight: '500' }}>Общая экономия по реестру</div>
+            <div className="text-base sm:text-lg font-bold mb-2 text-white">Экономия</div>
+            <div className="text-xs sm:text-sm font-medium" style={{ color: '#a3aed0' }}>Общая экономия по реестру</div>
           </div>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(1, 181, 116, 0.1)', color: '#01b574', border: '1px solid rgba(1, 181, 116, 0.2)' }}>
-            <Icon name="PiggyBank" size={20} />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(1, 181, 116, 0.1)', color: '#01b574', border: '1px solid rgba(1, 181, 116, 0.2)' }}>
+            <Icon name="PiggyBank" size={18} className="sm:w-5 sm:h-5" />
           </div>
         </div>
 
-        <div style={{ fontSize: '28px', fontWeight: '800', marginBottom: '4px', color: '#01b574', textShadow: '0 0 20px rgba(1, 181, 116, 0.4)' }}>
+        <div className="text-2xl sm:text-3xl font-extrabold mb-2" style={{ color: '#01b574', textShadow: '0 0 20px rgba(1, 181, 116, 0.4)' }}>
           {savingsData ? formatAmount(savingsData.total_amount) : '—'}
         </div>
-        <div style={{ color: '#a3aed0', fontSize: '13px', fontWeight: '500', marginBottom: '16px' }}>
+        <div className="text-xs sm:text-sm font-medium mb-3" style={{ color: '#a3aed0' }}>
           {savingsData ? `${savingsData.count} ${savingsData.count === 1 ? 'запись' : 'записей'} в реестре` : 'Загрузка...'}
         </div>
 
         {savingsData && savingsData.top_departments.length > 0 && (
-          <div style={{ 
-            borderTop: '1px solid rgba(163, 174, 208, 0.1)', 
-            paddingTop: '12px',
-            marginTop: '12px'
-          }}>
-            <div style={{ fontSize: '13px', fontWeight: '600', color: '#a3aed0', marginBottom: '8px' }}>
+          <div className="border-t border-white/10 pt-3 mt-3">
+            <div className="text-xs sm:text-sm font-semibold mb-2" style={{ color: '#a3aed0' }}>
               Топ отделов-заказчиков:
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div className="flex flex-col gap-1.5">
               {savingsData.top_departments.slice(0, 3).map((dept, index) => (
                 <div 
                   key={index}
-                  style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    fontSize: '12px'
-                  }}
+                  className="flex justify-between items-center text-xs"
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
-                    <span style={{ 
-                      width: '18px', 
-                      height: '18px', 
-                      borderRadius: '4px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
+                  <div className="flex items-center gap-1.5 text-white min-w-0 flex-1">
+                    <span className="w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{
                       background: index === 0 ? 'rgba(1, 181, 116, 0.2)' : 'rgba(163, 174, 208, 0.1)',
-                      color: index === 0 ? '#01b574' : '#a3aed0',
-                      fontSize: '10px',
-                      fontWeight: '700'
+                      color: index === 0 ? '#01b574' : '#a3aed0'
                     }}>
                       {index + 1}
                     </span>
-                    <span style={{ fontWeight: '500' }}>{dept.department_name || 'Не указан'}</span>
+                    <span className="font-medium truncate">{dept.department_name || 'Не указан'}</span>
                   </div>
-                  <span style={{ fontWeight: '600', color: '#01b574' }}>
+                  <span className="font-semibold ml-2 flex-shrink-0" style={{ color: '#01b574' }}>
                     {formatAmount(dept.total_saved)}
                   </span>
                 </div>
