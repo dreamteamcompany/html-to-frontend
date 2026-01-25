@@ -98,8 +98,12 @@ const Monitoring = () => {
   };
 
   const deleteService = async (serviceId: number, serviceName: string) => {
-    if (!confirm(`Удалить "${serviceName}" из мониторинга?`)) return;
+    console.log('Delete clicked:', serviceId, serviceName);
+    const confirmed = window.confirm(`Удалить "${serviceName}" из мониторинга?`);
+    console.log('Confirmation result:', confirmed);
+    if (!confirmed) return;
     
+    console.log('Sending DELETE request...');
     try {
       const response = await fetch(`https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d?serviceId=${serviceId}`, {
         method: 'DELETE',
@@ -108,11 +112,21 @@ const Monitoring = () => {
         },
       });
       
+      console.log('DELETE response:', response.status, response.ok);
+      
       if (response.ok) {
         await loadServices();
         toast({
           title: 'Удалено',
           description: `${serviceName} удалён из мониторинга`,
+        });
+      } else {
+        const error = await response.json();
+        console.error('DELETE failed:', error);
+        toast({
+          title: 'Ошибка',
+          description: error.error || 'Не удалось удалить сервис',
+          variant: 'destructive',
         });
       }
     } catch (error) {
