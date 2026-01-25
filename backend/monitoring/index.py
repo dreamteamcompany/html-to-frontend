@@ -72,7 +72,10 @@ def get_all_services(conn) -> dict:
             service_dict['balance'] = float(service_dict['balance']) if service_dict['balance'] else 0
             service_dict['threshold_warning'] = float(service_dict['threshold_warning']) if service_dict['threshold_warning'] else None
             service_dict['threshold_critical'] = float(service_dict['threshold_critical']) if service_dict['threshold_critical'] else None
-            service_dict['last_updated'] = service_dict['last_updated'].isoformat() if service_dict['last_updated'] else None
+            if service_dict['last_updated']:
+                service_dict['last_updated'] = service_dict['last_updated'].isoformat() + 'Z'
+            else:
+                service_dict['last_updated'] = None
             services_list.append(service_dict)
         
         return {
