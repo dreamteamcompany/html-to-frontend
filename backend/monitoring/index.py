@@ -108,7 +108,8 @@ def create_service(conn, event: dict) -> dict:
     
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute('SELECT id FROM service_balances WHERE service_name = %s', (body['service_name'],))
-        if cur.fetchone():
+        existing = cur.fetchone()
+        if existing:
             return {
                 'statusCode': 409,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},

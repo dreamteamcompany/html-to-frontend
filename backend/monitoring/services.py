@@ -94,6 +94,40 @@ def fetch_mango_office_balance() -> Dict[str, any]:
         'currency': currency
     }
 
+def fetch_plusofon_balance() -> Dict[str, any]:
+    """Получение баланса из Plusofon API"""
+    api_token = os.environ.get('PLUSOFON_API_TOKEN')
+    client_id = os.environ.get('PLUSOFON_CLIENT_ID')
+    
+    if not api_token or not client_id:
+        raise ValueError('PLUSOFON_API_TOKEN and PLUSOFON_CLIENT_ID not configured')
+    
+    response = requests.get(
+        'https://restapi.plusofon.ru/api/v1/payment/balance',
+        headers={
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Client': client_id,
+            'Authorization': f'Bearer {api_token}'
+        },
+        timeout=10
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f'Plusofon API error: {response.status_code} - {response.text}')
+    
+    data = response.json()
+    
+    if 'balance' not in data:
+        raise Exception(f'Plusofon API error: {data}')
+    
+    balance = float(data.get('balance', 0))
+    
+    return {
+        'balance': balance,
+        'currency': 'RUB'
+    }
+
 def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None, 
                          api_key_secret_name: Optional[str] = None) -> Dict[str, any]:
     """Универсальная функция для получения баланса сервиса"""
@@ -106,6 +140,9 @@ def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None,
     
     if service_name.lower() == 'mango office' or (api_endpoint and 'mango-office' in api_endpoint):
         return fetch_mango_office_balance()
+    
+    if service_name.lower() == 'plusofon' or service_name.lower() == 'плюсофон' or (api_endpoint and 'plusofon' in api_endpoint):
+        return fetch_plusofon_balance()
     
     raise ValueError(f'Service {service_name} not supported yet')
 
