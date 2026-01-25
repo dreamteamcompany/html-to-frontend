@@ -122,6 +122,8 @@ def fetch_plusofon_balance() -> Dict[str, any]:
     print(f"[DEBUG] Plusofon response body: {response.text}")
     
     if response.status_code != 200:
+        if response.status_code == 404:
+            raise Exception(f'Plusofon API error 404: Проверьте правильность Client ID ({client_id}) и токена. Ответ: {response.text}')
         raise Exception(f'Plusofon API error: {response.status_code} - {response.text}')
     
     data = response.json()
