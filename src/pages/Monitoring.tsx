@@ -374,7 +374,11 @@ const Monitoring = () => {
                         <div>
                           <h3 className="font-semibold text-white">{service.service_name}</h3>
                           <p className="text-sm text-white/50">
-                            Обновлено: {new Date(service.last_updated).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}
+                            Обновлено: {(() => {
+                              const date = new Date(service.last_updated);
+                              console.log('Raw date:', service.last_updated, 'Parsed:', date, 'MSK:', date.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }));
+                              return date.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+                            })()}
                           </p>
                         </div>
                       </div>
