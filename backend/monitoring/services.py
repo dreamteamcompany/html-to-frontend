@@ -29,12 +29,42 @@ def fetch_timeweb_balance() -> Dict[str, any]:
         'currency': currency
     }
 
+def fetch_smsru_balance() -> Dict[str, any]:
+    """Получение баланса из sms.ru API"""
+    api_id = os.environ.get('SMSRU_API_ID')
+    if not api_id:
+        raise ValueError('SMSRU_API_ID not configured')
+    
+    response = requests.get(
+        'https://sms.ru/my/balance',
+        params={'api_id': api_id, 'json': 1},
+        timeout=10
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f'sms.ru API error: {response.status_code} - {response.text}')
+    
+    data = response.json()
+    
+    if data.get('status') != 'OK':
+        raise Exception(f'sms.ru API error: {data.get("status_text", "Unknown error")}')
+    
+    balance = float(data.get('balance', 0))
+    
+    return {
+        'balance': balance,
+        'currency': 'RUB'
+    }
+
 def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None, 
                          api_key_secret_name: Optional[str] = None) -> Dict[str, any]:
     """Универсальная функция для получения баланса сервиса"""
     
     if service_name.lower() == 'timeweb cloud' or (api_endpoint and 'timeweb' in api_endpoint):
         return fetch_timeweb_balance()
+    
+    if service_name.lower() == 'sms.ru' or (api_endpoint and 'sms.ru' in api_endpoint):
+        return fetch_smsru_balance()
     
     raise ValueError(f'Service {service_name} not supported yet')
 

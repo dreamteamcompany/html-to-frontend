@@ -34,6 +34,7 @@ const Monitoring = () => {
   const [services, setServices] = useState<ServiceBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [addServiceType, setAddServiceType] = useState<'timeweb' | 'smsru' | null>(null);
   const [adding, setAdding] = useState(false);
   const { token } = useAuth();
   const { toast } = useToast();
@@ -180,7 +181,28 @@ const Monitoring = () => {
     loadServices();
   }, [token]);
 
-  const addTimewebService = async () => {
+  const addService = async (type: 'timeweb' | 'smsru') => {
+    const serviceConfigs = {
+      timeweb: {
+        service_name: 'Timeweb Cloud',
+        api_endpoint: 'https://api.timeweb.cloud/api/v1/account/finances',
+        api_key_secret_name: 'TIMEWEB_API_TOKEN',
+        threshold_warning: 500,
+        threshold_critical: 100,
+        description: 'Timeweb Cloud успешно добавлен в мониторинг'
+      },
+      smsru: {
+        service_name: 'sms.ru',
+        api_endpoint: 'https://sms.ru/my/balance',
+        api_key_secret_name: 'SMSRU_API_ID',
+        threshold_warning: 100,
+        threshold_critical: 20,
+        description: 'sms.ru успешно добавлен в мониторинг'
+      }
+    };
+
+    const config = serviceConfigs[type];
+
     try {
       setAdding(true);
       const response = await fetch('https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d', {
@@ -190,12 +212,8 @@ const Monitoring = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          service_name: 'Timeweb Cloud',
+          ...config,
           currency: 'RUB',
-          api_endpoint: 'https://api.timeweb.cloud/api/v1/account/finances',
-          api_key_secret_name: 'TIMEWEB_API_TOKEN',
-          threshold_warning: 500,
-          threshold_critical: 100,
           auto_refresh: true,
           refresh_interval_minutes: 60,
         }),
@@ -204,9 +222,10 @@ const Monitoring = () => {
       if (response.ok) {
         toast({
           title: 'Сервис добавлен',
-          description: 'Timeweb Cloud успешно добавлен в мониторинг',
+          description: config.description,
         });
         setShowAddForm(false);
+        setAddServiceType(null);
         await loadServices();
       } else {
         const error = await response.json();
@@ -288,9 +307,13 @@ const Monitoring = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => setShowAddForm(true)}>
+                    <DropdownMenuItem onClick={() => { setAddServiceType('timeweb'); setShowAddForm(true); }}>
                       <Icon name="Server" className="mr-2 h-4 w-4" />
                       Timeweb Cloud
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setAddServiceType('smsru'); setShowAddForm(true); }}>
+                      <Icon name="MessageSquare" className="mr-2 h-4 w-4" />
+                      sms.ru
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -301,14 +324,16 @@ const Monitoring = () => {
               </div>
             </div>
 
-            {showAddForm && (
+            {showAddForm && addServiceType && (
               <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Добавить Timeweb Cloud</h3>
+                    <h3 className="text-lg font-semibold text-white mb-1">
+                      {addServiceType === 'timeweb' ? 'Добавить Timeweb Cloud' : 'Добавить sms.ru'}
+                    </h3>
                     <p className="text-sm text-white/60">Автоматический мониторинг баланса вашего аккаунта</p>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => setShowAddForm(false)} className="text-white/60 hover:text-white">
+                  <Button variant="ghost" size="icon" onClick={() => { setShowAddForm(false); setAddServiceType(null); }} className="text-white/60 hover:text-white">
                     <Icon name="X" className="h-4 w-4" />
                   </Button>
                 </div>
@@ -320,15 +345,23 @@ const Monitoring = () => {
                   </div>
                   <div className="flex items-start gap-2 text-sm text-white/70">
                     <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
-                    <span>Уведомления при низком балансе (&lt; 500₽ - warning, &lt; 100₽ - critical)</span>
+                    <span>
+                      {addServiceType === 'timeweb' 
+                        ? 'Уведомления при низком балансе (< 500₽ - warning, < 100₽ - critical)'
+                        : 'Уведомления при низком балансе (< 100₽ - warning, < 20₽ - critical)'}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2 text-sm text-white/70">
                     <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
-                    <span>Требуется токен TIMEWEB_API_TOKEN (добавьте в секреты проекта)</span>
+                    <span>
+                      {addServiceType === 'timeweb'
+                        ? 'Требуется токен TIMEWEB_API_TOKEN (добавьте в секреты проекта)'
+                        : 'Требуется API ID SMSRU_API_ID (добавьте в секреты проекта)'}
+                    </span>
                   </div>
                 </div>
 
-                <Button onClick={addTimewebService} disabled={adding} className="w-full">
+                <Button onClick={() => addService(addServiceType)} disabled={adding} className="w-full">
                   {adding ? (
                     <>
                       <Icon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
