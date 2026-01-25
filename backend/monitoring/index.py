@@ -11,6 +11,7 @@ def handler(event: dict, context) -> dict:
     
     method = event.get('httpMethod', 'GET')
     path = event.get('pathParams', {})
+    query = event.get('queryStringParameters', {})
     
     if method == 'OPTIONS':
         return {
@@ -40,10 +41,10 @@ def handler(event: dict, context) -> dict:
             return refresh_service_balance(conn, int(path['serviceId']))
         elif method == 'POST':
             return create_service(conn, event)
-        elif method == 'PUT' and path.get('serviceId'):
-            return update_service(conn, int(path['serviceId']), event)
-        elif method == 'DELETE' and path.get('serviceId'):
-            return delete_service(conn, int(path['serviceId']))
+        elif method == 'PUT' and query.get('serviceId'):
+            return update_service(conn, int(query['serviceId']), event)
+        elif method == 'DELETE' and query.get('serviceId'):
+            return delete_service(conn, int(query['serviceId']))
         else:
             return {
                 'statusCode': 404,
