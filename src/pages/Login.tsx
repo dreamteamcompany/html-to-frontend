@@ -41,7 +41,7 @@ const Login = () => {
           </div>
           <CardTitle className="text-2xl font-bold">Вход в систему</CardTitle>
           <CardDescription>
-            Введите email и пароль для доступа
+            Введите логин и пароль для доступа
           </CardDescription>
         </CardHeader>
         <CardContent>
