@@ -103,6 +103,14 @@ def create_service(conn, event: dict) -> dict:
             }
     
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute('SELECT id FROM service_balances WHERE service_name = %s', (body['service_name'],))
+        if cur.fetchone():
+            return {
+                'statusCode': 409,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': f'Сервис "{body["service_name"]}" уже добавлен в мониторинг'})
+            }
+        
         cur.execute('''
             INSERT INTO service_balances (
                 service_name, balance, currency, status, 

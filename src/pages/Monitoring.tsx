@@ -97,6 +97,34 @@ const Monitoring = () => {
     }
   };
 
+  const deleteService = async (serviceId: number, serviceName: string) => {
+    if (!confirm(`Удалить "${serviceName}" из мониторинга?`)) return;
+    
+    try {
+      const response = await fetch(`https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d?serviceId=${serviceId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        await loadServices();
+        toast({
+          title: 'Удалено',
+          description: `${serviceName} удалён из мониторинга`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to delete service:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось удалить сервис',
+        variant: 'destructive',
+      });
+    }
+  };
+
   useEffect(() => {
     loadServices();
   }, [token]);
@@ -132,7 +160,7 @@ const Monitoring = () => {
       } else {
         const error = await response.json();
         toast({
-          title: 'Ошибка',
+          title: response.status === 409 ? 'Сервис уже добавлен' : 'Ошибка',
           description: error.error || 'Не удалось добавить сервис',
           variant: 'destructive',
         });
@@ -288,14 +316,24 @@ const Monitoring = () => {
                           </p>
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => refreshBalance(service.id)}
-                        className="text-white/60 hover:text-white"
-                      >
-                        <Icon name="RefreshCw" className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => refreshBalance(service.id)}
+                          className="text-white/60 hover:text-white"
+                        >
+                          <Icon name="RefreshCw" className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => deleteService(service.id, service.service_name)}
+                          className="text-white/60 hover:text-red-500"
+                        >
+                          <Icon name="Trash2" className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="space-y-2">

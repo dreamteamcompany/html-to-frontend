@@ -7,7 +7,7 @@
       "expectedStatus": 200
     },
     {
-      "name": "Create new service",
+      "name": "Create duplicate service returns error",
       "method": "POST",
       "path": "/",
       "body": {
@@ -17,7 +17,7 @@
         "threshold_warning": 500,
         "threshold_critical": 100
       },
-      "expectedStatus": 201
+      "expectedStatus": 409
     }
   ]
 }
