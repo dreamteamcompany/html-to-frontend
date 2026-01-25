@@ -6,6 +6,12 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ServiceBalance {
   id: number;
@@ -242,10 +248,21 @@ const Monitoring = () => {
             <div className="flex justify-between items-center flex-wrap gap-3">
               <h2 className="text-2xl font-bold text-white">Балансы сервисов</h2>
               <div className="flex gap-2">
-                <Button onClick={() => setShowAddForm(true)} variant="default" size="sm">
-                  <Icon name="Plus" className="mr-2 h-4 w-4" />
-                  Добавить Timeweb Cloud
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="default" size="sm">
+                      <Icon name="Plus" className="mr-2 h-4 w-4" />
+                      Добавить
+                      <Icon name="ChevronDown" className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => setShowAddForm(true)}>
+                      <Icon name="Server" className="mr-2 h-4 w-4" />
+                      Timeweb Cloud
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button onClick={loadServices} variant="outline" size="sm">
                   <Icon name="RefreshCw" className="mr-2 h-4 w-4" />
                   Обновить все
