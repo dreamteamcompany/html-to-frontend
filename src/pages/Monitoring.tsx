@@ -34,7 +34,7 @@ const Monitoring = () => {
   const [services, setServices] = useState<ServiceBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addServiceType, setAddServiceType] = useState<'timeweb' | 'smsru' | 'mango' | null>(null);
+  const [addServiceType, setAddServiceType] = useState<'timeweb' | 'smsru' | 'mango' | 'plusofon' | null>(null);
   const [adding, setAdding] = useState(false);
   const { token } = useAuth();
   const { toast } = useToast();
@@ -181,7 +181,7 @@ const Monitoring = () => {
     loadServices();
   }, [token]);
 
-  const addService = async (type: 'timeweb' | 'smsru' | 'mango') => {
+  const addService = async (type: 'timeweb' | 'smsru' | 'mango' | 'plusofon') => {
     const serviceConfigs = {
       timeweb: {
         service_name: 'Timeweb Cloud',
@@ -206,6 +206,14 @@ const Monitoring = () => {
         threshold_warning: 1000,
         threshold_critical: 200,
         description: 'Mango Office успешно добавлен в мониторинг'
+      },
+      plusofon: {
+        service_name: 'Plusofon',
+        api_endpoint: 'https://restapi.plusofon.ru/api/v1/payment/balance',
+        api_key_secret_name: 'PLUSOFON_API_TOKEN',
+        threshold_warning: 500,
+        threshold_critical: 100,
+        description: 'Plusofon успешно добавлен в мониторинг'
       }
     };
 
@@ -327,6 +335,10 @@ const Monitoring = () => {
                       <Icon name="Phone" className="mr-2 h-4 w-4" />
                       Mango Office
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setAddServiceType('plusofon'); setShowAddForm(true); }}>
+                      <Icon name="PhoneCall" className="mr-2 h-4 w-4" />
+                      Plusofon
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Button onClick={refreshAllBalances} variant="outline" size="sm" disabled={loading || services.length === 0}>
@@ -343,7 +355,8 @@ const Monitoring = () => {
                     <h3 className="text-lg font-semibold text-white mb-1">
                       {addServiceType === 'timeweb' ? 'Добавить Timeweb Cloud' : 
                        addServiceType === 'smsru' ? 'Добавить sms.ru' : 
-                       'Добавить Mango Office'}
+                       addServiceType === 'mango' ? 'Добавить Mango Office' :
+                       'Добавить Plusofon'}
                     </h3>
                     <p className="text-sm text-white/60">Автоматический мониторинг баланса вашего аккаунта</p>
                   </div>
@@ -360,8 +373,10 @@ const Monitoring = () => {
                   <div className="flex items-start gap-2 text-sm text-white/70">
                     <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
                     <span>
-                      {addServiceType === 'timeweb' 
+                      {addServiceType === 'timeweb' || addServiceType === 'plusofon'
                         ? 'Уведомления при низком балансе (< 500₽ - warning, < 100₽ - critical)'
+                        : addServiceType === 'mango'
+                        ? 'Уведомления при низком балансе (< 1000₽ - warning, < 200₽ - critical)'
                         : 'Уведомления при низком балансе (< 100₽ - warning, < 20₽ - critical)'}
                     </span>
                   </div>
@@ -369,8 +384,12 @@ const Monitoring = () => {
                     <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
                     <span>
                       {addServiceType === 'timeweb'
-                        ? 'Требуется токен TIMEWEB_API_TOKEN (добавьте в секреты проекта)'
-                        : 'Требуется API ID SMSRU_API_ID (добавьте в секреты проекта)'}
+                        ? 'Требуется токен TIMEWEB_API_TOKEN'
+                        : addServiceType === 'smsru'
+                        ? 'Требуется API ID SMSRU_API_ID'
+                        : addServiceType === 'mango'
+                        ? 'Требуется MANGO_OFFICE_API_KEY и MANGO_OFFICE_API_SALT'
+                        : 'Требуется PLUSOFON_API_TOKEN и PLUSOFON_CLIENT_ID'}
                     </span>
                   </div>
                 </div>
