@@ -81,7 +81,17 @@ def get_all_services(conn) -> dict:
         }
 
 def create_service(conn, event: dict) -> dict:
-    body = json.loads(event.get('body', '{}'))
+    raw_body = event.get('body', '{}')
+    print(f"[DEBUG] Raw body type: {type(raw_body)}, value: {raw_body}")
+    
+    if isinstance(raw_body, str):
+        if not raw_body or raw_body.strip() == '':
+            raw_body = '{}'
+        body = json.loads(raw_body)
+    else:
+        body = raw_body
+    
+    print(f"[DEBUG] Parsed body: {body}")
     
     required_fields = ['service_name', 'currency']
     for field in required_fields:
