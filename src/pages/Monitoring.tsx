@@ -34,7 +34,7 @@ const Monitoring = () => {
   const [services, setServices] = useState<ServiceBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addServiceType, setAddServiceType] = useState<'timeweb' | 'smsru' | null>(null);
+  const [addServiceType, setAddServiceType] = useState<'timeweb' | 'smsru' | 'mango' | null>(null);
   const [adding, setAdding] = useState(false);
   const { token } = useAuth();
   const { toast } = useToast();
@@ -181,7 +181,7 @@ const Monitoring = () => {
     loadServices();
   }, [token]);
 
-  const addService = async (type: 'timeweb' | 'smsru') => {
+  const addService = async (type: 'timeweb' | 'smsru' | 'mango') => {
     const serviceConfigs = {
       timeweb: {
         service_name: 'Timeweb Cloud',
@@ -198,6 +198,14 @@ const Monitoring = () => {
         threshold_warning: 100,
         threshold_critical: 20,
         description: 'sms.ru успешно добавлен в мониторинг'
+      },
+      mango: {
+        service_name: 'Mango Office',
+        api_endpoint: 'https://app.mango-office.ru/vpbx/account/balance',
+        api_key_secret_name: 'MANGO_OFFICE_API_KEY',
+        threshold_warning: 1000,
+        threshold_critical: 200,
+        description: 'Mango Office успешно добавлен в мониторинг'
       }
     };
 
@@ -315,6 +323,10 @@ const Monitoring = () => {
                       <Icon name="MessageSquare" className="mr-2 h-4 w-4" />
                       sms.ru
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setAddServiceType('mango'); setShowAddForm(true); }}>
+                      <Icon name="Phone" className="mr-2 h-4 w-4" />
+                      Mango Office
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Button onClick={refreshAllBalances} variant="outline" size="sm" disabled={loading || services.length === 0}>
@@ -329,7 +341,9 @@ const Monitoring = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-1">
-                      {addServiceType === 'timeweb' ? 'Добавить Timeweb Cloud' : 'Добавить sms.ru'}
+                      {addServiceType === 'timeweb' ? 'Добавить Timeweb Cloud' : 
+                       addServiceType === 'smsru' ? 'Добавить sms.ru' : 
+                       'Добавить Mango Office'}
                     </h3>
                     <p className="text-sm text-white/60">Автоматический мониторинг баланса вашего аккаунта</p>
                   </div>
