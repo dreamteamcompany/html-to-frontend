@@ -37,8 +37,8 @@ def handler(event: dict, context) -> dict:
     try:
         if method == 'GET' and not path:
             return get_all_services(conn)
-        elif method == 'POST' and path.get('action') == 'refresh' and path.get('serviceId'):
-            return refresh_service_balance(conn, int(path['serviceId']))
+        elif method == 'POST' and query.get('action') == 'refresh' and query.get('serviceId'):
+            return refresh_service_balance(conn, int(query['serviceId']))
         elif method == 'POST':
             return create_service(conn, event)
         elif method == 'PUT' and query.get('serviceId'):
