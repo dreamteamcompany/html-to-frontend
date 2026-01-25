@@ -103,6 +103,37 @@ const Monitoring = () => {
     }
   };
 
+  const refreshAllBalances = async () => {
+    setLoading(true);
+    try {
+      const refreshPromises = services.map(service => 
+        fetch(`https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d?action=refresh&serviceId=${service.id}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+      );
+      
+      await Promise.all(refreshPromises);
+      await loadServices();
+      
+      toast({
+        title: 'Обновлено',
+        description: `Обновлено ${services.length} сервисов`,
+      });
+    } catch (error) {
+      console.error('Failed to refresh all balances:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось обновить все балансы',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const deleteService = async (serviceId: number, serviceName: string) => {
     console.log('Delete clicked:', serviceId, serviceName);
     const confirmed = window.confirm(`Удалить "${serviceName}" из мониторинга?`);
@@ -263,7 +294,7 @@ const Monitoring = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button onClick={loadServices} variant="outline" size="sm">
+                <Button onClick={refreshAllBalances} variant="outline" size="sm" disabled={loading || services.length === 0}>
                   <Icon name="RefreshCw" className="mr-2 h-4 w-4" />
                   Обновить все
                 </Button>
