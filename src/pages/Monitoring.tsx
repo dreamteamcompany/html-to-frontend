@@ -246,6 +246,12 @@ const Monitoring = () => {
 
   useEffect(() => {
     loadServices();
+    
+    const interval = setInterval(() => {
+      refreshAllBalances();
+    }, 60000);
+    
+    return () => clearInterval(interval);
   }, [token]);
 
   const addService = async (type: 'timeweb' | 'timeweb-hosting' | 'smsru' | 'mango' | 'plusofon') => {
