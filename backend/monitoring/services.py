@@ -106,24 +106,33 @@ def fetch_plusofon_balance() -> Dict[str, any]:
         raise ValueError('PLUSOFON_API_TOKEN and PLUSOFON_CLIENT_ID not configured')
     
     print(f"[DEBUG] Making request to Plusofon API with Client: {client_id}")
+    print(f"[DEBUG] Token (first 20 chars): {api_token[:20] if api_token else 'N/A'}...")
+    
+    headers = {
+        'Accept': 'application/json',
+        'Client': str(client_id).strip(),
+        'Authorization': f'Bearer {api_token.strip()}'
+    }
+    
+    print(f"[DEBUG] Request headers: {headers}")
     
     response = requests.get(
         'https://restapi.plusofon.ru/api/v1/payment/balance',
-        headers={
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Client': client_id,
-            'Authorization': f'Bearer {api_token}'
-        },
+        headers=headers,
         timeout=10
     )
     
     print(f"[DEBUG] Plusofon response status: {response.status_code}")
+    print(f"[DEBUG] Plusofon response headers: {dict(response.headers)}")
     print(f"[DEBUG] Plusofon response body: {response.text}")
     
     if response.status_code != 200:
         if response.status_code == 404:
             raise Exception(f'Plusofon API error 404: Проверьте правильность Client ID ({client_id}) и токена. Ответ: {response.text}')
+        elif response.status_code == 401:
+            raise Exception(f'Plusofon API error 401: Неверная авторизация. Проверьте токен.')
+        elif response.status_code == 403:
+            raise Exception(f'Plusofon API error 403: Доступ запрещен. Проверьте права токена.')
         raise Exception(f'Plusofon API error: {response.status_code} - {response.text}')
     
     data = response.json()
