@@ -15,10 +15,18 @@ interface Saving {
   annual_amount: number;
 }
 
+interface TopDepartment {
+  department_name: string;
+  total_saved: number;
+}
+
 interface SavingsData {
   savings: Saving[];
   total_annual: number;
   currency: string;
+  total_amount: number;
+  count: number;
+  top_departments: TopDepartment[];
 }
 
 const AnnualSavingsStatCard = () => {
@@ -80,11 +88,40 @@ const AnnualSavingsStatCard = () => {
         </div>
 
         <div className="text-2xl sm:text-3xl font-extrabold mb-2" style={{ color: '#01b574', textShadow: '0 0 20px rgba(1, 181, 116, 0.4)' }}>
-          {savingsData ? formatAmount(savingsData.total_annual) : '—'}
+          {savingsData ? formatAmount(savingsData.total_amount) : '—'}
         </div>
         <div className="text-xs sm:text-sm font-medium mb-3" style={{ color: '#a3aed0' }}>
-          {savingsData ? `${savingsData.savings.length} ${savingsData.savings.length === 1 ? 'запись' : savingsData.savings.length < 5 ? 'записи' : 'записей'} в реестре` : 'Загрузка...'}
+          {savingsData ? `${savingsData.count} ${savingsData.count === 1 ? 'запись' : savingsData.count < 5 ? 'записи' : 'записей'} в реестре` : 'Загрузка...'}
         </div>
+
+        {savingsData && savingsData.top_departments && savingsData.top_departments.length > 0 && (
+          <div className="border-t border-white/10 pt-3 mt-3">
+            <div className="text-xs sm:text-sm font-semibold mb-2" style={{ color: '#a3aed0' }}>
+              Топ отделов-заказчиков:
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {savingsData.top_departments.slice(0, 3).map((dept, index) => (
+                <div 
+                  key={index}
+                  className="flex justify-between items-center text-xs"
+                >
+                  <div className="flex items-center gap-1.5 text-white min-w-0 flex-1">
+                    <span className="w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{
+                      background: index === 0 ? 'rgba(1, 181, 116, 0.2)' : 'rgba(163, 174, 208, 0.1)',
+                      color: index === 0 ? '#01b574' : '#a3aed0'
+                    }}>
+                      {index + 1}
+                    </span>
+                    <span className="font-medium truncate">{dept.department_name}</span>
+                  </div>
+                  <span className="font-semibold ml-2 flex-shrink-0" style={{ color: '#01b574' }}>
+                    {formatAmount(dept.total_saved)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
