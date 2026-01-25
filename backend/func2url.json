@@ -1,4 +1,5 @@
 {
+  "monitoring": "https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d",
   "push-notifications": "https://functions.poehali.dev/cc67e884-8946-4bcd-939d-ea3c195a6598",
   "test-deploy": "https://functions.poehali.dev/e50e0008-e6b6-4c27-9969-a5dc77bd5f99",
   "process-scheduled-payments": "https://functions.poehali.dev/eeefc720-2351-43cd-804d-44fbd748ab8f",
