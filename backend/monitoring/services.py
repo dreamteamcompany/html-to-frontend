@@ -99,8 +99,13 @@ def fetch_plusofon_balance() -> Dict[str, any]:
     api_token = os.environ.get('PLUSOFON_API_TOKEN')
     client_id = os.environ.get('PLUSOFON_CLIENT_ID')
     
+    print(f"[DEBUG] PLUSOFON_API_TOKEN exists: {bool(api_token)}")
+    print(f"[DEBUG] PLUSOFON_CLIENT_ID exists: {bool(client_id)}")
+    
     if not api_token or not client_id:
         raise ValueError('PLUSOFON_API_TOKEN and PLUSOFON_CLIENT_ID not configured')
+    
+    print(f"[DEBUG] Making request to Plusofon API with Client: {client_id}")
     
     response = requests.get(
         'https://restapi.plusofon.ru/api/v1/payment/balance',
@@ -112,6 +117,9 @@ def fetch_plusofon_balance() -> Dict[str, any]:
         },
         timeout=10
     )
+    
+    print(f"[DEBUG] Plusofon response status: {response.status_code}")
+    print(f"[DEBUG] Plusofon response body: {response.text}")
     
     if response.status_code != 200:
         raise Exception(f'Plusofon API error: {response.status_code} - {response.text}')
