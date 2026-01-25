@@ -65,14 +65,15 @@ def fetch_mango_office_balance() -> Dict[str, any]:
     if not api_key or not api_salt:
         raise ValueError('MANGO_OFFICE_API_KEY and MANGO_OFFICE_API_SALT not configured')
     
-    sign = hashlib.sha256(f'{api_key}{api_salt}'.encode()).hexdigest()
+    json_data = '{}'
+    sign = hashlib.sha256(f'{api_key}{json_data}{api_salt}'.encode()).hexdigest()
     
     response = requests.post(
         'https://app.mango-office.ru/vpbx/account/balance',
         data={
             'vpbx_api_key': api_key,
             'sign': sign,
-            'json': '{}'
+            'json': json_data
         },
         timeout=10
     )
