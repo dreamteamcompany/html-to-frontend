@@ -27,6 +27,8 @@ const Monitoring = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [services, setServices] = useState<ServiceBalance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [adding, setAdding] = useState(false);
   const { token } = useAuth();
   const { toast } = useToast();
 
@@ -99,6 +101,54 @@ const Monitoring = () => {
     loadServices();
   }, [token]);
 
+  const addTimewebService = async () => {
+    try {
+      setAdding(true);
+      const response = await fetch('https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          service_name: 'Timeweb Cloud',
+          currency: 'RUB',
+          api_endpoint: 'https://api.timeweb.cloud/api/v1/account/finances',
+          api_key_secret_name: 'TIMEWEB_API_TOKEN',
+          threshold_warning: 500,
+          threshold_critical: 100,
+          auto_refresh: true,
+          refresh_interval_minutes: 60,
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Сервис добавлен',
+          description: 'Timeweb Cloud успешно добавлен в мониторинг',
+        });
+        setShowAddForm(false);
+        await loadServices();
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Ошибка',
+          description: error.error || 'Не удалось добавить сервис',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to add service:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось добавить сервис',
+        variant: 'destructive',
+      });
+    } finally {
+      setAdding(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ok':
@@ -147,13 +197,62 @@ const Monitoring = () => {
 
         <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
           <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-3">
               <h2 className="text-2xl font-bold text-white">Балансы сервисов</h2>
-              <Button onClick={loadServices} variant="outline" size="sm">
-                <Icon name="RefreshCw" className="mr-2 h-4 w-4" />
-                Обновить все
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setShowAddForm(true)} variant="default" size="sm">
+                  <Icon name="Plus" className="mr-2 h-4 w-4" />
+                  Добавить Timeweb Cloud
+                </Button>
+                <Button onClick={loadServices} variant="outline" size="sm">
+                  <Icon name="RefreshCw" className="mr-2 h-4 w-4" />
+                  Обновить все
+                </Button>
+              </div>
             </div>
+
+            {showAddForm && (
+              <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-1">Добавить Timeweb Cloud</h3>
+                    <p className="text-sm text-white/60">Автоматический мониторинг баланса вашего аккаунта</p>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setShowAddForm(false)} className="text-white/60 hover:text-white">
+                    <Icon name="X" className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-start gap-2 text-sm text-white/70">
+                    <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
+                    <span>Автоматическое обновление каждый час</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm text-white/70">
+                    <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
+                    <span>Уведомления при низком балансе (&lt; 500₽ - warning, &lt; 100₽ - critical)</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm text-white/70">
+                    <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
+                    <span>Требуется токен TIMEWEB_API_TOKEN (добавьте в секреты проекта)</span>
+                  </div>
+                </div>
+
+                <Button onClick={addTimewebService} disabled={adding} className="w-full">
+                  {adding ? (
+                    <>
+                      <Icon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
+                      Добавление...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="Plus" className="mr-2 h-4 w-4" />
+                      Добавить сервис
+                    </>
+                  )}
+                </Button>
+              </Card>
+            )}
 
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -168,9 +267,9 @@ const Monitoring = () => {
                 <Icon name="Wallet" className="mx-auto h-16 w-16 text-white/30 mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">Нет подключенных сервисов</h3>
                 <p className="text-white/60 mb-6">Добавьте интеграции с сервисами для мониторинга балансов</p>
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => setShowAddForm(true)}>
                   <Icon name="Plus" className="mr-2 h-4 w-4" />
-                  Добавить сервис
+                  Добавить Timeweb Cloud
                 </Button>
               </Card>
             ) : (

@@ -4,6 +4,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from decimal import Decimal
+from services import fetch_service_balance, calculate_status
 
 def handler(event: dict, context) -> dict:
     '''API для мониторинга балансов сервисов - получение, обновление и управление интеграциями'''
@@ -206,17 +207,37 @@ def refresh_service_balance(conn, service_id: int) -> dict:
                 'body': json.dumps({'error': 'Service not found'})
             }
         
-        balance = 0
-        status = 'ok'
+        try:
+            balance_data = fetch_service_balance(
+                service['service_name'],
+                service['api_endpoint'],
+                service['api_key_secret_name']
+            )
+            
+            balance = balance_data['balance']
+            currency = balance_data.get('currency', 'RUB')
+            status = calculate_status(
+                balance,
+                float(service['threshold_warning']) if service['threshold_warning'] else None,
+                float(service['threshold_critical']) if service['threshold_critical'] else None
+            )
+            
+        except Exception as e:
+            return {
+                'statusCode': 500,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': f'Failed to fetch balance: {str(e)}'})
+            }
         
         cur.execute('''
             UPDATE service_balances 
             SET balance = %s, 
+                currency = %s,
                 status = %s, 
                 last_updated = CURRENT_TIMESTAMP,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = %s
-        ''', (balance, status, service_id))
+        ''', (balance, currency, status, service_id))
         
         conn.commit()
         
@@ -226,6 +247,7 @@ def refresh_service_balance(conn, service_id: int) -> dict:
             'body': json.dumps({
                 'success': True,
                 'balance': balance,
+                'currency': currency,
                 'status': status
             })
         }
