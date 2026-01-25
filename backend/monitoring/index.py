@@ -131,6 +131,38 @@ def create_service(conn, event: dict) -> dict:
         service_dict['balance'] = float(service_dict['balance'])
         service_dict['last_updated'] = service_dict['last_updated'].isoformat()
         
+        if body.get('api_endpoint') and body.get('api_key_secret_name'):
+            try:
+                from services import fetch_service_balance, calculate_status
+                balance_data = fetch_service_balance(
+                    body['service_name'],
+                    body.get('api_endpoint'),
+                    body.get('api_key_secret_name')
+                )
+                
+                new_status = calculate_status(
+                    balance_data['balance'],
+                    body.get('threshold_warning'),
+                    body.get('threshold_critical')
+                )
+                
+                cur.execute('''
+                    UPDATE service_balances 
+                    SET balance = %s, currency = %s, status = %s, last_updated = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                    RETURNING balance, currency, status, last_updated
+                ''', (balance_data['balance'], balance_data['currency'], new_status, service_dict['id']))
+                
+                updated = cur.fetchone()
+                conn.commit()
+                
+                service_dict['balance'] = float(updated['balance'])
+                service_dict['currency'] = updated['currency']
+                service_dict['status'] = updated['status']
+                service_dict['last_updated'] = updated['last_updated'].isoformat()
+            except Exception as e:
+                print(f"[WARNING] Failed to fetch initial balance: {e}")
+        
         return {
             'statusCode': 201,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
