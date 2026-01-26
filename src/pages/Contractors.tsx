@@ -155,15 +155,25 @@ const Contractors = () => {
     
     try {
       const response = await apiFetch(
-        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors&id=${id}`,
-        { method: 'DELETE' }
+        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors`,
+        { 
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id })
+        }
       );
 
       if (response.ok) {
         loadContractors();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Не удалось удалить контрагента');
       }
     } catch (err) {
       console.error('Failed to delete contractor:', err);
+      alert('Ошибка при удалении контрагента');
     }
   };
 
