@@ -181,6 +181,32 @@ const Roles = () => {
         return 'Shield';
       case 'categories':
         return 'Tag';
+      case 'legal_entities':
+        return 'Building2';
+      case 'contractors':
+        return 'Briefcase';
+      case 'custom_fields':
+        return 'Settings';
+      case 'customer_departments':
+        return 'Building';
+      case 'services':
+        return 'Package';
+      case 'savings':
+        return 'TrendingDown';
+      case 'saving_reasons':
+        return 'Target';
+      case 'approvals':
+        return 'CheckCircle';
+      case 'planned_payments':
+        return 'Calendar';
+      case 'audit_logs':
+        return 'FileText';
+      case 'dashboard':
+        return 'LayoutDashboard';
+      case 'stats':
+        return 'BarChart3';
+      case 'monitoring':
+        return 'Activity';
       default:
         return 'Circle';
     }
@@ -196,8 +222,75 @@ const Roles = () => {
         return 'text-purple-500 bg-purple-500/10';
       case 'categories':
         return 'text-yellow-500 bg-yellow-500/10';
+      case 'legal_entities':
+        return 'text-orange-500 bg-orange-500/10';
+      case 'contractors':
+        return 'text-cyan-500 bg-cyan-500/10';
+      case 'custom_fields':
+        return 'text-pink-500 bg-pink-500/10';
+      case 'customer_departments':
+        return 'text-indigo-500 bg-indigo-500/10';
+      case 'services':
+        return 'text-violet-500 bg-violet-500/10';
+      case 'savings':
+        return 'text-emerald-500 bg-emerald-500/10';
+      case 'saving_reasons':
+        return 'text-teal-500 bg-teal-500/10';
+      case 'approvals':
+        return 'text-lime-500 bg-lime-500/10';
+      case 'planned_payments':
+        return 'text-sky-500 bg-sky-500/10';
+      case 'audit_logs':
+        return 'text-slate-500 bg-slate-500/10';
+      case 'dashboard':
+        return 'text-fuchsia-500 bg-fuchsia-500/10';
+      case 'stats':
+        return 'text-rose-500 bg-rose-500/10';
+      case 'monitoring':
+        return 'text-amber-500 bg-amber-500/10';
       default:
         return 'text-gray-500 bg-gray-500/10';
+    }
+  };
+
+  const getResourceName = (resource: string) => {
+    switch (resource) {
+      case 'payments':
+        return 'Платежи';
+      case 'users':
+        return 'Пользователи';
+      case 'roles':
+        return 'Роли';
+      case 'categories':
+        return 'Категории';
+      case 'legal_entities':
+        return 'Юридические лица';
+      case 'contractors':
+        return 'Контрагенты';
+      case 'custom_fields':
+        return 'Дополнительные поля';
+      case 'customer_departments':
+        return 'Отделы-заказчики';
+      case 'services':
+        return 'Услуги';
+      case 'savings':
+        return 'Экономии';
+      case 'saving_reasons':
+        return 'Причины экономии';
+      case 'approvals':
+        return 'Согласования';
+      case 'planned_payments':
+        return 'Запланированные платежи';
+      case 'audit_logs':
+        return 'Журнал аудита';
+      case 'dashboard':
+        return 'Дашборд';
+      case 'stats':
+        return 'Статистика';
+      case 'monitoring':
+        return 'Мониторинг';
+      default:
+        return resource;
     }
   };
 
@@ -315,7 +408,7 @@ const Roles = () => {
                         <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${getResourceColor(resource)}`}>
                           <Icon name={getResourceIcon(resource)} size={14} />
                         </div>
-                        <h5 className="text-sm font-medium capitalize">{resource}</h5>
+                        <h5 className="text-sm font-medium">{getResourceName(resource)}</h5>
                       </div>
                       <div className="ml-8 space-y-2">
                         {perms.map((perm) => (
@@ -376,9 +469,10 @@ const Roles = () => {
                         <div
                           key={perm.id}
                           className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs ${getResourceColor(perm.resource)}`}
+                          title={perm.description}
                         >
                           <Icon name={getResourceIcon(perm.resource)} size={12} />
-                          <span>{perm.action}</span>
+                          <span>{perm.description.split(' ')[0]}</span>
                         </div>
                       ))}
                       {(role.permissions?.length || 0) > 6 && (
