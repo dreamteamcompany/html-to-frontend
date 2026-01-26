@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface User {
   id: number;
@@ -22,6 +23,8 @@ interface UsersMobileListProps {
 }
 
 const UsersMobileList = ({ users, onEdit, onToggleStatus, onDelete }: UsersMobileListProps) => {
+  const { hasPermission } = useAuth();
+  
   return (
     <div className="md:hidden space-y-3 p-4">
       {users.map((user) => (
@@ -61,32 +64,40 @@ const UsersMobileList = ({ users, onEdit, onToggleStatus, onDelete }: UsersMobil
                 </span>
               )) || <span className="text-muted-foreground text-xs">Нет ролей</span>}
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(user)}
-                className="gap-2 text-blue-500 hover:text-blue-600 border-blue-500/50"
-              >
-                <Icon name="Pencil" size={16} />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onToggleStatus(user.id, user.is_active)}
-                className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600 border-yellow-500/50' : 'text-green-500 hover:text-green-600 border-green-500/50'}`}
-              >
-                <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDelete(user.id, user.full_name)}
-                className="gap-2 text-red-500 hover:text-red-600 border-red-500/50"
-              >
-                <Icon name="Trash2" size={16} />
-              </Button>
-            </div>
+            {(hasPermission('users', 'update') || hasPermission('users', 'delete')) && (
+              <div className="grid grid-cols-3 gap-2">
+                {hasPermission('users', 'update') && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEdit(user)}
+                      className="gap-2 text-blue-500 hover:text-blue-600 border-blue-500/50"
+                    >
+                      <Icon name="Pencil" size={16} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onToggleStatus(user.id, user.is_active)}
+                      className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600 border-yellow-500/50' : 'text-green-500 hover:text-green-600 border-green-500/50'}`}
+                    >
+                      <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
+                    </Button>
+                  </>
+                )}
+                {hasPermission('users', 'delete') && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDelete(user.id, user.full_name)}
+                    className="gap-2 text-red-500 hover:text-red-600 border-red-500/50"
+                  >
+                    <Icon name="Trash2" size={16} />
+                  </Button>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       ))}

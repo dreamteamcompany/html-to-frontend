@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/utils/api';
+import { useAuth } from '@/contexts/AuthContext';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ const availableIcons = [
 ];
 
 const SavingReasons = () => {
+  const { hasPermission } = useAuth();
   const [reasons, setReasons] = useState<SavingReason[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -195,13 +197,14 @@ const SavingReasons = () => {
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Причины экономии</h1>
             <p className="text-sm md:text-base text-muted-foreground">Управление причинами для классификации сэкономленных средств</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
-                <Icon name="Plus" size={18} />
-                <span className="sm:inline">Добавить причину</span>
-              </Button>
-            </DialogTrigger>
+          {hasPermission('saving_reasons', 'create') && (
+            <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+                  <Icon name="Plus" size={18} />
+                  <span className="sm:inline">Добавить причину</span>
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>
@@ -251,6 +254,7 @@ const SavingReasons = () => {
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         <Card className="bg-card/50 backdrop-blur-sm border-white/10">

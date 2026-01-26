@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -66,19 +67,22 @@ const ContractorForm = ({
   handleSubmit,
   handleDialogClose,
 }: ContractorFormProps) => {
+  const { hasPermission } = useAuth();
+  
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold mb-2">Контрагенты</h1>
         <p className="text-sm md:text-base text-muted-foreground">Управление контрагентами</p>
       </div>
-      <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-        <DialogTrigger asChild>
-          <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
-            <Icon name="Plus" size={18} />
-            <span>Добавить контрагента</span>
-          </Button>
-        </DialogTrigger>
+      {hasPermission('contractors', 'create') && (
+        <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+          <DialogTrigger asChild>
+            <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+              <Icon name="Plus" size={18} />
+              <span>Добавить контрагента</span>
+            </Button>
+          </DialogTrigger>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingContractor ? 'Редактировать контрагента' : 'Новый контрагент'}</DialogTitle>
@@ -246,6 +250,7 @@ const ContractorForm = ({
           </form>
         </DialogContent>
       </Dialog>
+      )}
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/utils/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -35,6 +36,7 @@ interface CustomerDepartment {
 }
 
 const CustomerDepartments = () => {
+  const { hasPermission } = useAuth();
   const [departments, setDepartments] = useState<CustomerDepartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -188,10 +190,12 @@ const CustomerDepartments = () => {
               <p className="text-muted-foreground mt-1">Управление отделами-заказчиками</p>
             </div>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Icon name="Plus" size={18} />
-            Добавить отдел
-          </Button>
+          {hasPermission('customer_departments', 'create') && (
+            <Button onClick={() => setDialogOpen(true)}>
+              <Icon name="Plus" size={18} />
+              Добавить отдел
+            </Button>
+          )}
           
           <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
             <DialogContent>

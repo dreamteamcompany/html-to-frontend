@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { apiFetch } from '@/utils/api';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ const fieldTypes = [
 ];
 
 const CustomFields = () => {
+  const { hasPermission } = useAuth();
   const [fields, setFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -225,13 +227,14 @@ const CustomFields = () => {
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Дополнительные поля</h1>
             <p className="text-sm md:text-base text-muted-foreground">Настройка дополнительных полей для платежей</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
-                <Icon name="Plus" size={18} />
-                <span className="sm:inline">Добавить поле</span>
-              </Button>
-            </DialogTrigger>
+          {hasPermission('custom_fields', 'create') && (
+            <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+                  <Icon name="Plus" size={18} />
+                  <span className="sm:inline">Добавить поле</span>
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>
@@ -319,6 +322,7 @@ const CustomFields = () => {
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">

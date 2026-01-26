@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface User {
   id: number;
@@ -21,6 +22,8 @@ interface UsersTableProps {
 }
 
 const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps) => {
+  const { hasPermission } = useAuth();
+  
   return (
     <>
       {/* Desktop version */}
@@ -84,32 +87,40 @@ const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps
                 </span>
               </td>
               <td className="p-4">
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEdit(user)}
-                    className="gap-2 text-blue-500 hover:text-blue-600"
-                  >
-                    <Icon name="Pencil" size={16} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onToggleStatus(user.id, user.is_active)}
-                    className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600' : 'text-green-500 hover:text-green-600'}`}
-                  >
-                    <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(user.id, user.full_name)}
-                    className="gap-2 text-red-500 hover:text-red-600"
-                  >
-                    <Icon name="Trash2" size={16} />
-                  </Button>
-                </div>
+                {(hasPermission('users', 'update') || hasPermission('users', 'delete')) && (
+                  <div className="flex gap-2">
+                    {hasPermission('users', 'update') && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEdit(user)}
+                          className="gap-2 text-blue-500 hover:text-blue-600"
+                        >
+                          <Icon name="Pencil" size={16} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onToggleStatus(user.id, user.is_active)}
+                          className={`gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600' : 'text-green-500 hover:text-green-600'}`}
+                        >
+                          <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
+                        </Button>
+                      </>
+                    )}
+                    {hasPermission('users', 'delete') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDelete(user.id, user.full_name)}
+                        className="gap-2 text-red-500 hover:text-red-600"
+                      >
+                        <Icon name="Trash2" size={16} />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </td>
             </tr>
           ))}
@@ -172,34 +183,42 @@ const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps
               }
             </div>
 
-            <div className="flex gap-2 pt-2 border-t border-white/10">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onEdit(user)}
-                className="flex-1 gap-2 text-blue-500 hover:text-blue-600"
-              >
-                <Icon name="Pencil" size={16} />
-                <span>Изменить</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onToggleStatus(user.id, user.is_active)}
-                className={`flex-1 gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600' : 'text-green-500 hover:text-green-600'}`}
-              >
-                <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
-                <span>{user.is_active ? 'Блок' : 'Актив'}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete(user.id, user.full_name)}
-                className="gap-2 text-red-500 hover:text-red-600"
-              >
-                <Icon name="Trash2" size={16} />
-              </Button>
-            </div>
+            {(hasPermission('users', 'update') || hasPermission('users', 'delete')) && (
+              <div className="flex gap-2 pt-2 border-t border-white/10">
+                {hasPermission('users', 'update') && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(user)}
+                      className="flex-1 gap-2 text-blue-500 hover:text-blue-600"
+                    >
+                      <Icon name="Pencil" size={16} />
+                      <span>Изменить</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onToggleStatus(user.id, user.is_active)}
+                      className={`flex-1 gap-2 ${user.is_active ? 'text-yellow-500 hover:text-yellow-600' : 'text-green-500 hover:text-green-600'}`}
+                    >
+                      <Icon name={user.is_active ? 'Ban' : 'Check'} size={16} />
+                      <span>{user.is_active ? 'Блок' : 'Актив'}</span>
+                    </Button>
+                  </>
+                )}
+                {hasPermission('users', 'delete') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(user.id, user.full_name)}
+                    className="gap-2 text-red-500 hover:text-red-600"
+                  >
+                    <Icon name="Trash2" size={16} />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>

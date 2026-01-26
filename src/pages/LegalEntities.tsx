@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { apiFetch } from '@/utils/api';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ interface LegalEntity {
 }
 
 const LegalEntities = () => {
+  const { hasPermission } = useAuth();
   const [entities, setEntities] = useState<LegalEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -194,13 +196,14 @@ const LegalEntities = () => {
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Юридические лица</h1>
             <p className="text-sm md:text-base text-muted-foreground">Управление юридическими лицами и их данными</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
-                <Icon name="Plus" size={18} />
-                <span className="sm:inline">Добавить юридическое лицо</span>
-              </Button>
-            </DialogTrigger>
+          {hasPermission('legal_entities', 'create') && (
+            <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+                  <Icon name="Plus" size={18} />
+                  <span className="sm:inline">Добавить юридическое лицо</span>
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>
@@ -267,7 +270,8 @@ const LegalEntities = () => {
                 </Button>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          )}
         </div>
 
         <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
@@ -300,26 +304,32 @@ const LegalEntities = () => {
                       {entity.kpp && <div>КПП: {entity.kpp}</div>}
                       {entity.address && <div className="line-clamp-2">{entity.address}</div>}
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(entity)}
-                        className="flex-1"
-                      >
-                        <Icon name="Pencil" size={16} />
-                        <span className="ml-2">Изменить</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(entity.id)}
-                        className="flex-1 text-red-400 hover:text-red-300"
-                      >
-                        <Icon name="Trash2" size={16} />
-                        <span className="ml-2">Удалить</span>
-                      </Button>
-                    </div>
+                    {(hasPermission('legal_entities', 'update') || hasPermission('legal_entities', 'delete')) && (
+                      <div className="flex gap-2">
+                        {hasPermission('legal_entities', 'update') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(entity)}
+                            className="flex-1"
+                          >
+                            <Icon name="Pencil" size={16} />
+                            <span className="ml-2">Изменить</span>
+                          </Button>
+                        )}
+                        {hasPermission('legal_entities', 'delete') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(entity.id)}
+                            className="flex-1 text-red-400 hover:text-red-300"
+                          >
+                            <Icon name="Trash2" size={16} />
+                            <span className="ml-2">Удалить</span>
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

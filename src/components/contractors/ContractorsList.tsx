@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Contractor {
   id: number;
@@ -30,6 +31,8 @@ interface ContractorsListProps {
 }
 
 const ContractorsList = ({ contractors, loading, handleEdit, handleDelete }: ContractorsListProps) => {
+  const { hasPermission } = useAuth();
+  
   return (
     <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
       <CardContent className="p-0">
@@ -69,24 +72,28 @@ const ContractorsList = ({ contractors, loading, handleEdit, handleDelete }: Con
                       </td>
                       <td className="p-4">
                         <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(contractor)}
-                            className="gap-2"
-                          >
-                            <Icon name="Pencil" size={16} />
-                            Редактировать
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(contractor.id)}
-                            className="gap-2 text-red-500 hover:text-red-600"
-                          >
-                            <Icon name="Trash2" size={16} />
-                            Удалить
-                          </Button>
+                          {hasPermission('contractors', 'update') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(contractor)}
+                              className="gap-2"
+                            >
+                              <Icon name="Pencil" size={16} />
+                              Редактировать
+                            </Button>
+                          )}
+                          {hasPermission('contractors', 'delete') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(contractor.id)}
+                              className="gap-2 text-red-500 hover:text-red-600"
+                            >
+                              <Icon name="Trash2" size={16} />
+                              Удалить
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -113,23 +120,27 @@ const ContractorsList = ({ contractors, loading, handleEdit, handleDelete }: Con
                       </div>
                     )}
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(contractor)}
-                        className="flex-1 gap-2"
-                      >
-                        <Icon name="Pencil" size={16} />
-                        Редактировать
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(contractor.id)}
-                        className="gap-2 text-red-500 hover:text-red-600"
-                      >
-                        <Icon name="Trash2" size={16} />
-                      </Button>
+                      {hasPermission('contractors', 'update') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(contractor)}
+                          className="flex-1 gap-2"
+                        >
+                          <Icon name="Pencil" size={16} />
+                          Редактировать
+                        </Button>
+                      )}
+                      {hasPermission('contractors', 'delete') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(contractor.id)}
+                          className="gap-2 text-red-500 hover:text-red-600"
+                        >
+                          <Icon name="Trash2" size={16} />
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

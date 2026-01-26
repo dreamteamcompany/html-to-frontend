@@ -4,6 +4,7 @@ import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -59,6 +60,7 @@ const UserFormDialog = ({
   roles,
   handleSubmit,
 }: UserFormDialogProps) => {
+  const { hasPermission } = useAuth();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
 
@@ -127,26 +129,28 @@ const UserFormDialog = ({
   };
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={(open) => {
-      setDialogOpen(open);
-      if (!open) {
-        setEditingUser(null);
-        setFormData({
-          username: '',
-          password: '',
-          full_name: '',
-          position: '',
-          role_ids: [],
-          photo_url: '',
-        });
-      }
-    }}>
-      <DialogTrigger asChild>
-        <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
-          <Icon name="UserPlus" size={18} />
-          <span>Добавить пользователя</span>
-        </Button>
-      </DialogTrigger>
+    <>
+      {hasPermission('users', 'create') && (
+        <Dialog open={dialogOpen} onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setEditingUser(null);
+            setFormData({
+              username: '',
+              password: '',
+              full_name: '',
+              position: '',
+              role_ids: [],
+              photo_url: '',
+            });
+          }
+        }}>
+          <DialogTrigger asChild>
+            <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+              <Icon name="UserPlus" size={18} />
+              <span>Добавить пользователя</span>
+            </Button>
+          </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editingUser ? 'Редактировать пользователя' : 'Новый пользователь'}</DialogTitle>
@@ -267,7 +271,9 @@ const UserFormDialog = ({
           </Button>
         </form>
       </DialogContent>
-    </Dialog>
+        </Dialog>
+      )}
+    </>
   );
 };
 

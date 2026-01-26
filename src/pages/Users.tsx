@@ -36,7 +36,7 @@ const Users = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
-  const { token } = useAuth();
+  const { token, hasPermission } = useAuth();
 
   const [formData, setFormData] = useState({
     username: '',

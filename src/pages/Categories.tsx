@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/utils/api';
+import { useAuth } from '@/contexts/AuthContext';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,6 +37,7 @@ const availableIcons = [
 ];
 
 const Categories = () => {
+  const { hasPermission } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -196,13 +198,14 @@ const Categories = () => {
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Категории платежей</h1>
             <p className="text-sm md:text-base text-muted-foreground">Управление категориями для классификации расходов</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
-                <Icon name="Plus" size={18} />
-                <span className="sm:inline">Добавить категорию</span>
-              </Button>
-            </DialogTrigger>
+          {hasPermission('categories', 'create') && (
+            <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+                  <Icon name="Plus" size={18} />
+                  <span className="sm:inline">Добавить категорию</span>
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>
@@ -251,7 +254,8 @@ const Categories = () => {
                 </Button>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          )}
         </div>
 
         <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
@@ -279,25 +283,31 @@ const Categories = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(category)}
-                        className="flex-1"
-                      >
-                        <Icon name="Edit" size={14} className="mr-1" />
-                        Редактировать
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(category.id)}
-                        className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                      >
-                        <Icon name="Trash2" size={14} />
-                      </Button>
-                    </div>
+                    {(hasPermission('categories', 'update') || hasPermission('categories', 'delete')) && (
+                      <div className="flex gap-2">
+                        {hasPermission('categories', 'update') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(category)}
+                            className="flex-1"
+                          >
+                            <Icon name="Edit" size={14} className="mr-1" />
+                            Редактировать
+                          </Button>
+                        )}
+                        {hasPermission('categories', 'delete') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(category.id)}
+                            className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                          >
+                            <Icon name="Trash2" size={14} />
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
