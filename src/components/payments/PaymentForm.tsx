@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Category {
   id: number;
@@ -89,19 +90,22 @@ const PaymentForm = ({
   services,
   handleSubmit,
 }: PaymentFormProps) => {
+  const { hasPermission } = useAuth();
+
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold mb-2">История платежей</h1>
         <p className="text-sm md:text-base text-muted-foreground">Все операции по IT расходам</p>
       </div>
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogTrigger asChild>
-          <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
-            <Icon name="Plus" size={18} />
-            <span>Добавить платёж</span>
-          </Button>
-        </DialogTrigger>
+      {hasPermission('payments', 'create') && (
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+              <Icon name="Plus" size={18} />
+              <span>Добавить платёж</span>
+            </Button>
+          </DialogTrigger>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Новый платёж</DialogTitle>
@@ -386,7 +390,8 @@ const PaymentForm = ({
             </Button>
           </form>
         </DialogContent>
-      </Dialog>
+        </Dialog>
+      )}
     </div>
   );
 };
