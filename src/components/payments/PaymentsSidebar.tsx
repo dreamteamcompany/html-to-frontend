@@ -68,18 +68,22 @@ const PaymentsSidebar = ({
       </a>
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/5 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/10">
         <ul className="px-[15px] py-5 space-y-1 pb-4">
-        <li>
-          <Link to="/" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-            <Icon name="Home" size={20} />
-            <span>Дашборд</span>
-          </Link>
-        </li>
-        <li>
-          <Link to="/monitoring" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/monitoring') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-            <Icon name="Activity" size={20} />
-            <span>Мониторинг</span>
-          </Link>
-        </li>
+        {hasPermission('dashboard', 'read') && (
+          <li>
+            <Link to="/" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+              <Icon name="Home" size={20} />
+              <span>Дашборд</span>
+            </Link>
+          </li>
+        )}
+        {hasPermission('monitoring', 'read') && (
+          <li>
+            <Link to="/monitoring" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/monitoring') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+              <Icon name="Activity" size={20} />
+              <span>Мониторинг</span>
+            </Link>
+          </li>
+        )}
         {hasPermission('payments', 'read') && (
           <>
             <li>
@@ -88,172 +92,206 @@ const PaymentsSidebar = ({
                 <span>Платежи</span>
               </Link>
             </li>
-            <li>
-              <Link to="/planned-payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/planned-payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-                <Icon name="CalendarClock" size={20} />
-                <span>Запланированные платежи</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/pending-approvals" className={`flex items-center justify-between px-[15px] py-3 rounded-lg ${isActive('/pending-approvals') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-                <div className="flex items-center gap-3">
-                  <Icon name="ClipboardCheck" size={20} />
-                  <span>На согласовании</span>
-                </div>
-                {pendingCount > 0 && (
-                  <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
-                    {pendingCount}
-                  </span>
-                )}
-              </Link>
-            </li>
-            <li>
-              <Link to="/savings" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/savings') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-                <Icon name="PiggyBank" size={20} />
-                <span>Реестр экономии</span>
-              </Link>
-            </li>
+            {hasPermission('planned_payments', 'read') && (
+              <li>
+                <Link to="/planned-payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/planned-payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+                  <Icon name="CalendarClock" size={20} />
+                  <span>Запланированные платежи</span>
+                </Link>
+              </li>
+            )}
+            {hasPermission('approvals', 'read') && (
+              <li>
+                <Link to="/pending-approvals" className={`flex items-center justify-between px-[15px] py-3 rounded-lg ${isActive('/pending-approvals') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+                  <div className="flex items-center gap-3">
+                    <Icon name="ClipboardCheck" size={20} />
+                    <span>На согласовании</span>
+                  </div>
+                  {pendingCount > 0 && (
+                    <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+                      {pendingCount}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            )}
+            {hasPermission('savings', 'read') && (
+              <li>
+                <Link to="/savings" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/savings') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+                  <Icon name="PiggyBank" size={20} />
+                  <span>Реестр экономии</span>
+                </Link>
+              </li>
+            )}
           </>
         )}
 
-        <li>
-          <button 
-            onClick={() => setDictionariesOpen(!dictionariesOpen)}
-            className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <Icon name="BookOpen" size={20} />
-              <span>Справочники</span>
-            </div>
-            <Icon 
-              name="ChevronDown" 
-              size={16} 
-              className={`transition-transform ${dictionariesOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {dictionariesOpen && (
-            <div className="mt-1 space-y-1">
-              <Link 
-                to="/legal-entities" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/legal-entities') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Building2" size={18} />
-                <span>Юридические лица</span>
-              </Link>
-              <Link 
-                to="/categories" 
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/categories') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Tag" size={18} />
-                <span>Категории платежей</span>
-              </Link>
-              <button 
-                onClick={() => navigate('/custom-fields')}
-                className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/custom-fields') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Settings" size={18} />
-                <span>Дополнительные поля</span>
-              </button>
-              <button 
-                onClick={() => navigate('/contractors')}
-                className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/contractors') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Briefcase" size={18} />
-                <span>Контрагенты</span>
-              </button>
-              <button 
-                onClick={() => navigate('/customer-departments')}
-                className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/customer-departments') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Building" size={18} />
-                <span>Отделы-заказчики</span>
-              </button>
-              <button 
-                onClick={() => navigate('/services')}
-                className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/services') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Box" size={18} />
-                <span>Сервисы</span>
-              </button>
-              <button 
-                onClick={() => navigate('/saving-reasons')}
-                className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/saving-reasons') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Target" size={18} />
-                <span>Причины экономии</span>
-              </button>
-            </div>
-          )}
-        </li>
-        <li>
-          <button 
-            onClick={() => setSettingsOpen(!settingsOpen)}
-            className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <Icon name="Settings" size={20} />
-              <span>Настройки</span>
-            </div>
-            <Icon 
-              name="ChevronDown" 
-              size={16} 
-              className={`transition-transform ${settingsOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {settingsOpen && (
-            <div className="mt-1 space-y-1">
-              <Link
-                to="/settings"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/settings') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Sliders" size={18} />
-                <span>Основные настройки</span>
-              </Link>
-              <Link
-                to="/users"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/users') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Users" size={18} />
-                <span>Пользователи</span>
-              </Link>
-              <Link
-                to="/roles"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/roles') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Shield" size={18} />
-                <span>Права доступа</span>
-              </Link>
-              <Link
-                to="/approvals-history"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/approvals-history') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="FileCheck" size={18} />
-                <span>История согласований</span>
-              </Link>
-              <Link
-                to="/audit-logs"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/audit-logs') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="History" size={18} />
-                <span>История изменений</span>
-              </Link>
-              <Link
-                to="/log-analyzer"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/log-analyzer') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="FileText" size={18} />
-                <span>Анализатор логов</span>
-              </Link>
-              <Link
-                to="/monitoring"
-                className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/monitoring') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-              >
-                <Icon name="Activity" size={18} />
-                <span>Мониторинг балансов</span>
-              </Link>
-            </div>
-          )}
-        </li>
+        {(hasPermission('legal_entities', 'read') || hasPermission('categories', 'read') || hasPermission('custom_fields', 'read') || hasPermission('contractors', 'read') || hasPermission('customer_departments', 'read') || hasPermission('services', 'read') || hasPermission('saving_reasons', 'read')) && (
+          <li>
+            <button 
+              onClick={() => setDictionariesOpen(!dictionariesOpen)}
+              className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Icon name="BookOpen" size={20} />
+                <span>Справочники</span>
+              </div>
+              <Icon 
+                name="ChevronDown" 
+                size={16} 
+                className={`transition-transform ${dictionariesOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {dictionariesOpen && (
+              <div className="mt-1 space-y-1">
+                {hasPermission('legal_entities', 'read') && (
+                  <Link 
+                    to="/legal-entities" 
+                    className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/legal-entities') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="Building2" size={18} />
+                    <span>Юридические лица</span>
+                  </Link>
+                )}
+                {hasPermission('categories', 'read') && (
+                  <Link 
+                    to="/categories" 
+                    className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/categories') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="Tag" size={18} />
+                    <span>Категории платежей</span>
+                  </Link>
+                )}
+                {hasPermission('custom_fields', 'read') && (
+                  <button 
+                    onClick={() => navigate('/custom-fields')}
+                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/custom-fields') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="Settings" size={18} />
+                    <span>Дополнительные поля</span>
+                  </button>
+                )}
+                {hasPermission('contractors', 'read') && (
+                  <button 
+                    onClick={() => navigate('/contractors')}
+                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/contractors') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="Briefcase" size={18} />
+                    <span>Контрагенты</span>
+                  </button>
+                )}
+                {hasPermission('customer_departments', 'read') && (
+                  <button 
+                    onClick={() => navigate('/customer-departments')}
+                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/customer-departments') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="Building" size={18} />
+                    <span>Отделы-заказчики</span>
+                  </button>
+                )}
+                {hasPermission('services', 'read') && (
+                  <button 
+                    onClick={() => navigate('/services')}
+                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/services') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="Box" size={18} />
+                    <span>Сервисы</span>
+                  </button>
+                )}
+                {hasPermission('saving_reasons', 'read') && (
+                  <button 
+                    onClick={() => navigate('/saving-reasons')}
+                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/saving-reasons') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="Target" size={18} />
+                    <span>Причины экономии</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </li>
+        )}
+        {(hasPermission('users', 'read') || hasPermission('roles', 'read') || hasPermission('permissions', 'read') || hasPermission('audit_logs', 'read')) && (
+          <li>
+            <button 
+              onClick={() => setSettingsOpen(!settingsOpen)}
+              className="w-full flex items-center justify-between px-[15px] py-3 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Icon name="Settings" size={20} />
+                <span>Настройки</span>
+              </div>
+              <Icon 
+                name="ChevronDown" 
+                size={16} 
+                className={`transition-transform ${settingsOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {settingsOpen && (
+              <div className="mt-1 space-y-1">
+                <Link
+                  to="/settings"
+                  className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/settings') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                >
+                  <Icon name="Sliders" size={18} />
+                  <span>Основные настройки</span>
+                </Link>
+                {hasPermission('users', 'read') && (
+                  <Link
+                    to="/users"
+                    className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/users') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="Users" size={18} />
+                    <span>Пользователи</span>
+                  </Link>
+                )}
+                {(hasPermission('roles', 'read') || hasPermission('permissions', 'read')) && (
+                  <Link
+                    to="/roles"
+                    className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/roles') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="Shield" size={18} />
+                    <span>Права доступа</span>
+                  </Link>
+                )}
+                {hasPermission('approvals', 'read') && (
+                  <Link
+                    to="/approvals-history"
+                    className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/approvals-history') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="FileCheck" size={18} />
+                    <span>История согласований</span>
+                  </Link>
+                )}
+                {hasPermission('audit_logs', 'read') && (
+                  <Link
+                    to="/audit-logs"
+                    className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/audit-logs') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="History" size={18} />
+                    <span>История изменений</span>
+                  </Link>
+                )}
+                <Link
+                  to="/log-analyzer"
+                  className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/log-analyzer') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                >
+                  <Icon name="FileText" size={18} />
+                  <span>Анализатор логов</span>
+                </Link>
+                {hasPermission('monitoring', 'read') && (
+                  <Link
+                    to="/monitoring"
+                    className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/monitoring') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                  >
+                    <Icon name="Activity" size={18} />
+                    <span>Мониторинг балансов</span>
+                  </Link>
+                )}
+              </div>
+            )}
+          </li>
+        )}
       </ul>
       </div>
       
