@@ -140,15 +140,25 @@ const Roles = () => {
     
     try {
       const response = await apiFetch(
-        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles&id=${id}`,
-        { method: 'DELETE' }
+        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles`,
+        { 
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id })
+        }
       );
 
       if (response.ok) {
         loadRoles();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Не удалось удалить роль');
       }
     } catch (err) {
       console.error('Failed to delete role:', err);
+      alert('Ошибка при удалении роли');
     }
   };
 
