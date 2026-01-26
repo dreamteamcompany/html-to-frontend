@@ -229,13 +229,6 @@ const PaymentsSidebar = ({
             </button>
             {settingsOpen && (
               <div className="mt-1 space-y-1">
-                <Link
-                  to="/settings"
-                  className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/settings') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-                >
-                  <Icon name="Sliders" size={18} />
-                  <span>Основные настройки</span>
-                </Link>
                 {hasPermission('users', 'read') && (
                   <Link
                     to="/users"
@@ -270,22 +263,6 @@ const PaymentsSidebar = ({
                   >
                     <Icon name="History" size={18} />
                     <span>История изменений</span>
-                  </Link>
-                )}
-                <Link
-                  to="/log-analyzer"
-                  className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/log-analyzer') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-                >
-                  <Icon name="FileText" size={18} />
-                  <span>Анализатор логов</span>
-                </Link>
-                {hasPermission('monitoring', 'read') && (
-                  <Link
-                    to="/monitoring"
-                    className={`flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/monitoring') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
-                  >
-                    <Icon name="Activity" size={18} />
-                    <span>Мониторинг балансов</span>
                   </Link>
                 )}
               </div>
