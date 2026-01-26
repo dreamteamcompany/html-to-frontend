@@ -85,45 +85,43 @@ const PaymentsSidebar = ({
           </li>
         )}
         {hasPermission('payments', 'read') && (
-          <>
-            <li>
-              <Link to="/payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-                <Icon name="CreditCard" size={20} />
-                <span>Платежи</span>
-              </Link>
-            </li>
-            {hasPermission('planned_payments', 'read') && (
-              <li>
-                <Link to="/planned-payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/planned-payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-                  <Icon name="CalendarClock" size={20} />
-                  <span>Запланированные платежи</span>
-                </Link>
-              </li>
-            )}
-            {hasPermission('approvals', 'read') && (
-              <li>
-                <Link to="/pending-approvals" className={`flex items-center justify-between px-[15px] py-3 rounded-lg ${isActive('/pending-approvals') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-                  <div className="flex items-center gap-3">
-                    <Icon name="ClipboardCheck" size={20} />
-                    <span>На согласовании</span>
-                  </div>
-                  {pendingCount > 0 && (
-                    <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
-                      {pendingCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            )}
-            {hasPermission('savings', 'read') && (
-              <li>
-                <Link to="/savings" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/savings') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-                  <Icon name="PiggyBank" size={20} />
-                  <span>Реестр экономии</span>
-                </Link>
-              </li>
-            )}
-          </>
+          <li>
+            <Link to="/payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+              <Icon name="CreditCard" size={20} />
+              <span>Платежи</span>
+            </Link>
+          </li>
+        )}
+        {hasPermission('planned_payments', 'read') && (
+          <li>
+            <Link to="/planned-payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/planned-payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+              <Icon name="CalendarClock" size={20} />
+              <span>Запланированные платежи</span>
+            </Link>
+          </li>
+        )}
+        {hasPermission('approvals', 'read') && (
+          <li>
+            <Link to="/pending-approvals" className={`flex items-center justify-between px-[15px] py-3 rounded-lg ${isActive('/pending-approvals') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+              <div className="flex items-center gap-3">
+                <Icon name="ClipboardCheck" size={20} />
+                <span>На согласовании</span>
+              </div>
+              {pendingCount > 0 && (
+                <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+                  {pendingCount}
+                </span>
+              )}
+            </Link>
+          </li>
+        )}
+        {hasPermission('savings', 'read') && (
+          <li>
+            <Link to="/savings" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/savings') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+              <Icon name="PiggyBank" size={20} />
+              <span>Реестр экономии</span>
+            </Link>
+          </li>
         )}
 
         {(hasPermission('legal_entities', 'read') || hasPermission('categories', 'read') || hasPermission('custom_fields', 'read') || hasPermission('contractors', 'read') || hasPermission('customer_departments', 'read') || hasPermission('services', 'read') || hasPermission('saving_reasons', 'read')) && (
