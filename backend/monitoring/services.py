@@ -128,20 +128,18 @@ def fetch_mango_office_balance() -> Dict[str, any]:
 def fetch_plusofon_balance() -> Dict[str, any]:
     """Получение баланса из Plusofon API"""
     api_token = os.environ.get('PLUSOFON_API_TOKEN')
-    client_id = os.environ.get('PLUSOFON_CLIENT_ID')
     
     print(f"[DEBUG] PLUSOFON_API_TOKEN exists: {bool(api_token)}")
-    print(f"[DEBUG] PLUSOFON_CLIENT_ID exists: {bool(client_id)}")
     
-    if not api_token or not client_id:
-        raise ValueError('PLUSOFON_API_TOKEN and PLUSOFON_CLIENT_ID not configured')
+    if not api_token:
+        raise ValueError('PLUSOFON_API_TOKEN not configured')
     
-    print(f"[DEBUG] Making request to Plusofon API with Client: {client_id}")
+    print(f"[DEBUG] Making request to Plusofon API with Client: 10553")
     print(f"[DEBUG] Token (first 20 chars): {api_token[:20] if api_token else 'N/A'}...")
     
     headers = {
         'Accept': 'application/json',
-        'Client': str(client_id).strip(),
+        'Client': '10553',
         'Authorization': f'Bearer {api_token.strip()}'
     }
     
@@ -159,7 +157,7 @@ def fetch_plusofon_balance() -> Dict[str, any]:
     
     if response.status_code != 200:
         if response.status_code == 404:
-            raise Exception(f'Plusofon API error 404: Проверьте правильность Client ID ({client_id}) и токена. Ответ: {response.text}')
+            raise Exception(f'Plusofon API error 404: Проверьте правильность токена. Ответ: {response.text}')
         elif response.status_code == 401:
             raise Exception(f'Plusofon API error 401: Неверная авторизация. Проверьте токен.')
         elif response.status_code == 403:
