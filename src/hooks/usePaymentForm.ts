@@ -76,10 +76,33 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     setIsProcessingInvoice(true);
 
     try {
-      // Шаг 1: Загружаем файл в S3 (если это изображение)
+      // Проверяем тип файла
+      if (invoiceFile.type === 'application/pdf') {
+        toast({
+          title: 'PDF не поддерживается',
+          description: 'Загрузите изображение счёта (JPG, PNG)',
+          variant: 'destructive',
+        });
+        setIsProcessingInvoice(false);
+        return;
+      }
+
+      if (!invoiceFile.type.startsWith('image/')) {
+        toast({
+          title: 'Неверный формат',
+          description: 'Поддерживаются только изображения',
+          variant: 'destructive',
+        });
+        setIsProcessingInvoice(false);
+        return;
+      }
+
+      // Шаг 1: Создаём URL для Tesseract
+      const imageUrl = URL.createObjectURL(invoiceFile);
       let fileUrl = '';
-      
-      if (invoiceFile.type.startsWith('image/')) {
+
+      // Шаг 2: Загружаем файл в S3 параллельно
+      const uploadPromise = (async () => {
         const reader = new FileReader();
         const base64Promise = new Promise<string>((resolve) => {
           reader.onloadend = () => resolve(reader.result as string);
@@ -96,16 +119,23 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         
         if (uploadResponse.ok) {
           const uploadData = await uploadResponse.json();
-          fileUrl = uploadData.file_url || '';
+          return uploadData.file_url || '';
         }
-      }
+        return '';
+      })();
 
-      // Шаг 2: OCR через Tesseract.js (локально)
+      // Шаг 3: OCR через Tesseract.js
       const worker = await createWorker('rus+eng');
-      const { data: { text } } = await worker.recognize(invoiceFile);
+      const { data: { text } } = await worker.recognize(imageUrl);
       await worker.terminate();
+      
+      // Освобождаем URL
+      URL.revokeObjectURL(imageUrl);
 
-      // Шаг 3: Парсим данные из текста
+      // Ждём загрузку файла
+      fileUrl = await uploadPromise;
+
+      // Шаг 4: Парсим данные из текста
       const extracted = parseInvoiceText(text);
       
       const updates: Record<string, string | undefined> = {};
@@ -138,13 +168,13 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       
       toast({
         title: 'Успешно',
-        description: 'Данные из счёта распознаны локально',
+        description: 'Данные из счёта распознаны',
       });
     } catch (err) {
       console.error('Failed to process invoice:', err);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось распознать счёт',
+        description: err instanceof Error ? err.message : 'Не удалось распознать счёт',
         variant: 'destructive',
       });
     } finally {
