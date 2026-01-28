@@ -162,6 +162,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
 
       // Шаг 4: Парсим данные из текста
       const extracted = parseInvoiceText(text);
+      console.log('Extracted data:', extracted);
       
       const updates: Record<string, string | undefined> = {};
       
@@ -185,8 +186,33 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         updates.description = (formData.description || '') + `\nЮр. лицо: ${extracted.legal_entity}`;
       }
       
+      // Автосоздание контрагента если не выбран и распознан
       if (extracted.contractor && !formData.contractor_id) {
-        updates.description = (updates.description || formData.description || '') + `\nКонтрагент: ${extracted.contractor}`;
+        try {
+          const createContractorResponse = await fetch(FUNC2URL['contractors'], {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              name: extracted.contractor,
+              is_active: true,
+            }),
+          });
+          
+          if (createContractorResponse.ok) {
+            const newContractor = await createContractorResponse.json();
+            updates.contractor_id = newContractor.id?.toString();
+            console.log('Created contractor:', newContractor);
+          } else {
+            updates.description = (updates.description || formData.description || '') + `\nКонтрагент: ${extracted.contractor}`;
+          }
+        } catch (err) {
+          console.error('Failed to create contractor:', err);
+          updates.description = (updates.description || formData.description || '') + `\nКонтрагент: ${extracted.contractor}`;
+        }
       }
       
       setFormData({ ...formData, ...updates });
@@ -273,44 +299,61 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       }
     }
     
-    // Дата: множественные форматы
+    // Дата: множественные форматы с приоритетом
     const datePatterns = [
-      /(?:от|date|дата)[:\s]*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})/gi,
-      /(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})/g,
-      /(\d{4}[./-]\d{1,2}[./-]\d{1,2})/g,
+      { pattern: /(?:счет|счёт|invoice).*?(?:от|date|дата)[:\s]*(\d{1,2})[.\s/]*(\d{1,2})[.\s/]*(\d{2,4})/gi, priority: 1 },
+      { pattern: /(?:от|date|дата)[:\s]*(\d{1,2})[.\s/]*(\d{1,2})[.\s/]*(\d{2,4})/gi, priority: 2 },
+      { pattern: /(\d{1,2})[./-](\d{1,2})[./-](20\d{2})/g, priority: 3 },
+      { pattern: /(\d{1,2})[.\s/](\d{1,2})[.\s/](\d{2})/g, priority: 4 },
+      { pattern: /(20\d{2})[./-](\d{1,2})[./-](\d{1,2})/g, priority: 5 },
     ];
     
-    for (const pattern of datePatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        for (const dateCandidate of match) {
-          const dateStr = dateCandidate.replace(/(?:от|date|дата)[:\s]*/gi, '');
-          const parts = dateStr.split(/[./-]/);
+    const dateMatches: Array<{date: string, priority: number}> = [];
+    
+    for (const { pattern, priority } of datePatterns) {
+      const regex = new RegExp(pattern.source, pattern.flags);
+      let match;
+      
+      while ((match = regex.exec(text)) !== null) {
+        let day, month, year;
+        
+        if (match.length === 4) {
+          day = parseInt(match[1]);
+          month = parseInt(match[2]);
+          year = parseInt(match[3]);
+        } else {
+          const dateStr = match[0].replace(/(?:от|date|дата|счет|счёт|invoice)[:\s]*/gi, '');
+          const parts = dateStr.split(/[.\s/-]+/).filter(p => p && /\d/.test(p));
           
-          if (parts.length === 3) {
-            let year, month, day;
-            
-            // Определяем формат
-            if (parts[0].length === 4) {
-              [year, month, day] = parts.map(p => parseInt(p));
-            } else {
-              [day, month, year] = parts.map(p => parseInt(p));
-            }
-            
-            if (year < 100) year += 2000;
-            if (year < 2000 || year > 2100) continue;
-            if (month < 1 || month > 12) continue;
-            if (day < 1 || day > 31) continue;
-            
-            const date = new Date(year, month - 1, day);
-            if (!isNaN(date.getTime())) {
-              data.invoice_date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-              break;
-            }
+          if (parts.length < 3) continue;
+          
+          if (parts[0].length === 4) {
+            year = parseInt(parts[0]);
+            month = parseInt(parts[1]);
+            day = parseInt(parts[2]);
+          } else {
+            day = parseInt(parts[0]);
+            month = parseInt(parts[1]);
+            year = parseInt(parts[2]);
           }
         }
-        if (data.invoice_date) break;
+        
+        if (year < 100) year += 2000;
+        if (year < 2020 || year > 2030) continue;
+        if (month < 1 || month > 12) continue;
+        if (day < 1 || day > 31) continue;
+        
+        const date = new Date(year, month - 1, day);
+        if (!isNaN(date.getTime())) {
+          const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          dateMatches.push({ date: dateStr, priority });
+        }
       }
+    }
+    
+    if (dateMatches.length > 0) {
+      dateMatches.sort((a, b) => a.priority - b.priority);
+      data.invoice_date = dateMatches[0].date;
     }
     
     // Юридическое лицо: поиск в таблице поставщика/продавца
