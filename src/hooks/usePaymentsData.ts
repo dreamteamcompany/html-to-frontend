@@ -103,6 +103,20 @@ export const usePaymentsData = () => {
       });
   };
 
+  const loadContractors = () => {
+    return apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors')
+      .then(res => res.json())
+      .then(data => {
+        setContractors(Array.isArray(data) ? data : []);
+        return data;
+      })
+      .catch(err => {
+        console.error('Failed to load contractors:', err);
+        setContractors([]);
+        return [];
+      });
+  };
+
   useEffect(() => {
     loadPayments();
     apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories')
@@ -143,5 +157,6 @@ export const usePaymentsData = () => {
     services,
     loading,
     loadPayments,
+    loadContractors,
   };
 };

@@ -14,7 +14,7 @@ interface CustomFieldDefinition {
   options: string;
 }
 
-export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess: () => void) => {
+export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess: () => void, loadContractors?: () => Promise<any>) => {
   const { token } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -204,6 +204,11 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
             const newContractor = await createContractorResponse.json();
             updates.contractor_id = newContractor.id?.toString();
             console.log('✅ Contractor auto-created:', newContractor);
+            
+            // Обновляем список контрагентов
+            if (loadContractors) {
+              await loadContractors();
+            }
             
             toast({
               title: "Контрагент создан",
