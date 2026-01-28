@@ -193,9 +193,8 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
+              'X-Auth-Token': token || '',
             },
-            credentials: 'include',
             body: JSON.stringify({
               name: extracted.contractor,
             }),
