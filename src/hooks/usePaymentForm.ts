@@ -189,7 +189,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       // Автосоздание контрагента если не выбран и распознан
       if (extracted.contractor && !formData.contractor_id) {
         try {
-          const createContractorResponse = await fetch(`${FUNC2URL['main']}/api/contractors`, {
+          const createContractorResponse = await fetch(`${FUNC2URL['main']}?endpoint=contractors`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
