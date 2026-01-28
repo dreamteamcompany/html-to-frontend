@@ -189,7 +189,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       // Автосоздание контрагента если не выбран и распознан
       if (extracted.contractor && !formData.contractor_id) {
         try {
-          const createContractorResponse = await fetch(FUNC2URL['contractors'], {
+          const createContractorResponse = await fetch(`${FUNC2URL['main']}/api/contractors`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -198,15 +198,21 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
             credentials: 'include',
             body: JSON.stringify({
               name: extracted.contractor,
-              is_active: true,
             }),
           });
           
           if (createContractorResponse.ok) {
             const newContractor = await createContractorResponse.json();
             updates.contractor_id = newContractor.id?.toString();
-            console.log('Created contractor:', newContractor);
+            console.log('✅ Contractor auto-created:', newContractor);
+            
+            toast({
+              title: "Контрагент создан",
+              description: `Автоматически добавлен: ${extracted.contractor}`,
+            });
           } else {
+            const errorText = await createContractorResponse.text();
+            console.error('Failed to create contractor:', errorText);
             updates.description = (updates.description || formData.description || '') + `\nКонтрагент: ${extracted.contractor}`;
           }
         } catch (err) {
