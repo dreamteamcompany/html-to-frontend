@@ -169,86 +169,128 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     
     if (!text) return data;
     
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     const textLower = text.toLowerCase();
     
-    // Сумма
+    // Сумма: расширенные паттерны для таблиц и разных форматов
     const amountPatterns = [
-      /итого[:\s]+(\d+[\s\d]*[.,]?\d*)/i,
-      /сумма[:\s]+(\d+[\s\d]*[.,]?\d*)/i,
-      /к\s+оплате[:\s]+(\d+[\s\d]*[.,]?\d*)/i,
-      /всего[:\s]+(\d+[\s\d]*[.,]?\d*)/i,
+      /итого\s*[:\s]*(\d+[\s\d]*[.,]?\d*)\s*(?:руб|₽|rub)?/gi,
+      /сумма\s*[:\s]*(\d+[\s\d]*[.,]?\d*)\s*(?:руб|₽|rub)?/gi,
+      /к\s+оплате\s*[:\s]*(\d+[\s\d]*[.,]?\d*)\s*(?:руб|₽|rub)?/gi,
+      /всего\s*[:\s]*(\d+[\s\d]*[.,]?\d*)\s*(?:руб|₽|rub)?/gi,
+      /total\s*[:\s]*(\d+[\s\d]*[.,]?\d*)/gi,
+      /amount\s*[:\s]*(\d+[\s\d]*[.,]?\d*)/gi,
     ];
     
+    const allAmounts: number[] = [];
+    
     for (const pattern of amountPatterns) {
-      const match = textLower.match(pattern);
-      if (match) {
+      let match;
+      while ((match = pattern.exec(textLower)) !== null) {
         const amountStr = match[1].replace(/\s/g, '').replace(',', '.');
-        try {
-          data.amount = parseFloat(amountStr);
-          break;
-        } catch (e) {
-          // ignore
+        const amount = parseFloat(amountStr);
+        if (!isNaN(amount) && amount > 0) {
+          allAmounts.push(amount);
         }
       }
     }
     
-    // Номер счёта
+    // Берём максимальную сумму (обычно итоговая)
+    if (allAmounts.length > 0) {
+      data.amount = Math.max(...allAmounts);
+    }
+    
+    // Номер счёта: улучшенные паттерны
     const invoicePatterns = [
-      /счет[:\s№]+(\d+)/i,
-      /счёт[:\s№]+(\d+)/i,
-      /invoice[:\s#]+(\d+)/i,
-      /№\s*(\d+)/i,
+      /(?:счет|счёт|invoice|inv)[:\s#№]*(\d+[-/]?\d*)/gi,
+      /№\s*(\d{4,})/gi,
+      /\b(\d{6,})\b/g, // 6+ цифр подряд
     ];
     
     for (const pattern of invoicePatterns) {
-      const match = textLower.match(pattern);
+      const match = text.match(pattern);
       if (match) {
-        data.invoice_number = match[1];
-        break;
+        const num = match[0].replace(/[^\d-/]/g, '');
+        if (num.length >= 4) {
+          data.invoice_number = num;
+          break;
+        }
       }
     }
     
-    // Дата
+    // Дата: множественные форматы
     const datePatterns = [
-      /(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})/,
-      /(\d{4}[./-]\d{1,2}[./-]\d{1,2})/,
+      /(?:от|date|дата)[:\s]*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})/gi,
+      /(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})/g,
+      /(\d{4}[./-]\d{1,2}[./-]\d{1,2})/g,
     ];
     
     for (const pattern of datePatterns) {
       const match = text.match(pattern);
       if (match) {
-        const dateStr = match[1];
-        try {
-          const formats = ['%d.%m.%Y', '%d/%m/%Y', '%Y-%m-%d', '%d-%m-%Y'];
-          for (const fmt of formats) {
-            try {
-              const parts = dateStr.split(/[./-]/);
-              let year, month, day;
-              
-              if (fmt === '%d.%m.%Y' || fmt === '%d/%m/%Y' || fmt === '%d-%m-%Y') {
-                day = parseInt(parts[0]);
-                month = parseInt(parts[1]);
-                year = parseInt(parts[2]);
-              } else {
-                year = parseInt(parts[0]);
-                month = parseInt(parts[1]);
-                day = parseInt(parts[2]);
-              }
-              
-              if (year < 100) year += 2000;
-              
-              const date = new Date(year, month - 1, day);
-              if (!isNaN(date.getTime())) {
-                data.invoice_date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                break;
-              }
-            } catch (e) {
-              // ignore
+        for (const dateCandidate of match) {
+          const dateStr = dateCandidate.replace(/(?:от|date|дата)[:\s]*/gi, '');
+          const parts = dateStr.split(/[./-]/);
+          
+          if (parts.length === 3) {
+            let year, month, day;
+            
+            // Определяем формат
+            if (parts[0].length === 4) {
+              [year, month, day] = parts.map(p => parseInt(p));
+            } else {
+              [day, month, year] = parts.map(p => parseInt(p));
+            }
+            
+            if (year < 100) year += 2000;
+            if (year < 2000 || year > 2100) continue;
+            if (month < 1 || month > 12) continue;
+            if (day < 1 || day > 31) continue;
+            
+            const date = new Date(year, month - 1, day);
+            if (!isNaN(date.getTime())) {
+              data.invoice_date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              break;
             }
           }
-          if (data.invoice_date) break;
-        } catch (e) {
-          // ignore
+        }
+        if (data.invoice_date) break;
+      }
+    }
+    
+    // Юридическое лицо: поиск в таблице поставщика/продавца
+    const legalEntityPatterns = [
+      /(?:поставщик|продавец|исполнитель|получатель)[:\s]*([^\n]{5,100})/gi,
+      /(?:ооо|оао|зао|ип)\s+[«"]?([^»"\n]{3,80})[»"]?/gi,
+    ];
+    
+    for (const pattern of legalEntityPatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        const entity = match[0]
+          .replace(/(?:поставщик|продавец|исполнитель|получатель)[:\s]*/gi, '')
+          .trim();
+        if (entity.length > 3 && entity.length < 150) {
+          data.legal_entity = entity;
+          break;
+        }
+      }
+    }
+    
+    // Контрагент: поиск покупателя/заказчика
+    const contractorPatterns = [
+      /(?:покупатель|заказчик|плательщик)[:\s]*([^\n]{5,100})/gi,
+    ];
+    
+    for (const pattern of contractorPatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        const contractor = match[0]
+          .replace(/(?:покупатель|заказчик|плательщик)[:\s]*/gi, '')
+          .trim();
+        if (contractor.length > 3 && contractor.length < 150) {
+          data.contractor = contractor;
+          break;
         }
       }
     }
