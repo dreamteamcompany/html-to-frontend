@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { createWorker } from 'tesseract.js';
+import * as pdfjsLib from 'pdfjs-dist';
 import FUNC2URL from '@/../backend/func2url.json';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface CustomFieldDefinition {
   id: number;
@@ -70,36 +73,56 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     }
   };
 
+  const convertPdfToImage = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const page = await pdf.getPage(1);
+    
+    const viewport = page.getViewport({ scale: 2.0 });
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    
+    if (!context) throw new Error('Canvas context not available');
+    
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    
+    await page.render({
+      canvasContext: context,
+      viewport: viewport,
+    }).promise;
+    
+    return canvas.toDataURL('image/png');
+  };
+
   const handleExtractData = async () => {
     if (!invoiceFile) return;
 
     setIsProcessingInvoice(true);
 
     try {
-      // Проверяем тип файла
-      if (invoiceFile.type === 'application/pdf') {
-        toast({
-          title: 'PDF не поддерживается',
-          description: 'Загрузите изображение счёта (JPG, PNG)',
-          variant: 'destructive',
-        });
-        setIsProcessingInvoice(false);
-        return;
-      }
+      let imageUrl = '';
+      let fileUrl = '';
+      const isPdf = invoiceFile.type === 'application/pdf';
 
-      if (!invoiceFile.type.startsWith('image/')) {
+      // Шаг 1: Конвертируем PDF в изображение или используем изображение напрямую
+      if (isPdf) {
+        toast({
+          title: 'Обработка PDF',
+          description: 'Конвертирую первую страницу в изображение...',
+        });
+        imageUrl = await convertPdfToImage(invoiceFile);
+      } else if (invoiceFile.type.startsWith('image/')) {
+        imageUrl = URL.createObjectURL(invoiceFile);
+      } else {
         toast({
           title: 'Неверный формат',
-          description: 'Поддерживаются только изображения',
+          description: 'Поддерживаются PDF и изображения (JPG, PNG)',
           variant: 'destructive',
         });
         setIsProcessingInvoice(false);
         return;
       }
-
-      // Шаг 1: Создаём URL для Tesseract
-      const imageUrl = URL.createObjectURL(invoiceFile);
-      let fileUrl = '';
 
       // Шаг 2: Загружаем файл в S3 параллельно
       const uploadPromise = (async () => {
@@ -129,8 +152,10 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       const { data: { text } } = await worker.recognize(imageUrl);
       await worker.terminate();
       
-      // Освобождаем URL
-      URL.revokeObjectURL(imageUrl);
+      // Освобождаем URL (только для non-PDF)
+      if (!isPdf) {
+        URL.revokeObjectURL(imageUrl);
+      }
 
       // Ждём загрузку файла
       fileUrl = await uploadPromise;
