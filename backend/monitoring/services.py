@@ -181,6 +181,8 @@ def fetch_regru_balance() -> Dict[str, any]:
     username = os.environ.get('REGRU_USERNAME')
     password = os.environ.get('REGRU_PASSWORD')
     
+    print(f"[DEBUG] Reg.ru - username exists: {bool(username)}, password exists: {bool(password)}")
+    
     if not username or not password:
         raise ValueError('REGRU_USERNAME and REGRU_PASSWORD not configured')
     
@@ -193,6 +195,9 @@ def fetch_regru_balance() -> Dict[str, any]:
         },
         timeout=10
     )
+    
+    print(f"[DEBUG] Reg.ru response status: {response.status_code}")
+    print(f"[DEBUG] Reg.ru response body: {response.text}")
     
     if response.status_code != 200:
         raise Exception(f'Reg.ru API error: {response.status_code} - {response.text}')
@@ -219,6 +224,8 @@ def fetch_regru_balance() -> Dict[str, any]:
 def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None, 
                          api_key_secret_name: Optional[str] = None) -> Dict[str, any]:
     """Универсальная функция для получения баланса сервиса"""
+    
+    print(f"[DEBUG] fetch_service_balance called with service_name='{service_name}', api_endpoint='{api_endpoint}'")
     
     if service_name.lower() == 'timeweb cloud' or (api_endpoint and 'api.timeweb.cloud' in api_endpoint):
         return fetch_timeweb_balance()
