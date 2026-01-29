@@ -400,15 +400,15 @@ const Monitoring = () => {
 
         <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
           <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex justify-between items-center flex-wrap gap-3">
-              <h2 className="text-2xl font-bold text-white">Балансы сервисов</h2>
-              <div className="flex gap-2">
+            <div className="flex justify-between items-center gap-3">
+              <h2 className="text-xl md:text-2xl font-bold text-white">Балансы сервисов</h2>
+              <div className="flex gap-2 shrink-0">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="default" size="sm">
-                      <Icon name="Plus" className="mr-2 h-4 w-4" />
-                      Добавить
-                      <Icon name="ChevronDown" className="ml-2 h-4 w-4" />
+                    <Button variant="default" size="sm" className="whitespace-nowrap">
+                      <Icon name="Plus" className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">Добавить</span>
+                      <Icon name="ChevronDown" className="ml-1 md:ml-2 h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
@@ -438,9 +438,9 @@ const Monitoring = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button onClick={refreshAllBalances} variant="outline" size="sm" disabled={loading || services.length === 0}>
-                  <Icon name="RefreshCw" className="mr-2 h-4 w-4" />
-                  Обновить все
+                <Button onClick={refreshAllBalances} variant="outline" size="sm" disabled={loading || services.length === 0} className="whitespace-nowrap">
+                  <Icon name="RefreshCw" className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Обновить все</span>
                 </Button>
               </div>
             </div>
