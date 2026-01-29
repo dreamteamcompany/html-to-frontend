@@ -176,6 +176,46 @@ def fetch_plusofon_balance() -> Dict[str, any]:
         'currency': 'RUB'
     }
 
+def fetch_regru_balance() -> Dict[str, any]:
+    """Получение баланса из Reg.ru API"""
+    username = os.environ.get('REGRU_USERNAME')
+    password = os.environ.get('REGRU_PASSWORD')
+    
+    if not username or not password:
+        raise ValueError('REGRU_USERNAME and REGRU_PASSWORD not configured')
+    
+    response = requests.post(
+        'https://api.reg.ru/api/regru2/user/get_balance',
+        data={
+            'username': username,
+            'password': password,
+            'output_format': 'json'
+        },
+        timeout=10
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f'Reg.ru API error: {response.status_code} - {response.text}')
+    
+    data = response.json()
+    
+    if data.get('result') != 'success':
+        error_code = data.get('error_code', 'UNKNOWN')
+        error_text = data.get('error_text', 'Unknown error')
+        raise Exception(f'Reg.ru API error {error_code}: {error_text}')
+    
+    answer = data.get('answer', {})
+    balance = float(answer.get('prepay', 0))
+    currency = answer.get('currency', 'RUR')
+    
+    if currency == 'RUR':
+        currency = 'RUB'
+    
+    return {
+        'balance': balance,
+        'currency': currency
+    }
+
 def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None, 
                          api_key_secret_name: Optional[str] = None) -> Dict[str, any]:
     """Универсальная функция для получения баланса сервиса"""
@@ -194,6 +234,9 @@ def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None,
     
     if service_name.lower() == 'plusofon' or service_name.lower() == 'плюсофон' or (api_endpoint and 'plusofon' in api_endpoint):
         return fetch_plusofon_balance()
+    
+    if service_name.lower() == 'reg.ru' or (api_endpoint and 'api.reg.ru' in api_endpoint):
+        return fetch_regru_balance()
     
     raise ValueError(f'Service {service_name} not supported yet')
 

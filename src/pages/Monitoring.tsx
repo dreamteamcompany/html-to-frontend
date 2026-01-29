@@ -44,7 +44,7 @@ const Monitoring = () => {
   const [services, setServices] = useState<ServiceBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addServiceType, setAddServiceType] = useState<'timeweb' | 'timeweb-hosting' | 'smsru' | 'mango' | 'plusofon' | null>(null);
+  const [addServiceType, setAddServiceType] = useState<'timeweb' | 'timeweb-hosting' | 'smsru' | 'mango' | 'plusofon' | 'regru' | null>(null);
   const [adding, setAdding] = useState(false);
   const [editingService, setEditingService] = useState<ServiceBalance | null>(null);
   const [editForm, setEditForm] = useState({
@@ -254,7 +254,7 @@ const Monitoring = () => {
     return () => clearInterval(interval);
   }, [token]);
 
-  const addService = async (type: 'timeweb' | 'timeweb-hosting' | 'smsru' | 'mango' | 'plusofon') => {
+  const addService = async (type: 'timeweb' | 'timeweb-hosting' | 'smsru' | 'mango' | 'plusofon' | 'regru') => {
     const serviceConfigs = {
       timeweb: {
         service_name: 'Timeweb Cloud',
@@ -295,6 +295,14 @@ const Monitoring = () => {
         threshold_warning: 500,
         threshold_critical: 100,
         description: 'Plusofon успешно добавлен в мониторинг'
+      },
+      regru: {
+        service_name: 'Reg.ru',
+        api_endpoint: 'https://api.reg.ru/api/regru2/user/get_balance',
+        api_key_secret_name: 'REGRU_USERNAME',
+        threshold_warning: 1000,
+        threshold_critical: 200,
+        description: 'Reg.ru успешно добавлен в мониторинг'
       }
     };
 
@@ -424,6 +432,10 @@ const Monitoring = () => {
                       <Icon name="Globe" className="mr-2 h-4 w-4" />
                       Timeweb Hosting
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setAddServiceType('regru'); setShowAddForm(true); }}>
+                      <Icon name="Globe" className="mr-2 h-4 w-4" />
+                      Reg.ru
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Button onClick={refreshAllBalances} variant="outline" size="sm" disabled={loading || services.length === 0}>
@@ -442,6 +454,7 @@ const Monitoring = () => {
                        addServiceType === 'timeweb-hosting' ? 'Добавить Timeweb Hosting' :
                        addServiceType === 'smsru' ? 'Добавить sms.ru' : 
                        addServiceType === 'mango' ? 'Добавить Mango Office' :
+                       addServiceType === 'regru' ? 'Добавить Reg.ru' :
                        'Добавить Plusofon'}
                     </h3>
                     <p className="text-sm text-white/60">Автоматический мониторинг баланса вашего аккаунта</p>
@@ -461,7 +474,7 @@ const Monitoring = () => {
                     <span>
                       {addServiceType === 'timeweb' || addServiceType === 'timeweb-hosting' || addServiceType === 'plusofon'
                         ? 'Уведомления при низком балансе (< 500₽ - warning, < 100₽ - critical)'
-                        : addServiceType === 'mango'
+                        : addServiceType === 'mango' || addServiceType === 'regru'
                         ? 'Уведомления при низком балансе (< 1000₽ - warning, < 200₽ - critical)'
                         : 'Уведомления при низком балансе (< 100₽ - warning, < 20₽ - critical)'}
                     </span>
@@ -477,6 +490,8 @@ const Monitoring = () => {
                         ? 'Требуется API ID SMSRU_API_ID'
                         : addServiceType === 'mango'
                         ? 'Требуется MANGO_OFFICE_API_KEY и MANGO_OFFICE_API_SALT'
+                        : addServiceType === 'regru'
+                        ? 'Требуется REGRU_USERNAME и REGRU_PASSWORD'
                         : 'Требуется PLUSOFON_API_TOKEN и PLUSOFON_CLIENT_ID'}
                     </span>
                   </div>
