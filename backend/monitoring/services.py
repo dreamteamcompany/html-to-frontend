@@ -178,13 +178,28 @@ def fetch_plusofon_balance() -> Dict[str, any]:
 
 def fetch_regru_balance(account_id: Optional[str] = None) -> Dict[str, any]:
     """Получение общего баланса аккаунта из Reg.ru API"""
-    username = os.environ.get('REGRU_USERNAME_2')
-    password = os.environ.get('REGRU_PASSWORD_2')
+    # Determine which account to use based on account_id
+    if account_id == '2':
+        username = os.environ.get('REGRU_USERNAME_2')
+        password = os.environ.get('REGRU_PASSWORD_2')
+        account_label = 'аккаунт 2'
+    else:
+        username = os.environ.get('REGRU_USERNAME')
+        password = os.environ.get('REGRU_PASSWORD')
+        account_label = 'аккаунт 1'
     
-    print(f"[DEBUG] Reg.ru - username exists: {bool(username)}, password exists: {bool(password)}")
+    print(f"[DEBUG] Reg.ru ({account_label}) - username exists: {bool(username)}, password exists: {bool(password)}")
     
     if not username or not password:
-        raise ValueError('REGRU_USERNAME_2 and REGRU_PASSWORD_2 not configured')
+        raise ValueError(f'REGRU_USERNAME and REGRU_PASSWORD not configured for {account_label}')
+    
+    # Check our outgoing IP first
+    try:
+        ip_response = requests.get('https://api.ipify.org?format=json', timeout=5)
+        our_ip = ip_response.json().get('ip', 'unknown')
+        print(f"[DEBUG] Our outgoing IP: {our_ip}")
+    except Exception as e:
+        print(f"[DEBUG] Could not detect IP: {e}")
     
     response = requests.post(
         'https://api.reg.ru/api/regru2/user/get_balance',
@@ -247,7 +262,11 @@ def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None,
         return fetch_plusofon_balance()
     
     if 'reg.ru' in service_name.lower() or (api_endpoint and 'api.reg.ru' in api_endpoint):
-        return fetch_regru_balance(account_id)
+        # Detect account from service name
+        if 'аккаунт 2' in service_name.lower():
+            return fetch_regru_balance('2')
+        else:
+            return fetch_regru_balance('1')
     
     raise ValueError(f'Service {service_name} not supported yet')
 
