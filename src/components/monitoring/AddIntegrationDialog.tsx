@@ -175,6 +175,23 @@ const SERVICE_TEMPLATES: ServiceTemplate[] = [
       },
     ],
   },
+  {
+    id: 'smsfast',
+    name: 'SmsFast',
+    icon: 'MessageSquare',
+    api_endpoint: 'https://smsfastapi.com/stubs/handler_api.php',
+    default_warning: 100,
+    default_critical: 20,
+    fields: [
+      {
+        name: 'api_key',
+        label: 'API ключ',
+        type: 'password',
+        placeholder: 'Введите API ключ из настроек аккаунта',
+        secret_name: 'SMSFAST_API_KEY',
+      },
+    ],
+  },
 ];
 
 interface AddIntegrationDialogProps {
