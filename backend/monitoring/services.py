@@ -257,52 +257,22 @@ def fetch_1dedic_balance() -> Dict[str, any]:
     except Exception as e:
         print(f"[DEBUG] 1Dedic - Could not detect IP: {e}")
     
-    # Step 1: Авторизация и получение auth токена
-    # Добавляем skipcaptcha=on для обхода капчи при авторизации с белого IP
-    auth_response = requests.post(
-        'https://my.1dedic.ru/billmgr',
-        data={
-            'username': username,
-            'password': password,
-            'func': 'auth',
-            'out': 'json',
-            'skipcaptcha': 'on'
-        },
-        timeout=10
-    )
+    # Попытка 1: Прямой запрос баланса с authinfo (без двухэтапной авторизации)
+    print(f"[DEBUG] 1Dedic - Trying direct authinfo method")
+    authinfo = f"{username}:{password}"
     
-    print(f"[DEBUG] 1Dedic auth response status: {auth_response.status_code}")
-    print(f"[DEBUG] 1Dedic auth response body: {auth_response.text}")
-    
-    if auth_response.status_code != 200:
-        raise Exception(f'1Dedic auth error: {auth_response.status_code} - {auth_response.text}')
-    
-    auth_data = auth_response.json()
-    
-    if auth_data.get('doc', {}).get('error'):
-        error = auth_data['doc']['error']
-        raise Exception(f'1Dedic auth error: {error.get("$msg", "Unknown error")}')
-    
-    # Получаем auth токен из ответа
-    auth_token = auth_data.get('doc', {}).get('auth', {}).get('$id')
-    if not auth_token:
-        raise Exception('Failed to get auth token from 1Dedic')
-    
-    print(f"[DEBUG] 1Dedic auth token: {auth_token}")
-    
-    # Step 2: Получение баланса с использованием auth токена
     response = requests.post(
         'https://my.1dedic.ru/billmgr',
         data={
-            'auth': auth_token,
+            'authinfo': authinfo,
             'func': 'profile',
             'out': 'json'
         },
         timeout=10
     )
     
-    print(f"[DEBUG] 1Dedic balance response status: {response.status_code}")
-    print(f"[DEBUG] 1Dedic balance response body: {response.text}")
+    print(f"[DEBUG] 1Dedic profile response status: {response.status_code}")
+    print(f"[DEBUG] 1Dedic profile response body: {response.text}")
     
     if response.status_code != 200:
         raise Exception(f'1Dedic API error: {response.status_code} - {response.text}')
@@ -311,7 +281,9 @@ def fetch_1dedic_balance() -> Dict[str, any]:
     
     if data.get('doc', {}).get('error'):
         error = data['doc']['error']
-        raise Exception(f'1Dedic API error: {error.get("$msg", "Unknown error")}')
+        error_obj = error.get('$object', 'unknown')
+        error_msg = error.get('$msg') or error.get('msg', {}).get('$', 'Unknown error')
+        raise Exception(f'1Dedic API error ({error_obj}): {error_msg}')
     
     balance_str = data.get('doc', {}).get('balance', {}).get('$', '0')
     
