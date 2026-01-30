@@ -249,20 +249,50 @@ def fetch_1dedic_balance() -> Dict[str, any]:
         print(f"[DEBUG] 1Dedic - username exists: {bool(username)}, password exists: {bool(password)}")
         raise ValueError('DEDIC_USERNAME and DEDIC_PASSWORD not configured')
     
-    authinfo = f'{username}:{password}'
-    
-    response = requests.get(
+    # Step 1: Авторизация и получение auth токена
+    auth_response = requests.post(
         'https://my.1dedic.ru/billmgr',
-        params={
-            'authinfo': authinfo,
+        data={
+            'username': username,
+            'password': password,
+            'func': 'auth',
+            'out': 'json'
+        },
+        timeout=10
+    )
+    
+    print(f"[DEBUG] 1Dedic auth response status: {auth_response.status_code}")
+    print(f"[DEBUG] 1Dedic auth response body: {auth_response.text}")
+    
+    if auth_response.status_code != 200:
+        raise Exception(f'1Dedic auth error: {auth_response.status_code} - {auth_response.text}')
+    
+    auth_data = auth_response.json()
+    
+    if auth_data.get('doc', {}).get('error'):
+        error = auth_data['doc']['error']
+        raise Exception(f'1Dedic auth error: {error.get("$msg", "Unknown error")}')
+    
+    # Получаем auth токен из ответа
+    auth_token = auth_data.get('doc', {}).get('auth', {}).get('$id')
+    if not auth_token:
+        raise Exception('Failed to get auth token from 1Dedic')
+    
+    print(f"[DEBUG] 1Dedic auth token: {auth_token}")
+    
+    # Step 2: Получение баланса с использованием auth токена
+    response = requests.post(
+        'https://my.1dedic.ru/billmgr',
+        data={
+            'auth': auth_token,
             'func': 'profile',
             'out': 'json'
         },
         timeout=10
     )
     
-    print(f"[DEBUG] 1Dedic response status: {response.status_code}")
-    print(f"[DEBUG] 1Dedic response body: {response.text}")
+    print(f"[DEBUG] 1Dedic balance response status: {response.status_code}")
+    print(f"[DEBUG] 1Dedic balance response body: {response.text}")
     
     if response.status_code != 200:
         raise Exception(f'1Dedic API error: {response.status_code} - {response.text}')
