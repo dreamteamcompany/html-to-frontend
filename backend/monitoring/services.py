@@ -177,24 +177,20 @@ def fetch_plusofon_balance() -> Dict[str, any]:
     }
 
 def fetch_regru_balance(account_id: Optional[str] = None) -> Dict[str, any]:
-    """Получение баланса услуги из Reg.ru API"""
+    """Получение общего баланса аккаунта из Reg.ru API"""
     username = os.environ.get('REGRU_USERNAME_2')
     password = os.environ.get('REGRU_PASSWORD_2')
     
-    print(f"[DEBUG] Reg.ru - username exists: {bool(username)}, password exists: {bool(password)}, account_id: {account_id}")
+    print(f"[DEBUG] Reg.ru - username exists: {bool(username)}, password exists: {bool(password)}")
     
     if not username or not password:
         raise ValueError('REGRU_USERNAME_2 and REGRU_PASSWORD_2 not configured')
     
-    if not account_id:
-        raise ValueError('service_id (account_id) is required for Reg.ru balance check')
-    
     response = requests.post(
-        'https://api.reg.ru/api/regru2/service/get_balance',
+        'https://api.reg.ru/api/regru2/user/get_balance',
         data={
             'username': username,
             'password': password,
-            'service_id': account_id,
             'output_format': 'json'
         },
         timeout=10
