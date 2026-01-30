@@ -176,21 +176,25 @@ def fetch_plusofon_balance() -> Dict[str, any]:
         'currency': 'RUB'
     }
 
-def fetch_regru_balance() -> Dict[str, any]:
-    """Получение баланса из Reg.ru API"""
-    username = os.environ.get('REGRU_USERNAME')
-    password = os.environ.get('REGRU_PASSWORD')
+def fetch_regru_balance(account_id: Optional[str] = None) -> Dict[str, any]:
+    """Получение баланса услуги из Reg.ru API"""
+    username = os.environ.get('REGRU_USERNAME_2')
+    password = os.environ.get('REGRU_PASSWORD_2')
     
-    print(f"[DEBUG] Reg.ru - username exists: {bool(username)}, password exists: {bool(password)}")
+    print(f"[DEBUG] Reg.ru - username exists: {bool(username)}, password exists: {bool(password)}, account_id: {account_id}")
     
     if not username or not password:
-        raise ValueError('REGRU_USERNAME and REGRU_PASSWORD not configured')
+        raise ValueError('REGRU_USERNAME_2 and REGRU_PASSWORD_2 not configured')
+    
+    if not account_id:
+        raise ValueError('service_id (account_id) is required for Reg.ru balance check')
     
     response = requests.post(
-        'https://api.reg.ru/api/regru2/user/get_balance',
+        'https://api.reg.ru/api/regru2/service/get_balance',
         data={
             'username': username,
             'password': password,
+            'service_id': account_id,
             'output_format': 'json'
         },
         timeout=10
@@ -210,22 +214,23 @@ def fetch_regru_balance() -> Dict[str, any]:
         raise Exception(f'Reg.ru API error {error_code}: {error_text}')
     
     answer = data.get('answer', {})
-    balance = float(answer.get('prepay', 0))
-    currency = answer.get('currency', 'RUR')
+    balance_str = answer.get('balance', '0')
     
-    if currency == 'RUR':
-        currency = 'RUB'
+    try:
+        balance = float(balance_str)
+    except (ValueError, TypeError):
+        balance = 0.0
     
     return {
         'balance': balance,
-        'currency': currency
+        'currency': 'RUB'
     }
 
 def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None, 
-                         api_key_secret_name: Optional[str] = None) -> Dict[str, any]:
+                         api_key_secret_name: Optional[str] = None, account_id: Optional[str] = None) -> Dict[str, any]:
     """Универсальная функция для получения баланса сервиса"""
     
-    print(f"[DEBUG] fetch_service_balance called with service_name='{service_name}', api_endpoint='{api_endpoint}'")
+    print(f"[DEBUG] fetch_service_balance called with service_name='{service_name}', api_endpoint='{api_endpoint}', account_id='{account_id}'")
     
     if service_name.lower() == 'timeweb cloud' or (api_endpoint and 'api.timeweb.cloud' in api_endpoint):
         return fetch_timeweb_balance()
@@ -242,8 +247,8 @@ def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None,
     if service_name.lower() == 'plusofon' or service_name.lower() == 'плюсофон' or (api_endpoint and 'plusofon' in api_endpoint):
         return fetch_plusofon_balance()
     
-    if service_name.lower() == 'reg.ru' or (api_endpoint and 'api.reg.ru' in api_endpoint):
-        return fetch_regru_balance()
+    if 'reg.ru' in service_name.lower() or (api_endpoint and 'api.reg.ru' in api_endpoint):
+        return fetch_regru_balance(account_id)
     
     raise ValueError(f'Service {service_name} not supported yet')
 

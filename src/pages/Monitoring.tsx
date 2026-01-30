@@ -53,6 +53,7 @@ const Monitoring = () => {
     threshold_warning: 0,
     threshold_critical: 0,
   });
+  const [regRuServiceId, setRegRuServiceId] = useState('');
   const [saving, setSaving] = useState(false);
   const { token } = useAuth();
   const { toast } = useToast();
@@ -297,12 +298,12 @@ const Monitoring = () => {
         description: 'Plusofon успешно добавлен в мониторинг'
       },
       regru: {
-        service_name: 'Reg.ru',
-        api_endpoint: 'https://api.reg.ru/api/regru2/user/get_balance',
-        api_key_secret_name: 'REGRU_USERNAME',
-        threshold_warning: 1000,
-        threshold_critical: 200,
-        description: 'Reg.ru успешно добавлен в мониторинг'
+        service_name: 'Reg.ru (account2)',
+        api_endpoint: 'https://api.reg.ru/api/regru2/service/get_balance',
+        api_key_secret_name: 'REGRU_USERNAME_2',
+        threshold_warning: 100,
+        threshold_critical: 20,
+        description: 'Reg.ru (account2) успешно добавлен в мониторинг'
       }
     };
 
@@ -321,6 +322,7 @@ const Monitoring = () => {
           currency: 'RUB',
           auto_refresh: true,
           refresh_interval_minutes: 60,
+          account_id: type === 'regru' ? regRuServiceId : undefined,
         }),
       });
 
@@ -331,6 +333,7 @@ const Monitoring = () => {
         });
         setShowAddForm(false);
         setAddServiceType(null);
+        setRegRuServiceId('');
         await loadServices();
       } else {
         const error = await response.json();
@@ -491,13 +494,32 @@ const Monitoring = () => {
                         : addServiceType === 'mango'
                         ? 'Требуется MANGO_OFFICE_API_KEY и MANGO_OFFICE_API_SALT'
                         : addServiceType === 'regru'
-                        ? 'Требуется REGRU_USERNAME и REGRU_PASSWORD'
+                        ? 'Требуется REGRU_USERNAME_2 и REGRU_PASSWORD_2'
                         : 'Требуется PLUSOFON_API_TOKEN и PLUSOFON_CLIENT_ID'}
                     </span>
                   </div>
                 </div>
 
-                <Button onClick={() => addService(addServiceType)} disabled={adding} className="w-full">
+                {addServiceType === 'regru' && (
+                  <div className="mb-4">
+                    <Label htmlFor="regru_service_id" className="text-white mb-2 block">
+                      Service ID услуги
+                    </Label>
+                    <Input
+                      id="regru_service_id"
+                      type="text"
+                      placeholder="Например: 12345678"
+                      value={regRuServiceId}
+                      onChange={(e) => setRegRuServiceId(e.target.value)}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                    />
+                    <p className="text-xs text-white/50 mt-1">
+                      Найдите Service ID в личном кабинете Reg.ru в разделе услуг
+                    </p>
+                  </div>
+                )}
+
+                <Button onClick={() => addService(addServiceType)} disabled={adding || (addServiceType === 'regru' && !regRuServiceId)} className="w-full">
                   {adding ? (
                     <>
                       <Icon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
