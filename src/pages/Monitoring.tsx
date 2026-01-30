@@ -53,7 +53,6 @@ const Monitoring = () => {
     threshold_warning: 0,
     threshold_critical: 0,
   });
-  const [regRuServiceId, setRegRuServiceId] = useState('');
   const [saving, setSaving] = useState(false);
   const { token } = useAuth();
   const { toast } = useToast();
@@ -298,12 +297,12 @@ const Monitoring = () => {
         description: 'Plusofon успешно добавлен в мониторинг'
       },
       regru: {
-        service_name: 'Reg.ru (account2)',
-        api_endpoint: 'https://api.reg.ru/api/regru2/service/get_balance',
+        service_name: 'Reg.ru (аккаунт 2)',
+        api_endpoint: 'https://api.reg.ru/api/regru2/user/get_balance',
         api_key_secret_name: 'REGRU_USERNAME_2',
         threshold_warning: 100,
         threshold_critical: 20,
-        description: 'Reg.ru (account2) успешно добавлен в мониторинг'
+        description: 'Reg.ru (аккаунт 2) успешно добавлен в мониторинг'
       }
     };
 
@@ -322,7 +321,6 @@ const Monitoring = () => {
           currency: 'RUB',
           auto_refresh: true,
           refresh_interval_minutes: 60,
-          account_id: type === 'regru' ? regRuServiceId : undefined,
         }),
       });
 
@@ -333,7 +331,6 @@ const Monitoring = () => {
         });
         setShowAddForm(false);
         setAddServiceType(null);
-        setRegRuServiceId('');
         await loadServices();
       } else {
         const error = await response.json();
@@ -477,7 +474,7 @@ const Monitoring = () => {
                     <span>
                       {addServiceType === 'timeweb' || addServiceType === 'timeweb-hosting' || addServiceType === 'plusofon'
                         ? 'Уведомления при низком балансе (< 500₽ - warning, < 100₽ - critical)'
-                        : addServiceType === 'mango' || addServiceType === 'regru'
+                        : addServiceType === 'mango'
                         ? 'Уведомления при низком балансе (< 1000₽ - warning, < 200₽ - critical)'
                         : 'Уведомления при низком балансе (< 100₽ - warning, < 20₽ - critical)'}
                     </span>
@@ -500,26 +497,7 @@ const Monitoring = () => {
                   </div>
                 </div>
 
-                {addServiceType === 'regru' && (
-                  <div className="mb-4">
-                    <Label htmlFor="regru_service_id" className="text-white mb-2 block">
-                      Service ID услуги
-                    </Label>
-                    <Input
-                      id="regru_service_id"
-                      type="text"
-                      placeholder="Например: 12345678"
-                      value={regRuServiceId}
-                      onChange={(e) => setRegRuServiceId(e.target.value)}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
-                    />
-                    <p className="text-xs text-white/50 mt-1">
-                      Найдите Service ID в личном кабинете Reg.ru в разделе услуг
-                    </p>
-                  </div>
-                )}
-
-                <Button onClick={() => addService(addServiceType)} disabled={adding || (addServiceType === 'regru' && !regRuServiceId)} className="w-full">
+                <Button onClick={() => addService(addServiceType)} disabled={adding} className="w-full">
                   {adding ? (
                     <>
                       <Icon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
