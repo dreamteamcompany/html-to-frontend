@@ -240,6 +240,42 @@ def fetch_regru_balance(account_id: Optional[str] = None) -> Dict[str, any]:
         'currency': 'RUB'
     }
 
+def fetch_smsfast_balance() -> Dict[str, any]:
+    """Получение баланса из SmsFast API"""
+    api_key = os.environ.get('SMSFAST_API_KEY')
+    if not api_key:
+        raise ValueError('SMSFAST_API_KEY not configured')
+    
+    response = requests.get(
+        'https://smsfastapi.com/stubs/handler_api.php',
+        params={
+            'api_key': api_key,
+            'action': 'getBalance'
+        },
+        timeout=10
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f'SmsFast API error: {response.status_code} - {response.text}')
+    
+    # Ответ в формате: ACCESS_BALANCE:540
+    text = response.text.strip()
+    
+    if not text.startswith('ACCESS_BALANCE:'):
+        raise Exception(f'SmsFast unexpected response: {text}')
+    
+    balance_str = text.replace('ACCESS_BALANCE:', '')
+    
+    try:
+        balance = float(balance_str)
+    except (ValueError, TypeError):
+        raise Exception(f'SmsFast invalid balance format: {balance_str}')
+    
+    return {
+        'balance': balance,
+        'currency': 'RUB'
+    }
+
 def fetch_1dedic_balance() -> Dict[str, any]:
     """Получение баланса из 1Dedic (BILLmanager) API"""
     username = os.environ.get('DEDIC_USERNAME')
@@ -332,6 +368,9 @@ def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None,
     
     if '1dedic' in service_name.lower() or 'dedic' in service_name.lower() or (api_endpoint and '1dedic.ru' in api_endpoint):
         return fetch_1dedic_balance()
+    
+    if 'smsfast' in service_name.lower() or (api_endpoint and 'smsfast' in api_endpoint):
+        return fetch_smsfast_balance()
     
     raise ValueError(f'Service {service_name} not supported yet')
 
