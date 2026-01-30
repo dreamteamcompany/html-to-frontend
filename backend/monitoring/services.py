@@ -210,7 +210,10 @@ def fetch_regru_balance(account_id: Optional[str] = None) -> Dict[str, any]:
         raise Exception(f'Reg.ru API error {error_code}: {error_text}')
     
     answer = data.get('answer', {})
-    balance_str = answer.get('balance', '0')
+    balance_str = answer.get('prepay', answer.get('balance', '0'))
+    
+    print(f"[DEBUG] Reg.ru answer: {answer}")
+    print(f"[DEBUG] Reg.ru balance_str: {balance_str}")
     
     try:
         balance = float(balance_str)
