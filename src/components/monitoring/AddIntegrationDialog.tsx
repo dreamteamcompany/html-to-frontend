@@ -192,6 +192,23 @@ const SERVICE_TEMPLATES: ServiceTemplate[] = [
       },
     ],
   },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    icon: 'Sparkles',
+    api_endpoint: 'https://api.openai.com/v1/dashboard/billing/credit_grants',
+    default_warning: 5,
+    default_critical: 1,
+    fields: [
+      {
+        name: 'api_key',
+        label: 'API ключ',
+        type: 'password',
+        placeholder: 'Введите API ключ (sk-...)',
+        secret_name: 'OPENAI_API_KEY',
+      },
+    ],
+  },
 ];
 
 interface AddIntegrationDialogProps {

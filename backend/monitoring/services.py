@@ -276,6 +276,33 @@ def fetch_smsfast_balance() -> Dict[str, any]:
         'currency': 'RUB'
     }
 
+def fetch_openai_balance() -> Dict[str, any]:
+    """Получение баланса из OpenAI API"""
+    api_key = os.environ.get('OPENAI_API_KEY')
+    if not api_key:
+        raise ValueError('OPENAI_API_KEY not configured')
+    
+    response = requests.get(
+        'https://api.openai.com/v1/dashboard/billing/credit_grants',
+        headers={
+            'Authorization': f'Bearer {api_key}'
+        },
+        timeout=10
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f'OpenAI API error: {response.status_code} - {response.text}')
+    
+    data = response.json()
+    
+    # Структура ответа: {"total_granted": 18.0, "total_used": 5.23, "total_available": 12.77, ...}
+    balance = data.get('total_available', 0.0)
+    
+    return {
+        'balance': float(balance),
+        'currency': 'USD'
+    }
+
 def fetch_1dedic_balance() -> Dict[str, any]:
     """Получение баланса из 1Dedic (BILLmanager) API"""
     username = os.environ.get('DEDIC_USERNAME')
@@ -371,6 +398,9 @@ def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None,
     
     if 'smsfast' in service_name.lower() or (api_endpoint and 'smsfast' in api_endpoint):
         return fetch_smsfast_balance()
+    
+    if 'openai' in service_name.lower() or (api_endpoint and 'api.openai.com' in api_endpoint):
+        return fetch_openai_balance()
     
     raise ValueError(f'Service {service_name} not supported yet')
 
