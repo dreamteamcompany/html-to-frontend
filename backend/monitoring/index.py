@@ -253,7 +253,7 @@ def refresh_service_balance(conn, service_id: int) -> dict:
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute('''
             SELECT id, service_name, api_endpoint, api_key_secret_name,
-                   threshold_warning, threshold_critical
+                   threshold_warning, threshold_critical, account_id
             FROM service_balances 
             WHERE id = %s
         ''', (service_id,))
@@ -270,7 +270,8 @@ def refresh_service_balance(conn, service_id: int) -> dict:
             balance_data = fetch_service_balance(
                 service['service_name'],
                 service['api_endpoint'],
-                service['api_key_secret_name']
+                service['api_key_secret_name'],
+                service.get('account_id')
             )
             
             balance = balance_data['balance']
