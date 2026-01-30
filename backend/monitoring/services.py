@@ -249,14 +249,24 @@ def fetch_1dedic_balance() -> Dict[str, any]:
         print(f"[DEBUG] 1Dedic - username exists: {bool(username)}, password exists: {bool(password)}")
         raise ValueError('DEDIC_USERNAME and DEDIC_PASSWORD not configured')
     
+    # Проверяем наш исходящий IP
+    try:
+        ip_response = requests.get('https://api.ipify.org?format=json', timeout=5)
+        our_ip = ip_response.json().get('ip', 'unknown')
+        print(f"[DEBUG] 1Dedic - Our outgoing IP: {our_ip}")
+    except Exception as e:
+        print(f"[DEBUG] 1Dedic - Could not detect IP: {e}")
+    
     # Step 1: Авторизация и получение auth токена
+    # Добавляем skipcaptcha=on для обхода капчи при авторизации с белого IP
     auth_response = requests.post(
         'https://my.1dedic.ru/billmgr',
         data={
             'username': username,
             'password': password,
             'func': 'auth',
-            'out': 'json'
+            'out': 'json',
+            'skipcaptcha': 'on'
         },
         timeout=10
     )
