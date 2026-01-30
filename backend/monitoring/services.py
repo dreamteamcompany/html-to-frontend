@@ -257,17 +257,17 @@ def fetch_1dedic_balance() -> Dict[str, any]:
     except Exception as e:
         print(f"[DEBUG] 1Dedic - Could not detect IP: {e}")
     
-    # Попытка 1: Прямой запрос баланса с authinfo (без двухэтапной авторизации)
-    print(f"[DEBUG] 1Dedic - Trying direct authinfo method")
-    authinfo = f"{username}:{password}"
+    # Попытка с HTTP Basic Authentication
+    print(f"[DEBUG] 1Dedic - Trying HTTP Basic Auth method")
+    from requests.auth import HTTPBasicAuth
     
     response = requests.post(
         'https://my.1dedic.ru/billmgr',
         data={
-            'authinfo': authinfo,
             'func': 'profile',
             'out': 'json'
         },
+        auth=HTTPBasicAuth(username, password),
         timeout=10
     )
     
