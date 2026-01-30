@@ -258,13 +258,14 @@ def fetch_1dedic_balance() -> Dict[str, any]:
         print(f"[DEBUG] 1Dedic - Could not detect IP: {e}")
     
     # Попытка с HTTP Basic Authentication
-    print(f"[DEBUG] 1Dedic - Trying HTTP Basic Auth method")
+    print(f"[DEBUG] 1Dedic - Trying HTTP Basic Auth method with func=profile.info")
     from requests.auth import HTTPBasicAuth
     
+    # Пробуем func=profile.info вместо func=profile
     response = requests.post(
         'https://my.1dedic.ru/billmgr',
         data={
-            'func': 'profile',
+            'func': 'profile.info',
             'out': 'json'
         },
         auth=HTTPBasicAuth(username, password),
