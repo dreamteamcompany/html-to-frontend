@@ -240,6 +240,55 @@ def fetch_regru_balance(account_id: Optional[str] = None) -> Dict[str, any]:
         'currency': 'RUB'
     }
 
+def fetch_1dedic_balance() -> Dict[str, any]:
+    """Получение баланса из 1Dedic (BILLmanager) API"""
+    username = os.environ.get('DEDIC_USERNAME')
+    password = os.environ.get('DEDIC_PASSWORD')
+    
+    if not username or not password:
+        print(f"[DEBUG] 1Dedic - username exists: {bool(username)}, password exists: {bool(password)}")
+        raise ValueError('DEDIC_USERNAME and DEDIC_PASSWORD not configured')
+    
+    authinfo = f'{username}:{password}'
+    
+    response = requests.get(
+        'https://my.1dedic.ru/billmgr',
+        params={
+            'authinfo': authinfo,
+            'func': 'profile',
+            'out': 'json'
+        },
+        timeout=10
+    )
+    
+    print(f"[DEBUG] 1Dedic response status: {response.status_code}")
+    print(f"[DEBUG] 1Dedic response body: {response.text}")
+    
+    if response.status_code != 200:
+        raise Exception(f'1Dedic API error: {response.status_code} - {response.text}')
+    
+    data = response.json()
+    
+    if data.get('doc', {}).get('error'):
+        error = data['doc']['error']
+        raise Exception(f'1Dedic API error: {error.get("$msg", "Unknown error")}')
+    
+    balance_str = data.get('doc', {}).get('balance', {}).get('$', '0')
+    
+    print(f"[DEBUG] 1Dedic balance_str: {balance_str}")
+    
+    try:
+        balance = float(balance_str)
+    except (ValueError, TypeError):
+        balance = 0.0
+    
+    currency = data.get('doc', {}).get('balance', {}).get('$currency', 'RUB')
+    
+    return {
+        'balance': balance,
+        'currency': currency
+    }
+
 def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None, 
                          api_key_secret_name: Optional[str] = None, account_id: Optional[str] = None) -> Dict[str, any]:
     """Универсальная функция для получения баланса сервиса"""
@@ -267,6 +316,9 @@ def fetch_service_balance(service_name: str, api_endpoint: Optional[str] = None,
             return fetch_regru_balance('2')
         else:
             return fetch_regru_balance('1')
+    
+    if '1dedic' in service_name.lower() or 'dedic' in service_name.lower() or (api_endpoint and '1dedic.ru' in api_endpoint):
+        return fetch_1dedic_balance()
     
     raise ValueError(f'Service {service_name} not supported yet')
 

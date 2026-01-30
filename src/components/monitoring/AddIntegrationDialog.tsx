@@ -151,6 +151,30 @@ const SERVICE_TEMPLATES: ServiceTemplate[] = [
       },
     ],
   },
+  {
+    id: '1dedic',
+    name: '1Dedic (BILLmanager)',
+    icon: 'Server',
+    api_endpoint: 'https://my.1dedic.ru/billmgr',
+    default_warning: 1000,
+    default_critical: 200,
+    fields: [
+      {
+        name: 'username',
+        label: 'Логин',
+        type: 'text',
+        placeholder: 'Введите логин от личного кабинета',
+        secret_name: 'DEDIC_USERNAME',
+      },
+      {
+        name: 'password',
+        label: 'Пароль',
+        type: 'password',
+        placeholder: 'Введите пароль от личного кабинета',
+        secret_name: 'DEDIC_PASSWORD',
+      },
+    ],
+  },
 ];
 
 interface AddIntegrationDialogProps {
