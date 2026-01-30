@@ -7,12 +7,6 @@ import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -21,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import AddIntegrationDialog from '@/components/monitoring/AddIntegrationDialog';
 
 interface ServiceBalance {
   id: number;
@@ -43,9 +38,7 @@ const Monitoring = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [services, setServices] = useState<ServiceBalance[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [addServiceType, setAddServiceType] = useState<'timeweb' | 'timeweb-hosting' | 'smsru' | 'mango' | 'plusofon' | 'regru' | null>(null);
-  const [adding, setAdding] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingService, setEditingService] = useState<ServiceBalance | null>(null);
   const [editForm, setEditForm] = useState({
     service_name: '',
@@ -254,62 +247,8 @@ const Monitoring = () => {
     return () => clearInterval(interval);
   }, [token]);
 
-  const addService = async (type: 'timeweb' | 'timeweb-hosting' | 'smsru' | 'mango' | 'plusofon' | 'regru') => {
-    const serviceConfigs = {
-      timeweb: {
-        service_name: 'Timeweb Cloud',
-        api_endpoint: 'https://api.timeweb.cloud/api/v1/account/finances',
-        api_key_secret_name: 'TIMEWEB_API_TOKEN',
-        threshold_warning: 500,
-        threshold_critical: 100,
-        description: 'Timeweb Cloud успешно добавлен в мониторинг'
-      },
-      'timeweb-hosting': {
-        service_name: 'Timeweb Hosting',
-        api_endpoint: 'https://api.timeweb.ru/v1.1/finances/accounts',
-        api_key_secret_name: 'TIMEWEB_HOSTING_API_TOKEN',
-        threshold_warning: 500,
-        threshold_critical: 100,
-        description: 'Timeweb Hosting успешно добавлен в мониторинг'
-      },
-      smsru: {
-        service_name: 'sms.ru',
-        api_endpoint: 'https://sms.ru/my/balance',
-        api_key_secret_name: 'SMSRU_API_ID',
-        threshold_warning: 100,
-        threshold_critical: 20,
-        description: 'sms.ru успешно добавлен в мониторинг'
-      },
-      mango: {
-        service_name: 'Mango Office',
-        api_endpoint: 'https://app.mango-office.ru/vpbx/account/balance',
-        api_key_secret_name: 'MANGO_OFFICE_API_KEY',
-        threshold_warning: 1000,
-        threshold_critical: 200,
-        description: 'Mango Office успешно добавлен в мониторинг'
-      },
-      plusofon: {
-        service_name: 'Plusofon',
-        api_endpoint: 'https://restapi.plusofon.ru/api/v1/payment/balance',
-        api_key_secret_name: 'PLUSOFON_API_TOKEN',
-        threshold_warning: 500,
-        threshold_critical: 100,
-        description: 'Plusofon успешно добавлен в мониторинг'
-      },
-      regru: {
-        service_name: 'Reg.ru (аккаунт 2)',
-        api_endpoint: 'https://api.reg.ru/api/regru2/user/get_balance',
-        api_key_secret_name: 'REGRU_USERNAME_2',
-        threshold_warning: 100,
-        threshold_critical: 20,
-        description: 'Reg.ru (аккаунт 2) успешно добавлен в мониторинг'
-      }
-    };
-
-    const config = serviceConfigs[type];
-
+  const addIntegration = async (integration: any) => {
     try {
-      setAdding(true);
       const response = await fetch('https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d', {
         method: 'POST',
         headers: {
@@ -317,7 +256,12 @@ const Monitoring = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...config,
+          service_name: integration.service_name,
+          description: integration.description,
+          api_endpoint: integration.api_endpoint,
+          api_key_secret_name: integration.api_key_secret_name,
+          threshold_warning: integration.threshold_warning,
+          threshold_critical: integration.threshold_critical,
           currency: 'RUB',
           auto_refresh: true,
           refresh_interval_minutes: 60,
@@ -326,29 +270,27 @@ const Monitoring = () => {
 
       if (response.ok) {
         toast({
-          title: 'Сервис добавлен',
-          description: config.description,
+          title: 'Интеграция добавлена',
+          description: `${integration.service_name} успешно добавлен в мониторинг`,
         });
-        setShowAddForm(false);
-        setAddServiceType(null);
         await loadServices();
       } else {
         const error = await response.json();
         toast({
           title: response.status === 409 ? 'Сервис уже добавлен' : 'Ошибка',
-          description: error.error || 'Не удалось добавить сервис',
+          description: error.error || 'Не удалось добавить интеграцию',
           variant: 'destructive',
         });
+        throw new Error(error.error);
       }
     } catch (error) {
-      console.error('Failed to add service:', error);
+      console.error('Failed to add integration:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось добавить сервис',
+        description: 'Не удалось добавить интеграцию',
         variant: 'destructive',
       });
-    } finally {
-      setAdding(false);
+      throw error;
     }
   };
 
@@ -403,115 +345,21 @@ const Monitoring = () => {
             <div className="flex justify-between items-center gap-3">
               <h2 className="text-xl md:text-2xl font-bold text-white">Балансы сервисов</h2>
               <div className="flex gap-2 shrink-0">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="default" size="sm" className="whitespace-nowrap">
-                      <Icon name="Plus" className="h-4 w-4 md:mr-2" />
-                      <span className="hidden md:inline">Добавить</span>
-                      <Icon name="ChevronDown" className="ml-1 md:ml-2 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => { setAddServiceType('timeweb'); setShowAddForm(true); }}>
-                      <Icon name="Server" className="mr-2 h-4 w-4" />
-                      Timeweb Cloud
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setAddServiceType('smsru'); setShowAddForm(true); }}>
-                      <Icon name="MessageSquare" className="mr-2 h-4 w-4" />
-                      sms.ru
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setAddServiceType('mango'); setShowAddForm(true); }}>
-                      <Icon name="Phone" className="mr-2 h-4 w-4" />
-                      Mango Office
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setAddServiceType('plusofon'); setShowAddForm(true); }}>
-                      <Icon name="PhoneCall" className="mr-2 h-4 w-4" />
-                      Plusofon
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setAddServiceType('timeweb-hosting'); setShowAddForm(true); }}>
-                      <Icon name="Globe" className="mr-2 h-4 w-4" />
-                      Timeweb Hosting
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setAddServiceType('regru'); setShowAddForm(true); }}>
-                      <Icon name="Globe" className="mr-2 h-4 w-4" />
-                      Reg.ru
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="whitespace-nowrap"
+                  onClick={() => setShowAddDialog(true)}
+                >
+                  <Icon name="Plus" className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Добавить интеграцию</span>
+                </Button>
                 <Button onClick={refreshAllBalances} variant="outline" size="sm" disabled={loading || services.length === 0} className="whitespace-nowrap">
                   <Icon name="RefreshCw" className="h-4 w-4 md:mr-2" />
                   <span className="hidden md:inline">Обновить все</span>
                 </Button>
               </div>
             </div>
-
-            {showAddForm && addServiceType && (
-              <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-1">
-                      {addServiceType === 'timeweb' ? 'Добавить Timeweb Cloud' : 
-                       addServiceType === 'timeweb-hosting' ? 'Добавить Timeweb Hosting' :
-                       addServiceType === 'smsru' ? 'Добавить sms.ru' : 
-                       addServiceType === 'mango' ? 'Добавить Mango Office' :
-                       addServiceType === 'regru' ? 'Добавить Reg.ru' :
-                       'Добавить Plusofon'}
-                    </h3>
-                    <p className="text-sm text-white/60">Автоматический мониторинг баланса вашего аккаунта</p>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={() => { setShowAddForm(false); setAddServiceType(null); }} className="text-white/60 hover:text-white">
-                    <Icon name="X" className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-start gap-2 text-sm text-white/70">
-                    <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
-                    <span>Автоматическое обновление каждый час</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-sm text-white/70">
-                    <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
-                    <span>
-                      {addServiceType === 'timeweb' || addServiceType === 'timeweb-hosting' || addServiceType === 'plusofon'
-                        ? 'Уведомления при низком балансе (< 500₽ - warning, < 100₽ - critical)'
-                        : addServiceType === 'mango'
-                        ? 'Уведомления при низком балансе (< 1000₽ - warning, < 200₽ - critical)'
-                        : 'Уведомления при низком балансе (< 100₽ - warning, < 20₽ - critical)'}
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-2 text-sm text-white/70">
-                    <Icon name="CheckCircle2" className="h-4 w-4 mt-0.5 text-green-500" />
-                    <span>
-                      {addServiceType === 'timeweb'
-                        ? 'Требуется токен TIMEWEB_API_TOKEN'
-                        : addServiceType === 'timeweb-hosting'
-                        ? 'Требуется TIMEWEB_HOSTING_API_TOKEN, APP_KEY и LOGIN'
-                        : addServiceType === 'smsru'
-                        ? 'Требуется API ID SMSRU_API_ID'
-                        : addServiceType === 'mango'
-                        ? 'Требуется MANGO_OFFICE_API_KEY и MANGO_OFFICE_API_SALT'
-                        : addServiceType === 'regru'
-                        ? 'Требуется REGRU_USERNAME_2 и REGRU_PASSWORD_2'
-                        : 'Требуется PLUSOFON_API_TOKEN и PLUSOFON_CLIENT_ID'}
-                    </span>
-                  </div>
-                </div>
-
-                <Button onClick={() => addService(addServiceType)} disabled={adding} className="w-full">
-                  {adding ? (
-                    <>
-                      <Icon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
-                      Добавление...
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="Plus" className="mr-2 h-4 w-4" />
-                      Добавить сервис
-                    </>
-                  )}
-                </Button>
-              </Card>
-            )}
 
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -526,9 +374,9 @@ const Monitoring = () => {
                 <Icon name="Wallet" className="mx-auto h-16 w-16 text-white/30 mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">Нет подключенных сервисов</h3>
                 <p className="text-white/60 mb-6">Добавьте интеграции с сервисами для мониторинга балансов</p>
-                <Button variant="outline" onClick={() => setShowAddForm(true)}>
+                <Button variant="outline" onClick={() => setShowAddDialog(true)}>
                   <Icon name="Plus" className="mr-2 h-4 w-4" />
-                  Добавить Timeweb Cloud
+                  Добавить интеграцию
                 </Button>
               </Card>
             ) : (
@@ -694,6 +542,12 @@ const Monitoring = () => {
                 </DialogContent>
               </Dialog>
             )}
+
+            <AddIntegrationDialog
+              open={showAddDialog}
+              onOpenChange={setShowAddDialog}
+              onAdd={addIntegration}
+            />
           </div>
         </main>
       </div>
