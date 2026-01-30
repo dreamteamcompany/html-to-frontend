@@ -226,6 +226,18 @@ def create_service(conn, event: dict) -> dict:
                 service_dict['currency'] = updated['currency']
                 service_dict['status'] = updated['status']
                 service_dict['last_updated'] = updated['last_updated'].isoformat()
+            except ValueError as e:
+                error_msg = str(e)
+                if 'not configured' in error_msg:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({
+                            'error': f'Ошибка подключения: {error_msg}',
+                            'hint': 'Добавьте секрет в настройках проекта перед созданием интеграции'
+                        })
+                    }
+                print(f"[WARNING] Failed to fetch initial balance: {e}")
             except Exception as e:
                 print(f"[WARNING] Failed to fetch initial balance: {e}")
         
