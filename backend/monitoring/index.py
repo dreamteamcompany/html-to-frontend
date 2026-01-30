@@ -37,6 +37,8 @@ def handler(event: dict, context) -> dict:
     try:
         if method == 'GET' and not path:
             return get_all_services(conn)
+        elif method == 'POST' and query.get('action') == 'test':
+            return test_connection(event)
         elif method == 'POST' and query.get('action') == 'refresh' and query.get('serviceId'):
             return refresh_service_balance(conn, int(query['serviceId']))
         elif method == 'POST':
@@ -53,6 +55,56 @@ def handler(event: dict, context) -> dict:
             }
     finally:
         conn.close()
+
+def test_connection(event: dict) -> dict:
+    '''Тестирование подключения к сервису перед добавлением'''
+    raw_body = event.get('body', '{}')
+    if isinstance(raw_body, str):
+        body = json.loads(raw_body)
+    else:
+        body = raw_body
+    
+    service_name = body.get('service_name', 'Test Service')
+    api_endpoint = body.get('api_endpoint')
+    
+    if not api_endpoint:
+        return {
+            'statusCode': 400,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'api_endpoint is required', 'success': False})
+        }
+    
+    try:
+        balance = fetch_service_balance(service_name, api_endpoint, None)
+        
+        if balance is None:
+            return {
+                'statusCode': 500,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({
+                    'success': False,
+                    'error': 'Не удалось получить баланс. Проверьте API ключи и настройки доступа.'
+                })
+            }
+        
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({
+                'success': True,
+                'balance': float(balance),
+                'message': f'Подключение успешно! Текущий баланс: {balance}'
+            })
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({
+                'success': False,
+                'error': f'Ошибка подключения: {str(e)}'
+            })
+        }
 
 def get_all_services(conn) -> dict:
     with conn.cursor(cursor_factory=RealDictCursor) as cur:

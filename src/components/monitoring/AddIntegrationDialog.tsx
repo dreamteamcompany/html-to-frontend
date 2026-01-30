@@ -174,6 +174,11 @@ export default function AddIntegrationDialog({
     credentials: {} as Record<string, string>,
   });
   const [adding, setAdding] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   const handleServiceSelect = (serviceId: string) => {
     const service = SERVICE_TEMPLATES.find(s => s.id === serviceId);
@@ -193,6 +198,7 @@ export default function AddIntegrationDialog({
   const handleBack = () => {
     setStep('select');
     setSelectedService(null);
+    setTestResult(null);
     setFormData({
       service_name: '',
       description: '',
@@ -200,6 +206,39 @@ export default function AddIntegrationDialog({
       threshold_critical: 0,
       credentials: {},
     });
+  };
+
+  const handleTestConnection = async () => {
+    if (!selectedService) return;
+
+    try {
+      setTesting(true);
+      setTestResult(null);
+
+      const response = await fetch('https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d?action=test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          service_name: formData.service_name,
+          api_endpoint: selectedService.api_endpoint,
+        }),
+      });
+
+      const result = await response.json();
+      setTestResult({
+        success: result.success,
+        message: result.success ? result.message : result.error,
+      });
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: 'Ошибка при тестировании подключения',
+      });
+    } finally {
+      setTesting(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -368,20 +407,55 @@ export default function AddIntegrationDialog({
               </div>
             </div>
 
+            {testResult && (
+              <div className={`p-3 rounded-lg border ${testResult.success ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                <div className="flex items-start gap-2">
+                  <Icon name={testResult.success ? 'CheckCircle2' : 'XCircle'} size={16} className="mt-0.5 shrink-0" />
+                  <span className="text-sm">{testResult.message}</span>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2 pt-4">
               <Button
                 variant="outline"
                 onClick={handleBack}
-                className="flex-1 border-white/10 text-white hover:bg-white/5"
+                disabled={adding || testing}
+                className="border-white/10 text-white hover:bg-white/5"
               >
                 Назад
               </Button>
               <Button
-                onClick={handleSubmit}
-                disabled={!isFormValid() || adding}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                variant="outline"
+                onClick={handleTestConnection}
+                disabled={!isFormValid() || testing || adding}
+                className="border-blue-500/20 text-blue-400 hover:bg-blue-500/10"
               >
-                {adding ? 'Добавление...' : 'Добавить интеграцию'}
+                {testing ? (
+                  <>
+                    <Icon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
+                    Проверка...
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Zap" className="mr-2 h-4 w-4" />
+                    Тест
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={!isFormValid() || adding || testing}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {adding ? (
+                  <>
+                    <Icon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
+                    Добавление...
+                  </>
+                ) : (
+                  'Добавить'
+                )}
               </Button>
             </div>
           </div>
