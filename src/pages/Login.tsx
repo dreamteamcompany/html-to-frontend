@@ -23,8 +23,28 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(username, password, rememberMe);
-      navigate('/');
+      const userData = await login(username, password, rememberMe);
+      
+      // Проверяем роли пользователя после успешного входа
+      // Если CEO - редирект на "На согласовании", иначе - на дашборд
+      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=me', {
+        headers: {
+          'X-Auth-Token': rememberMe 
+            ? localStorage.getItem('auth_token') || ''
+            : sessionStorage.getItem('auth_token') || '',
+        },
+      });
+      
+      if (response.ok) {
+        const user = await response.json();
+        const isCEO = user.roles?.some((role: { name: string }) => 
+          role.name === 'CEO' || role.name === 'Генеральный директор'
+        );
+        
+        navigate(isCEO ? '/pending-approvals' : '/');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка входа');
     } finally {
