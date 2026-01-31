@@ -27,7 +27,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<User>;
   logout: () => void;
   hasPermission: (resource: string, action: string) => boolean;
   checkAuth: () => Promise<void>;
@@ -232,6 +232,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       sessionStorage.setItem('auth_token', data.token);
       localStorage.removeItem('remember_me');
     }
+    
+    return data.user; // Возвращаем данные пользователя
   };
 
   const hasPermission = (resource: string, action: string): boolean => {

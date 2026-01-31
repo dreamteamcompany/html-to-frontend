@@ -25,23 +25,19 @@ const Login = () => {
     try {
       const userData = await login(username, password, rememberMe);
       
-      // Проверяем роли пользователя после успешного входа
-      // Если CEO - редирект на "На согласовании", иначе - на дашборд
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=me', {
-        headers: {
-          'X-Auth-Token': rememberMe 
-            ? localStorage.getItem('auth_token') || ''
-            : sessionStorage.getItem('auth_token') || '',
-        },
-      });
+      // Проверяем роли и права пользователя после успешного входа
+      const isCEO = userData.roles?.some((role: { name: string }) => 
+        role.name === 'CEO' || role.name === 'Генеральный директор'
+      );
       
-      if (response.ok) {
-        const user = await response.json();
-        const isCEO = user.roles?.some((role: { name: string }) => 
-          role.name === 'CEO' || role.name === 'Генеральный директор'
-        );
-        
-        navigate(isCEO ? '/pending-approvals' : '/');
+      // Проверяем есть ли доступ к pending-approvals (payments.read)
+      const hasPaymentsAccess = userData.permissions?.some(
+        (p: { resource: string; action: string }) => p.resource === 'payments' && p.action === 'read'
+      );
+      
+      // CEO с доступом идет на "На согласовании", остальные - на дашборд
+      if (isCEO && hasPaymentsAccess) {
+        navigate('/pending-approvals');
       } else {
         navigate('/');
       }
