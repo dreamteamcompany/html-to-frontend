@@ -134,11 +134,11 @@ const Services = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await apiFetch(`${BACKEND_URL}?endpoint=approvers`);
+      const response = await apiFetch(`${BACKEND_URL}?endpoint=users`);
       const data = await response.json();
-      setUsers(Array.isArray(data) ? data : []);
+      setUsers(Array.isArray(data) ? data : data.users || []);
     } catch (error) {
-      console.error('Failed to load approvers:', error);
+      console.error('Failed to load users:', error);
       setUsers([]);
     }
   };

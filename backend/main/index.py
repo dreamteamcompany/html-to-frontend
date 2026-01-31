@@ -8,10 +8,10 @@ from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
-# Deploy version: v2.5 - added approvers endpoint
+# Deploy version: v2.5.1 - added approvers endpoint for all authenticated users
 
 SCHEMA = 't_p61788166_html_to_frontend'
-VERSION = '2.5.0'
+VERSION = '2.5.1'
 
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
