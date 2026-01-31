@@ -8,10 +8,10 @@ from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
-# Deploy version: v2.5.1 - added approvers endpoint for all authenticated users
+# Deploy version: v2.5.2 - fixed approvers endpoint handlers
 
 SCHEMA = 't_p61788166_html_to_frontend'
-VERSION = '2.5.1'
+VERSION = '2.5.2'
 
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
@@ -796,6 +796,26 @@ def handle_users_list(method: str, event: Dict[str, Any], conn, payload: Dict[st
         users = [dict(row) for row in users_data]
         
         return response(200, {'users': users})
+    except Exception as e:
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+def handle_get_approvers(conn, payload: Dict[str, Any], user: Dict[str, Any]) -> Dict[str, Any]:
+    """Получение списка пользователей-согласантов (доступно всем авторизованным)"""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute(f"""
+            SELECT id, full_name, position
+            FROM {SCHEMA}.users
+            WHERE is_active = true
+            ORDER BY full_name
+        """)
+        
+        users_data = cur.fetchall()
+        users = [dict(row) for row in users_data]
+        
+        return response(200, users)
     except Exception as e:
         return response(500, {'error': str(e)})
     finally:
@@ -3010,6 +3030,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_ticket_history(method, event, conn, payload)
         elif endpoint == 'users-list':
             result = handle_users_list(method, event, conn, payload)
+        elif endpoint == 'approvers':
+            user_data = get_user_with_permissions(conn, payload['user_id'])
+            result = handle_get_approvers(conn, payload, user_data)
         elif endpoint == 'tickets-bulk-actions':
             result = handle_tickets_bulk_actions(method, event, conn, payload)
         elif endpoint == 'notifications':
