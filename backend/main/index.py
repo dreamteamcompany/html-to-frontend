@@ -8,10 +8,10 @@ from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
-# Deploy version: v2.4 - using stderr for logging
+# Deploy version: v2.5 - added approvers endpoint
 
 SCHEMA = 't_p61788166_html_to_frontend'
-VERSION = '2.4.0'
+VERSION = '2.5.0'
 
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
@@ -352,6 +352,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # User management
         elif endpoint == 'users':
             return handle_users(method, event, conn)
+        elif endpoint == 'approvers':
+            return handle_approvers(event, conn)
         
         # API endpoints
         elif endpoint == 'payments':
@@ -532,6 +534,37 @@ def handle_me(event: Dict[str, Any], conn) -> Dict[str, Any]:
         return response(404, {'error': 'Пользователь не найден'})
     
     return response(200, user_data)
+
+def handle_approvers(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Получить список пользователей для выбора согласующих - доступно всем авторизованным"""
+    token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+    if not token:
+        return response(401, {'error': 'Требуется авторизация'})
+    
+    payload = verify_jwt_token(token)
+    if not payload:
+        return response(401, {'error': 'Недействительный токен'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("""
+        SELECT 
+            u.id, u.full_name, u.position,
+            COALESCE(
+                array_agg(r.name) FILTER (WHERE r.id IS NOT NULL),
+                ARRAY[]::text[]
+            ) as roles
+        FROM users u
+        LEFT JOIN user_roles ur ON u.id = ur.user_id
+        LEFT JOIN roles r ON ur.role_id = r.id
+        WHERE u.is_active = true
+        GROUP BY u.id
+        ORDER BY u.full_name
+    """)
+    
+    approvers = [dict(row) for row in cur.fetchall()]
+    cur.close()
+    
+    return response(200, approvers)
 
 # User management handler
 def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
