@@ -2942,8 +2942,31 @@ def handle_audit_logs(method: str, event: Dict[str, Any], conn, payload: Dict[st
     return response(405, {'error': 'Method not allowed'})
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    '''Главная функция-роутер для обработки всех запросов'''
+    '''
+    Главная функция-роутер для обработки всех запросов.
+    
+    МИГРАЦИЯ НА CLEAN ARCHITECTURE:
+    - Endpoints login, me, approvers → новый handler (Clean Architecture)
+    - Остальные endpoints → legacy handler (временно)
+    '''
+    
+    # Определить endpoint
+    endpoint = event.get('queryStringParameters', {}).get('endpoint', '')
     method = event.get('httpMethod', 'GET')
+    
+    # Новая архитектура для определённых endpoints
+    NEW_ARCHITECTURE_ENDPOINTS = ['login', 'me', 'approvers', 'refresh', 'health']
+    
+    if endpoint in NEW_ARCHITECTURE_ENDPOINTS or method == 'OPTIONS':
+        # Делегировать новому handler (Clean Architecture)
+        try:
+            from handler import handler as new_handler
+            return new_handler(event, context)
+        except ImportError as e:
+            print(f"Failed to import new handler: {e}")
+            # Fallback на старый код
+    
+    # === LEGACY CODE (временно, до полной миграции) ===
     
     if method == 'OPTIONS':
         return {
@@ -2964,8 +2987,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return response(500, {'error': f'Database connection failed: {str(e)}'})
     
     try:
-        endpoint = event.get('queryStringParameters', {}).get('endpoint', '')
-        
         if endpoint == 'login' and method == 'POST':
             return handle_login(event, conn)
         
@@ -3030,9 +3051,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_ticket_history(method, event, conn, payload)
         elif endpoint == 'users-list':
             result = handle_users_list(method, event, conn, payload)
-        elif endpoint == 'approvers':
-            user_data = get_user_with_permissions(conn, payload['user_id'])
-            result = handle_get_approvers(conn, payload, user_data)
         elif endpoint == 'tickets-bulk-actions':
             result = handle_tickets_bulk_actions(method, event, conn, payload)
         elif endpoint == 'notifications':
