@@ -100,7 +100,7 @@ const PaymentsSidebar = ({
             </Link>
           </li>
         )}
-        {hasPermission('payments', 'read') && (
+        {(hasPermission('payments', 'read') || hasPermission('approvals', 'read')) && (
           <li>
             <Link to="/pending-approvals" className={`flex items-center justify-between px-[15px] py-3 rounded-lg ${isActive('/pending-approvals') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
               <div className="flex items-center gap-3">
