@@ -1,0 +1,22 @@
+{
+  "tests": [
+    {
+      "name": "Approvers without auth",
+      "method": "GET",
+      "path": "/?endpoint=approvers",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Users without auth",
+      "method": "GET",
+      "path": "/?endpoint=users",
+      "expectedStatus": 401
+    },
+    {
+      "name": "OPTIONS request",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}
