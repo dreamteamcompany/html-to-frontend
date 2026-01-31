@@ -1,7 +1,7 @@
 """
 Cloud Function Handler (Entry Point)
-Новый чистый handler с Clean Architecture.
-Заменяет монолитный index.py (1639 строк → ~40 строк).
+Гибридная архитектура: Clean + Legacy delegation.
+Version: 3.1.0 - добавлена поддержка всех эндпоинтов через LegacyRoutes.
 """
 from typing import Dict, Any
 import sys

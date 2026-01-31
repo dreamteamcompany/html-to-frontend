@@ -7,6 +7,7 @@ import json
 
 from .dependencies import get_dependencies
 from .routes import AuthRoutes, UserRoutes
+from .routes.legacy_routes import LegacyRoutes
 
 
 class Router:
@@ -19,6 +20,7 @@ class Router:
         self._deps = get_dependencies()
         self._auth_routes = AuthRoutes(self._deps)
         self._user_routes = UserRoutes(self._deps)
+        self._legacy_routes = LegacyRoutes()
     
     def route(self, event: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -53,6 +55,13 @@ class Router:
             
             elif endpoint == 'health':
                 return self._success_response(200, {'status': 'healthy', 'version': '3.0.0'})
+            
+            # Legacy endpoints (делегирование в старый код)
+            elif endpoint in ['payments', 'categories', 'stats', 'legal-entities',
+                            'contractors', 'customer_departments', 'roles', 'permissions',
+                            'approvals', 'services', 'savings', 'saving-reasons',
+                            'custom-fields', 'users']:
+                return self._legacy_routes.route_legacy(endpoint, method, event)
             
             else:
                 return self._error_response(404, f"Endpoint '{endpoint}' not found")
