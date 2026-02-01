@@ -13,7 +13,7 @@
     {
       "name": "Get approvers list (unauthorized)",
       "method": "GET",
-      "path": "/approvers",
+      "path": "/?endpoint=approvers",
       "expectedStatus": 401,
       "expectedBody": {
         "error": "Unauthorized"

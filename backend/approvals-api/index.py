@@ -254,8 +254,14 @@ def handler(event: dict, context) -> dict:
     conn = psycopg2.connect(DSN)
     
     try:
-        # Определяем endpoint
-        endpoint = path.strip('/').split('/')[-1] if path != '/' else 'approvals'
+        # Определяем endpoint из query параметров или пути
+        query_params = event.get('queryStringParameters', {}) or {}
+        endpoint = query_params.get('endpoint', '')
+        
+        # Если endpoint не в query, пробуем извлечь из пути
+        if not endpoint:
+            path_parts = [p for p in path.strip('/').split('/') if p]
+            endpoint = path_parts[-1] if path_parts else ''
         
         if endpoint == 'approvers':
             # GET /approvers - список утверждающих

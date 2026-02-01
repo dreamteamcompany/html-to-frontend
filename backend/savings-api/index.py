@@ -219,8 +219,18 @@ def handler(event: dict, context) -> dict:
     conn = psycopg2.connect(DSN)
     
     try:
-        # Определяем endpoint
-        if 'reasons' in path or 'saving-reasons' in path:
+        # Определяем endpoint из query параметров или пути
+        query_params = event.get('queryStringParameters', {}) or {}
+        endpoint = query_params.get('endpoint', '')
+        
+        # Если endpoint не в query, проверяем путь
+        if not endpoint:
+            if 'reasons' in path or 'saving-reasons' in path:
+                endpoint = 'reasons'
+            else:
+                endpoint = 'savings'
+        
+        if endpoint in ['reasons', 'saving-reasons']:
             # /reasons endpoint
             if method == 'GET':
                 payload, error = verify_token_and_permission(event, conn, 'savings:read')

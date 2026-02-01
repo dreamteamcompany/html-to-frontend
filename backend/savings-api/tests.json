@@ -13,7 +13,7 @@
     {
       "name": "Get saving reasons (unauthorized)",
       "method": "GET",
-      "path": "/reasons",
+      "path": "/?endpoint=saving-reasons",
       "expectedStatus": 401,
       "expectedBody": {
         "error": "Unauthorized"

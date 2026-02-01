@@ -3,7 +3,7 @@
     {
       "name": "Get users list (unauthorized)",
       "method": "GET",
-      "path": "/users",
+      "path": "/?endpoint=users",
       "expectedStatus": 401,
       "expectedBody": {
         "error": "Unauthorized"
@@ -13,7 +13,7 @@
     {
       "name": "Get roles list (unauthorized)",
       "method": "GET",
-      "path": "/roles",
+      "path": "/?endpoint=roles",
       "expectedStatus": 401,
       "expectedBody": {
         "error": "Unauthorized"
@@ -23,7 +23,7 @@
     {
       "name": "Get permissions list (unauthorized)",
       "method": "GET",
-      "path": "/permissions",
+      "path": "/?endpoint=permissions",
       "expectedStatus": 401,
       "expectedBody": {
         "error": "Unauthorized"

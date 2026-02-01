@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { getApiUrl } from '@/config/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,7 +117,7 @@ const Services = () => {
 
   const loadServices = async () => {
     try {
-      const response = await apiFetch(`${BACKEND_URL}?endpoint=services`);
+      const response = await apiFetch(getApiUrl('services'));
       const data = await response.json();
       setServices(data.services || []);
     } catch (error) {
@@ -134,9 +135,9 @@ const Services = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await apiFetch(`${BACKEND_URL}?endpoint=approvers`);
+      const response = await apiFetch(getApiUrl('approvers'));
       const data = await response.json();
-      setUsers(Array.isArray(data) ? data : []);
+      setUsers(data.approvers || []);
     } catch (error) {
       console.error('Failed to load approvers:', error);
       setUsers([]);
@@ -145,7 +146,7 @@ const Services = () => {
 
   const loadDepartments = async () => {
     try {
-      const response = await apiFetch(`${BACKEND_URL}?endpoint=customer-departments`);
+      const response = await apiFetch(getApiUrl('customer-departments'));
       const data = await response.json();
       setDepartments(Array.isArray(data) ? data : data.departments || []);
     } catch (error) {
@@ -156,7 +157,7 @@ const Services = () => {
 
   const loadCategories = async () => {
     try {
-      const response = await apiFetch(`${BACKEND_URL}?endpoint=categories`);
+      const response = await apiFetch(getApiUrl('categories'));
       const data = await response.json();
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -178,21 +179,24 @@ const Services = () => {
     }
 
     try {
-      const url = editingService
-        ? `${BACKEND_URL}?endpoint=services&id=${editingService.id}`
-        : `${BACKEND_URL}?endpoint=services`;
+      const url = getApiUrl('services');
+      const payload: any = {
+        name: formData.name,
+        description: formData.description,
+        intermediate_approver_id: parseInt(formData.final_approver_id),
+        final_approver_id: parseInt(formData.final_approver_id),
+        customer_department_id: formData.customer_department_id ? parseInt(formData.customer_department_id) : null,
+        category_id: formData.category_id ? parseInt(formData.category_id) : null,
+      };
+
+      if (editingService) {
+        payload.id = editingService.id;
+      }
 
       const response = await apiFetch(url, {
         method: editingService ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
-          intermediate_approver_id: parseInt(formData.final_approver_id),
-          final_approver_id: parseInt(formData.final_approver_id),
-          customer_department_id: formData.customer_department_id ? parseInt(formData.customer_department_id) : null,
-          category_id: formData.category_id ? parseInt(formData.category_id) : null,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -232,8 +236,10 @@ const Services = () => {
     if (!confirm('Удалить этот сервис?')) return;
 
     try {
-      const response = await apiFetch(`${BACKEND_URL}?endpoint=services&id=${id}`, {
+      const response = await apiFetch(getApiUrl('services'), {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
       });
 
       if (response.ok) {

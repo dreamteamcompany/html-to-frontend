@@ -462,12 +462,25 @@ def handler(event: dict, context) -> dict:
     conn = psycopg2.connect(DSN)
     
     try:
-        if 'permissions' in path or 'permission' in path:
+        # Определяем endpoint из query параметров или пути
+        query_params = event.get('queryStringParameters', {}) or {}
+        endpoint = query_params.get('endpoint', '')
+        
+        # Если endpoint не в query, проверяем путь
+        if not endpoint:
+            if 'permissions' in path or 'permission' in path:
+                endpoint = 'permissions'
+            elif 'roles' in path or 'role' in path:
+                endpoint = 'roles'
+            else:
+                endpoint = 'users'
+        
+        if endpoint == 'permissions':
             return handle_permissions_endpoint(event, conn, method, path)
-        elif 'roles' in path or 'role' in path:
+        elif endpoint == 'roles':
             return handle_roles_endpoint(event, conn, method, path)
         else:
-            # /users endpoint
+            # users endpoint
             return handle_users_endpoint(event, conn, method, path)
     
     finally:
