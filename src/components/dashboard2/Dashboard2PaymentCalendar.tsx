@@ -63,14 +63,14 @@ const Dashboard2PaymentCalendar = () => {
         </div>
 
         {/* Days of week header */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', marginBottom: '8px' }} className="sm:gap-3 sm:mb-3">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '6px' }} className="sm:gap-3 sm:mb-3">
           {['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'].map((day, idx) => (
             <div key={idx} style={{ 
               textAlign: 'center', 
               color: '#7551e9', 
-              fontSize: '10px', 
+              fontSize: '9px', 
               fontWeight: '700',
-              padding: '4px'
+              padding: '2px'
             }} className="sm:text-xs sm:p-2">
               {day}
             </div>
@@ -78,7 +78,7 @@ const Dashboard2PaymentCalendar = () => {
         </div>
 
         {/* Calendar grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }} className="sm:gap-3">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }} className="sm:gap-3">
           {(() => {
             const days = [];
             const paymentsData = {
@@ -136,9 +136,9 @@ const Dashboard2PaymentCalendar = () => {
                   style={{
                     background: bgColor,
                     border: `1px solid ${borderColor}`,
-                    borderRadius: '8px',
-                    padding: '6px',
-                    minHeight: '60px',
+                    borderRadius: '6px',
+                    padding: '4px',
+                    minHeight: '50px',
                     display: 'flex',
                     flexDirection: 'column',
                     position: 'relative',
@@ -147,6 +147,7 @@ const Dashboard2PaymentCalendar = () => {
                     boxShadow: isToday ? `0 0 20px ${glowColor}, inset 0 0 20px ${glowColor}` : 'none',
                     animation: isToday ? 'pulse 2s infinite' : 'none'
                   }}
+                  className="sm:p-2.5 sm:min-h-[70px] sm:rounded-lg"
                   onMouseEnter={(e) => {
                     if (dayData && dayData.amount > 0) {
                       e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
@@ -164,27 +165,27 @@ const Dashboard2PaymentCalendar = () => {
                     display: 'flex', 
                     justifyContent: 'space-between', 
                     alignItems: 'center',
-                    marginBottom: dayData && dayData.amount > 0 ? '8px' : '0'
-                  }}>
+                    marginBottom: dayData && dayData.amount > 0 ? '4px' : '0'
+                  }} className="sm:mb-2">
                     <span style={{ 
                       color: textColor, 
-                      fontSize: '12px', 
+                      fontSize: '11px', 
                       fontWeight: '700',
                       textShadow: isToday ? `0 0 10px ${glowColor}` : 'none'
-                    }} className="sm:text-base">
+                    }} className="sm:text-sm">
                       {i}
                     </span>
                     {isToday && (
                       <div style={{
                         background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
-                        padding: '2px 4px',
-                        borderRadius: '4px',
-                        fontSize: '8px',
+                        padding: '1px 3px',
+                        borderRadius: '3px',
+                        fontSize: '7px',
                         fontWeight: '700',
                         color: '#fff',
                         textTransform: 'uppercase',
                         boxShadow: '0 0 10px rgba(117, 81, 233, 0.5)'
-                      }} className="sm:text-[9px] sm:px-1.5">
+                      }} className="sm:text-[9px] sm:px-1.5 sm:py-0.5">
                         Сегодня
                       </div>
                     )}
@@ -193,20 +194,20 @@ const Dashboard2PaymentCalendar = () => {
                     <>
                       <div style={{ 
                         color: textColor, 
-                        fontSize: '11px', 
+                        fontSize: '10px', 
                         fontWeight: '800',
-                        marginBottom: '4px',
+                        marginBottom: '2px',
                         textShadow: `0 0 15px ${glowColor}`
-                      }} className="sm:text-sm sm:mb-1.5">
+                      }} className="sm:text-xs sm:mb-1">
                         {new Intl.NumberFormat('ru-RU').format(dayData.amount)} ₽
                       </div>
                       <div style={{ 
                         display: 'flex', 
                         flexDirection: 'column', 
-                        gap: '3px',
-                        fontSize: '11px',
+                        gap: '1px',
+                        fontSize: '7px',
                         color: '#a3aed0'
-                      }}>
+                      }} className="sm:text-[9px] sm:gap-0.5">
                         {dayData.payments.map((payment, idx) => (
                           <div key={idx} style={{ 
                             overflow: 'hidden',
@@ -219,15 +220,15 @@ const Dashboard2PaymentCalendar = () => {
                       </div>
                       <div style={{
                         position: 'absolute',
-                        top: '6px',
-                        right: '6px',
-                        width: '6px',
-                        height: '6px',
+                        top: '4px',
+                        right: '4px',
+                        width: '5px',
+                        height: '5px',
                         borderRadius: '50%',
                         background: textColor,
-                        boxShadow: `0 0 10px ${textColor}`,
+                        boxShadow: `0 0 8px ${textColor}`,
                         animation: dayData.category === 'large' ? 'pulse 2s infinite' : 'none'
-                      }} />
+                      }} className="sm:w-1.5 sm:h-1.5 sm:top-1.5 sm:right-1.5" />
                     </>
                   )}
                 </div>
