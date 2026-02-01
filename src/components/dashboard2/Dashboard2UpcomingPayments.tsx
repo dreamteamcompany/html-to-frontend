@@ -194,52 +194,54 @@ const Dashboard2UpcomingPayments = () => {
                   }} />
                 )}
                 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ 
-                    background: `linear-gradient(135deg, ${payment.color} 0%, ${payment.color}cc 100%)`,
-                    padding: '14px',
-                    borderRadius: '12px',
-                    boxShadow: `0 0 20px ${payment.color}60`,
-                    flexShrink: 0
-                  }}>
-                    <Icon name={payment.icon} size={24} style={{ color: '#fff' }} />
-                  </div>
-
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                      <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: '700' }}>
-                        {payment.name}
-                      </h4>
-                      {payment.urgent && (
-                        <div style={{
-                          background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          fontSize: '10px',
-                          fontWeight: '800',
-                          color: '#fff',
-                          textTransform: 'uppercase',
-                          boxShadow: '0 0 10px rgba(255, 107, 107, 0.5)',
-                          animation: 'pulse 1.5s infinite'
-                        }}>
-                          Срочно
-                        </div>
-                      )}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div style={{ 
+                      background: `linear-gradient(135deg, ${payment.color} 0%, ${payment.color}cc 100%)`,
+                      padding: '12px',
+                      borderRadius: '12px',
+                      boxShadow: `0 0 20px ${payment.color}60`,
+                      flexShrink: 0
+                    }}>
+                      <Icon name={payment.icon} size={20} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ 
-                        color: '#a3aed0', 
-                        fontSize: '13px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}>
-                        <Icon name="Tag" size={14} style={{ color: payment.color }} />
-                        {payment.category}
-                      </span>
-                      <span style={{ color: '#7551e9', fontSize: '14px', fontWeight: '700' }}>
-                        {new Intl.NumberFormat('ru-RU').format(payment.amount)} ₽
-                      </span>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h4 style={{ color: '#fff', fontSize: '14px', fontWeight: '700', wordBreak: 'break-word' }} className="sm:text-base">
+                          {payment.name}
+                        </h4>
+                        {payment.urgent && (
+                          <div style={{
+                            background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '9px',
+                            fontWeight: '800',
+                            color: '#fff',
+                            textTransform: 'uppercase',
+                            boxShadow: '0 0 10px rgba(255, 107, 107, 0.5)',
+                            animation: 'pulse 1.5s infinite',
+                            flexShrink: 0
+                          }} className="sm:text-[10px] sm:px-2">
+                            Срочно
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm">
+                        <span style={{ 
+                          color: '#a3aed0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <Icon name="Tag" size={12} style={{ color: payment.color }} className="sm:w-[14px] sm:h-[14px]" />
+                          {payment.category}
+                        </span>
+                        <span style={{ color: '#7551e9', fontWeight: '700' }}>
+                          {new Intl.NumberFormat('ru-RU').format(payment.amount)} ₽
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -247,70 +249,78 @@ const Dashboard2UpcomingPayments = () => {
                     background: isExpiringSoon 
                       ? 'rgba(255, 107, 107, 0.15)' 
                       : 'rgba(255, 255, 255, 0.05)',
-                    padding: '14px 18px',
-                    borderRadius: '12px',
+                    padding: '10px 12px',
+                    borderRadius: '10px',
                     border: isExpiringSoon 
                       ? '1px solid rgba(255, 107, 107, 0.3)' 
                       : '1px solid rgba(255, 255, 255, 0.08)',
-                    minWidth: '160px',
+                    width: '100%',
                     textAlign: 'center'
-                  }}>
+                  }} className="sm:w-auto sm:min-w-[160px] sm:p-3">
                     <div style={{ 
                       color: isExpiringSoon ? '#ff6b6b' : '#a3aed0', 
-                      fontSize: '11px', 
+                      fontSize: '10px', 
                       fontWeight: '600',
                       marginBottom: '6px',
                       textTransform: 'uppercase'
-                    }}>
+                    }} className="sm:text-[11px]">
                       {isExpiringSoon ? 'Осталось' : 'До платежа'}
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <div className="flex gap-1.5 justify-center items-center sm:gap-2">
                       {countdown.days > 0 && (
-                        <div style={{ textAlign: 'center' }}>
+                        <>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ 
+                              color: isExpiringSoon ? '#ff6b6b' : payment.color, 
+                              fontSize: '18px', 
+                              fontWeight: '900',
+                              textShadow: `0 0 15px ${isExpiringSoon ? '#ff6b6b' : payment.color}60`,
+                              lineHeight: 1
+                            }} className="sm:text-xl">
+                              {countdown.days}
+                            </div>
+                            <div style={{ color: '#a3aed0', fontSize: '8px', fontWeight: '600', marginTop: '2px' }} className="sm:text-[9px]">
+                              дн
+                            </div>
+                          </div>
                           <div style={{ 
                             color: isExpiringSoon ? '#ff6b6b' : payment.color, 
-                            fontSize: '20px', 
-                            fontWeight: '900',
-                            textShadow: `0 0 15px ${isExpiringSoon ? '#ff6b6b' : payment.color}60`
-                          }}>
-                            {countdown.days}
-                          </div>
-                          <div style={{ color: '#a3aed0', fontSize: '9px', fontWeight: '600' }}>
-                            ДН
-                          </div>
-                        </div>
+                            fontSize: '16px', 
+                            fontWeight: '900'
+                          }}>:</div>
+                        </>
                       )}
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ 
                           color: isExpiringSoon ? '#ff6b6b' : payment.color, 
-                          fontSize: '20px', 
+                          fontSize: '18px', 
                           fontWeight: '900',
-                          textShadow: `0 0 15px ${isExpiringSoon ? '#ff6b6b' : payment.color}60`
-                        }}>
+                          textShadow: `0 0 15px ${isExpiringSoon ? '#ff6b6b' : payment.color}60`,
+                          lineHeight: 1
+                        }} className="sm:text-xl">
                           {String(countdown.hours).padStart(2, '0')}
                         </div>
-                        <div style={{ color: '#a3aed0', fontSize: '9px', fontWeight: '600' }}>
-                          ЧС
+                        <div style={{ color: '#a3aed0', fontSize: '8px', fontWeight: '600', marginTop: '2px' }} className="sm:text-[9px]">
+                          чс
                         </div>
                       </div>
                       <div style={{ 
-                        color: isExpiringSoon ? '#ff6b6b' : '#7551e9', 
-                        fontSize: '20px', 
-                        fontWeight: '900',
-                        display: 'flex',
-                        alignItems: 'center'
+                        color: isExpiringSoon ? '#ff6b6b' : payment.color, 
+                        fontSize: '16px', 
+                        fontWeight: '900'
                       }}>:</div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ 
                           color: isExpiringSoon ? '#ff6b6b' : payment.color, 
-                          fontSize: '20px', 
+                          fontSize: '18px', 
                           fontWeight: '900',
-                          textShadow: `0 0 15px ${isExpiringSoon ? '#ff6b6b' : payment.color}60`
-                        }}>
+                          textShadow: `0 0 15px ${isExpiringSoon ? '#ff6b6b' : payment.color}60`,
+                          lineHeight: 1
+                        }} className="sm:text-xl">
                           {String(countdown.minutes).padStart(2, '0')}
                         </div>
-                        <div style={{ color: '#a3aed0', fontSize: '9px', fontWeight: '600' }}>
-                          МН
+                        <div style={{ color: '#a3aed0', fontSize: '8px', fontWeight: '600', marginTop: '2px' }} className="sm:text-[9px]">
+                          мин
                         </div>
                       </div>
                       {isExpiringSoon && (
