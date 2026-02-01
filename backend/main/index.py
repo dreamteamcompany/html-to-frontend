@@ -2944,29 +2944,9 @@ def handle_audit_logs(method: str, event: Dict[str, Any], conn, payload: Dict[st
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Главная функция-роутер для обработки всех запросов.
-    
-    МИГРАЦИЯ НА CLEAN ARCHITECTURE:
-    - Endpoints login, me, approvers → новый handler (Clean Architecture)
-    - Остальные endpoints → legacy handler (временно)
     '''
-    
-    # Определить endpoint
     endpoint = event.get('queryStringParameters', {}).get('endpoint', '')
     method = event.get('httpMethod', 'GET')
-    
-    # Новая архитектура для определённых endpoints
-    NEW_ARCHITECTURE_ENDPOINTS = ['login', 'me', 'approvers', 'refresh', 'health']
-    
-    if endpoint in NEW_ARCHITECTURE_ENDPOINTS or method == 'OPTIONS':
-        # Делегировать новому handler (Clean Architecture)
-        try:
-            from handler import handler as new_handler
-            return new_handler(event, context)
-        except ImportError as e:
-            print(f"Failed to import new handler: {e}")
-            # Fallback на старый код
-    
-    # === LEGACY CODE (временно, до полной миграции) ===
     
     if method == 'OPTIONS':
         return {
