@@ -448,11 +448,11 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         }
       });
 
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments', {
+      const response = await fetch('https://functions.poehali.dev/7f682e02-1640-40e7-8e2a-7a4e7723b309', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Auth-Token': token || '',
+          'Authorization': `Bearer ${token || ''}`,
         },
         body: JSON.stringify({
           category_id: formData.category_id ? parseInt(formData.category_id) : 0,

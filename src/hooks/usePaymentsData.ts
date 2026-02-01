@@ -90,7 +90,7 @@ export const usePaymentsData = () => {
   const [loading, setLoading] = useState(true);
 
   const loadPayments = () => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments')
+    apiFetch('https://functions.poehali.dev/7f682e02-1640-40e7-8e2a-7a4e7723b309')
       .then(res => res.json())
       .then(data => {
         setPayments(Array.isArray(data) ? data : []);
