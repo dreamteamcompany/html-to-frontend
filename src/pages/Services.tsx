@@ -2,39 +2,11 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { getApiUrl } from '@/config/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Label } from '@/components/ui/label';
-import Icon from '@/components/ui/icon';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useToast } from '@/hooks/use-toast';
-
-const BACKEND_URL = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd';
+import ServicesHeader from '@/components/services/ServicesHeader';
+import ServiceFormDialog from '@/components/services/ServiceFormDialog';
+import ServicesTable from '@/components/services/ServicesTable';
 
 interface User {
   id: number;
@@ -279,6 +251,10 @@ const Services = () => {
     }
   };
 
+  const handleCreateClick = () => {
+    setDialogOpen(true);
+  };
+
   return (
     <div className="flex min-h-screen">
       <PaymentsSidebar
@@ -300,203 +276,30 @@ const Services = () => {
       )}
 
       <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden p-2 text-white"
-            >
-              <Icon name="Menu" size={24} />
-            </button>
-            <h1 className="text-2xl font-bold">Сервисы</h1>
-          </div>
+        <ServicesHeader
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          onCreateClick={handleCreateClick}
+        />
 
-          <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-            <DialogTrigger asChild>
-              <Button>
-                <Icon name="Plus" size={18} className="mr-2" />
-                Создать сервис
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingService ? 'Редактировать сервис' : 'Создать сервис'}
-                </DialogTitle>
-                <DialogDescription>
-                  Укажите название сервиса и согласующих лиц
-                </DialogDescription>
-              </DialogHeader>
+        <ServiceFormDialog
+          open={dialogOpen}
+          onOpenChange={handleDialogClose}
+          editingService={editingService}
+          formData={formData}
+          setFormData={setFormData}
+          users={users}
+          departments={departments}
+          categories={categories}
+          onSubmit={handleSubmit}
+        />
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Название *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Например: AWS Cloud Services"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Описание</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Краткое описание сервиса"
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="category">Категория сервиса</Label>
-                  <Select
-                    value={formData.category_id}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, category_id: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите категорию" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <Icon name={cat.icon} size={16} />
-                            {cat.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="department">Отдел-заказчик</Label>
-                  <Select
-                    value={formData.customer_department_id}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, customer_department_id: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите отдел" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id.toString()}>
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="final">Согласующее лицо (CEO) *</Label>
-                  <Select
-                    value={formData.final_approver_id}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, final_approver_id: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите пользователя" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => handleDialogClose(false)}>
-                    Отмена
-                  </Button>
-                  <Button type="submit">
-                    {editingService ? 'Сохранить' : 'Создать'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </header>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Все сервисы</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 sm:p-6">
-            {loading ? (
-              <div className="text-center py-8">Загрузка...</div>
-            ) : services.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Нет созданных сервисов
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Название</TableHead>
-                    <TableHead>Категория</TableHead>
-                    <TableHead>Описание</TableHead>
-                    <TableHead>Отдел-заказчик</TableHead>
-                    <TableHead>Промежуточное согласование</TableHead>
-                    <TableHead>Окончательное согласование</TableHead>
-                    <TableHead className="text-right">Действия</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {services.map((service) => (
-                    <TableRow key={service.id}>
-                      <TableCell className="font-medium">{service.name}</TableCell>
-                      <TableCell>
-                        {service.category_name ? (
-                          <div className="flex items-center gap-2">
-                            <Icon name={service.category_icon || 'Tag'} size={16} />
-                            {service.category_name}
-                          </div>
-                        ) : '—'}
-                      </TableCell>
-                      <TableCell>{service.description || '—'}</TableCell>
-                      <TableCell>{service.customer_department_name || '—'}</TableCell>
-                      <TableCell>{service.intermediate_approver_name || '—'}</TableCell>
-                      <TableCell>{service.final_approver_name || '—'}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(service)}
-                          >
-                            <Icon name="Pencil" size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(service.id)}
-                          >
-                            <Icon name="Trash2" size={16} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <ServicesTable
+          services={services}
+          loading={loading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </main>
     </div>
   );
