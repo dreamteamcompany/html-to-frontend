@@ -1,0 +1,672 @@
+import json
+import os
+import sys
+import jwt
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from typing import Dict, Any, Optional
+from pydantic import BaseModel, Field
+
+SCHEMA = 't_p61788166_html_to_frontend'
+
+def log(msg):
+    print(msg, file=sys.stderr, flush=True)
+
+class CategoryRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    icon: str = Field(default='Tag')
+
+class LegalEntityRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    inn: str = Field(default='')
+    kpp: str = Field(default='')
+    address: str = Field(default='')
+
+class ContractorRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    inn: str = Field(default='')
+    kpp: str = Field(default='')
+    ogrn: str = Field(default='')
+    legal_address: str = Field(default='')
+    actual_address: str = Field(default='')
+    phone: str = Field(default='')
+    email: str = Field(default='')
+    contact_person: str = Field(default='')
+    bank_name: str = Field(default='')
+    bank_bik: str = Field(default='')
+    bank_account: str = Field(default='')
+    correspondent_account: str = Field(default='')
+    notes: str = Field(default='')
+
+class CustomerDepartmentRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    description: str = Field(default='')
+
+class CustomFieldRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    field_type: str = Field(..., pattern='^(text|select|file|toggle)$')
+    options: str = Field(default='')
+
+class ServiceRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    description: str = Field(default='')
+    intermediate_approver_id: int = Field(..., gt=0)
+    final_approver_id: int = Field(..., gt=0)
+    customer_department_id: Optional[int] = None
+    category_id: Optional[int] = None
+
+def response(status_code: int, data: Any) -> Dict[str, Any]:
+    return {
+        'statusCode': status_code,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps(data, ensure_ascii=False),
+        'isBase64Encoded': False
+    }
+
+def get_db_connection():
+    dsn = os.environ.get('DATABASE_URL')
+    if not dsn:
+        raise ValueError('DATABASE_URL not set')
+    return psycopg2.connect(dsn)
+
+def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    token = event.get('headers', {}).get('X-Authorization', '').replace('Bearer ', '')
+    
+    if not token:
+        return None
+    
+    try:
+        secret = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
+        payload = jwt.decode(token, secret, algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+def check_user_permission(conn, user_id: int, required_permission: str) -> bool:
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute(f"""
+            SELECT COUNT(*) as count
+            FROM {SCHEMA}.user_roles ur
+            JOIN {SCHEMA}.role_permissions rp ON ur.role_id = rp.role_id
+            JOIN {SCHEMA}.permissions p ON rp.permission_id = p.id
+            WHERE ur.user_id = %s AND p.name = %s
+        """, (user_id, required_permission))
+        result = cur.fetchone()
+        return result['count'] > 0
+    finally:
+        cur.close()
+
+def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    '''
+    API для управления справочниками: категории, юрлица, контрагенты, подразделения, сервисы, кастомные поля.
+    '''
+    method = event.get('httpMethod', 'GET')
+    endpoint = event.get('queryStringParameters', {}).get('endpoint', '')
+    
+    if method == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, X-Authorization',
+                'Access-Control-Max-Age': '86400'
+            },
+            'body': '',
+            'isBase64Encoded': False
+        }
+    
+    try:
+        conn = get_db_connection()
+    except Exception as e:
+        return response(500, {'error': f'Database connection failed: {str(e)}'})
+    
+    try:
+        payload = verify_token(event)
+        if not payload:
+            conn.close()
+            return response(401, {'error': 'Unauthorized'})
+        
+        user_id = payload['user_id']
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Categories
+        if endpoint == 'categories':
+            if method == 'GET':
+                if not check_user_permission(conn, user_id, 'payments.read'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                cur.execute(f'SELECT id, name, icon FROM {SCHEMA}.categories ORDER BY name')
+                categories = [dict(row) for row in cur.fetchall()]
+                
+                cur.close()
+                conn.close()
+                return response(200, categories)
+            
+            elif method == 'POST':
+                if not check_user_permission(conn, user_id, 'categories.create'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                cat_req = CategoryRequest(**data)
+                
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.categories (name, icon) VALUES (%s, %s) RETURNING id, name, icon",
+                    (cat_req.name, cat_req.icon)
+                )
+                row = cur.fetchone()
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(201, dict(row))
+            
+            elif method == 'PUT':
+                if not check_user_permission(conn, user_id, 'categories.update'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                cat_id = data.get('id')
+                cat_req = CategoryRequest(**data)
+                
+                if not cat_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(
+                    f"UPDATE {SCHEMA}.categories SET name = %s, icon = %s WHERE id = %s RETURNING id, name, icon",
+                    (cat_req.name, cat_req.icon, cat_id)
+                )
+                row = cur.fetchone()
+                
+                if not row:
+                    conn.close()
+                    return response(404, {'error': 'Category not found'})
+                
+                conn.commit()
+                cur.close()
+                conn.close()
+                return response(200, dict(row))
+            
+            elif method == 'DELETE':
+                if not check_user_permission(conn, user_id, 'categories.delete'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                params = event.get('queryStringParameters', {})
+                cat_id = params.get('id')
+                
+                if not cat_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(f'DELETE FROM {SCHEMA}.categories WHERE id = %s', (cat_id,))
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(200, {'success': True})
+        
+        # Legal Entities
+        elif endpoint == 'legal-entities':
+            if method == 'GET':
+                if not check_user_permission(conn, user_id, 'payments.read'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                cur.execute(f'SELECT id, name, inn, kpp, address FROM {SCHEMA}.legal_entities ORDER BY name')
+                entities = [dict(row) for row in cur.fetchall()]
+                
+                cur.close()
+                conn.close()
+                return response(200, entities)
+            
+            elif method == 'POST':
+                if not check_user_permission(conn, user_id, 'payments.create'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                le_req = LegalEntityRequest(**data)
+                
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.legal_entities (name, inn, kpp, address) VALUES (%s, %s, %s, %s) RETURNING id, name, inn, kpp, address",
+                    (le_req.name, le_req.inn, le_req.kpp, le_req.address)
+                )
+                row = cur.fetchone()
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(201, dict(row))
+            
+            elif method == 'PUT':
+                if not check_user_permission(conn, user_id, 'payments.update'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                le_id = data.get('id')
+                le_req = LegalEntityRequest(**data)
+                
+                if not le_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(
+                    f"UPDATE {SCHEMA}.legal_entities SET name = %s, inn = %s, kpp = %s, address = %s WHERE id = %s RETURNING id, name, inn, kpp, address",
+                    (le_req.name, le_req.inn, le_req.kpp, le_req.address, le_id)
+                )
+                row = cur.fetchone()
+                
+                if not row:
+                    conn.close()
+                    return response(404, {'error': 'Legal entity not found'})
+                
+                conn.commit()
+                cur.close()
+                conn.close()
+                return response(200, dict(row))
+            
+            elif method == 'DELETE':
+                if not check_user_permission(conn, user_id, 'payments.delete'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                params = event.get('queryStringParameters', {})
+                le_id = params.get('id')
+                
+                if not le_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(f'DELETE FROM {SCHEMA}.legal_entities WHERE id = %s', (le_id,))
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(200, {'success': True})
+        
+        # Contractors
+        elif endpoint == 'contractors':
+            if method == 'GET':
+                if not check_user_permission(conn, user_id, 'payments.read'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                cur.execute(f"""
+                    SELECT id, name, inn, kpp, ogrn, legal_address, actual_address, 
+                           phone, email, contact_person, bank_name, bank_bik, 
+                           bank_account, correspondent_account, notes 
+                    FROM {SCHEMA}.contractors ORDER BY name
+                """)
+                contractors = [dict(row) for row in cur.fetchall()]
+                
+                cur.close()
+                conn.close()
+                return response(200, contractors)
+            
+            elif method == 'POST':
+                if not check_user_permission(conn, user_id, 'payments.create'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                cont_req = ContractorRequest(**data)
+                
+                cur.execute(f"""
+                    INSERT INTO {SCHEMA}.contractors 
+                    (name, inn, kpp, ogrn, legal_address, actual_address, phone, email, contact_person, 
+                     bank_name, bank_bik, bank_account, correspondent_account, notes) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
+                    RETURNING id, name, inn, kpp, ogrn, legal_address, actual_address, phone, email, contact_person, 
+                              bank_name, bank_bik, bank_account, correspondent_account, notes
+                """, (cont_req.name, cont_req.inn, cont_req.kpp, cont_req.ogrn, cont_req.legal_address,
+                      cont_req.actual_address, cont_req.phone, cont_req.email, cont_req.contact_person,
+                      cont_req.bank_name, cont_req.bank_bik, cont_req.bank_account, 
+                      cont_req.correspondent_account, cont_req.notes))
+                row = cur.fetchone()
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(201, dict(row))
+            
+            elif method == 'PUT':
+                if not check_user_permission(conn, user_id, 'payments.update'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                cont_id = data.get('id')
+                cont_req = ContractorRequest(**data)
+                
+                if not cont_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(f"""
+                    UPDATE {SCHEMA}.contractors 
+                    SET name = %s, inn = %s, kpp = %s, ogrn = %s, legal_address = %s, actual_address = %s,
+                        phone = %s, email = %s, contact_person = %s, bank_name = %s, bank_bik = %s,
+                        bank_account = %s, correspondent_account = %s, notes = %s
+                    WHERE id = %s
+                    RETURNING id, name, inn, kpp, ogrn, legal_address, actual_address, phone, email, contact_person,
+                              bank_name, bank_bik, bank_account, correspondent_account, notes
+                """, (cont_req.name, cont_req.inn, cont_req.kpp, cont_req.ogrn, cont_req.legal_address,
+                      cont_req.actual_address, cont_req.phone, cont_req.email, cont_req.contact_person,
+                      cont_req.bank_name, cont_req.bank_bik, cont_req.bank_account,
+                      cont_req.correspondent_account, cont_req.notes, cont_id))
+                row = cur.fetchone()
+                
+                if not row:
+                    conn.close()
+                    return response(404, {'error': 'Contractor not found'})
+                
+                conn.commit()
+                cur.close()
+                conn.close()
+                return response(200, dict(row))
+            
+            elif method == 'DELETE':
+                if not check_user_permission(conn, user_id, 'payments.delete'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                params = event.get('queryStringParameters', {})
+                cont_id = params.get('id')
+                
+                if not cont_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(f'DELETE FROM {SCHEMA}.contractors WHERE id = %s', (cont_id,))
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(200, {'success': True})
+        
+        # Customer Departments
+        elif endpoint == 'customer-departments' or endpoint == 'customer_departments' or endpoint == 'departments':
+            if method == 'GET':
+                if not check_user_permission(conn, user_id, 'payments.read'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                cur.execute(f'SELECT id, name, description FROM {SCHEMA}.customer_departments ORDER BY name')
+                departments = [dict(row) for row in cur.fetchall()]
+                
+                cur.close()
+                conn.close()
+                return response(200, departments)
+            
+            elif method == 'POST':
+                if not check_user_permission(conn, user_id, 'payments.create'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                dept_req = CustomerDepartmentRequest(**data)
+                
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.customer_departments (name, description) VALUES (%s, %s) RETURNING id, name, description",
+                    (dept_req.name, dept_req.description)
+                )
+                row = cur.fetchone()
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(201, dict(row))
+            
+            elif method == 'PUT':
+                if not check_user_permission(conn, user_id, 'payments.update'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                dept_id = data.get('id')
+                dept_req = CustomerDepartmentRequest(**data)
+                
+                if not dept_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(
+                    f"UPDATE {SCHEMA}.customer_departments SET name = %s, description = %s WHERE id = %s RETURNING id, name, description",
+                    (dept_req.name, dept_req.description, dept_id)
+                )
+                row = cur.fetchone()
+                
+                if not row:
+                    conn.close()
+                    return response(404, {'error': 'Department not found'})
+                
+                conn.commit()
+                cur.close()
+                conn.close()
+                return response(200, dict(row))
+            
+            elif method == 'DELETE':
+                if not check_user_permission(conn, user_id, 'payments.delete'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                params = event.get('queryStringParameters', {})
+                dept_id = params.get('id')
+                
+                if not dept_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(f'DELETE FROM {SCHEMA}.customer_departments WHERE id = %s', (dept_id,))
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(200, {'success': True})
+        
+        # Services
+        elif endpoint == 'services':
+            if method == 'GET':
+                if not check_user_permission(conn, user_id, 'payments.read'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                cur.execute(f"""
+                    SELECT s.id, s.name, s.description, s.intermediate_approver_id, s.final_approver_id,
+                           s.customer_department_id, s.category_id, 
+                           c.name as category_name, c.icon as category_icon,
+                           cd.name as department_name,
+                           u1.username as intermediate_approver_name,
+                           u2.username as final_approver_name
+                    FROM {SCHEMA}.services s
+                    LEFT JOIN {SCHEMA}.categories c ON s.category_id = c.id
+                    LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
+                    LEFT JOIN {SCHEMA}.users u1 ON s.intermediate_approver_id = u1.id
+                    LEFT JOIN {SCHEMA}.users u2 ON s.final_approver_id = u2.id
+                    ORDER BY s.name
+                """)
+                services = [dict(row) for row in cur.fetchall()]
+                
+                cur.close()
+                conn.close()
+                return response(200, {'services': services})
+            
+            elif method == 'POST':
+                if not check_user_permission(conn, user_id, 'payments.create'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                svc_req = ServiceRequest(**data)
+                
+                cur.execute(f"""
+                    INSERT INTO {SCHEMA}.services 
+                    (name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id
+                """, (svc_req.name, svc_req.description, svc_req.intermediate_approver_id, 
+                      svc_req.final_approver_id, svc_req.customer_department_id, svc_req.category_id))
+                row = cur.fetchone()
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(201, dict(row))
+            
+            elif method == 'PUT':
+                if not check_user_permission(conn, user_id, 'payments.update'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                svc_id = data.get('id')
+                svc_req = ServiceRequest(**data)
+                
+                if not svc_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(f"""
+                    UPDATE {SCHEMA}.services 
+                    SET name = %s, description = %s, intermediate_approver_id = %s, final_approver_id = %s,
+                        customer_department_id = %s, category_id = %s
+                    WHERE id = %s
+                    RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id
+                """, (svc_req.name, svc_req.description, svc_req.intermediate_approver_id,
+                      svc_req.final_approver_id, svc_req.customer_department_id, svc_req.category_id, svc_id))
+                row = cur.fetchone()
+                
+                if not row:
+                    conn.close()
+                    return response(404, {'error': 'Service not found'})
+                
+                conn.commit()
+                cur.close()
+                conn.close()
+                return response(200, dict(row))
+            
+            elif method == 'DELETE':
+                if not check_user_permission(conn, user_id, 'payments.delete'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                params = event.get('queryStringParameters', {})
+                svc_id = params.get('id')
+                
+                if not svc_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(f'UPDATE {SCHEMA}.payments SET service_id = NULL WHERE service_id = %s', (svc_id,))
+                cur.execute(f'UPDATE {SCHEMA}.savings SET service_id = NULL WHERE service_id = %s', (svc_id,))
+                cur.execute(f'DELETE FROM {SCHEMA}.services WHERE id = %s', (svc_id,))
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(200, {'success': True})
+        
+        # Custom Fields
+        elif endpoint == 'custom-fields':
+            if method == 'GET':
+                if not check_user_permission(conn, user_id, 'payments.read'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                cur.execute(f'SELECT id, name, field_type, options FROM {SCHEMA}.custom_fields ORDER BY name')
+                fields = [dict(row) for row in cur.fetchall()]
+                
+                cur.close()
+                conn.close()
+                return response(200, fields)
+            
+            elif method == 'POST':
+                if not check_user_permission(conn, user_id, 'payments.create'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                field_req = CustomFieldRequest(**data)
+                
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.custom_fields (name, field_type, options) VALUES (%s, %s, %s) RETURNING id, name, field_type, options",
+                    (field_req.name, field_req.field_type, field_req.options)
+                )
+                row = cur.fetchone()
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(201, dict(row))
+            
+            elif method == 'PUT':
+                if not check_user_permission(conn, user_id, 'payments.update'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                data = json.loads(event.get('body', '{}'))
+                field_id = data.get('id')
+                field_req = CustomFieldRequest(**data)
+                
+                if not field_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(
+                    f"UPDATE {SCHEMA}.custom_fields SET name = %s, field_type = %s, options = %s WHERE id = %s RETURNING id, name, field_type, options",
+                    (field_req.name, field_req.field_type, field_req.options, field_id)
+                )
+                row = cur.fetchone()
+                
+                if not row:
+                    conn.close()
+                    return response(404, {'error': 'Custom field not found'})
+                
+                conn.commit()
+                cur.close()
+                conn.close()
+                return response(200, dict(row))
+            
+            elif method == 'DELETE':
+                if not check_user_permission(conn, user_id, 'payments.delete'):
+                    conn.close()
+                    return response(403, {'error': 'Forbidden'})
+                
+                params = event.get('queryStringParameters', {})
+                field_id = params.get('id')
+                
+                if not field_id:
+                    conn.close()
+                    return response(400, {'error': 'ID is required'})
+                
+                cur.execute(f'DELETE FROM {SCHEMA}.custom_fields WHERE id = %s', (field_id,))
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                return response(200, {'success': True})
+        
+        cur.close()
+        conn.close()
+        return response(404, {'error': f'Endpoint not found: {endpoint}'})
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        log(f"Error: {str(e)}")
+        log(f"Traceback: {error_details}")
+        if conn:
+            conn.close()
+        return response(500, {'error': str(e), 'details': error_details})

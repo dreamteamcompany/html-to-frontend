@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { createWorker } from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
 import FUNC2URL from '@/../backend/func2url.json';
+import { API_ENDPOINTS } from '@/config/api';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
@@ -448,7 +449,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         }
       });
 
-      const response = await fetch('https://functions.poehali.dev/7f682e02-1640-40e7-8e2a-7a4e7723b309', {
+      const response = await fetch(API_ENDPOINTS.payments, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
