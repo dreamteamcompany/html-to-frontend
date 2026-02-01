@@ -2912,6 +2912,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_permissions(method, event, conn)
         elif endpoint == 'approvals':
             result = handle_approvals(method, event, conn, payload)
+        elif endpoint == 'approvers':
+            user_data = get_user_with_permissions(conn, payload['user_id'])
+            result = handle_get_approvers(conn, payload, user_data)
         elif endpoint == 'stats':
             result = handle_stats(method, event, conn)
         elif endpoint == 'comments':
