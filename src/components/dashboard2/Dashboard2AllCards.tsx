@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import TotalExpensesCard from './blocks/TotalExpensesCard';
 import IndexationCard from './blocks/IndexationCard';
-import AttentionRequiredCard from './blocks/AttentionRequiredCard';
 import AnnualSavingsStatCard from './blocks/AnnualSavingsStatCard';
 import MonthlyDynamicsChart from './blocks/MonthlyDynamicsChart';
 import CategoryExpensesChart from './blocks/CategoryExpensesChart';
@@ -21,7 +20,6 @@ const Dashboard2AllCards = () => {
   const defaultCards: DashboardCard[] = [
     { id: 'total-expenses', title: 'Общие IT Расходы', type: 'stat' },
     { id: 'total-payments', title: 'Индексация', type: 'stat' },
-    { id: 'attention-required', title: 'Требуют внимания', type: 'stat' },
     { id: 'annual-savings', title: 'Экономия', type: 'stat' },
     { id: 'monthly-dynamics', title: 'Динамика Расходов по Месяцам', type: 'chart' },
     { id: 'category-expenses', title: 'IT Расходы по Категориям', type: 'chart' },
@@ -51,8 +49,6 @@ const Dashboard2AllCards = () => {
         return <TotalExpensesCard />;
       case 'total-payments':
         return <IndexationCard />;
-      case 'attention-required':
-        return <AttentionRequiredCard />;
       case 'annual-savings':
         return <AnnualSavingsStatCard />;
       case 'monthly-dynamics':
