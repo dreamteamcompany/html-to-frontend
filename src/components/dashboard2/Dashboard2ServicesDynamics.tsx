@@ -33,20 +33,14 @@ const Dashboard2ServicesDynamics = () => {
     return amount.toLocaleString('ru-RU') + ' ₽';
   };
 
-  const dynamicHeight = Math.max(300, sortedData.length * 45 + 120);
-  const barHeight = 32;
-  const spacing = 45;
-  const maxWidth = 420;
-  const startX = 160;
   const barColors = ['#3965ff', '#2CD9FF', '#01B574', '#7551e9', '#ffb547'];
 
   return (
-    <Card className="w-full max-w-full sm:max-w-[650px]" style={{ 
+    <Card className="w-full max-w-full" style={{ 
       background: '#111c44',
       backdropFilter: 'blur(60px)',
       border: 'none',
       boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
-      height: `${dynamicHeight}px`,
       overflow: 'hidden',
       position: 'relative',
       marginBottom: '20px'
@@ -62,8 +56,8 @@ const Dashboard2ServicesDynamics = () => {
         pointerEvents: 'none',
         animation: 'rotate 30s linear infinite'
       }} />
-      <CardContent className="p-3 sm:p-4" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }} className="sm:mb-4">
+      <CardContent className="p-3 sm:p-4 md:p-6" style={{ position: 'relative', zIndex: 1 }}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 sm:mb-6">
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="sm:gap-2">
             <Icon name="Activity" size={16} style={{ color: '#2CD9FF' }} className="sm:w-[18px] sm:h-[18px]" />
             <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff' }} className="sm:text-base">Динамика расходов по сервисам</h3>
@@ -71,115 +65,80 @@ const Dashboard2ServicesDynamics = () => {
         </div>
 
         <div style={{ 
-          position: 'relative',
-          width: '100%',
-          minHeight: `${sortedData.length * 45 + 30}px`
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
         }}>
-          <svg viewBox={`0 0 650 ${sortedData.length * 45 + 30}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
-            <defs>
-              {sortedData.map((_, index) => {
-                const color = barColors[index % barColors.length];
-                return (
-                  <linearGradient key={`gradient-${index}`} id={`d2Bar-${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-                    <stop offset="100%" stopColor={color} stopOpacity="1" />
-                  </linearGradient>
-                );
-              })}
-              <filter id="d2Glow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-              const x = startX + ratio * maxWidth;
-              const value = formatAmount(Math.round(ratio * maxAmount));
-              return (
-                <g key={`grid-${idx}`}>
-                  <line
-                    x1={x}
-                    y1="15"
-                    x2={x}
-                    y2={sortedData.length * spacing + 15}
-                    stroke="#56577A"
-                    strokeWidth="1"
-                    strokeDasharray="5 5"
-                  />
-                  <text
-                    x={x}
-                    y="12"
-                    textAnchor="middle"
-                    fill="#c8cfca"
-                    style={{ fontSize: '11px', fontWeight: '500' }}
-                  >
-                    {value}
-                  </text>
-                </g>
-              );
-            })}
-
-            {sortedData.map((service, index) => {
-              const y = 25 + index * spacing;
-              const barWidth = (service.amount / maxAmount) * maxWidth;
-              
-              return (
-                <g key={`bar-${service.name}-${index}`}>
-                  <rect
-                    x={startX}
-                    y={y}
-                    width={barWidth}
-                    height={barHeight}
-                    fill={`url(#d2Bar-${index})`}
-                    rx="8"
-                  />
-                  <text
-                    x="15"
-                    y={y + barHeight / 2 + 4}
-                    textAnchor="start"
-                    fill="#c8cfca"
-                    style={{ fontSize: '14px' }}
-                  >
+          {sortedData.map((service, index) => {
+            const barWidthPercent = (service.amount / maxAmount) * 100;
+            const color = barColors[index % barColors.length];
+            
+            return (
+              <div key={`service-${index}`} style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                borderRadius: '10px',
+                padding: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.borderColor = color + '40';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+              }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span style={{ 
+                    color: '#c8cfca', 
+                    fontSize: '13px',
+                    fontWeight: '500'
+                  }} className="sm:text-sm">
                     {service.name}
-                  </text>
-                  <text
-                    x={startX + barWidth + 10}
-                    y={y + barHeight / 2 + 4}
-                    textAnchor="start"
-                    fill="#fff"
-                    style={{ fontSize: '14px', fontWeight: '600' }}
-                  >
-                    {formatAmount(service.amount)}
-                  </text>
-                  {service.trend !== 0 && (
-                    <g>
-                      <rect
-                        x={startX + barWidth + 95}
-                        y={y + barHeight / 2 - 9}
-                        width="45"
-                        height="18"
-                        rx="3"
-                        fill={service.trend > 0 ? '#01B574' : '#E31A1A'}
-                        opacity="0.9"
-                      />
-                      <text
-                        x={startX + barWidth + 117}
-                        y={y + barHeight / 2 + 4}
-                        textAnchor="middle"
-                        fill="#fff"
-                        style={{ fontSize: '12px', fontWeight: 'bold' }}
-                      >
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span style={{ 
+                      color: '#fff', 
+                      fontSize: '13px', 
+                      fontWeight: '600'
+                    }} className="sm:text-sm">
+                      {formatAmount(service.amount)}
+                    </span>
+                    {service.trend !== 0 && (
+                      <div style={{
+                        background: service.trend > 0 ? '#01B574' : '#E31A1A',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        color: '#fff'
+                      }} className="sm:text-xs">
                         {service.trend > 0 ? '+' : ''}{service.trend}%
-                      </text>
-                    </g>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: '6px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '3px',
+                  overflow: 'hidden',
+                  position: 'relative'
+                }}>
+                  <div style={{
+                    width: `${barWidthPercent}%`,
+                    height: '100%',
+                    background: `linear-gradient(90deg, ${color}60 0%, ${color} 100%)`,
+                    borderRadius: '3px',
+                    transition: 'width 0.5s ease',
+                    boxShadow: `0 0 10px ${color}60`
+                  }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div style={{ 
