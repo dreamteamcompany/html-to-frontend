@@ -6,16 +6,10 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import AddIntegrationDialog from '@/components/monitoring/AddIntegrationDialog';
+import MonitoringHeader from '@/components/monitoring/MonitoringHeader';
+import ServiceCard from '@/components/monitoring/ServiceCard';
+import ServiceEditDialog from '@/components/monitoring/ServiceEditDialog';
 
 interface ServiceBalance {
   id: number;
@@ -342,24 +336,12 @@ const Monitoring = () => {
 
         <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
           <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex justify-between items-center gap-3">
-              <h2 className="text-xl md:text-2xl font-bold text-white">Балансы сервисов</h2>
-              <div className="flex gap-2 shrink-0">
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  className="whitespace-nowrap"
-                  onClick={() => setShowAddDialog(true)}
-                >
-                  <Icon name="Plus" className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">Добавить интеграцию</span>
-                </Button>
-                <Button onClick={refreshAllBalances} variant="outline" size="sm" disabled={loading || services.length === 0} className="whitespace-nowrap">
-                  <Icon name="RefreshCw" className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">Обновить все</span>
-                </Button>
-              </div>
-            </div>
+            <MonitoringHeader
+              onAddClick={() => setShowAddDialog(true)}
+              onRefreshAll={refreshAllBalances}
+              loading={loading}
+              servicesCount={services.length}
+            />
 
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -382,166 +364,28 @@ const Monitoring = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {services.map((service) => (
-                  <Card key={service.id} className="p-6 bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg border ${getStatusColor(service.status)}`}>
-                          <Icon name={getStatusIcon(service.status)} className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-white">{service.service_name}</h3>
-                          <p className="text-sm text-white/50">
-                            Обновлено: {(() => {
-                              const date = new Date(service.last_updated);
-                              console.log('Raw date:', service.last_updated, 'Parsed:', date, 'MSK:', date.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }));
-                              return date.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
-                            })()}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => refreshBalance(service.id)}
-                          className="text-white/60 hover:text-white"
-                        >
-                          <Icon name="RefreshCw" className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => openEditDialog(service)}
-                          className="text-white/60 hover:text-white"
-                        >
-                          <Icon name="Settings" className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => deleteService(service.id, service.service_name)}
-                          className="text-white/60 hover:text-red-500"
-                        >
-                          <Icon name="Trash2" className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      {service.description && (
-                        <p className="text-sm text-white/60">{service.description}</p>
-                      )}
-                      
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-white">
-                          {service.balance.toLocaleString('ru-RU')}
-                        </span>
-                        <span className="text-white/60">{service.currency}</span>
-                      </div>
-
-                      {service.threshold_warning && service.threshold_critical && (
-                        <div className="flex gap-2 text-xs">
-                          <div className="flex items-center gap-1 text-yellow-500">
-                            <Icon name="AlertTriangle" className="h-3 w-3" />
-                            <span>&lt; {service.threshold_warning}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-red-500">
-                            <Icon name="XCircle" className="h-3 w-3" />
-                            <span>&lt; {service.threshold_critical}</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </Card>
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    onRefresh={refreshBalance}
+                    onEdit={openEditDialog}
+                    onDelete={deleteService}
+                    getStatusColor={getStatusColor}
+                    getStatusIcon={getStatusIcon}
+                  />
                 ))}
               </div>
             )}
 
-            {editingService && (
-              <Dialog open={!!editingService} onOpenChange={(open) => !open && setEditingService(null)}>
-                <DialogContent className="bg-[#0f1535] border-white/10 text-white">
-                  <DialogHeader>
-                    <DialogTitle>Настройки сервиса</DialogTitle>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="service_name">Название</Label>
-                      <Input
-                        id="service_name"
-                        value={editForm.service_name}
-                        onChange={(e) => setEditForm({ ...editForm, service_name: e.target.value })}
-                        className="bg-white/5 border-white/10 text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="description">Описание</Label>
-                      <Textarea
-                        id="description"
-                        value={editForm.description}
-                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                        placeholder="Добавьте описание для этого сервиса..."
-                        className="bg-white/5 border-white/10 text-white"
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="threshold_warning">Порог предупреждения</Label>
-                        <Input
-                          id="threshold_warning"
-                          type="number"
-                          value={editForm.threshold_warning}
-                          onChange={(e) => setEditForm({ ...editForm, threshold_warning: Number(e.target.value) })}
-                          className="bg-white/5 border-white/10 text-white"
-                        />
-                        <p className="text-xs text-yellow-500 mt-1">Покажет предупреждение</p>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="threshold_critical">Критический порог</Label>
-                        <Input
-                          id="threshold_critical"
-                          type="number"
-                          value={editForm.threshold_critical}
-                          onChange={(e) => setEditForm({ ...editForm, threshold_critical: Number(e.target.value) })}
-                          className="bg-white/5 border-white/10 text-white"
-                        />
-                        <p className="text-xs text-red-500 mt-1">Покажет критическую ошибку</p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button
-                        variant="outline"
-                        onClick={() => setEditingService(null)}
-                        disabled={saving}
-                      >
-                        Отмена
-                      </Button>
-                      <Button
-                        onClick={saveServiceSettings}
-                        disabled={saving}
-                      >
-                        {saving ? (
-                          <>
-                            <Icon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
-                            Сохранение...
-                          </>
-                        ) : (
-                          <>
-                            <Icon name="Save" className="mr-2 h-4 w-4" />
-                            Сохранить
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
+            <ServiceEditDialog
+              open={!!editingService}
+              onOpenChange={(open) => !open && setEditingService(null)}
+              editingService={editingService}
+              editForm={editForm}
+              setEditForm={setEditForm}
+              onSave={saveServiceSettings}
+              saving={saving}
+            />
 
             <AddIntegrationDialog
               open={showAddDialog}
