@@ -358,8 +358,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # API endpoints
         elif endpoint == 'payments':
             return handle_payments(method, event, conn)
-        elif endpoint == 'categories':
-            return handle_categories(method, event, conn)
         elif endpoint == 'ticket_service_categories':
             return handle_ticket_service_categories(method, event, conn)
         elif endpoint == 'stats':
@@ -822,103 +820,6 @@ def handle_get_approvers(conn, payload: Dict[str, Any], user: Dict[str, Any]) ->
         cur.close()
 
 # API handlers (simplified for context - keeping core logic)
-def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
-    cur = conn.cursor()
-    
-    try:
-        if method == 'GET':
-            payload, error = verify_token_and_permission(event, conn, 'categories.read')
-            if error:
-                return error
-            
-            cur.execute('SELECT id, name, icon, created_at FROM categories ORDER BY name')
-            rows = cur.fetchall()
-            categories = [
-                {
-                    'id': row[0],
-                    'name': row[1],
-                    'icon': row[2],
-                    'created_at': row[3].isoformat() if row[3] else None
-                }
-                for row in rows
-            ]
-            return response(200, categories)
-        
-        elif method == 'POST':
-            payload, error = verify_token_and_permission(event, conn, 'categories.create')
-            if error:
-                return error
-            
-            body = json.loads(event.get('body', '{}'))
-            cat_req = CategoryRequest(**body)
-            
-            cur.execute(
-                "INSERT INTO categories (name, icon) VALUES (%s, %s) RETURNING id, name, icon, created_at",
-                (cat_req.name, cat_req.icon)
-            )
-            row = cur.fetchone()
-            conn.commit()
-            
-            return response(201, {
-                'id': row[0],
-                'name': row[1],
-                'icon': row[2],
-                'created_at': row[3].isoformat() if row[3] else None
-            })
-        
-        elif method == 'PUT':
-            body = json.loads(event.get('body', '{}'))
-            category_id = body.get('id')
-            cat_req = CategoryRequest(**body)
-            
-            if not category_id:
-                return response(400, {'error': 'ID is required'})
-            
-            cur.execute(
-                "UPDATE categories SET name = %s, icon = %s WHERE id = %s RETURNING id, name, icon, created_at",
-                (cat_req.name, cat_req.icon, category_id)
-            )
-            row = cur.fetchone()
-            
-            if not row:
-                return response(404, {'error': 'Category not found'})
-            
-            conn.commit()
-            
-            return response(200, {
-                'id': row[0],
-                'name': row[1],
-                'icon': row[2],
-                'created_at': row[3].isoformat() if row[3] else None
-            })
-        
-        elif method == 'DELETE':
-            payload, error = verify_token_and_permission(event, conn, 'categories.delete')
-            if error:
-                return error
-            
-            params = event.get('queryStringParameters', {})
-            category_id = params.get('id')
-            
-            if not category_id:
-                return response(400, {'error': 'ID is required'})
-            
-            cur.execute('SELECT COUNT(*) FROM payments WHERE category_id = %s', (category_id,))
-            count = cur.fetchone()[0]
-            
-            if count > 0:
-                return response(400, {'error': 'Cannot delete category with existing payments'})
-            
-            cur.execute('DELETE FROM categories WHERE id = %s', (category_id,))
-            conn.commit()
-            
-            return response(200, {'success': True})
-        
-        return response(405, {'error': 'Method not allowed'})
-    
-    finally:
-        cur.close()
-
 def handle_ticket_service_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     cur = conn.cursor()
     
