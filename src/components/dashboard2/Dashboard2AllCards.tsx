@@ -74,12 +74,12 @@ const Dashboard2AllCards = () => {
   return (
     <div className="mb-6 sm:mb-8 overflow-x-hidden max-w-full">
       {/* Stat Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 mb-4 sm:mb-6">
         {statCards.map((card) => {
           return (
             <div 
               key={card.id} 
-              className="w-full h-[280px] sm:h-[300px]"
+              className="w-full"
             >
               {renderCard(card)}
             </div>
