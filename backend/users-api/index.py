@@ -1,344 +1,474 @@
+"""API для управления пользователями, ролями и правами доступа"""
 import json
 import os
-import sys
-import jwt
-import bcrypt
+from typing import Dict, Any, List
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from typing import Dict, Any
+from pydantic import BaseModel, Field
 
-SCHEMA = 't_p61788166_html_to_frontend'
-VERSION = '1.0.0'
+# Environment
+SCHEMA = os.environ.get('DB_SCHEMA', 'public')
+DSN = os.environ['DATABASE_URL']
 
-def log(msg):
-    print(msg, file=sys.stderr, flush=True)
-
-def response(status_code: int, body: Any) -> Dict[str, Any]:
+def response(status: int, body: Any) -> Dict[str, Any]:
+    """Формирует HTTP ответ"""
     return {
-        'statusCode': status_code,
+        'statusCode': status,
         'headers': {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, X-User-Id',
+            'Access-Control-Allow-Headers': 'Content-Type, X-Authorization'
         },
         'body': json.dumps(body, ensure_ascii=False, default=str)
     }
 
-def get_db_connection():
-    dsn = os.environ.get('DATABASE_URL')
-    if not dsn:
-        raise Exception('DATABASE_URL not set')
-    return psycopg2.connect(dsn)
-
-def verify_jwt_token(token: str):
-    secret = os.environ.get('JWT_SECRET')
-    if not secret:
-        return None
-    try:
-        payload = jwt.decode(token, secret, algorithms=['HS256'])
-        return payload
-    except:
-        return None
-
-def verify_token_and_permission(event: Dict[str, Any], conn, required_permission: str):
-    token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+def verify_token(event: Dict[str, Any], conn) -> tuple:
+    """Проверяет токен и возвращает (payload, error_response)"""
+    token = event.get('headers', {}).get('X-Authorization', '').replace('Bearer ', '')
+    
     if not token:
-        return None, response(401, {'error': 'Требуется авторизация'})
-    
-    secret = os.environ.get('JWT_SECRET')
-    if not secret:
-        return None, response(500, {'error': 'Server configuration error'})
-    
-    try:
-        payload = jwt.decode(token, secret, algorithms=['HS256'])
-    except jwt.ExpiredSignatureError:
-        return None, response(401, {'error': 'Токен истек'})
-    except jwt.InvalidTokenError:
-        return None, response(401, {'error': 'Недействительный токен'})
+        return None, response(401, {'error': 'Unauthorized'})
     
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    
-    # Проверяем, является ли пользователь администратором
     cur.execute(f"""
-        SELECT r.name
-        FROM {SCHEMA}.roles r
-        JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
-        WHERE ur.user_id = %s
-    """, (payload['user_id'],))
+        SELECT user_id, expires_at 
+        FROM {SCHEMA}.auth_tokens 
+        WHERE token = %s AND expires_at > NOW()
+    """, (token,))
     
-    roles = [row['name'] for row in cur.fetchall()]
+    row = cur.fetchone()
+    cur.close()
     
-    # Если у пользователя роль администратора - даём полный доступ
-    if 'Администратор' in roles or 'Admin' in roles:
-        cur.close()
-        return payload, None
+    if not row:
+        return None, response(401, {'error': 'Invalid or expired token'})
     
-    # Иначе проверяем конкретное разрешение
+    return {'user_id': row['user_id']}, None
+
+def verify_token_and_permission(event: Dict[str, Any], conn, required_permission: str) -> tuple:
+    """Проверяет токен и права доступа"""
+    payload, error = verify_token(event, conn)
+    if error:
+        return None, error
+    
+    cur = conn.cursor()
     cur.execute(f"""
-        SELECT DISTINCT p.name
-        FROM {SCHEMA}.permissions p
+        SELECT COUNT(*) FROM {SCHEMA}.permissions p
         JOIN {SCHEMA}.role_permissions rp ON p.id = rp.permission_id
         JOIN {SCHEMA}.user_roles ur ON rp.role_id = ur.role_id
         WHERE ur.user_id = %s AND p.name = %s
     """, (payload['user_id'], required_permission))
     
-    if cur.fetchone():
-        cur.close()
-        return payload, None
-    
+    has_permission = cur.fetchone()[0] > 0
     cur.close()
-    return None, response(403, {'error': 'Недостаточно прав'})
+    
+    if not has_permission:
+        return None, response(403, {'error': 'Forbidden'})
+    
+    return payload, None
 
-def handle_approvers(event: Dict[str, Any], conn) -> Dict[str, Any]:
-    """Получить список пользователей для выбора согласующих - доступно всем авторизованным"""
-    token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
-    if not token:
-        return response(401, {'error': 'Требуется авторизация'})
-    
-    payload = verify_jwt_token(token)
-    if not payload:
-        return response(401, {'error': 'Недействительный токен'})
-    
+class RoleRequest(BaseModel):
+    """Модель запроса роли"""
+    name: str = Field(..., min_length=1, max_length=255)
+    description: str = Field(default='')
+    permission_ids: List[int] = Field(default_factory=list)
+
+class PermissionRequest(BaseModel):
+    """Модель запроса разрешения"""
+    name: str = Field(..., min_length=1, max_length=255)
+    resource: str = Field(..., min_length=1, max_length=255)
+    action: str = Field(..., min_length=1, max_length=255)
+    description: str = Field(default='')
+
+def get_user_with_permissions(conn, user_id: int) -> Dict[str, Any]:
+    """Получает пользователя с ролями и правами"""
     cur = conn.cursor(cursor_factory=RealDictCursor)
+    
     cur.execute(f"""
-        SELECT 
-            u.id, u.full_name, u.position,
-            COALESCE(
-                array_agg(r.name) FILTER (WHERE r.id IS NOT NULL),
-                ARRAY[]::text[]
-            ) as roles
-        FROM {SCHEMA}.users u
-        LEFT JOIN {SCHEMA}.user_roles ur ON u.id = ur.user_id
-        LEFT JOIN {SCHEMA}.roles r ON ur.role_id = r.id
-        WHERE u.is_active = true
-        GROUP BY u.id
-        ORDER BY u.full_name
-    """)
+        SELECT id, username, email, full_name, is_active, created_at, last_login
+        FROM {SCHEMA}.users
+        WHERE id = %s
+    """, (user_id,))
     
-    approvers = [dict(row) for row in cur.fetchall()]
-    cur.close()
-    
-    return response(200, approvers)
-
-def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
-    if method == 'GET':
-        user_payload, error = verify_token_and_permission(event, conn, 'users.read')
-        if error:
-            return error
-        
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute(f"""
-            SELECT 
-                u.id, u.username, u.full_name, u.position, u.photo_url, u.is_active, 
-                u.created_at, u.last_login,
-                COALESCE(
-                    array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
-                    ARRAY[]::json[]
-                ) as roles
-            FROM {SCHEMA}.users u
-            LEFT JOIN {SCHEMA}.user_roles ur ON u.id = ur.user_id
-            LEFT JOIN {SCHEMA}.roles r ON ur.role_id = r.id
-            GROUP BY u.id
-            ORDER BY u.created_at DESC
-        """)
-        
-        users = [dict(row) for row in cur.fetchall()]
+    user = cur.fetchone()
+    if not user:
         cur.close()
-        
-        return response(200, users)
+        return None
     
-    elif method == 'POST':
-        user_payload, error = verify_token_and_permission(event, conn, 'users.create')
+    user = dict(user)
+    
+    # Получаем роли пользователя
+    cur.execute(f"""
+        SELECT r.id, r.name, r.description
+        FROM {SCHEMA}.roles r
+        JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
+        WHERE ur.user_id = %s
+    """, (user_id,))
+    user['roles'] = [dict(row) for row in cur.fetchall()]
+    
+    # Получаем все права пользователя
+    cur.execute(f"""
+        SELECT DISTINCT p.id, p.name, p.resource, p.action
+        FROM {SCHEMA}.permissions p
+        JOIN {SCHEMA}.role_permissions rp ON p.id = rp.permission_id
+        JOIN {SCHEMA}.user_roles ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = %s
+    """, (user_id,))
+    user['permissions'] = [dict(row) for row in cur.fetchall()]
+    
+    cur.close()
+    return user
+
+def handle_users_endpoint(event: Dict[str, Any], conn, method: str, path: str) -> Dict[str, Any]:
+    """Обработка /users endpoint"""
+    path_parts = path.rstrip('/').split('/')
+    user_id = None
+    if len(path_parts) > 0 and path_parts[-1].isdigit():
+        user_id = int(path_parts[-1])
+    
+    if method == 'GET':
+        payload, error = verify_token_and_permission(event, conn, 'users:read')
         if error:
             return error
         
-        body_data = json.loads(event.get('body', '{}'))
-        username = body_data.get('username', '').strip()
-        password = body_data.get('password', '')
-        full_name = body_data.get('full_name', '').strip()
-        position = body_data.get('position', '').strip()
-        photo_url = body_data.get('photo_url', '').strip()
-        role_ids = body_data.get('role_ids', [])
-        
-        if not username or not password or not full_name:
-            return response(400, {'error': 'Логин, пароль и имя обязательны'})
-        
-        if len(password) < 4:
-            return response(400, {'error': 'Пароль должен быть не менее 4 символов'})
-        
-        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
-        try:
+        if user_id:
+            # Получить конкретного пользователя
+            user = get_user_with_permissions(conn, user_id)
+            if not user:
+                return response(404, {'error': 'Пользователь не найден'})
+            return response(200, {'user': user})
+        else:
+            # Получить всех пользователей
             cur.execute(f"""
-                INSERT INTO {SCHEMA}.users (username, password_hash, full_name, position, photo_url, email, is_active)
-                VALUES (%s, %s, %s, %s, %s, %s, true)
-                RETURNING id, username, full_name, position, photo_url, is_active, created_at
-            """, (username, password_hash, full_name, position, photo_url, username + '@example.com'))
+                SELECT id, username, email, full_name, is_active, created_at, last_login
+                FROM {SCHEMA}.users
+                ORDER BY created_at DESC
+            """)
             
-            new_user = cur.fetchone()
+            users = [dict(row) for row in cur.fetchall()]
             
-            if role_ids:
-                for role_id in role_ids:
-                    cur.execute(f"""
-                        INSERT INTO {SCHEMA}.user_roles (user_id, role_id, assigned_by)
-                        VALUES (%s, %s, %s)
-                    """, (new_user['id'], role_id, user_payload['user_id']))
+            # Для каждого пользователя получаем роли
+            for user in users:
+                cur.execute(f"""
+                    SELECT r.id, r.name, r.description
+                    FROM {SCHEMA}.roles r
+                    JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
+                    WHERE ur.user_id = %s
+                """, (user['id'],))
+                user['roles'] = [dict(row) for row in cur.fetchall()]
             
-            conn.commit()
-            
-            cur.execute(f"""
-                SELECT 
-                    u.id, u.username, u.full_name, u.position, u.photo_url, u.is_active, 
-                    u.created_at, u.last_login,
-                    COALESCE(
-                        array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
-                        ARRAY[]::json[]
-                    ) as roles
-                FROM {SCHEMA}.users u
-                LEFT JOIN {SCHEMA}.user_roles ur ON u.id = ur.user_id
-                LEFT JOIN {SCHEMA}.roles r ON ur.role_id = r.id
-                WHERE u.id = %s
-                GROUP BY u.id
-            """, (new_user['id'],))
-            
-            created_user = cur.fetchone()
             cur.close()
-            
-            return response(201, dict(created_user))
-        except psycopg2.IntegrityError:
-            conn.rollback()
-            cur.close()
-            return response(409, {'error': 'Пользователь с таким логином уже существует'})
+            return response(200, {'users': users})
     
     elif method == 'PUT':
-        user_payload, error = verify_token_and_permission(event, conn, 'users.update')
+        payload, error = verify_token_and_permission(event, conn, 'users:update')
         if error:
             return error
         
-        query_params = event.get('queryStringParameters', {}) or {}
-        user_id = query_params.get('id')
-        
         if not user_id:
-            return response(400, {'error': 'ID пользователя обязателен'})
+            return response(400, {'error': 'ID пользователя не указан'})
         
-        body_data = json.loads(event.get('body', '{}'))
-        
+        body = json.loads(event.get('body', '{}'))
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
-        if 'is_active' in body_data:
-            cur.execute(f"""
-                UPDATE {SCHEMA}.users SET is_active = %s
-                WHERE id = %s
-                RETURNING id, username, full_name, position, photo_url, is_active
-            """, (body_data['is_active'], user_id))
-            
-            updated_user = cur.fetchone()
-            conn.commit()
+        # Проверяем существование пользователя
+        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE id = %s", (user_id,))
+        if not cur.fetchone():
             cur.close()
-            
-            return response(200, dict(updated_user))
+            return response(404, {'error': 'Пользователь не найден'})
         
-        username = body_data.get('username', '').strip()
-        full_name = body_data.get('full_name', '').strip()
-        position = body_data.get('position', '').strip()
-        photo_url = body_data.get('photo_url', '').strip()
-        password = body_data.get('password')
-        role_ids = body_data.get('role_ids')
+        # Обновляем поля пользователя
+        update_fields = []
+        update_values = []
         
-        if not username or not full_name:
-            return response(400, {'error': 'Логин и имя обязательны'})
+        if 'full_name' in body:
+            update_fields.append('full_name = %s')
+            update_values.append(body['full_name'])
         
-        try:
-            cur.execute(f"""
-                UPDATE {SCHEMA}.users 
-                SET username = %s, full_name = %s, position = %s, photo_url = %s
-                WHERE id = %s
-            """, (username, full_name, position, photo_url, user_id))
-            
-            if password and len(password) >= 4:
-                password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = %s WHERE id = %s", (password_hash, user_id))
-            
-            if role_ids is not None:
-                cur.execute(f"DELETE FROM {SCHEMA}.user_roles WHERE user_id = %s", (user_id,))
-                for role_id in role_ids:
-                    cur.execute(f"""
-                        INSERT INTO {SCHEMA}.user_roles (user_id, role_id, assigned_by)
-                        VALUES (%s, %s, %s)
-                    """, (user_id, role_id, user_payload['user_id']))
-            
-            conn.commit()
-            
-            cur.execute(f"""
-                SELECT 
-                    u.id, u.username, u.full_name, u.position, u.photo_url, u.is_active, 
-                    u.created_at, u.last_login,
-                    COALESCE(
-                        array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
-                        ARRAY[]::json[]
-                    ) as roles
-                FROM {SCHEMA}.users u
-                LEFT JOIN {SCHEMA}.user_roles ur ON u.id = ur.user_id
-                LEFT JOIN {SCHEMA}.roles r ON ur.role_id = r.id
-                WHERE u.id = %s
-                GROUP BY u.id
-            """, (user_id,))
-            
-            updated_user = cur.fetchone()
-            cur.close()
-            
-            if not updated_user:
-                return response(404, {'error': 'Пользователь не найден'})
-            
-            return response(200, dict(updated_user))
-        except psycopg2.IntegrityError:
-            conn.rollback()
-            cur.close()
-            return response(409, {'error': 'Пользователь с таким логином уже существует'})
-    
-    elif method == 'DELETE':
-        user_payload, error = verify_token_and_permission(event, conn, 'users.delete')
-        if error:
-            return error
+        if 'is_active' in body:
+            update_fields.append('is_active = %s')
+            update_values.append(body['is_active'])
         
-        query_params = event.get('queryStringParameters', {}) or {}
-        user_id = query_params.get('id')
+        if 'role_ids' in body:
+            # Обновляем роли пользователя
+            cur.execute(f"DELETE FROM {SCHEMA}.user_roles WHERE user_id = %s", (user_id,))
+            for role_id in body['role_ids']:
+                cur.execute(f"""
+                    INSERT INTO {SCHEMA}.user_roles (user_id, role_id)
+                    VALUES (%s, %s)
+                """, (user_id, role_id))
         
-        if not user_id:
-            return response(400, {'error': 'ID пользователя обязателен'})
+        if update_fields:
+            update_values.append(user_id)
+            query = f"UPDATE {SCHEMA}.users SET {', '.join(update_fields)} WHERE id = %s"
+            cur.execute(query, update_values)
         
-        cur = conn.cursor()
-        cur.execute(f"DELETE FROM {SCHEMA}.users WHERE id = %s", (user_id,))
         conn.commit()
         cur.close()
         
-        return response(200, {'message': 'Пользователь удалён'})
+        return response(200, {'message': 'Пользователь обновлён'})
     
-    return response(405, {'error': f'Метод {method} не поддерживается'})
+    return response(405, {'error': 'Method not allowed'})
 
-def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    """API для управления пользователями и списка согласующих"""
-    log(f"[users-api] Event: {event.get('httpMethod')} {event.get('queryStringParameters')}")
+def handle_roles_endpoint(event: Dict[str, Any], conn, method: str, path: str) -> Dict[str, Any]:
+    """Обработка /roles endpoint"""
+    path_parts = path.rstrip('/').split('/')
+    role_id = None
+    if len(path_parts) > 0 and path_parts[-1].isdigit():
+        role_id = int(path_parts[-1])
     
+    if method == 'GET':
+        payload, error = verify_token_and_permission(event, conn, 'roles:read')
+        if error:
+            return error
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cur.execute(f"""
+            SELECT id, name, description, created_at, updated_at
+            FROM {SCHEMA}.roles
+            ORDER BY name
+        """)
+        
+        roles = [dict(row) for row in cur.fetchall()]
+        
+        # Для каждой роли получаем разрешения
+        for role in roles:
+            cur.execute(f"""
+                SELECT p.id, p.name, p.resource, p.action, p.description
+                FROM {SCHEMA}.permissions p
+                JOIN {SCHEMA}.role_permissions rp ON p.id = rp.permission_id
+                WHERE rp.role_id = %s
+            """, (role['id'],))
+            role['permissions'] = [dict(row) for row in cur.fetchall()]
+        
+        cur.close()
+        return response(200, {'roles': roles})
+    
+    elif method == 'POST':
+        payload, error = verify_token_and_permission(event, conn, 'roles:create')
+        if error:
+            return error
+        
+        body = json.loads(event.get('body', '{}'))
+        role_req = RoleRequest(**body)
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Создаём роль
+        cur.execute(f"""
+            INSERT INTO {SCHEMA}.roles (name, description)
+            VALUES (%s, %s)
+            RETURNING id
+        """, (role_req.name, role_req.description))
+        
+        role_id = cur.fetchone()['id']
+        
+        # Добавляем разрешения
+        for permission_id in role_req.permission_ids:
+            cur.execute(f"""
+                INSERT INTO {SCHEMA}.role_permissions (role_id, permission_id)
+                VALUES (%s, %s)
+            """, (role_id, permission_id))
+        
+        conn.commit()
+        cur.close()
+        
+        return response(201, {'id': role_id, 'message': 'Роль создана'})
+    
+    elif method == 'PUT':
+        payload, error = verify_token_and_permission(event, conn, 'roles:update')
+        if error:
+            return error
+        
+        if not role_id:
+            return response(400, {'error': 'ID роли не указан'})
+        
+        body = json.loads(event.get('body', '{}'))
+        role_req = RoleRequest(**body)
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cur.execute(f"SELECT id FROM {SCHEMA}.roles WHERE id = %s", (role_id,))
+        if not cur.fetchone():
+            cur.close()
+            return response(404, {'error': 'Роль не найдена'})
+        
+        # Обновляем роль
+        cur.execute(f"""
+            UPDATE {SCHEMA}.roles
+            SET name = %s, description = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """, (role_req.name, role_req.description, role_id))
+        
+        # Обновляем разрешения
+        cur.execute(f"DELETE FROM {SCHEMA}.role_permissions WHERE role_id = %s", (role_id,))
+        for permission_id in role_req.permission_ids:
+            cur.execute(f"""
+                INSERT INTO {SCHEMA}.role_permissions (role_id, permission_id)
+                VALUES (%s, %s)
+            """, (role_id, permission_id))
+        
+        conn.commit()
+        cur.close()
+        
+        return response(200, {'message': 'Роль обновлена'})
+    
+    elif method == 'DELETE':
+        payload, error = verify_token_and_permission(event, conn, 'roles:delete')
+        if error:
+            return error
+        
+        if not role_id:
+            return response(400, {'error': 'ID роли не указан'})
+        
+        cur = conn.cursor()
+        
+        # Проверяем, что роль не используется
+        cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.user_roles WHERE role_id = %s", (role_id,))
+        if cur.fetchone()[0] > 0:
+            cur.close()
+            return response(400, {'error': 'Роль используется пользователями'})
+        
+        cur.execute(f"DELETE FROM {SCHEMA}.role_permissions WHERE role_id = %s", (role_id,))
+        cur.execute(f"DELETE FROM {SCHEMA}.roles WHERE id = %s", (role_id,))
+        
+        if cur.rowcount == 0:
+            cur.close()
+            return response(404, {'error': 'Роль не найдена'})
+        
+        conn.commit()
+        cur.close()
+        return response(200, {'message': 'Роль удалена'})
+    
+    return response(405, {'error': 'Method not allowed'})
+
+def handle_permissions_endpoint(event: Dict[str, Any], conn, method: str, path: str) -> Dict[str, Any]:
+    """Обработка /permissions endpoint"""
+    path_parts = path.rstrip('/').split('/')
+    perm_id = None
+    if len(path_parts) > 0 and path_parts[-1].isdigit():
+        perm_id = int(path_parts[-1])
+    
+    if method == 'GET':
+        payload, error = verify_token_and_permission(event, conn, 'permissions:read')
+        if error:
+            return error
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cur.execute(f"""
+            SELECT id, name, resource, action, description, created_at
+            FROM {SCHEMA}.permissions
+            ORDER BY resource, action
+        """)
+        
+        permissions = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        
+        return response(200, {'permissions': permissions})
+    
+    elif method == 'POST':
+        payload, error = verify_token_and_permission(event, conn, 'permissions:create')
+        if error:
+            return error
+        
+        body = json.loads(event.get('body', '{}'))
+        perm_req = PermissionRequest(**body)
+        
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cur.execute(f"""
+            INSERT INTO {SCHEMA}.permissions (name, resource, action, description)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        """, (perm_req.name, perm_req.resource, perm_req.action, perm_req.description))
+        
+        perm_id = cur.fetchone()['id']
+        conn.commit()
+        cur.close()
+        
+        return response(201, {'id': perm_id, 'message': 'Разрешение создано'})
+    
+    elif method == 'PUT':
+        payload, error = verify_token_and_permission(event, conn, 'permissions:update')
+        if error:
+            return error
+        
+        if not perm_id:
+            return response(400, {'error': 'ID разрешения не указан'})
+        
+        body = json.loads(event.get('body', '{}'))
+        perm_req = PermissionRequest(**body)
+        
+        cur = conn.cursor()
+        
+        cur.execute(f"""
+            UPDATE {SCHEMA}.permissions
+            SET name = %s, resource = %s, action = %s, description = %s
+            WHERE id = %s
+        """, (perm_req.name, perm_req.resource, perm_req.action, perm_req.description, perm_id))
+        
+        if cur.rowcount == 0:
+            cur.close()
+            return response(404, {'error': 'Разрешение не найдено'})
+        
+        conn.commit()
+        cur.close()
+        
+        return response(200, {'message': 'Разрешение обновлено'})
+    
+    elif method == 'DELETE':
+        payload, error = verify_token_and_permission(event, conn, 'permissions:delete')
+        if error:
+            return error
+        
+        if not perm_id:
+            return response(400, {'error': 'ID разрешения не указан'})
+        
+        cur = conn.cursor()
+        
+        cur.execute(f"DELETE FROM {SCHEMA}.role_permissions WHERE permission_id = %s", (perm_id,))
+        cur.execute(f"DELETE FROM {SCHEMA}.permissions WHERE id = %s", (perm_id,))
+        
+        if cur.rowcount == 0:
+            cur.close()
+            return response(404, {'error': 'Разрешение не найдено'})
+        
+        conn.commit()
+        cur.close()
+        return response(200, {'message': 'Разрешение удалено'})
+    
+    return response(405, {'error': 'Method not allowed'})
+
+def handler(event: dict, context) -> dict:
+    """
+    API для управления пользователями, ролями и правами доступа.
+    
+    Endpoints:
+    - GET/PUT /users - работа с пользователями
+    - GET/POST/PUT/DELETE /roles - работа с ролями
+    - GET/POST/PUT/DELETE /permissions - работа с правами доступа
+    """
     method = event.get('httpMethod', 'GET')
+    path = event.get('path', '/')
     
+    # CORS preflight
     if method == 'OPTIONS':
         return response(200, {})
     
-    params = event.get('queryStringParameters') or {}
-    endpoint = params.get('endpoint', 'users')
-    
-    conn = get_db_connection()
+    conn = psycopg2.connect(DSN)
     
     try:
-        if endpoint == 'approvers':
-            return handle_approvers(event, conn)
-        elif endpoint == 'users':
-            return handle_users(method, event, conn)
+        if 'permissions' in path or 'permission' in path:
+            return handle_permissions_endpoint(event, conn, method, path)
+        elif 'roles' in path or 'role' in path:
+            return handle_roles_endpoint(event, conn, method, path)
         else:
-            return response(404, {'error': 'Endpoint not found'})
+            # /users endpoint
+            return handle_users_endpoint(event, conn, method, path)
+    
     finally:
         conn.close()
