@@ -8,10 +8,10 @@ const Dashboard2ChartsSection = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8 overflow-x-hidden max-w-full">
       <div className="min-w-0 max-w-full overflow-hidden">
-        <MonthlyDynamicsChart />
+        <CategoryExpensesChart />
       </div>
       <div className="min-w-0 max-w-full overflow-hidden">
-        <CategoryExpensesChart />
+        <MonthlyDynamicsChart />
       </div>
       <div className="min-w-0 max-w-full overflow-hidden">
         <ContractorComparisonChart />
