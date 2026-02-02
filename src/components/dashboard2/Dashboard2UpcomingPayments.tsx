@@ -207,8 +207,8 @@ const Dashboard2UpcomingPayments = () => {
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <h4 style={{ color: '#fff', fontSize: '14px', fontWeight: '700', wordBreak: 'break-word' }} className="sm:text-base">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 style={{ color: '#fff', fontSize: '14px', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="sm:text-base sm:whitespace-normal">
                           {payment.name}
                         </h4>
                         {payment.urgent && (
