@@ -14,10 +14,10 @@ const Dashboard2ChartsSection = () => {
         <CategoryExpensesChart />
       </div>
       <div className="min-w-0 max-w-full overflow-hidden">
-        <ExpenseStructureChart />
+        <ContractorComparisonChart />
       </div>
       <div className="min-w-0 max-w-full overflow-hidden">
-        <ContractorComparisonChart />
+        <ExpenseStructureChart />
       </div>
       <div className="min-w-0 max-w-full overflow-hidden">
         <LegalEntityComparisonChart />
