@@ -194,8 +194,8 @@ const Dashboard2UpcomingPayments = () => {
                   }} />
                 )}
                 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4" style={{ width: '100%', overflow: 'hidden' }}>
-                  <div className="flex items-center gap-3 flex-1 min-w-0" style={{ overflow: 'hidden' }}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div style={{ 
                       background: `linear-gradient(135deg, ${payment.color} 0%, ${payment.color}cc 100%)`,
                       padding: '12px',
@@ -206,9 +206,9 @@ const Dashboard2UpcomingPayments = () => {
                       <Icon name={payment.icon} size={20} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
                     </div>
 
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                      <div className="flex items-center gap-2 mb-1" style={{ overflow: 'hidden' }}>
-                        <h4 style={{ color: '#fff', fontSize: '14px', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} className="sm:text-base">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="flex items-center gap-2 mb-1 overflow-hidden">
+                        <h4 style={{ color: '#fff', fontSize: '14px', fontWeight: '700', overflow: 'hidden', textOverflow: 'ellipsis' }} className="sm:text-base whitespace-nowrap flex-1">
                           {payment.name}
                         </h4>
                         {payment.urgent && (
