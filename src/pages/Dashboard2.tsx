@@ -130,28 +130,28 @@ const Dashboard2 = () => {
 
             <TabsContent value="today" className="space-y-6 mt-6">
               <Dashboard2AllCards />
-              <Dashboard2BudgetBreakdown />
               <Dashboard2Charts />
+              <Dashboard2BudgetBreakdown />
             </TabsContent>
             <TabsContent value="week" className="space-y-6 mt-6">
               <Dashboard2AllCards />
-              <Dashboard2BudgetBreakdown />
               <Dashboard2Charts />
+              <Dashboard2BudgetBreakdown />
             </TabsContent>
             <TabsContent value="month" className="space-y-6 mt-6">
               <Dashboard2AllCards />
-              <Dashboard2BudgetBreakdown />
               <Dashboard2Charts />
+              <Dashboard2BudgetBreakdown />
             </TabsContent>
             <TabsContent value="year" className="space-y-6 mt-6">
               <Dashboard2AllCards />
-              <Dashboard2BudgetBreakdown />
               <Dashboard2Charts />
+              <Dashboard2BudgetBreakdown />
             </TabsContent>
             <TabsContent value="custom" className="space-y-6 mt-6">
               <Dashboard2AllCards />
-              <Dashboard2BudgetBreakdown />
               <Dashboard2Charts />
+              <Dashboard2BudgetBreakdown />
             </TabsContent>
           </Tabs>
         </div>
