@@ -40,7 +40,8 @@ def create_jwt_token(user_id: int, email: str) -> str:
     return jwt.encode(payload, secret, algorithm='HS256')
 
 def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    token = event.get('headers', {}).get('X-Authorization', '').replace('Bearer ', '')
+    headers = event.get('headers', {})
+    token = headers.get('X-Auth-Token') or headers.get('x-auth-token') or headers.get('X-Authorization', '').replace('Bearer ', '')
     
     if not token:
         return None
@@ -111,7 +112,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, X-Authorization',
+                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, X-Authorization',
                 'Access-Control-Max-Age': '86400'
             },
             'body': '',

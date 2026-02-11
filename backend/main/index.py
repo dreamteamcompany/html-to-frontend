@@ -1425,14 +1425,25 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if not entity_id:
                 return response(400, {'error': 'ID обязателен'})
             
-            cur.execute(f"DELETE FROM {SCHEMA}.legal_entities WHERE id = %s RETURNING id", (entity_id,))
-            row = cur.fetchone()
-            
-            if not row:
-                return response(404, {'error': 'Legal entity not found'})
-            
-            conn.commit()
-            return response(200, {'message': 'Legal entity deleted'})
+            try:
+                cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.payments WHERE legal_entity_id = %s", (entity_id,))
+                count = cur.fetchone()[0]
+                
+                if count > 0:
+                    return response(400, {'error': f'Невозможно удалить юридическое лицо: с ним связано {count} платежей'})
+                
+                cur.execute(f"DELETE FROM {SCHEMA}.legal_entities WHERE id = %s RETURNING id", (entity_id,))
+                row = cur.fetchone()
+                
+                if not row:
+                    return response(404, {'error': 'Юридическое лицо не найдено'})
+                
+                conn.commit()
+                return response(200, {'message': 'Юридическое лицо удалено'})
+            except Exception as e:
+                conn.rollback()
+                log(f"Error deleting legal entity: {e}")
+                return response(500, {'error': 'Ошибка при удалении юридического лица'})
         
         return response(405, {'error': 'Method not allowed'})
     
@@ -1669,17 +1680,31 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             if error:
                 return error
             
-            body_data = json.loads(event.get('body', '{}'))
-            contractor_id = body_data.get('id')
+            params = event.get('queryStringParameters', {}) or {}
+            contractor_id = params.get('id')
             
-            cur.execute("DELETE FROM contractors WHERE id = %s RETURNING id", (contractor_id,))
-            row = cur.fetchone()
+            if not contractor_id:
+                return response(400, {'error': 'ID обязателен'})
             
-            if not row:
-                return response(404, {'error': 'Contractor not found'})
-            
-            conn.commit()
-            return response(200, {'message': 'Contractor deleted'})
+            try:
+                cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.payments WHERE contractor_id = %s", (contractor_id,))
+                count = cur.fetchone()[0]
+                
+                if count > 0:
+                    return response(400, {'error': f'Невозможно удалить контрагента: с ним связано {count} платежей'})
+                
+                cur.execute(f"DELETE FROM {SCHEMA}.contractors WHERE id = %s RETURNING id", (contractor_id,))
+                row = cur.fetchone()
+                
+                if not row:
+                    return response(404, {'error': 'Контрагент не найден'})
+                
+                conn.commit()
+                return response(200, {'message': 'Контрагент удалён'})
+            except Exception as e:
+                conn.rollback()
+                log(f"Error deleting contractor: {e}")
+                return response(500, {'error': 'Ошибка при удалении контрагента'})
         
         return response(405, {'error': 'Method not allowed'})
     

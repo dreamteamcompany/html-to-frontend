@@ -129,9 +129,13 @@ const LegalEntities = () => {
 
       if (response.ok) {
         loadEntities();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Ошибка при удалении юридического лица');
       }
     } catch (err) {
       console.error('Failed to delete legal entity:', err);
+      alert('Ошибка при удалении юридического лица');
     }
   };
 
