@@ -1419,10 +1419,13 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if error:
                 return error
             
-            body_data = json.loads(event.get('body', '{}'))
-            entity_id = body_data.get('id')
+            params = event.get('queryStringParameters', {}) or {}
+            entity_id = params.get('id')
             
-            cur.execute("DELETE FROM legal_entities WHERE id = %s RETURNING id", (entity_id,))
+            if not entity_id:
+                return response(400, {'error': 'ID обязателен'})
+            
+            cur.execute(f"DELETE FROM {SCHEMA}.legal_entities WHERE id = %s RETURNING id", (entity_id,))
             row = cur.fetchone()
             
             if not row:
