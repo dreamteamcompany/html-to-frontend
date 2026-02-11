@@ -118,13 +118,12 @@ const LegalEntities = () => {
 
     try {
       const response = await apiFetch(
-        'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities',
+        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=legal-entities&id=${id}`,
         {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ id }),
         }
       );
 
