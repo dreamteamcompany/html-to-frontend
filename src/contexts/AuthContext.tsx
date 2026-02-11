@@ -124,7 +124,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log('[checkAuth] Verifying token with backend...');
       const response = await fetch('https://functions.poehali.dev/cc3b9628-07ec-420e-b340-1c20cad986da?endpoint=me', {
         headers: {
-          'Authorization': `Bearer ${savedToken}`,
+          'X-Auth-Token': savedToken,
         },
       });
 
