@@ -2868,6 +2868,25 @@ def handle_audit_logs(method: str, event: Dict[str, Any], conn, payload: Dict[st
                 cur.close()
             return response(500, {'error': str(e)})
     
+    elif method == 'DELETE':
+        params = event.get('queryStringParameters', {})
+        log_id = params.get('id')
+        
+        if not log_id:
+            return response(400, {'error': 'Missing log ID'})
+        
+        cur = conn.cursor()
+        try:
+            cur.execute(f'DELETE FROM {SCHEMA}.audit_logs WHERE id = %s', (int(log_id),))
+            conn.commit()
+            cur.close()
+            return response(200, {'success': True})
+        except Exception as e:
+            conn.rollback()
+            if cur:
+                cur.close()
+            return response(500, {'error': str(e)})
+    
     return response(405, {'error': 'Method not allowed'})
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
