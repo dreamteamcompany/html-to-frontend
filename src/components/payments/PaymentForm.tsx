@@ -224,14 +224,25 @@ const PaymentForm = ({
                   onValueChange={(value) => setFormData({ ...formData, department_id: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите отдел" />
+                    <SelectValue placeholder="Выберите отдел-заказчик" />
                   </SelectTrigger>
                   <SelectContent>
-                    {customerDepartments.map((department) => (
-                      <SelectItem key={department.id} value={department.id.toString()}>
-                        {department.name}
-                      </SelectItem>
-                    ))}
+                    {customerDepartments.length === 0 ? (
+                      <div className="p-2 text-sm text-muted-foreground text-center">
+                        Нет доступных отделов
+                      </div>
+                    ) : (
+                      customerDepartments.map((department) => (
+                        <SelectItem key={department.id} value={department.id.toString()}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{department.name}</span>
+                            {department.description && (
+                              <span className="text-xs text-muted-foreground">{department.description}</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
