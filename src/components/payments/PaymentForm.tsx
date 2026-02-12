@@ -133,14 +133,41 @@ const PaymentForm = ({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Категория</Label>
+                <Label htmlFor="service">Сервис *</Label>
+                <Select
+                  value={formData.service_id}
+                  onValueChange={(value) => {
+                    const selectedService = services.find(s => s.id.toString() === value);
+                    setFormData({ 
+                      ...formData, 
+                      service_id: value,
+                      service_description: selectedService?.description || '',
+                      category_id: selectedService?.category_id ? selectedService.category_id.toString() : formData.category_id
+                    });
+                  }}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите сервис" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.map((service) => (
+                      <SelectItem key={service.id} value={service.id.toString()}>
+                        {service.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Категория *</Label>
                 <Select
                   value={formData.category_id}
                   onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-                  disabled={true}
+                  required
                 >
-                  <SelectTrigger className="bg-muted/50 cursor-not-allowed">
-                    <SelectValue placeholder="Выбирается автоматически из сервиса" />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите категорию" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
@@ -208,32 +235,6 @@ const PaymentForm = ({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="service">Сервис</Label>
-                <Select
-                  value={formData.service_id}
-                  onValueChange={(value) => {
-                    const selectedService = services.find(s => s.id.toString() === value);
-                    setFormData({ 
-                      ...formData, 
-                      service_id: value,
-                      service_description: selectedService?.description || '',
-                      category_id: selectedService?.category_id ? selectedService.category_id.toString() : formData.category_id
-                    });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите сервис" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {services.map((service) => (
-                      <SelectItem key={service.id} value={service.id.toString()}>
-                        {service.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               {formData.service_id && (
                 <div className="space-y-2">
                   <Label htmlFor="service_description">Описание сервиса</Label>
@@ -248,20 +249,31 @@ const PaymentForm = ({
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="amount">Сумма</Label>
-                <Input
-                  id="amount"
-                  type="text"
-                  value={formData.amount ? formData.amount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : ''}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\s/g, '');
-                    if (/^\d*$/.test(value)) {
-                      setFormData({ ...formData, amount: value });
-                    }
-                  }}
-                  placeholder="0"
-                  required
-                />
+                <Label htmlFor="amount">Сумма *</Label>
+                <div className="relative">
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.amount || ''}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    placeholder="0.00"
+                    className="pr-12"
+                    required
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                    руб.
+                  </span>
+                </div>
+                {formData.amount && parseFloat(formData.amount) > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {parseFloat(formData.amount).toLocaleString('ru-RU', { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    })} руб.
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="invoice_number">Номер счёта</Label>
