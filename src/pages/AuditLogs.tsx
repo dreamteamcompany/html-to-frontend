@@ -7,6 +7,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
+import ApprovedPaymentDetailsModal from '@/components/payments/ApprovedPaymentDetailsModal';
 
 interface AuditLog {
   id: number;
@@ -38,6 +41,9 @@ const AuditLogs = () => {
   const [actionFilter, setActionFilter] = useState<string>('all');
   const [userFilter, setUserFilter] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
+  const [selectedApprovedPaymentId, setSelectedApprovedPaymentId] = useState<number | null>(null);
+  const [deletingLogId, setDeletingLogId] = useState<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -83,6 +89,43 @@ const AuditLogs = () => {
 
     loadLogs();
   }, [token, entityTypeFilter, actionFilter, toast]);
+
+  const handlePaymentClick = (entityType: string, entityId: number) => {
+    if (entityType === 'payment') {
+      setSelectedPaymentId(entityId);
+    } else if (entityType === 'approved_payment') {
+      setSelectedApprovedPaymentId(entityId);
+    }
+  };
+
+  const handleDeleteLog = async (logId: number) => {
+    if (!confirm('Удалить эту запись из истории?')) return;
+    
+    setDeletingLogId(logId);
+    try {
+      const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=audit-logs&id=${logId}`, {
+        method: 'DELETE',
+        headers: { 'X-Auth-Token': token || '' },
+      });
+
+      if (!response.ok) throw new Error('Failed to delete log');
+
+      setLogs(logs.filter(log => log.id !== logId));
+      toast({
+        title: 'Успешно',
+        description: 'Запись удалена из истории',
+      });
+    } catch (err) {
+      console.error('Failed to delete log:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось удалить запись',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingLogId(null);
+    }
+  };
 
   const getActionIcon = (action: string) => {
     switch (action) {
@@ -223,7 +266,7 @@ const AuditLogs = () => {
                   {filteredLogs.map((log) => (
                     <div
                       key={log.id}
-                      className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors"
+                      className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors group"
                     >
                       <div className="flex items-start gap-4">
                         <div className={`w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 ${getActionColor(log.action)}`}>
@@ -231,23 +274,45 @@ const AuditLogs = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-3 mb-2">
-                            <div>
-                              <p className="font-medium">
+                            <div className="flex-1">
+                              <button
+                                onClick={() => (log.entity_type === 'payment' || log.entity_type === 'approved_payment') && handlePaymentClick(log.entity_type, log.entity_id)}
+                                className={`font-medium text-left ${
+                                  (log.entity_type === 'payment' || log.entity_type === 'approved_payment') 
+                                    ? 'hover:text-primary cursor-pointer underline decoration-transparent hover:decoration-current transition-colors' 
+                                    : ''
+                                }`}
+                              >
                                 {getEntityTypeLabel(log.entity_type)} #{log.entity_id}
-                              </p>
+                              </button>
                               <p className="text-sm text-muted-foreground">
                                 {getActionLabel(log.action)} • {log.username || 'Система'}
                               </p>
                             </div>
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              {new Date(log.created_at).toLocaleString('ru-RU', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {new Date(log.created_at).toLocaleString('ru-RU', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteLog(log.id)}
+                                disabled={deletingLogId === log.id}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-500"
+                              >
+                                {deletingLogId === log.id ? (
+                                  <Icon name="Loader2" size={16} className="animate-spin" />
+                                ) : (
+                                  <Icon name="Trash2" size={16} />
+                                )}
+                              </Button>
+                            </div>
                           </div>
                           
                           {log.changed_fields && Object.keys(log.changed_fields).length > 0 && (
@@ -278,6 +343,20 @@ const AuditLogs = () => {
           </Card>
         </div>
       </main>
+
+      {selectedPaymentId && (
+        <PaymentDetailsModal
+          paymentId={selectedPaymentId}
+          onClose={() => setSelectedPaymentId(null)}
+        />
+      )}
+
+      {selectedApprovedPaymentId && (
+        <ApprovedPaymentDetailsModal
+          paymentId={selectedApprovedPaymentId}
+          onClose={() => setSelectedApprovedPaymentId(null)}
+        />
+      )}
     </div>
   );
 };
