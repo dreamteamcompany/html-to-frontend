@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { createWorker } from 'tesseract.js';
+
 import * as pdfjsLib from 'pdfjs-dist';
 import FUNC2URL from '@/../backend/func2url.json';
 import { API_ENDPOINTS } from '@/config/api';
@@ -111,20 +111,9 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     setIsProcessingInvoice(true);
 
     try {
-      let imageUrl = '';
-      let fileUrl = '';
       const isPdf = file.type === 'application/pdf';
 
-      // Шаг 1: Конвертируем PDF в изображение или используем изображение напрямую
-      if (isPdf) {
-        toast({
-          title: 'Обработка PDF',
-          description: 'Конвертирую первую страницу в изображение...',
-        });
-        imageUrl = await convertPdfToImage(file);
-      } else if (file.type.startsWith('image/')) {
-        imageUrl = URL.createObjectURL(file);
-      } else {
+      if (!isPdf && !file.type.startsWith('image/')) {
         toast({
           title: 'Неверный формат',
           description: 'Поддерживаются PDF и изображения (JPG, PNG)',
@@ -134,45 +123,34 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         return;
       }
 
-      // Шаг 2: Загружаем файл в S3 параллельно
-      const uploadPromise = (async () => {
-        const reader = new FileReader();
-        const base64Promise = new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-        
-        const base64 = await base64Promise;
-        
-        const uploadResponse = await fetch(FUNC2URL['invoice-ocr'], {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file: base64, fileName: file.name }),
-        });
-        
-        if (uploadResponse.ok) {
-          const uploadData = await uploadResponse.json();
-          return uploadData.file_url || '';
-        }
-        return '';
-      })();
+      toast({
+        title: 'Сканирование документа',
+        description: 'Распознаю текст и извлекаю данные...',
+      });
 
-      // Шаг 3: OCR через Tesseract.js
-      const worker = await createWorker('rus+eng');
-      const { data: { text } } = await worker.recognize(imageUrl);
-      await worker.terminate();
+      // Отправляем файл в backend для OCR и загрузки в S3
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
       
-      // Освобождаем URL (только для non-PDF)
-      if (!isPdf) {
-        URL.revokeObjectURL(imageUrl);
+      const base64 = await base64Promise;
+      
+      const ocrResponse = await fetch(FUNC2URL['invoice-ocr'], {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: base64, fileName: file.name }),
+      });
+      
+      if (!ocrResponse.ok) {
+        throw new Error('Ошибка при обработке документа');
       }
 
-      // Ждём загрузку файла
-      fileUrl = await uploadPromise;
-
-      // Шаг 4: Парсим данные из текста
-      const extracted = parseInvoiceText(text);
-      console.log('Extracted data:', extracted);
+      const ocrData = await ocrResponse.json();
+      const fileUrl = ocrData.file_url || '';
+      const extracted = ocrData.extracted_data || {};
+      console.log('Extracted data from backend OCR:', extracted, 'Raw text preview:', ocrData.raw_text);
       
       const updates: Record<string, string | undefined> = {};
       
@@ -256,169 +234,6 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
   const handleExtractData = async () => {
     if (!invoiceFile) return;
     await handleExtractDataFromFile(invoiceFile);
-  };
-
-  const parseInvoiceText = (text: string) => {
-    const data: {
-      amount: number | null;
-      invoice_number: string | null;
-      invoice_date: string | null;
-      legal_entity: string | null;
-      contractor: string | null;
-    } = {
-      amount: null,
-      invoice_number: null,
-      invoice_date: null,
-      legal_entity: null,
-      contractor: null,
-    };
-    
-    if (!text) return data;
-    
-    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-    const textLower = text.toLowerCase();
-    
-    // Сумма: расширенные паттерны для таблиц и разных форматов
-    const amountPatterns = [
-      /итого\s*[:\s]*(\d+[\s\d]*[.,]?\d*)\s*(?:руб|₽|rub)?/gi,
-      /сумма\s*[:\s]*(\d+[\s\d]*[.,]?\d*)\s*(?:руб|₽|rub)?/gi,
-      /к\s+оплате\s*[:\s]*(\d+[\s\d]*[.,]?\d*)\s*(?:руб|₽|rub)?/gi,
-      /всего\s*[:\s]*(\d+[\s\d]*[.,]?\d*)\s*(?:руб|₽|rub)?/gi,
-      /total\s*[:\s]*(\d+[\s\d]*[.,]?\d*)/gi,
-      /amount\s*[:\s]*(\d+[\s\d]*[.,]?\d*)/gi,
-    ];
-    
-    const allAmounts: number[] = [];
-    
-    for (const pattern of amountPatterns) {
-      let match;
-      while ((match = pattern.exec(textLower)) !== null) {
-        const amountStr = match[1].replace(/\s/g, '').replace(',', '.');
-        const amount = parseFloat(amountStr);
-        if (!isNaN(amount) && amount > 0) {
-          allAmounts.push(amount);
-        }
-      }
-    }
-    
-    // Берём максимальную сумму (обычно итоговая)
-    if (allAmounts.length > 0) {
-      data.amount = Math.max(...allAmounts);
-    }
-    
-    // Номер счёта: улучшенные паттерны
-    const invoicePatterns = [
-      /(?:счет|счёт|invoice|inv)[:\s#№]*(\d+[-/]?\d*)/gi,
-      /№\s*(\d{4,})/gi,
-      /\b(\d{6,})\b/g, // 6+ цифр подряд
-    ];
-    
-    for (const pattern of invoicePatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        const num = match[0].replace(/[^\d-/]/g, '');
-        if (num.length >= 4) {
-          data.invoice_number = num;
-          break;
-        }
-      }
-    }
-    
-    // Дата: множественные форматы с приоритетом
-    const datePatterns = [
-      { pattern: /(?:счет|счёт|invoice).*?(?:от|date|дата)[:\s]*(\d{1,2})[.\s/]*(\d{1,2})[.\s/]*(\d{2,4})/gi, priority: 1 },
-      { pattern: /(?:от|date|дата)[:\s]*(\d{1,2})[.\s/]*(\d{1,2})[.\s/]*(\d{2,4})/gi, priority: 2 },
-      { pattern: /(\d{1,2})[./-](\d{1,2})[./-](20\d{2})/g, priority: 3 },
-      { pattern: /(\d{1,2})[.\s/](\d{1,2})[.\s/](\d{2})/g, priority: 4 },
-      { pattern: /(20\d{2})[./-](\d{1,2})[./-](\d{1,2})/g, priority: 5 },
-    ];
-    
-    const dateMatches: Array<{date: string, priority: number}> = [];
-    
-    for (const { pattern, priority } of datePatterns) {
-      const regex = new RegExp(pattern.source, pattern.flags);
-      let match;
-      
-      while ((match = regex.exec(text)) !== null) {
-        let day, month, year;
-        
-        if (match.length === 4) {
-          day = parseInt(match[1]);
-          month = parseInt(match[2]);
-          year = parseInt(match[3]);
-        } else {
-          const dateStr = match[0].replace(/(?:от|date|дата|счет|счёт|invoice)[:\s]*/gi, '');
-          const parts = dateStr.split(/[.\s/-]+/).filter(p => p && /\d/.test(p));
-          
-          if (parts.length < 3) continue;
-          
-          if (parts[0].length === 4) {
-            year = parseInt(parts[0]);
-            month = parseInt(parts[1]);
-            day = parseInt(parts[2]);
-          } else {
-            day = parseInt(parts[0]);
-            month = parseInt(parts[1]);
-            year = parseInt(parts[2]);
-          }
-        }
-        
-        if (year < 100) year += 2000;
-        if (year < 2020 || year > 2030) continue;
-        if (month < 1 || month > 12) continue;
-        if (day < 1 || day > 31) continue;
-        
-        const date = new Date(year, month - 1, day);
-        if (!isNaN(date.getTime())) {
-          const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          dateMatches.push({ date: dateStr, priority });
-        }
-      }
-    }
-    
-    if (dateMatches.length > 0) {
-      dateMatches.sort((a, b) => a.priority - b.priority);
-      data.invoice_date = dateMatches[0].date;
-    }
-    
-    // Юридическое лицо: поиск в таблице поставщика/продавца
-    const legalEntityPatterns = [
-      /(?:поставщик|продавец|исполнитель|получатель)[:\s]*([^\n]{5,100})/gi,
-      /(?:ооо|оао|зао|ип)\s+[«"]?([^»"\n]{3,80})[»"]?/gi,
-    ];
-    
-    for (const pattern of legalEntityPatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        const entity = match[0]
-          .replace(/(?:поставщик|продавец|исполнитель|получатель)[:\s]*/gi, '')
-          .trim();
-        if (entity.length > 3 && entity.length < 150) {
-          data.legal_entity = entity;
-          break;
-        }
-      }
-    }
-    
-    // Контрагент: поиск покупателя/заказчика
-    const contractorPatterns = [
-      /(?:покупатель|заказчик|плательщик)[:\s]*([^\n]{5,100})/gi,
-    ];
-    
-    for (const pattern of contractorPatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        const contractor = match[0]
-          .replace(/(?:покупатель|заказчик|плательщик)[:\s]*/gi, '')
-          .trim();
-        if (contractor.length > 3 && contractor.length < 150) {
-          data.contractor = contractor;
-          break;
-        }
-      }
-    }
-    
-    return data;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
