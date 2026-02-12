@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface Approval {
   id: number;
@@ -20,6 +22,7 @@ interface Approval {
 
 const ApprovalsHistory = () => {
   const { token } = useAuth();
+  const { toast } = useToast();
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
@@ -27,6 +30,7 @@ const ApprovalsHistory = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -42,7 +46,7 @@ const ApprovalsHistory = () => {
     }
   };
 
-  useEffect(() => {
+  const loadApprovals = () => {
     if (!token) return;
 
     fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
@@ -60,7 +64,40 @@ const ApprovalsHistory = () => {
         setApprovals([]);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadApprovals();
   }, [token]);
+
+  const handleDeleteApproval = async (approvalId: number) => {
+    if (!confirm('Удалить эту запись из истории согласований?')) return;
+    
+    setDeletingId(approvalId);
+    try {
+      const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals&id=${approvalId}`, {
+        method: 'DELETE',
+        headers: { 'X-Auth-Token': token || '' },
+      });
+
+      if (!response.ok) throw new Error('Failed to delete approval');
+
+      setApprovals(approvals.filter(a => a.id !== approvalId));
+      toast({
+        title: 'Успешно',
+        description: 'Запись удалена из истории согласований',
+      });
+    } catch (err) {
+      console.error('Failed to delete approval:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось удалить запись',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const getActionBadge = (action: string) => {
     switch (action) {
@@ -153,7 +190,7 @@ const ApprovalsHistory = () => {
                 {approvals.map((approval) => (
                   <div
                     key={approval.id}
-                    className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors"
+                    className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors group"
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex-1">
@@ -199,8 +236,21 @@ const ApprovalsHistory = () => {
                           </div>
                         )}
                       </div>
-                      <div>
+                      <div className="flex items-center gap-2">
                         {getActionBadge(approval.action)}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteApproval(approval.id)}
+                          disabled={deletingId === approval.id}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-500"
+                        >
+                          {deletingId === approval.id ? (
+                            <Icon name="Loader2" size={16} className="animate-spin" />
+                          ) : (
+                            <Icon name="Trash2" size={16} />
+                          )}
+                        </Button>
                       </div>
                     </div>
                   </div>
