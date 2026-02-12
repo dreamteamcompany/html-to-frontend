@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import InvoiceUpload from './InvoiceUpload';
+import FUNC2URL from '@/../backend/func2url.json';
 
 interface Category {
   id: number;
@@ -391,7 +392,7 @@ const PaymentForm = ({
                               const base64 = (reader.result as string).split(',')[1];
                               
                               try {
-                                const response = await fetch('https://functions.poehali.dev/465f29bc-7031-4a0b-a671-05368d234efe', {
+                                const response = await fetch(FUNC2URL['invoice-ocr'], {
                                   method: 'POST',
                                   headers: {
                                     'Content-Type': 'application/json',

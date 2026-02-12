@@ -1639,7 +1639,7 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if error:
                 return error
             
-            cur.execute('SELECT id, name, inn, kpp, address, created_at FROM legal_entities ORDER BY name')
+            cur.execute(f'SELECT id, name, inn, kpp, address, created_at FROM {SCHEMA}.legal_entities ORDER BY name')
             rows = cur.fetchall()
             entities = [
                 {
@@ -1663,7 +1663,7 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             entity_req = LegalEntityRequest(**body)
             
             cur.execute(
-                "INSERT INTO legal_entities (name, inn, kpp, address) VALUES (%s, %s, %s, %s) RETURNING id, name, inn, kpp, address, created_at",
+                f"INSERT INTO {SCHEMA}.legal_entities (name, inn, kpp, address) VALUES (%s, %s, %s, %s) RETURNING id, name, inn, kpp, address, created_at",
                 (entity_req.name, entity_req.inn, entity_req.kpp, entity_req.address)
             )
             row = cur.fetchone()
@@ -1691,7 +1691,7 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
                 return response(400, {'error': 'ID is required'})
             
             cur.execute(
-                "UPDATE legal_entities SET name = %s, inn = %s, kpp = %s, address = %s WHERE id = %s RETURNING id, name, inn, kpp, address, created_at",
+                f"UPDATE {SCHEMA}.legal_entities SET name = %s, inn = %s, kpp = %s, address = %s WHERE id = %s RETURNING id, name, inn, kpp, address, created_at",
                 (entity_req.name, entity_req.inn, entity_req.kpp, entity_req.address, entity_id)
             )
             row = cur.fetchone()
@@ -1753,7 +1753,7 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             if error:
                 return error
             
-            cur.execute('SELECT id, name, field_type, options, created_at FROM custom_fields ORDER BY created_at DESC')
+            cur.execute(f'SELECT id, name, field_type, options, created_at FROM {SCHEMA}.custom_fields ORDER BY created_at DESC')
             rows = cur.fetchall()
             fields = [
                 {
@@ -1776,7 +1776,7 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             field_req = CustomFieldRequest(**body)
             
             cur.execute(
-                "INSERT INTO custom_fields (name, field_type, options) VALUES (%s, %s, %s) RETURNING id, name, field_type, options, created_at",
+                f"INSERT INTO {SCHEMA}.custom_fields (name, field_type, options) VALUES (%s, %s, %s) RETURNING id, name, field_type, options, created_at",
                 (field_req.name, field_req.field_type, field_req.options)
             )
             row = cur.fetchone()
@@ -1803,7 +1803,7 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
                 return response(400, {'error': 'ID is required'})
             
             cur.execute(
-                "UPDATE custom_fields SET name = %s, field_type = %s, options = %s WHERE id = %s RETURNING id, name, field_type, options, created_at",
+                f"UPDATE {SCHEMA}.custom_fields SET name = %s, field_type = %s, options = %s WHERE id = %s RETURNING id, name, field_type, options, created_at",
                 (field_req.name, field_req.field_type, field_req.options, field_id)
             )
             row = cur.fetchone()
@@ -1829,7 +1829,7 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             body_data = json.loads(event.get('body', '{}'))
             field_id = body_data.get('id')
             
-            cur.execute("DELETE FROM custom_fields WHERE id = %s RETURNING id", (field_id,))
+            cur.execute(f"DELETE FROM {SCHEMA}.custom_fields WHERE id = %s RETURNING id", (field_id,))
             row = cur.fetchone()
             
             if not row:
@@ -1852,9 +1852,9 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             if error:
                 return error
             
-            cur.execute('''SELECT id, name, inn, kpp, ogrn, legal_address, actual_address, phone, email, 
+            cur.execute(f'''SELECT id, name, inn, kpp, ogrn, legal_address, actual_address, phone, email, 
                           contact_person, bank_name, bank_bik, bank_account, correspondent_account, notes, created_at 
-                          FROM contractors ORDER BY name''')
+                          FROM {SCHEMA}.contractors ORDER BY name''')
             rows = cur.fetchall()
             contractors = [
                 {
@@ -1888,7 +1888,7 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             cont_req = ContractorRequest(**body)
             
             cur.execute(
-                """INSERT INTO contractors (name, inn, kpp, ogrn, legal_address, actual_address, phone, email, 
+                f"""INSERT INTO {SCHEMA}.contractors (name, inn, kpp, ogrn, legal_address, actual_address, phone, email, 
                    contact_person, bank_name, bank_bik, bank_account, correspondent_account, notes) 
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
                    RETURNING id, name, inn, kpp, ogrn, legal_address, actual_address, phone, email, 
@@ -1932,7 +1932,7 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
                 return response(400, {'error': 'ID is required'})
             
             cur.execute(
-                """UPDATE contractors SET name = %s, inn = %s, kpp = %s, ogrn = %s, legal_address = %s, 
+                f"""UPDATE {SCHEMA}.contractors SET name = %s, inn = %s, kpp = %s, ogrn = %s, legal_address = %s, 
                    actual_address = %s, phone = %s, email = %s, contact_person = %s, bank_name = %s, 
                    bank_bik = %s, bank_account = %s, correspondent_account = %s, notes = %s 
                    WHERE id = %s 
@@ -2294,7 +2294,7 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             if error:
                 return error
             
-            cur.execute('SELECT id, name, description, is_active, created_at FROM customer_departments WHERE is_active = true ORDER BY name')
+            cur.execute(f'SELECT id, name, description, is_active, created_at FROM {SCHEMA}.customer_departments WHERE is_active = true ORDER BY name')
             rows = cur.fetchall()
             departments = [
                 {
@@ -2317,7 +2317,7 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             dept_req = CustomerDepartmentRequest(**body)
             
             cur.execute(
-                "INSERT INTO customer_departments (name, description) VALUES (%s, %s) RETURNING id, name, description, is_active, created_at",
+                f"INSERT INTO {SCHEMA}.customer_departments (name, description) VALUES (%s, %s) RETURNING id, name, description, is_active, created_at",
                 (dept_req.name, dept_req.description)
             )
             row = cur.fetchone()
@@ -2344,7 +2344,7 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
                 return response(400, {'error': 'ID is required'})
             
             cur.execute(
-                "UPDATE customer_departments SET name = %s, description = %s WHERE id = %s RETURNING id, name, description, is_active, created_at",
+                f"UPDATE {SCHEMA}.customer_departments SET name = %s, description = %s WHERE id = %s RETURNING id, name, description, is_active, created_at",
                 (dept_req.name, dept_req.description, dept_id)
             )
             row = cur.fetchone()
@@ -2370,7 +2370,7 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             body_data = json.loads(event.get('body', '{}'))
             dept_id = body_data.get('id')
             
-            cur.execute("DELETE FROM customer_departments WHERE id = %s RETURNING id", (dept_id,))
+            cur.execute(f"DELETE FROM {SCHEMA}.customer_departments WHERE id = %s RETURNING id", (dept_id,))
             row = cur.fetchone()
             
             if not row:
