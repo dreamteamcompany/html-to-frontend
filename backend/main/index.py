@@ -1334,6 +1334,302 @@ def handle_stats(method: str, conn) -> Dict[str, Any]:
     finally:
         cur.close()
 
+def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    '''Обработка запросов к категориям'''
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'categories.read')
+            if error:
+                return error
+            
+            cur.execute(f'SELECT id, name, icon, created_at FROM {SCHEMA}.categories ORDER BY name')
+            rows = cur.fetchall()
+            categories = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'icon': row[2],
+                    'created_at': row[3].isoformat() if row[3] else None
+                }
+                for row in rows
+            ]
+            return response(200, categories)
+        
+        elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'categories.create')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            cat_req = CategoryRequest(**body)
+            
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.categories (name, icon) VALUES (%s, %s) RETURNING id, name, icon, created_at",
+                (cat_req.name, cat_req.icon)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'icon': row[2],
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'categories.update')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            category_id = body.get('id')
+            cat_req = CategoryRequest(**body)
+            
+            if not category_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(
+                f"UPDATE {SCHEMA}.categories SET name = %s, icon = %s WHERE id = %s RETURNING id, name, icon, created_at",
+                (cat_req.name, cat_req.icon, category_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Category not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'icon': row[2],
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'categories.delete')
+            if error:
+                return error
+            
+            params = event.get('queryStringParameters', {})
+            category_id = params.get('id')
+            
+            if not category_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(f'DELETE FROM {SCHEMA}.categories WHERE id = %s', (category_id,))
+            conn.commit()
+            
+            return response(200, {'success': True})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
+def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    '''Обработка запросов к контрагентам'''
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'contractors.read')
+            if error:
+                return error
+            
+            cur.execute(f'SELECT id, name, inn, kpp, created_at FROM {SCHEMA}.contractors WHERE is_active = true ORDER BY name')
+            rows = cur.fetchall()
+            contractors = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'inn': row[2] or '',
+                    'kpp': row[3] or '',
+                    'created_at': row[4].isoformat() if row[4] else None
+                }
+                for row in rows
+            ]
+            return response(200, contractors)
+        
+        elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'contractors.create')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            contractor_req = ContractorRequest(**body)
+            
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.contractors (name, inn, kpp) VALUES (%s, %s, %s) RETURNING id, name, inn, kpp, created_at",
+                (contractor_req.name, contractor_req.inn, contractor_req.kpp)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'inn': row[2] or '',
+                'kpp': row[3] or '',
+                'created_at': row[4].isoformat() if row[4] else None
+            })
+        
+        elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'contractors.update')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            contractor_id = body.get('id')
+            contractor_req = ContractorRequest(**body)
+            
+            if not contractor_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(
+                f"UPDATE {SCHEMA}.contractors SET name = %s, inn = %s, kpp = %s WHERE id = %s RETURNING id, name, inn, kpp, created_at",
+                (contractor_req.name, contractor_req.inn, contractor_req.kpp, contractor_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Contractor not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'inn': row[2] or '',
+                'kpp': row[3] or '',
+                'created_at': row[4].isoformat() if row[4] else None
+            })
+        
+        elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'contractors.delete')
+            if error:
+                return error
+            
+            params = event.get('queryStringParameters', {})
+            contractor_id = params.get('id')
+            
+            if not contractor_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(f'DELETE FROM {SCHEMA}.contractors WHERE id = %s', (contractor_id,))
+            conn.commit()
+            
+            return response(200, {'success': True})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
+def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    '''Обработка запросов к ролям'''
+    cur = conn.cursor()
+    
+    try:
+        if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'roles.read')
+            if error:
+                return error
+            
+            cur.execute(f'SELECT id, name, description, created_at FROM {SCHEMA}.roles ORDER BY name')
+            rows = cur.fetchall()
+            roles = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'description': row[2] or '',
+                    'created_at': row[3].isoformat() if row[3] else None
+                }
+                for row in rows
+            ]
+            return response(200, roles)
+        
+        elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'roles.create')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            name = body.get('name', '').strip()
+            description = body.get('description', '').strip()
+            
+            if not name:
+                return response(400, {'error': 'Name is required'})
+            
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.roles (name, description) VALUES (%s, %s) RETURNING id, name, description, created_at",
+                (name, description)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'description': row[2] or '',
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'roles.update')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            role_id = body.get('id')
+            name = body.get('name', '').strip()
+            description = body.get('description', '').strip()
+            
+            if not role_id or not name:
+                return response(400, {'error': 'ID and name are required'})
+            
+            cur.execute(
+                f"UPDATE {SCHEMA}.roles SET name = %s, description = %s WHERE id = %s RETURNING id, name, description, created_at",
+                (name, description, role_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Role not found'})
+            
+            conn.commit()
+            
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'description': row[2] or '',
+                'created_at': row[3].isoformat() if row[3] else None
+            })
+        
+        elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'roles.delete')
+            if error:
+                return error
+            
+            params = event.get('queryStringParameters', {})
+            role_id = params.get('id')
+            
+            if not role_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(f'DELETE FROM {SCHEMA}.roles WHERE id = %s', (role_id,))
+            conn.commit()
+            
+            return response(200, {'success': True})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    finally:
+        cur.close()
+
 def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     cur = conn.cursor()
     
