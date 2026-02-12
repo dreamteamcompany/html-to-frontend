@@ -1722,12 +1722,10 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
                 return response(400, {'error': 'ID обязателен'})
             
             try:
-                cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.payments WHERE legal_entity_id = %s", (entity_id,))
-                count = cur.fetchone()[0]
+                # Обнуляем legal_entity_id в связанных платежах
+                cur.execute(f"UPDATE {SCHEMA}.payments SET legal_entity_id = NULL WHERE legal_entity_id = %s", (entity_id,))
                 
-                if count > 0:
-                    return response(400, {'error': f'Невозможно удалить юридическое лицо: с ним связано {count} платежей'})
-                
+                # Удаляем юридическое лицо
                 cur.execute(f"DELETE FROM {SCHEMA}.legal_entities WHERE id = %s RETURNING id", (entity_id,))
                 row = cur.fetchone()
                 
@@ -1983,12 +1981,10 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
                 return response(400, {'error': 'ID обязателен'})
             
             try:
-                cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.payments WHERE contractor_id = %s", (contractor_id,))
-                count = cur.fetchone()[0]
+                # Обнуляем contractor_id в связанных платежах
+                cur.execute(f"UPDATE {SCHEMA}.payments SET contractor_id = NULL WHERE contractor_id = %s", (contractor_id,))
                 
-                if count > 0:
-                    return response(400, {'error': f'Невозможно удалить контрагента: с ним связано {count} платежей'})
-                
+                # Удаляем контрагента
                 cur.execute(f"DELETE FROM {SCHEMA}.contractors WHERE id = %s RETURNING id", (contractor_id,))
                 row = cur.fetchone()
                 
