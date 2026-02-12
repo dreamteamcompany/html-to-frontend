@@ -87,37 +87,24 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl }
                 />
               )}
             </div>
+            {isProcessing && (
+              <div className="flex items-center justify-center gap-2 text-primary">
+                <Icon name="Loader2" size={16} className="animate-spin" />
+                <span className="text-sm font-medium">Автоматическое распознавание данных...</span>
+              </div>
+            )}
             <div className="flex gap-2 justify-center">
-              <Button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onExtractData();
-                }}
-                disabled={isProcessing}
-                className="gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <Icon name="Loader2" size={16} className="animate-spin" />
-                    Обработка...
-                  </>
-                ) : (
-                  <>
-                    <Icon name="Sparkles" size={16} />
-                    Распознать данные
-                  </>
-                )}
-              </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onFileSelect(null as any);
+                  onFileSelect(null!);
                 }}
+                disabled={isProcessing}
               >
-                <Icon name="X" size={16} />
+                <Icon name="X" size={16} className="mr-2" />
+                Удалить файл
               </Button>
             </div>
           </div>
@@ -135,8 +122,8 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl }
       </div>
       
       <p className="text-xs text-muted-foreground">
-        <Icon name="Info" size={12} className="inline mr-1" />
-        Данные из счёта будут автоматически распознаны и заполнены в форму
+        <Icon name="Sparkles" size={12} className="inline mr-1" />
+        Загрузите счёт — система автоматически распознает и заполнит все поля
       </p>
     </div>
   );

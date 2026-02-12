@@ -15,7 +15,7 @@ interface CustomFieldDefinition {
   options: string;
 }
 
-export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess: () => void, loadContractors?: () => Promise<any>) => {
+export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess: () => void, loadContractors?: () => Promise<unknown>) => {
   const { token } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -54,7 +54,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     setFormData(initialData);
   }, [customFields]);
 
-  const handleFileSelect = (file: File | null) => {
+  const handleFileSelect = async (file: File | null) => {
     if (!file) {
       setInvoiceFile(null);
       setInvoicePreview(null);
@@ -72,6 +72,17 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       };
       reader.readAsDataURL(file);
     }
+
+    // Автоматически запускаем распознавание после загрузки
+    toast({
+      title: 'Файл загружен',
+      description: 'Начинаю автоматическое распознавание данных...',
+    });
+    
+    // Небольшая задержка чтобы пользователь увидел превью
+    setTimeout(() => {
+      handleExtractDataFromFile(file);
+    }, 500);
   };
 
   const convertPdfToImage = async (file: File): Promise<string> => {
@@ -96,15 +107,13 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     return canvas.toDataURL('image/png');
   };
 
-  const handleExtractData = async () => {
-    if (!invoiceFile) return;
-
+  const handleExtractDataFromFile = async (file: File) => {
     setIsProcessingInvoice(true);
 
     try {
       let imageUrl = '';
       let fileUrl = '';
-      const isPdf = invoiceFile.type === 'application/pdf';
+      const isPdf = file.type === 'application/pdf';
 
       // Шаг 1: Конвертируем PDF в изображение или используем изображение напрямую
       if (isPdf) {
@@ -112,9 +121,9 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
           title: 'Обработка PDF',
           description: 'Конвертирую первую страницу в изображение...',
         });
-        imageUrl = await convertPdfToImage(invoiceFile);
-      } else if (invoiceFile.type.startsWith('image/')) {
-        imageUrl = URL.createObjectURL(invoiceFile);
+        imageUrl = await convertPdfToImage(file);
+      } else if (file.type.startsWith('image/')) {
+        imageUrl = URL.createObjectURL(file);
       } else {
         toast({
           title: 'Неверный формат',
@@ -130,7 +139,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         const reader = new FileReader();
         const base64Promise = new Promise<string>((resolve) => {
           reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(invoiceFile);
+          reader.readAsDataURL(file);
         });
         
         const base64 = await base64Promise;
@@ -138,7 +147,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         const uploadResponse = await fetch(FUNC2URL['invoice-ocr'], {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file: base64, fileName: invoiceFile.name }),
+          body: JSON.stringify({ file: base64, fileName: file.name }),
         });
         
         if (uploadResponse.ok) {
@@ -229,8 +238,8 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       setFormData({ ...formData, ...updates });
       
       toast({
-        title: 'Успешно',
-        description: 'Данные из счёта распознаны',
+        title: 'Данные распознаны ✓',
+        description: 'Все поля автоматически заполнены из счёта',
       });
     } catch (err) {
       console.error('Failed to process invoice:', err);
@@ -242,6 +251,11 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     } finally {
       setIsProcessingInvoice(false);
     }
+  };
+
+  const handleExtractData = async () => {
+    if (!invoiceFile) return;
+    await handleExtractDataFromFile(invoiceFile);
   };
 
   const parseInvoiceText = (text: string) => {
