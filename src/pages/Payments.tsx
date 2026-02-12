@@ -76,6 +76,8 @@ const Payments = () => {
     isProcessingInvoice,
     handleFileSelect,
     handleExtractData,
+    fileName,
+    fileType,
   } = usePaymentForm(customFields, loadPayments, loadContractors);
 
   const {
@@ -178,6 +180,8 @@ const Payments = () => {
           isProcessingInvoice={isProcessingInvoice}
           handleFileSelect={handleFileSelect}
           handleExtractData={handleExtractData}
+          fileName={fileName}
+          fileType={fileType}
         />
 
         <PaymentsList 

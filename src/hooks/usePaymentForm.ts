@@ -538,5 +538,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     isProcessingInvoice,
     handleFileSelect,
     handleExtractData,
+    fileName: invoiceFile?.name,
+    fileType: invoiceFile?.type,
   };
 };

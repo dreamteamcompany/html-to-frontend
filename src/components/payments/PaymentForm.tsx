@@ -81,6 +81,8 @@ interface PaymentFormProps {
   isProcessingInvoice: boolean;
   handleFileSelect: (file: File | null) => void;
   handleExtractData: () => void;
+  fileName?: string;
+  fileType?: string;
 }
 
 const PaymentForm = ({
@@ -99,6 +101,8 @@ const PaymentForm = ({
   isProcessingInvoice,
   handleFileSelect,
   handleExtractData,
+  fileName,
+  fileType,
 }: PaymentFormProps) => {
   const { hasPermission } = useAuth();
 
@@ -130,6 +134,8 @@ const PaymentForm = ({
                 onExtractData={handleExtractData}
                 isProcessing={isProcessingInvoice}
                 previewUrl={invoicePreview}
+                fileName={fileName}
+                fileType={fileType}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

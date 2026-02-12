@@ -8,11 +8,26 @@ interface InvoiceUploadProps {
   onExtractData: () => void;
   isProcessing: boolean;
   previewUrl: string | null;
+  fileName?: string;
+  fileType?: string;
 }
 
-const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl }: InvoiceUploadProps) => {
+const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, fileName, fileType }: InvoiceUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const getFileIcon = (type?: string) => {
+    if (!type) return 'File';
+    if (type.startsWith('image/')) return 'Image';
+    if (type === 'application/pdf') return 'FileText';
+    return 'File';
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -73,17 +88,35 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl }
         
         {previewUrl ? (
           <div className="space-y-4">
-            <div className="max-w-md mx-auto">
+            {/* Информация о файле */}
+            <div className="flex items-center gap-3 p-3 bg-background rounded-lg border">
+              <div className="flex-shrink-0">
+                <Icon name={getFileIcon(fileType)} size={32} className="text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{fileName || 'Файл загружен'}</p>
+                <p className="text-xs text-muted-foreground">
+                  {fileType === 'application/pdf' ? 'PDF документ' : 
+                   fileType?.startsWith('image/') ? 'Изображение' : 'Документ'}
+                </p>
+              </div>
+            </div>
+
+            {/* Превью */}
+            <div className="max-w-full mx-auto">
               {previewUrl.endsWith('.pdf') ? (
-                <div className="flex items-center justify-center gap-3 text-muted-foreground">
-                  <Icon name="FileText" size={48} />
-                  <span className="text-sm">PDF файл загружен</span>
+                <div className="flex flex-col items-center justify-center gap-4 p-8 bg-muted/30 rounded-lg border-2 border-dashed">
+                  <Icon name="FileText" size={64} className="text-muted-foreground" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium">PDF документ</p>
+                    <p className="text-xs text-muted-foreground mt-1">{fileName}</p>
+                  </div>
                 </div>
               ) : (
                 <img 
                   src={previewUrl} 
                   alt="Preview" 
-                  className="max-h-48 mx-auto rounded border"
+                  className="max-h-64 w-full object-contain mx-auto rounded-lg border shadow-sm"
                 />
               )}
             </div>
