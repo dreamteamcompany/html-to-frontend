@@ -58,14 +58,14 @@ def handler(event: dict, context) -> dict:
     s3.put_object(Bucket='files', Key=s3_key, Body=file_bytes, ContentType=content_type)
     cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
 
-    api_key = os.environ.get('API_KEY_SECRET', '')
-    folder_id = os.environ.get('YANDEX_FOLDER_ID', '')
+    api_key = os.environ.get('API_KEY', '')
+    folder_id = os.environ.get('FOLDER_ID', '')
 
     if not api_key or not folder_id:
         return resp(200, {
             'file_url': cdn_url,
             'extracted_data': None,
-            'warning': 'OCR не настроен — нужны API_KEY_SECRET и YANDEX_FOLDER_ID'
+            'warning': 'OCR не настроен — нужны API_KEY и FOLDER_ID'
         })
 
     ocr_text = run_vision_ocr(file_data, api_key, folder_id)
