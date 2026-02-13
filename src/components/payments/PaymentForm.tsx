@@ -12,6 +12,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import InvoiceUpload from './InvoiceUpload';
+import SearchableSelect from '@/components/ui/searchable-select';
 import FUNC2URL from '@/../backend/func2url.json';
 
 interface Category {
@@ -99,40 +100,57 @@ const PaymentForm = ({
 }: PaymentFormProps) => {
   const { hasPermission } = useAuth();
 
-  const resolveServiceName = (id?: string) => {
-    if (!id) return '';
-    const s = services.find(x => x.id.toString() === id);
-    return s?.name || '';
-  };
+  const serviceOptions = services.map((s) => ({
+    value: s.id.toString(),
+    label: s.name,
+    sublabel: s.description || undefined,
+  }));
 
-  const resolveCategoryName = (id?: string) => {
-    if (!id) return '';
-    const c = categories.find(x => x.id.toString() === id);
-    return c?.name || '';
-  };
+  const categoryOptions = categories.map((c) => ({
+    value: c.id.toString(),
+    label: c.name,
+    icon: c.icon || undefined,
+  }));
 
-  const resolveLegalEntityName = (id?: string) => {
-    if (!id) return '';
-    const e = legalEntities.find(x => x.id.toString() === id);
-    return e?.name || '';
-  };
+  const legalEntityOptions = legalEntities.map((e) => ({
+    value: e.id.toString(),
+    label: e.name,
+    sublabel: e.inn ? `ИНН: ${e.inn}` : undefined,
+  }));
 
-  const resolveContractorName = (id?: string) => {
-    if (!id) return '';
-    const c = contractors.find(x => x.id.toString() === id);
-    return c?.name || '';
-  };
+  const contractorOptions = contractors.map((c) => ({
+    value: c.id.toString(),
+    label: c.name,
+    sublabel: c.inn ? `ИНН: ${c.inn}` : undefined,
+  }));
 
-  const resolveDepartmentName = (id?: string) => {
-    if (!id) return '';
-    const d = customerDepartments.find(x => x.id.toString() === id);
-    return d?.name || '';
-  };
+  const departmentOptions = customerDepartments.map((d) => ({
+    value: d.id.toString(),
+    label: d.name,
+    sublabel: d.description || undefined,
+  }));
 
   const resolveServiceDescription = (id?: string) => {
     if (!id) return '';
     const s = services.find(x => x.id.toString() === id);
     return s?.description || '';
+  };
+
+  const handleServiceChange = (value: string | undefined) => {
+    if (!value) {
+      setFormData({ ...formData, service_id: undefined, service_description: '' });
+      return;
+    }
+    const service = services.find((s) => s.id.toString() === value);
+    const updates: Record<string, string | undefined> = {
+      ...formData,
+      service_id: value,
+      service_description: service?.description || '',
+    };
+    if (service?.category_id) {
+      updates.category_id = service.category_id.toString();
+    }
+    setFormData(updates);
   };
 
   return (
@@ -153,7 +171,7 @@ const PaymentForm = ({
           <DialogHeader>
             <DialogTitle>Новый платёж</DialogTitle>
             <DialogDescription>
-              Загрузите счёт — данные заполнятся автоматически
+              Загрузите счёт для автозаполнения или выберите данные вручную
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -170,93 +188,58 @@ const PaymentForm = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Сервис *</Label>
-                <Input
-                  value={resolveServiceName(formData.service_id)}
-                  readOnly
-                  className="bg-muted/50 cursor-default"
-                  placeholder="Заполнится из счёта"
+                <SearchableSelect
+                  options={serviceOptions}
+                  value={formData.service_id}
+                  onValueChange={handleServiceChange}
+                  placeholder="Выберите сервис"
+                  searchPlaceholder="Поиск сервиса..."
+                  emptyText="Сервис не найден"
                 />
-                {formData.service_id && (
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setFormData({ ...formData, service_id: undefined, service_description: '' })}
-                  >
-                    ✕ очистить
-                  </button>
-                )}
               </div>
               <div className="space-y-2">
                 <Label>Категория *</Label>
-                <Input
-                  value={resolveCategoryName(formData.category_id)}
-                  readOnly
-                  className="bg-muted/50 cursor-default"
-                  placeholder="Заполнится из счёта"
+                <SearchableSelect
+                  options={categoryOptions}
+                  value={formData.category_id}
+                  onValueChange={(v) => setFormData({ ...formData, category_id: v })}
+                  placeholder="Выберите категорию"
+                  searchPlaceholder="Поиск категории..."
+                  emptyText="Категория не найдена"
                 />
-                {formData.category_id && (
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setFormData({ ...formData, category_id: undefined })}
-                  >
-                    ✕ очистить
-                  </button>
-                )}
               </div>
               <div className="space-y-2">
                 <Label>Юридическое лицо</Label>
-                <Input
-                  value={resolveLegalEntityName(formData.legal_entity_id)}
-                  readOnly
-                  className="bg-muted/50 cursor-default"
-                  placeholder="Заполнится из счёта"
+                <SearchableSelect
+                  options={legalEntityOptions}
+                  value={formData.legal_entity_id}
+                  onValueChange={(v) => setFormData({ ...formData, legal_entity_id: v })}
+                  placeholder="Выберите юрлицо"
+                  searchPlaceholder="Поиск по названию или ИНН..."
+                  emptyText="Юрлицо не найдено"
                 />
-                {formData.legal_entity_id && (
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setFormData({ ...formData, legal_entity_id: undefined })}
-                  >
-                    ✕ очистить
-                  </button>
-                )}
               </div>
               <div className="space-y-2">
                 <Label>Контрагент</Label>
-                <Input
-                  value={resolveContractorName(formData.contractor_id)}
-                  readOnly
-                  className="bg-muted/50 cursor-default"
-                  placeholder="Заполнится из счёта"
+                <SearchableSelect
+                  options={contractorOptions}
+                  value={formData.contractor_id}
+                  onValueChange={(v) => setFormData({ ...formData, contractor_id: v })}
+                  placeholder="Выберите контрагента"
+                  searchPlaceholder="Поиск по названию или ИНН..."
+                  emptyText="Контрагент не найден"
                 />
-                {formData.contractor_id && (
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setFormData({ ...formData, contractor_id: undefined })}
-                  >
-                    ✕ очистить
-                  </button>
-                )}
               </div>
               <div className="space-y-2">
                 <Label>Отдел-заказчик</Label>
-                <Input
-                  value={resolveDepartmentName(formData.department_id)}
-                  readOnly
-                  className="bg-muted/50 cursor-default"
-                  placeholder="Заполнится из счёта"
+                <SearchableSelect
+                  options={departmentOptions}
+                  value={formData.department_id}
+                  onValueChange={(v) => setFormData({ ...formData, department_id: v })}
+                  placeholder="Выберите отдел"
+                  searchPlaceholder="Поиск отдела..."
+                  emptyText="Отдел не найден"
                 />
-                {formData.department_id && (
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setFormData({ ...formData, department_id: undefined })}
-                  >
-                    ✕ очистить
-                  </button>
-                )}
               </div>
               {formData.service_id && (
                 <div className="space-y-2">
