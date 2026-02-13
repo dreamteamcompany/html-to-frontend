@@ -124,7 +124,7 @@ def load_reference_data() -> dict:
     queries = {
         'categories': f'SELECT id, name FROM {SCHEMA}.categories ORDER BY name',
         'services': f'SELECT id, name FROM {SCHEMA}.services ORDER BY name',
-        'departments': f'SELECT id, name FROM {SCHEMA}.departments ORDER BY name',
+        'departments': f'SELECT id, name FROM {SCHEMA}.customer_departments ORDER BY name',
         'legal_entities': f'SELECT id, name FROM {SCHEMA}.legal_entities ORDER BY name',
         'contractors': f'SELECT id, name, inn FROM {SCHEMA}.contractors ORDER BY name',
     }
@@ -175,9 +175,11 @@ def analyze_with_gpt(ocr_text: str, ref_data: dict, api_key: str, folder_id: str
 6. Сформируй краткое описание за что платим
 
 Верни ТОЛЬКО валидный JSON без markdown:
-{{"amount": 12345.67, "invoice_number": "123", "invoice_date": "2025-01-15", "description": "краткое описание", "category_id": 1, "service_id": 1, "department_id": 1, "legal_entity_id": 1, "contractor_id": 1, "contractor_name": null, "contractor_inn": null}}
+{{"amount": 12345.67, "invoice_number": "123", "invoice_date": "2025-01-15", "description": "краткое описание", "category_id": 1, "service_id": 1, "department_id": 1, "legal_entity_id": 1, "legal_entity_name": null, "legal_entity_inn": null, "contractor_id": 1, "contractor_name": null, "contractor_inn": null}}
 
-Если поле не определено — ставь null. Для contractor: если найден в списке — только contractor_id, если нет — contractor_name и contractor_inn (без contractor_id)."""
+Если поле не определено — ставь null.
+Для contractor: если найден в списке — только contractor_id, если нет — contractor_name и contractor_inn (без contractor_id).
+Для legal_entity: если найден в списке — только legal_entity_id, если нет — legal_entity_name и legal_entity_inn (без legal_entity_id)."""
 
     r = requests.post(
         'https://llm.api.cloud.yandex.net/foundationModels/v1/completion',
@@ -212,7 +214,8 @@ def analyze_with_gpt(ocr_text: str, ref_data: dict, api_key: str, folder_id: str
 def parse_basic(text: str) -> dict:
     data = {'amount': None, 'invoice_number': None, 'invoice_date': None, 'description': None,
             'category_id': None, 'service_id': None, 'department_id': None,
-            'legal_entity_id': None, 'contractor_id': None, 'contractor_name': None, 'contractor_inn': None}
+            'legal_entity_id': None, 'legal_entity_name': None, 'legal_entity_inn': None,
+            'contractor_id': None, 'contractor_name': None, 'contractor_inn': None}
 
     if not text:
         return data

@@ -216,10 +216,10 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         }
       }
       
-      setFormData({ ...formData, ...updates });
+      setFormData(prev => ({ ...prev, ...updates }));
       
       toast({
-        title: 'Данные распознаны ✓',
+        title: 'Данные распознаны',
         description: 'Все поля автоматически заполнены из счёта',
       });
     } catch (err) {
@@ -242,10 +242,19 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.service_id) {
+      toast({
+        title: 'Ошибка',
+        description: 'Загрузите счёт — сервис заполнится автоматически',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!formData.category_id) {
       toast({
         title: 'Ошибка',
-        description: 'Выберите категорию платежа',
+        description: 'Загрузите счёт — категория заполнится автоматически',
         variant: 'destructive',
       });
       return;
