@@ -148,6 +148,20 @@ export const usePaymentsData = () => {
       .catch(err => { console.error('Failed to load custom fields:', err); setCustomFields([]); });
   }, []);
 
+  const loadLegalEntities = () => {
+    return apiFetch(getApiUrl('legal-entities'))
+      .then(res => res.json())
+      .then(data => {
+        setLegalEntities(Array.isArray(data) ? data : []);
+        return data;
+      })
+      .catch(err => {
+        console.error('Failed to load legal entities:', err);
+        setLegalEntities([]);
+        return [];
+      });
+  };
+
   return {
     payments,
     categories,
@@ -159,5 +173,6 @@ export const usePaymentsData = () => {
     loading,
     loadPayments,
     loadContractors,
+    loadLegalEntities,
   };
 };

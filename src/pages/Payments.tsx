@@ -64,6 +64,7 @@ const Payments = () => {
     loading,
     loadPayments,
     loadContractors,
+    loadLegalEntities,
   } = usePaymentsData();
 
   const {
@@ -78,7 +79,7 @@ const Payments = () => {
     handleExtractData,
     fileName,
     fileType,
-  } = usePaymentForm(customFields, loadPayments, loadContractors);
+  } = usePaymentForm(customFields, loadPayments, loadContractors, loadLegalEntities);
 
   const {
     menuOpen,

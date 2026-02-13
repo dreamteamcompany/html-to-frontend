@@ -15,7 +15,7 @@ interface CustomFieldDefinition {
   options: string;
 }
 
-export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess: () => void, loadContractors?: () => Promise<unknown>) => {
+export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess: () => void, loadContractors?: () => Promise<unknown>, loadLegalEntities?: () => Promise<unknown>) => {
   const { token } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -182,7 +182,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
 
       if (extracted.contractor_id) {
         updates.contractor_id = extracted.contractor_id.toString();
-      } else if (extracted.contractor_name && !formData.contractor_id) {
+      } else if (extracted.contractor_name) {
         try {
           const res = await fetch(`${FUNC2URL['main']}?endpoint=contractors`, {
             method: 'POST',
@@ -193,10 +193,26 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
             const nc = await res.json();
             updates.contractor_id = nc.id?.toString();
             if (loadContractors) await loadContractors();
-            toast({ title: 'Контрагент создан', description: extracted.contractor_name });
           }
         } catch (err) {
           console.error('Auto-create contractor failed:', err);
+        }
+      }
+
+      if (!extracted.legal_entity_id && extracted.legal_entity_name) {
+        try {
+          const res = await fetch(`${FUNC2URL['main']}?endpoint=legal-entities`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+            body: JSON.stringify({ name: extracted.legal_entity_name, inn: extracted.legal_entity_inn || '' }),
+          });
+          if (res.ok) {
+            const nle = await res.json();
+            updates.legal_entity_id = nle.id?.toString();
+            if (loadLegalEntities) await loadLegalEntities();
+          }
+        } catch (err) {
+          console.error('Auto-create legal entity failed:', err);
         }
       }
       
