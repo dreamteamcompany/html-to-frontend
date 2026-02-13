@@ -152,16 +152,27 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       const ocrData = await ocrResponse.json();
       const fileUrl = ocrData.file_url || '';
       const extracted = ocrData.extracted_data || {};
-      console.log('Extracted data from backend OCR:', extracted, 'Raw text preview:', ocrData.raw_text);
+      console.log('OCR result:', { extracted, raw_text: ocrData.raw_text, warning: ocrData.warning });
       
       const updates: Record<string, string | undefined> = {};
       
       if (fileUrl) {
         updates.invoice_file_url = fileUrl;
       }
+
+      if (ocrData.warning && !ocrData.extracted_data) {
+        toast({
+          title: 'Файл загружен',
+          description: ocrData.warning,
+          variant: 'destructive',
+        });
+        setFormData(prev => ({ ...prev, ...updates }));
+        return;
+      }
       
       if (extracted.amount) {
-        updates.amount = extracted.amount.toString();
+        const cleaned = extracted.amount.toString().replace(/\s/g, '').replace(',', '.');
+        updates.amount = cleaned;
       }
       
       if (extracted.invoice_number) {

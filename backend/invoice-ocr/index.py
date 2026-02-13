@@ -205,7 +205,13 @@ def analyze_with_gpt(ocr_text: str, ref_data: dict, api_key: str, folder_id: str
             text_resp = text_resp.split('\n', 1)[1] if '\n' in text_resp else text_resp[3:]
         if text_resp.endswith('```'):
             text_resp = text_resp[:-3]
-        return json.loads(text_resp.strip())
+        parsed = json.loads(text_resp.strip())
+        if parsed.get('amount'):
+            try:
+                parsed['amount'] = float(str(parsed['amount']).replace(' ', '').replace('\u00a0', '').replace(',', '.'))
+            except (ValueError, TypeError):
+                parsed['amount'] = None
+        return parsed
     except (KeyError, IndexError, json.JSONDecodeError) as e:
         print(f"[GPT PARSE ERROR] {e}")
         return parse_basic(ocr_text)
