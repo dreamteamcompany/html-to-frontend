@@ -256,7 +256,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     if (!formData.service_id) {
       toast({
         title: 'Ошибка',
-        description: 'Загрузите счёт — сервис заполнится автоматически',
+        description: 'Выберите сервис из списка',
         variant: 'destructive',
       });
       return;
@@ -265,7 +265,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     if (!formData.category_id) {
       toast({
         title: 'Ошибка',
-        description: 'Загрузите счёт — категория заполнится автоматически',
+        description: 'Выберите категорию из списка',
         variant: 'destructive',
       });
       return;
