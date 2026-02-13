@@ -10,13 +10,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import InvoiceUpload from './InvoiceUpload';
 import FUNC2URL from '@/../backend/func2url.json';
@@ -106,6 +99,42 @@ const PaymentForm = ({
 }: PaymentFormProps) => {
   const { hasPermission } = useAuth();
 
+  const resolveServiceName = (id?: string) => {
+    if (!id) return '';
+    const s = services.find(x => x.id.toString() === id);
+    return s?.name || '';
+  };
+
+  const resolveCategoryName = (id?: string) => {
+    if (!id) return '';
+    const c = categories.find(x => x.id.toString() === id);
+    return c?.name || '';
+  };
+
+  const resolveLegalEntityName = (id?: string) => {
+    if (!id) return '';
+    const e = legalEntities.find(x => x.id.toString() === id);
+    return e?.name || '';
+  };
+
+  const resolveContractorName = (id?: string) => {
+    if (!id) return '';
+    const c = contractors.find(x => x.id.toString() === id);
+    return c?.name || '';
+  };
+
+  const resolveDepartmentName = (id?: string) => {
+    if (!id) return '';
+    const d = customerDepartments.find(x => x.id.toString() === id);
+    return d?.name || '';
+  };
+
+  const resolveServiceDescription = (id?: string) => {
+    if (!id) return '';
+    const s = services.find(x => x.id.toString() === id);
+    return s?.description || '';
+  };
+
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
@@ -124,7 +153,7 @@ const PaymentForm = ({
           <DialogHeader>
             <DialogTitle>Новый платёж</DialogTitle>
             <DialogDescription>
-              Добавьте информацию о новой операции
+              Загрузите счёт — данные заполнятся автоматически
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -140,125 +169,100 @@ const PaymentForm = ({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="service">Сервис *</Label>
-                <Select
-                  value={formData.service_id}
-                  onValueChange={(value) => {
-                    const selectedService = services.find(s => s.id.toString() === value);
-                    setFormData({ 
-                      ...formData, 
-                      service_id: value,
-                      service_description: selectedService?.description || '',
-                      category_id: selectedService?.category_id ? selectedService.category_id.toString() : formData.category_id
-                    });
-                  }}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите сервис" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {services.map((service) => (
-                      <SelectItem key={service.id} value={service.id.toString()}>
-                        {service.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Сервис *</Label>
+                <Input
+                  value={resolveServiceName(formData.service_id)}
+                  readOnly
+                  className="bg-muted/50 cursor-default"
+                  placeholder="Заполнится из счёта"
+                />
+                {formData.service_id && (
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setFormData({ ...formData, service_id: undefined, service_description: '' })}
+                  >
+                    ✕ очистить
+                  </button>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="category">Категория *</Label>
-                <Select
-                  value={formData.category_id}
-                  onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите категорию" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          <Icon name={cat.icon} size={16} />
-                          {cat.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Категория *</Label>
+                <Input
+                  value={resolveCategoryName(formData.category_id)}
+                  readOnly
+                  className="bg-muted/50 cursor-default"
+                  placeholder="Заполнится из счёта"
+                />
+                {formData.category_id && (
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setFormData({ ...formData, category_id: undefined })}
+                  >
+                    ✕ очистить
+                  </button>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="legal_entity">Юридическое лицо</Label>
-                <Select
-                  value={formData.legal_entity_id}
-                  onValueChange={(value) => setFormData({ ...formData, legal_entity_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите юр. лицо" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {legalEntities.map((entity) => (
-                      <SelectItem key={entity.id} value={entity.id.toString()}>
-                        {entity.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Юридическое лицо</Label>
+                <Input
+                  value={resolveLegalEntityName(formData.legal_entity_id)}
+                  readOnly
+                  className="bg-muted/50 cursor-default"
+                  placeholder="Заполнится из счёта"
+                />
+                {formData.legal_entity_id && (
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setFormData({ ...formData, legal_entity_id: undefined })}
+                  >
+                    ✕ очистить
+                  </button>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contractor">Контрагент</Label>
-                <Select
-                  value={formData.contractor_id}
-                  onValueChange={(value) => setFormData({ ...formData, contractor_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите контрагента" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contractors.map((contractor) => (
-                      <SelectItem key={contractor.id} value={contractor.id.toString()}>
-                        {contractor.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Контрагент</Label>
+                <Input
+                  value={resolveContractorName(formData.contractor_id)}
+                  readOnly
+                  className="bg-muted/50 cursor-default"
+                  placeholder="Заполнится из счёта"
+                />
+                {formData.contractor_id && (
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setFormData({ ...formData, contractor_id: undefined })}
+                  >
+                    ✕ очистить
+                  </button>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="department">Отдел-заказчик</Label>
-                <Select
-                  value={formData.department_id}
-                  onValueChange={(value) => setFormData({ ...formData, department_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите отдел-заказчик" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customerDepartments.length === 0 ? (
-                      <div className="p-2 text-sm text-muted-foreground text-center">
-                        Нет доступных отделов
-                      </div>
-                    ) : (
-                      customerDepartments.map((department) => (
-                        <SelectItem key={department.id} value={department.id.toString()}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{department.name}</span>
-                            {department.description && (
-                              <span className="text-xs text-muted-foreground">{department.description}</span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <Label>Отдел-заказчик</Label>
+                <Input
+                  value={resolveDepartmentName(formData.department_id)}
+                  readOnly
+                  className="bg-muted/50 cursor-default"
+                  placeholder="Заполнится из счёта"
+                />
+                {formData.department_id && (
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setFormData({ ...formData, department_id: undefined })}
+                  >
+                    ✕ очистить
+                  </button>
+                )}
               </div>
               {formData.service_id && (
                 <div className="space-y-2">
-                  <Label htmlFor="service_description">Описание сервиса</Label>
+                  <Label>Описание сервиса</Label>
                   <Input
-                    id="service_description"
-                    value={formData.service_description || ''}
+                    value={resolveServiceDescription(formData.service_id)}
                     readOnly
                     disabled
                     className="bg-muted/50 cursor-not-allowed"
@@ -339,39 +343,14 @@ const PaymentForm = ({
                         placeholder={`Введите ${field.name.toLowerCase()}`}
                       />
                     )}
-                    {field.field_type === 'select' && (
-                      <Select
-                        value={formData[`custom_field_${field.id}`]}
-                        onValueChange={(value) => setFormData({ ...formData, [`custom_field_${field.id}`]: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Выберите значение" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {field.options.split(',').map((option, idx) => (
-                            <SelectItem key={idx} value={option.trim()}>
-                              {option.trim()}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                    {field.field_type === 'toggle' && (
-                      <Select
-                        value={formData[`custom_field_${field.id}`]}
-                        onValueChange={(value) => setFormData({ ...formData, [`custom_field_${field.id}`]: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Выберите значение" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {field.options.split(',').map((option, idx) => (
-                            <SelectItem key={idx} value={option.trim()}>
-                              {option.trim()}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    {(field.field_type === 'select' || field.field_type === 'toggle') && (
+                      <Input
+                        id={`custom_field_${field.id}`}
+                        value={formData[`custom_field_${field.id}`] || ''}
+                        readOnly
+                        className="bg-muted/50 cursor-default"
+                        placeholder="Заполнится автоматически"
+                      />
                     )}
                     {field.field_type === 'file' && (
                       <div>
@@ -423,7 +402,7 @@ const PaymentForm = ({
                           }}
                         />
                         {formData[`custom_field_${field.id}`] && (
-                          <p className="text-xs text-green-500 mt-1">✓ Файл загружен</p>
+                          <p className="text-xs text-green-500 mt-1">Файл загружен</p>
                         )}
                       </div>
                     )}
