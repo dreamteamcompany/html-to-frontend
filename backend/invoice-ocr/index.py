@@ -58,22 +58,27 @@ def handler(event: dict, context) -> dict:
     s3.put_object(Bucket='files', Key=s3_key, Body=file_bytes, ContentType=content_type)
     cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
 
-    val_a = os.environ.get('API_KEY', '')
-    val_b = os.environ.get('FOLDER_ID', '')
+    folder_id = os.environ.get('YANDEX_FOLDER_ID', '')
 
-    if not val_a or not val_b:
+    api_key_candidates = [
+        os.environ.get('FOLDER_ID', ''),
+        os.environ.get('API_KEY_SECRET', ''),
+        os.environ.get('API_KEY', ''),
+    ]
+    api_key = ''
+    for candidate in api_key_candidates:
+        if candidate and candidate.startswith('AQV'):
+            api_key = candidate
+            break
+    if not api_key:
+        api_key = next((c for c in api_key_candidates if c), '')
+
+    if not api_key or not folder_id:
         return resp(200, {
             'file_url': cdn_url,
             'extracted_data': None,
-            'warning': 'OCR не настроен — нужны API_KEY и FOLDER_ID'
+            'warning': 'OCR не настроен — нужны API-ключ и YANDEX_FOLDER_ID'
         })
-
-    if val_a.startswith('AQVN') or val_a.startswith('AQV'):
-        api_key, folder_id = val_a, val_b
-    elif val_b.startswith('AQVN') or val_b.startswith('AQV'):
-        api_key, folder_id = val_b, val_a
-    else:
-        api_key, folder_id = val_a, val_b
 
     print(f"[OCR] Using folder_id={folder_id[:8]}..., api_key={api_key[:8]}...")
 
