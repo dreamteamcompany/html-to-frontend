@@ -128,14 +128,16 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         description: 'Распознаю текст и извлекаю данные...',
       });
 
-      // Отправляем файл в backend для OCR и загрузки в S3
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-      
-      const base64 = await base64Promise;
+      let base64: string;
+      if (isPdf) {
+        base64 = await convertPdfToImage(file);
+      } else {
+        base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      }
       
       const ocrResponse = await fetch(FUNC2URL['invoice-ocr'], {
         method: 'POST',
@@ -170,46 +172,31 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         updates.invoice_date = extracted.invoice_date;
       }
       
-      if (extracted.legal_entity && !formData.legal_entity_id) {
-        updates.description = (formData.description || '') + `\nЮр. лицо: ${extracted.legal_entity}`;
+      if (extracted.description) updates.description = extracted.description;
+      if (extracted.service_id) updates.service_id = extracted.service_id.toString();
+      if (extracted.category_id) updates.category_id = extracted.category_id.toString();
+      if (extracted.department_id) updates.department_id = extracted.department_id.toString();
+      if (extracted.legal_entity_id) {
+        updates.legal_entity_id = extracted.legal_entity_id.toString();
       }
-      
-      // Автосоздание контрагента если не выбран и распознан
-      if (extracted.contractor && !formData.contractor_id) {
+
+      if (extracted.contractor_id) {
+        updates.contractor_id = extracted.contractor_id.toString();
+      } else if (extracted.contractor_name && !formData.contractor_id) {
         try {
-          const createContractorResponse = await fetch(`${FUNC2URL['main']}?endpoint=contractors`, {
+          const res = await fetch(`${FUNC2URL['main']}?endpoint=contractors`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Auth-Token': token || '',
-            },
-            body: JSON.stringify({
-              name: extracted.contractor,
-            }),
+            headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+            body: JSON.stringify({ name: extracted.contractor_name, inn: extracted.contractor_inn || '' }),
           });
-          
-          if (createContractorResponse.ok) {
-            const newContractor = await createContractorResponse.json();
-            updates.contractor_id = newContractor.id?.toString();
-            console.log('✅ Contractor auto-created:', newContractor);
-            
-            // Обновляем список контрагентов
-            if (loadContractors) {
-              await loadContractors();
-            }
-            
-            toast({
-              title: "Контрагент создан",
-              description: `Автоматически добавлен: ${extracted.contractor}`,
-            });
-          } else {
-            const errorText = await createContractorResponse.text();
-            console.error('Failed to create contractor:', errorText);
-            updates.description = (updates.description || formData.description || '') + `\nКонтрагент: ${extracted.contractor}`;
+          if (res.ok) {
+            const nc = await res.json();
+            updates.contractor_id = nc.id?.toString();
+            if (loadContractors) await loadContractors();
+            toast({ title: 'Контрагент создан', description: extracted.contractor_name });
           }
         } catch (err) {
-          console.error('Failed to create contractor:', err);
-          updates.description = (updates.description || formData.description || '') + `\nКонтрагент: ${extracted.contractor}`;
+          console.error('Auto-create contractor failed:', err);
         }
       }
       
