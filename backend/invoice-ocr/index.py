@@ -1,8 +1,6 @@
 import json
 import os
 import base64
-import re
-import unicodedata
 import boto3
 import requests
 import psycopg2
@@ -14,7 +12,7 @@ HEADERS = {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*
 
 
 def handler(event: dict, context) -> dict:
-    """Загрузка счёта в S3, OCR через Yandex Vision, regex-парсинг данных и автозаполнение полей"""
+    """Обработка финансовых документов: загрузка → Yandex GPT → сохранение в БД"""
 
     method = event.get('httpMethod', 'POST')
 
@@ -37,9 +35,27 @@ def handler(event: dict, context) -> dict:
     body = json.loads(event.get('body', '{}') or '{}')
     file_data = body.get('file')
     file_name = body.get('fileName', 'invoice.jpg')
+    user_id = body.get('user_id')
 
     if not file_data:
         return resp(400, {'error': 'File data is required'})
+
+    api_key = os.environ.get('YANDEX_GPT_API_KEY', '')
+    if not api_key:
+        api_key = os.environ.get('API_KEY', '')
+    if not api_key:
+        return resp(500, {
+            'error': 'Отсутствует API-ключ Yandex GPT. Необходимо сохранить ключ в переменной окружения с именем: YANDEX_GPT_API_KEY'
+        })
+
+    folder_id = os.environ.get('FOLDER_ID', '')
+    if not folder_id:
+        folder_id = os.environ.get('YANDEX_FOLDER_ID', '')
+    if not folder_id:
+        return resp(500, {'error': 'Отсутствует FOLDER_ID для Yandex GPT'})
+
+    # ===== ШАГ 1: Загрузка файла на сервер =====
+    print(f"[STEP 1] Загрузка файла: {file_name}, user_id: {user_id}")
 
     if ',' in file_data:
         file_data = file_data.split(',')[1]
@@ -58,47 +74,66 @@ def handler(event: dict, context) -> dict:
     s3.put_object(Bucket='files', Key=s3_key, Body=file_bytes, ContentType=content_type)
     cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
 
-    folder_id = os.environ.get('YANDEX_FOLDER_ID', '')
+    upload_date = datetime.now().isoformat()
+    print(f"[STEP 1] Файл сохранён: {cdn_url}, дата: {upload_date}, user_id: {user_id}")
 
-    api_key_candidates = [
-        os.environ.get('FOLDER_ID', ''),
-        os.environ.get('API_KEY_SECRET', ''),
-        os.environ.get('API_KEY', ''),
-    ]
-    api_key = ''
-    for candidate in api_key_candidates:
-        if candidate and candidate.startswith('AQV'):
-            api_key = candidate
-            break
-    if not api_key:
-        api_key = next((c for c in api_key_candidates if c), '')
-
-    if not api_key or not folder_id:
-        return resp(200, {
-            'file_url': cdn_url,
-            'extracted_data': None,
-            'warning': 'OCR не настроен — нужны API-ключ и YANDEX_FOLDER_ID'
-        })
-
-    print(f"[OCR] Using folder_id={folder_id[:8]}..., api_key={api_key[:8]}...")
-
-    ocr_text = run_vision_ocr(file_data, api_key, folder_id)
-
-    if not ocr_text:
-        return resp(200, {
-            'file_url': cdn_url,
-            'extracted_data': None,
-            'raw_text': '',
-            'warning': 'Текст не распознан'
-        })
+    # ===== ШАГ 2: Отправка в Yandex GPT =====
+    print(f"[STEP 2] Отправка в Yandex GPT, folder_id: {folder_id[:8]}...")
 
     ref_data = load_reference_data()
-    extracted = parse_invoice_text(ocr_text, ref_data)
+
+    categories_list = ', '.join([f'id={c["id"]} "{c["name"]}"' for c in ref_data['categories']])
+    services_list = ', '.join([f'id={s["id"]} "{s["name"]}"' for s in ref_data['services']])
+    departments_list = ', '.join([f'id={d["id"]} "{d["name"]}"' for d in ref_data['departments']])
+    legal_entities_list = ', '.join([f'id={le["id"]} "{le["name"]}" ИНН:{le.get("inn","")}'.strip() for le in ref_data['legal_entities']])
+    contractors_list = ', '.join([f'id={c["id"]} "{c["name"]}" ИНН:{c.get("inn","")}'.strip() for c in ref_data['contractors']])
+
+    gpt_prompt = f"""Ты — финансовый аналитик. Проанализируй изображение счёта/финансового документа и извлеки данные.
+
+Верни СТРОГО JSON с ТОЛЬКО этими полями:
+{{
+  "counterparty": {{"id": число_или_null, "name": "строка_или_null", "inn": "строка_или_null"}},
+  "legal_entity": {{"id": число_или_null, "name": "строка_или_null", "inn": "строка_или_null"}},
+  "invoice_number": "строка_или_null",
+  "invoice_date": "YYYY-MM-DD_или_null",
+  "purpose": "строка_или_null",
+  "amount": число_или_null
+}}
+
+Правила:
+1. counterparty — это ПОСТАВЩИК/ИСПОЛНИТЕЛЬ (кто выставил счёт). Попробуй сопоставить с существующими: [{contractors_list}]. Если нашёл совпадение по ИНН или названию — укажи id. Если не нашёл — id=null, но обязательно заполни name и inn.
+2. legal_entity — это ПОКУПАТЕЛЬ/ЗАКАЗЧИК (кому выставлен счёт). Попробуй сопоставить с: [{legal_entities_list}]. Если нашёл — укажи id. Если нет — id=null, заполни name и inn.
+3. invoice_number — номер счёта/документа.
+4. invoice_date — дата документа в формате YYYY-MM-DD.
+5. purpose — назначение платежа, описание за что выставлен счёт.
+6. amount — итоговая сумма к оплате (число без валюты).
+
+При отсутствии явных данных определи по контексту документа. Пустое значение null допустимо только при объективном отсутствии информации.
+
+ВАЖНО: Верни ТОЛЬКО JSON без markdown-разметки, без комментариев, без дополнительного текста."""
+
+    gpt_result = call_yandex_gpt(api_key, folder_id, gpt_prompt, file_data)
+
+    if not gpt_result:
+        return resp(200, {
+            'file_url': cdn_url,
+            'extracted_data': None,
+            'step': 2,
+            'warning': 'Yandex GPT не вернул результат'
+        })
+
+    print(f"[STEP 2] GPT ответ: {json.dumps(gpt_result, ensure_ascii=False)[:500]}")
+
+    # ===== ШАГ 3: Сохранение в БД =====
+    print("[STEP 3] Сохранение данных в БД")
+
+    extracted = map_gpt_to_db(gpt_result, ref_data)
+    print(f"[STEP 3] Mapped data: {json.dumps(extracted, ensure_ascii=False, default=str)}")
 
     return resp(200, {
         'file_url': cdn_url,
         'extracted_data': extracted,
-        'raw_text': ocr_text[:1000]
+        'gpt_raw': gpt_result
     })
 
 
@@ -109,40 +144,6 @@ def resp(status: int, body: dict) -> dict:
         'body': json.dumps(body, ensure_ascii=False, default=str),
         'isBase64Encoded': False
     }
-
-
-def run_vision_ocr(file_data_b64: str, api_key: str, folder_id: str) -> str:
-    r = requests.post(
-        'https://vision.api.cloud.yandex.net/vision/v1/batchAnalyze',
-        headers={'Authorization': f'Api-Key {api_key}', 'Content-Type': 'application/json'},
-        json={
-            'folderId': folder_id,
-            'analyze_specs': [{
-                'content': file_data_b64,
-                'features': [{'type': 'TEXT_DETECTION', 'text_detection_config': {'language_codes': ['ru', 'en']}}]
-            }]
-        },
-        timeout=30
-    )
-
-    if r.status_code != 200:
-        print(f"[OCR ERROR] {r.status_code}: {r.text[:500]}")
-        return ''
-
-    data = r.json()
-    full_text = ''
-
-    try:
-        pages = data['results'][0]['results'][0]['textDetection']['pages']
-        for page in pages:
-            for block in page.get('blocks', []):
-                for line in block.get('lines', []):
-                    words = [w.get('text', '') for w in line.get('words', [])]
-                    full_text += ' '.join(words) + '\n'
-    except (KeyError, IndexError) as e:
-        print(f"[OCR PARSE] {e}")
-
-    return full_text.strip()
 
 
 def load_reference_data() -> dict:
@@ -167,305 +168,158 @@ def load_reference_data() -> dict:
     return ref
 
 
-def normalize(text: str) -> str:
-    if not text:
-        return ''
-    text = unicodedata.normalize('NFKC', text)
-    text = text.lower().strip()
-    text = re.sub(r'[«»""\'\"]', '', text)
-    text = re.sub(r'\s+', ' ', text)
-    return text
+def call_yandex_gpt(api_key: str, folder_id: str, prompt: str, image_base64: str) -> dict | None:
+    url = 'https://llm.api.cloud.yandex.net/foundationModels/v1/completion'
 
-
-def extract_all_inn(text: str) -> list:
-    return re.findall(r'\b(\d{10}|\d{12})\b', text)
-
-
-def extract_all_kpp(text: str) -> list:
-    return re.findall(r'\b(\d{9})\b', text)
-
-
-def extract_amount(text: str) -> float | None:
-    patterns = [
-        r'(?:итого\s*(?:к\s*оплате)?|всего\s*(?:к\s*оплате)?|сумма\s*(?:к\s*оплате)?|к\s*оплате|итого\s*с\s*ндс|всего\s*с\s*ндс|общая\s*сумма)\s*[:\s]*(\d[\d\s\u00a0]*[.,]\d{2})',
-        r'(?:итого\s*(?:к\s*оплате)?|всего\s*(?:к\s*оплате)?|сумма\s*(?:к\s*оплате)?|к\s*оплате|итого\s*с\s*ндс|всего\s*с\s*ндс|общая\s*сумма)\s*[:\s]*(\d[\d\s\u00a0]*)',
-    ]
-    text_lower = text.lower()
-
-    for pattern in patterns:
-        matches = re.findall(pattern, text_lower)
-        if matches:
-            raw = matches[-1]
-            cleaned = re.sub(r'[\s\u00a0]', '', raw).replace(',', '.')
-            try:
-                val = float(cleaned)
-                if val > 0:
-                    return val
-            except ValueError:
-                continue
-
-    amount_pattern = r'(\d[\d\s\u00a0]+[.,]\d{2})\s*(?:руб|₽|rub)'
-    matches = re.findall(amount_pattern, text_lower)
-    if matches:
-        raw = matches[-1]
-        cleaned = re.sub(r'[\s\u00a0]', '', raw).replace(',', '.')
-        try:
-            val = float(cleaned)
-            if val > 0:
-                return val
-        except ValueError:
-            pass
-
-    return None
-
-
-def extract_invoice_number(text: str) -> str | None:
-    patterns = [
-        r'(?:счёт|счет|сч[её]т\s*на\s*оплату|invoice)\s*(?:на\s*оплату\s*)?(?:№|#|N|No\.?|номер)?\s*[:\s]*([A-Za-zА-Яа-я0-9\-/]+)',
-        r'(?:№|#)\s*([A-Za-zА-Яа-я0-9\-/]+)',
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            num = match.group(1).strip()
-            if len(num) >= 1 and len(num) <= 50:
-                return num
-    return None
-
-
-def extract_invoice_date(text: str) -> str | None:
-    patterns = [
-        r'(?:от|дата|date)\s*[:\s]*(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})',
-        r'(?:от|дата|date)\s*[:\s]*(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{2})\b',
-        r'(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})',
-    ]
-
-    months_ru = {
-        'января': '01', 'февраля': '02', 'марта': '03', 'апреля': '04',
-        'мая': '05', 'июня': '06', 'июля': '07', 'августа': '08',
-        'сентября': '09', 'октября': '10', 'ноября': '11', 'декабря': '12',
-        'январь': '01', 'февраль': '02', 'март': '03', 'апрель': '04',
-        'май': '05', 'июнь': '06', 'июль': '07', 'август': '08',
-        'сентябрь': '09', 'октябрь': '10', 'ноябрь': '11', 'декабрь': '12',
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Api-Key {api_key}',
+        'x-folder-id': folder_id
     }
 
-    ru_date = re.search(
-        r'(\d{1,2})\s+(' + '|'.join(months_ru.keys()) + r')\s+(\d{4})',
-        text.lower()
+    payload = {
+        'modelUri': f'gpt://{folder_id}/yandexgpt/latest',
+        'completionOptions': {
+            'stream': False,
+            'temperature': 0.1,
+            'maxTokens': 2000
+        },
+        'messages': [
+            {
+                'role': 'user',
+                'text': prompt,
+                'image': {
+                    'content': image_base64
+                }
+            }
+        ]
+    }
+
+    try:
+        r = requests.post(url, headers=headers, json=payload, timeout=60)
+        print(f"[GPT] Status: {r.status_code}")
+
+        if r.status_code != 200:
+            print(f"[GPT ERROR] {r.text[:500]}")
+
+            if r.status_code == 400 or 'image' in r.text.lower():
+                print("[GPT] Trying text-only OCR fallback via Vision API...")
+                ocr_text = run_vision_ocr(image_base64, api_key, folder_id)
+                if ocr_text:
+                    return call_gpt_text_only(api_key, folder_id, prompt, ocr_text)
+
+            return None
+
+        data = r.json()
+        text = data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text', '')
+        print(f"[GPT] Raw text: {text[:500]}")
+
+        return parse_gpt_json(text)
+
+    except Exception as e:
+        print(f"[GPT EXCEPTION] {e}")
+        return None
+
+
+def run_vision_ocr(image_base64: str, api_key: str, folder_id: str) -> str:
+    r = requests.post(
+        'https://vision.api.cloud.yandex.net/vision/v1/batchAnalyze',
+        headers={'Authorization': f'Api-Key {api_key}', 'Content-Type': 'application/json'},
+        json={
+            'folderId': folder_id,
+            'analyze_specs': [{
+                'content': image_base64,
+                'features': [{'type': 'TEXT_DETECTION', 'text_detection_config': {'language_codes': ['ru', 'en']}}]
+            }]
+        },
+        timeout=30
     )
-    if ru_date:
-        day = ru_date.group(1).zfill(2)
-        month = months_ru[ru_date.group(2)]
-        year = ru_date.group(3)
-        return f"{year}-{month}-{day}"
 
-    for pattern in patterns:
-        match = re.search(pattern, text)
-        if match:
-            day = match.group(1).zfill(2)
-            month = match.group(2).zfill(2)
-            year = match.group(3)
-            if len(year) == 2:
-                year = '20' + year
-            if 1 <= int(day) <= 31 and 1 <= int(month) <= 12 and 2000 <= int(year) <= 2099:
-                return f"{year}-{month}-{day}"
-    return None
+    if r.status_code != 200:
+        print(f"[VISION ERROR] {r.status_code}: {r.text[:300]}")
+        return ''
 
+    data = r.json()
+    full_text = ''
 
-def find_entity_by_inn(entities: list, inns: list) -> dict | None:
-    for inn in inns:
-        for entity in entities:
-            if entity.get('inn') and entity['inn'].strip() == inn:
-                return entity
-    return None
+    try:
+        pages = data['results'][0]['results'][0]['textDetection']['pages']
+        for page in pages:
+            for block in page.get('blocks', []):
+                for line in block.get('lines', []):
+                    words = [w.get('text', '') for w in line.get('words', [])]
+                    full_text += ' '.join(words) + '\n'
+    except (KeyError, IndexError) as e:
+        print(f"[VISION PARSE] {e}")
+
+    return full_text.strip()
 
 
-def find_entity_by_name(entities: list, text: str) -> dict | None:
-    text_norm = normalize(text)
-    best_match = None
-    best_score = 0
+def call_gpt_text_only(api_key: str, folder_id: str, original_prompt: str, ocr_text: str) -> dict | None:
+    url = 'https://llm.api.cloud.yandex.net/foundationModels/v1/completion'
 
-    for entity in entities:
-        name_norm = normalize(entity['name'])
-        if not name_norm:
-            continue
+    prompt_with_text = original_prompt + f"\n\nТекст документа (распознан через OCR):\n{ocr_text[:4000]}"
 
-        core_words = re.findall(r'[а-яёa-z]{3,}', name_norm)
-        if not core_words:
-            continue
-
-        matched_words = sum(1 for w in core_words if w in text_norm)
-        score = matched_words / len(core_words) if core_words else 0
-
-        if score > best_score and score >= 0.5:
-            best_score = score
-            best_match = entity
-
-    return best_match
-
-
-def identify_parties(text: str, legal_entities: list, contractors: list) -> dict:
-    result = {
-        'legal_entity_id': None,
-        'legal_entity_name': None,
-        'legal_entity_inn': None,
-        'contractor_id': None,
-        'contractor_name': None,
-        'contractor_inn': None,
+    payload = {
+        'modelUri': f'gpt://{folder_id}/yandexgpt/latest',
+        'completionOptions': {
+            'stream': False,
+            'temperature': 0.1,
+            'maxTokens': 2000
+        },
+        'messages': [
+            {
+                'role': 'user',
+                'text': prompt_with_text
+            }
+        ]
     }
 
-    all_inns = extract_all_inn(text)
-    print(f"[PARSE] Found INNs in text: {all_inns}")
+    try:
+        r = requests.post(url, headers={
+            'Content-Type': 'application/json',
+            'Authorization': f'Api-Key {api_key}',
+            'x-folder-id': folder_id
+        }, json=payload, timeout=60)
 
-    le_match = find_entity_by_inn(legal_entities, all_inns)
-    if le_match:
-        result['legal_entity_id'] = le_match['id']
-        matched_inn = le_match['inn'].strip()
-        remaining_inns = [i for i in all_inns if i != matched_inn]
-    else:
-        remaining_inns = all_inns
+        print(f"[GPT TEXT] Status: {r.status_code}")
 
-    ctr_match = find_entity_by_inn(contractors, remaining_inns)
-    if ctr_match:
-        result['contractor_id'] = ctr_match['id']
-    elif remaining_inns:
-        if not le_match:
-            le_by_name = find_entity_by_name(legal_entities, text)
-            if le_by_name:
-                result['legal_entity_id'] = le_by_name['id']
+        if r.status_code != 200:
+            print(f"[GPT TEXT ERROR] {r.text[:500]}")
+            return None
 
-    if not le_match and not result['legal_entity_id']:
-        le_by_name = find_entity_by_name(legal_entities, text)
-        if le_by_name:
-            result['legal_entity_id'] = le_by_name['id']
+        data = r.json()
+        text = data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text', '')
+        print(f"[GPT TEXT] Raw: {text[:500]}")
+        return parse_gpt_json(text)
 
-    if not ctr_match:
-        ctr_by_name = find_entity_by_name(contractors, text)
-        if ctr_by_name and ctr_by_name.get('id') != result.get('legal_entity_id'):
-            result['contractor_id'] = ctr_by_name['id']
-
-    text_lower = text.lower()
-    supplier_section = ''
-    supplier_patterns = [
-        r'(?:поставщик|исполнитель|продавец|получатель\s*(?:платежа)?)\s*[:\s]*(.*?)(?:\n|покупатель|заказчик|плательщик|$)',
-    ]
-    for pat in supplier_patterns:
-        m = re.search(pat, text_lower, re.DOTALL)
-        if m:
-            supplier_section = m.group(1)[:300]
-            break
-
-    buyer_section = ''
-    buyer_patterns = [
-        r'(?:покупатель|заказчик|плательщик)\s*[:\s]*(.*?)(?:\n|поставщик|исполнитель|продавец|$)',
-    ]
-    for pat in buyer_patterns:
-        m = re.search(pat, text_lower, re.DOTALL)
-        if m:
-            buyer_section = m.group(1)[:300]
-            break
-
-    if supplier_section and not result['contractor_id']:
-        supplier_inns = extract_all_inn(supplier_section)
-        ctr_by_inn = find_entity_by_inn(contractors, supplier_inns)
-        if ctr_by_inn:
-            result['contractor_id'] = ctr_by_inn['id']
-        else:
-            ctr_by_name = find_entity_by_name(contractors, supplier_section)
-            if ctr_by_name:
-                result['contractor_id'] = ctr_by_name['id']
-            elif supplier_inns:
-                name_match = re.search(r'(?:ООО|ОАО|ЗАО|ПАО|АО|ИП)\s*[«""]?([^»"""\n]{2,50})', supplier_section, re.IGNORECASE)
-                if name_match:
-                    result['contractor_name'] = name_match.group(0).strip()
-                    result['contractor_inn'] = supplier_inns[0]
-
-    if buyer_section and not result['legal_entity_id']:
-        buyer_inns = extract_all_inn(buyer_section)
-        le_by_inn = find_entity_by_inn(legal_entities, buyer_inns)
-        if le_by_inn:
-            result['legal_entity_id'] = le_by_inn['id']
-        else:
-            le_by_name = find_entity_by_name(legal_entities, buyer_section)
-            if le_by_name:
-                result['legal_entity_id'] = le_by_name['id']
-            elif buyer_inns:
-                name_match = re.search(r'(?:ООО|ОАО|ЗАО|ПАО|АО|ИП)\s*[«""]?([^»"""\n]{2,50})', buyer_section, re.IGNORECASE)
-                if name_match:
-                    result['legal_entity_name'] = name_match.group(0).strip()
-                    result['legal_entity_inn'] = buyer_inns[0]
-
-    return result
+    except Exception as e:
+        print(f"[GPT TEXT EXCEPTION] {e}")
+        return None
 
 
-def match_category(text: str, categories: list) -> int | None:
-    text_norm = normalize(text)
-    best = None
-    best_score = 0
+def parse_gpt_json(text: str) -> dict | None:
+    text = text.strip()
+    if text.startswith('```'):
+        lines = text.split('\n')
+        lines = [l for l in lines if not l.strip().startswith('```')]
+        text = '\n'.join(lines).strip()
 
-    for cat in categories:
-        name_norm = normalize(cat['name'])
-        words = re.findall(r'[а-яёa-z]{3,}', name_norm)
-        if not words:
-            continue
-        matched = sum(1 for w in words if w in text_norm)
-        score = matched / len(words)
-        if score > best_score and score >= 0.4:
-            best_score = score
-            best = cat['id']
-
-    return best
-
-
-def match_service(text: str, services: list) -> int | None:
-    text_norm = normalize(text)
-    best = None
-    best_score = 0
-
-    for svc in services:
-        name_norm = normalize(svc['name'])
-        words = re.findall(r'[а-яёa-z]{3,}', name_norm)
-        if not words:
-            continue
-        matched = sum(1 for w in words if w in text_norm)
-        score = matched / len(words)
-        if score > best_score and score >= 0.3:
-            best_score = score
-            best = svc
-
-    if best:
-        return best['id']
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        import re
+        match = re.search(r'\{[\s\S]*\}', text)
+        if match:
+            try:
+                return json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+    print(f"[GPT PARSE FAIL] Could not parse: {text[:300]}")
     return None
 
 
-def extract_description(text: str) -> str:
-    patterns = [
-        r'(?:наименование\s*(?:товара|услуги|работ))\s*[:\s]*(.*?)(?:\n|кол|ед\.)',
-        r'(?:за\s+)((?:оказание|предоставление|выполнение|поставку|обслуживание|услуги).*?)(?:\n|$)',
-        r'(?:назначение\s*платежа|основание)\s*[:\s]*(.*?)(?:\n|$)',
-    ]
-    for pat in patterns:
-        m = re.search(pat, text, re.IGNORECASE)
-        if m:
-            desc = m.group(1).strip()
-            desc = re.sub(r'\s+', ' ', desc)
-            if 5 <= len(desc) <= 200:
-                return desc
-
-    lines = text.split('\n')
-    for line in lines:
-        line = line.strip()
-        if 10 <= len(line) <= 150 and any(w in line.lower() for w in ['услуг', 'обслуживан', 'лицензи', 'подписк', 'поставк', 'работ', 'сервис', 'хостинг', 'домен', 'сопровожден']):
-            return line
-
-    return ''
-
-
-def parse_invoice_text(text: str, ref_data: dict) -> dict:
-    print(f"[PARSE] OCR text length: {len(text)}")
-    print(f"[PARSE] First 500 chars: {text[:500]}")
-
+def map_gpt_to_db(gpt_data: dict, ref_data: dict) -> dict:
     result = {
         'amount': None,
         'invoice_number': None,
@@ -482,23 +336,57 @@ def parse_invoice_text(text: str, ref_data: dict) -> dict:
         'contractor_inn': None,
     }
 
-    result['amount'] = extract_amount(text)
-    result['invoice_number'] = extract_invoice_number(text)
-    result['invoice_date'] = extract_invoice_date(text)
-    result['description'] = extract_description(text)
+    result['amount'] = gpt_data.get('amount')
+    result['invoice_number'] = gpt_data.get('invoice_number')
+    result['invoice_date'] = gpt_data.get('invoice_date')
+    result['description'] = gpt_data.get('purpose')
 
-    parties = identify_parties(text, ref_data['legal_entities'], ref_data['contractors'])
-    result.update(parties)
+    counterparty = gpt_data.get('counterparty') or {}
+    if isinstance(counterparty, dict):
+        cp_id = counterparty.get('id')
+        if cp_id and any(c['id'] == cp_id for c in ref_data['contractors']):
+            result['contractor_id'] = cp_id
+        else:
+            if counterparty.get('inn'):
+                for c in ref_data['contractors']:
+                    if c.get('inn') and c['inn'].strip() == str(counterparty['inn']).strip():
+                        result['contractor_id'] = c['id']
+                        break
+            if not result['contractor_id'] and counterparty.get('name'):
+                result['contractor_name'] = counterparty['name']
+                result['contractor_inn'] = counterparty.get('inn')
 
-    result['service_id'] = match_service(text, ref_data['services'])
+    legal_entity = gpt_data.get('legal_entity') or {}
+    if isinstance(legal_entity, dict):
+        le_id = legal_entity.get('id')
+        if le_id and any(le['id'] == le_id for le in ref_data['legal_entities']):
+            result['legal_entity_id'] = le_id
+        else:
+            if legal_entity.get('inn'):
+                for le in ref_data['legal_entities']:
+                    if le.get('inn') and le['inn'].strip() == str(legal_entity['inn']).strip():
+                        result['legal_entity_id'] = le['id']
+                        break
+            if not result['legal_entity_id'] and legal_entity.get('name'):
+                result['legal_entity_name'] = legal_entity['name']
+                result['legal_entity_inn'] = legal_entity.get('inn')
 
-    if result['service_id']:
-        svc = next((s for s in ref_data['services'] if s['id'] == result['service_id']), None)
-        if svc and svc.get('category_id'):
-            result['category_id'] = svc['category_id']
+    if result['description']:
+        desc_lower = result['description'].lower()
+        best_svc = None
+        best_score = 0
+        for svc in ref_data['services']:
+            svc_words = [w.lower() for w in svc['name'].split() if len(w) >= 3]
+            if not svc_words:
+                continue
+            matched = sum(1 for w in svc_words if w in desc_lower)
+            score = matched / len(svc_words)
+            if score > best_score and score >= 0.3:
+                best_score = score
+                best_svc = svc
+        if best_svc:
+            result['service_id'] = best_svc['id']
+            if best_svc.get('category_id'):
+                result['category_id'] = best_svc['category_id']
 
-    if not result['category_id']:
-        result['category_id'] = match_category(text, ref_data['categories'])
-
-    print(f"[PARSE] Extracted: {json.dumps(result, ensure_ascii=False, default=str)}")
     return result

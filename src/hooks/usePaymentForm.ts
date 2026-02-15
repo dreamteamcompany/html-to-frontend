@@ -16,7 +16,7 @@ interface CustomFieldDefinition {
 }
 
 export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess: () => void, loadContractors?: () => Promise<unknown>, loadLegalEntities?: () => Promise<unknown>) => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
@@ -124,8 +124,8 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       }
 
       toast({
-        title: 'Сканирование документа',
-        description: 'Распознаю текст и извлекаю данные...',
+        title: 'Шаг 1: Загрузка файла',
+        description: 'Сохраняю документ на сервер...',
       });
 
       let base64: string;
@@ -138,24 +138,34 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
           reader.readAsDataURL(file);
         });
       }
-      
+
+      toast({
+        title: 'Шаг 2: Анализ документа',
+        description: 'Отправляю в Yandex GPT для распознавания...',
+      });
+
       const ocrResponse = await fetch(FUNC2URL['invoice-ocr'], {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: base64, fileName: file.name }),
+        body: JSON.stringify({
+          file: base64,
+          fileName: file.name,
+          user_id: user?.id || null,
+        }),
       });
-      
+
       if (!ocrResponse.ok) {
-        throw new Error('Ошибка при обработке документа');
+        const errorData = await ocrResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Ошибка при обработке документа');
       }
 
       const ocrData = await ocrResponse.json();
       const fileUrl = ocrData.file_url || '';
       const extracted = ocrData.extracted_data || {};
-      console.log('OCR result:', { extracted, raw_text: ocrData.raw_text, warning: ocrData.warning });
-      
+      console.log('GPT result:', { extracted, gpt_raw: ocrData.gpt_raw, warning: ocrData.warning });
+
       const updates: Record<string, string | undefined> = {};
-      
+
       if (fileUrl) {
         updates.invoice_file_url = fileUrl;
       }
@@ -169,20 +179,20 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         setFormData(prev => ({ ...prev, ...updates }));
         return;
       }
-      
+
       if (extracted.amount) {
         const cleaned = extracted.amount.toString().replace(/\s/g, '').replace(',', '.');
         updates.amount = cleaned;
       }
-      
+
       if (extracted.invoice_number) {
         updates.invoice_number = extracted.invoice_number;
       }
-      
+
       if (extracted.invoice_date) {
         updates.invoice_date = extracted.invoice_date;
       }
-      
+
       if (extracted.description) updates.description = extracted.description;
       if (extracted.service_id) updates.service_id = extracted.service_id.toString();
       if (extracted.category_id) updates.category_id = extracted.category_id.toString();
@@ -226,11 +236,11 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
           console.error('Auto-create legal entity failed:', err);
         }
       }
-      
+
       setFormData(prev => ({ ...prev, ...updates }));
-      
+
       toast({
-        title: 'Данные распознаны',
+        title: 'Шаг 3: Данные сохранены',
         description: 'Все поля автоматически заполнены из счёта',
       });
     } catch (err) {
