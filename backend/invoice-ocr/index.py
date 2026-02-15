@@ -40,19 +40,35 @@ def handler(event: dict, context) -> dict:
     if not file_data:
         return resp(400, {'error': 'File data is required'})
 
-    api_key = os.environ.get('YANDEX_GPT_API_KEY', '')
-    if not api_key:
-        api_key = os.environ.get('API_KEY', '')
+    all_candidates = [
+        os.environ.get('YANDEX_GPT_API_KEY', ''),
+        os.environ.get('API_KEY', ''),
+        os.environ.get('API_KEY_SECRET', ''),
+        os.environ.get('FOLDER_ID', ''),
+        os.environ.get('YANDEX_FOLDER_ID', ''),
+    ]
+
+    api_key = ''
+    folder_id = ''
+    for val in all_candidates:
+        if not val:
+            continue
+        if val.startswith('AQV') or val.startswith('aje') or len(val) > 30:
+            if not api_key:
+                api_key = val
+        elif val.startswith('b1g') and len(val) < 30:
+            if not folder_id:
+                folder_id = val
+
     if not api_key:
         return resp(500, {
             'error': 'Отсутствует API-ключ Yandex GPT. Необходимо сохранить ключ в переменной окружения с именем: YANDEX_GPT_API_KEY'
         })
 
-    folder_id = os.environ.get('FOLDER_ID', '')
     if not folder_id:
-        folder_id = os.environ.get('YANDEX_FOLDER_ID', '')
+        folder_id = resolve_folder_id(api_key)
     if not folder_id:
-        return resp(500, {'error': 'Отсутствует FOLDER_ID для Yandex GPT'})
+        return resp(500, {'error': 'Не удалось определить FOLDER_ID для Yandex GPT'})
 
     # ===== ШАГ 1: Загрузка файла на сервер =====
     print(f"[STEP 1] Загрузка файла: {file_name}, user_id: {user_id}")
@@ -144,6 +160,40 @@ def resp(status: int, body: dict) -> dict:
         'body': json.dumps(body, ensure_ascii=False, default=str),
         'isBase64Encoded': False
     }
+
+
+def resolve_folder_id(api_key: str) -> str:
+    try:
+        r = requests.get(
+            'https://resource-manager.api.cloud.yandex.net/resource-manager/v1/clouds',
+            headers={'Authorization': f'Api-Key {api_key}'},
+            timeout=10
+        )
+        if r.status_code != 200:
+            print(f"[RESOLVE] clouds error: {r.status_code} {r.text[:200]}")
+            return ''
+        clouds = r.json().get('clouds', [])
+        if not clouds:
+            return ''
+        cloud_id = clouds[0]['id']
+
+        r2 = requests.get(
+            f'https://resource-manager.api.cloud.yandex.net/resource-manager/v1/folders?cloudId={cloud_id}',
+            headers={'Authorization': f'Api-Key {api_key}'},
+            timeout=10
+        )
+        if r2.status_code != 200:
+            return ''
+        folders = r2.json().get('folders', [])
+        for f in folders:
+            if f.get('status') == 'ACTIVE':
+                print(f"[RESOLVE] Found folder: {f['id']}")
+                return f['id']
+        if folders:
+            return folders[0]['id']
+    except Exception as e:
+        print(f"[RESOLVE] Exception: {e}")
+    return ''
 
 
 def load_reference_data() -> dict:
