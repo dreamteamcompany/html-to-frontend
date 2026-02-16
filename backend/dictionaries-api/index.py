@@ -73,7 +73,8 @@ def get_db_connection():
     return psycopg2.connect(dsn)
 
 def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    token = event.get('headers', {}).get('X-Authorization', '').replace('Bearer ', '')
+    headers = event.get('headers', {})
+    token = headers.get('X-Auth-Token') or headers.get('X-Authorization', '').replace('Bearer ', '')
     
     if not token:
         return None
