@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/utils/api';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
+import { useCrudPage } from '@/hooks/useCrudPage';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import RolesHeader from '@/components/roles/RolesHeader';
 import RoleFormDialog from '@/components/roles/RoleFormDialog';
@@ -24,18 +25,9 @@ interface Role {
 }
 
 const Roles = () => {
-  const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingRole, setEditingRole] = useState<Role | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    permission_ids: [] as number[],
-  });
 
   const {
     menuOpen,
@@ -45,19 +37,27 @@ const Roles = () => {
     handleTouchEnd,
   } = useSidebarTouch();
 
-  const loadRoles = () => {
-    apiFetch(`${API_ENDPOINTS.main}?endpoint=roles`)
-      .then(res => res.json())
-      .then(data => {
-        setRoles(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load roles:', err);
-        setRoles([]);
-        setLoading(false);
-      });
-  };
+  const {
+    items: roles,
+    loading,
+    dialogOpen,
+    setDialogOpen,
+    editingItem: editingRole,
+    formData,
+    setFormData,
+    loadData: loadRoles,
+    handleEdit: handleEditBase,
+    handleSubmit,
+    handleDelete: handleDeleteBase,
+  } = useCrudPage<Role>({
+    endpoint: 'roles',
+    initialFormData: {
+      name: '',
+      description: '',
+      permission_ids: [] as number[],
+      user_count: 0,
+    },
+  });
 
   const loadPermissions = () => {
     apiFetch(`${API_ENDPOINTS.main}?endpoint=permissions`)
@@ -72,72 +72,24 @@ const Roles = () => {
   useEffect(() => {
     loadRoles();
     loadPermissions();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const url = '${API_ENDPOINTS.main}?endpoint=roles';
-      const method = editingRole ? 'PUT' : 'POST';
-      const body = editingRole 
-        ? { ...formData, id: editingRole.id }
-        : formData;
-
-      const response = await apiFetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.ok) {
-        setDialogOpen(false);
-        setEditingRole(null);
-        setFormData({
-          name: '',
-          description: '',
-          permission_ids: [],
-        });
-        loadRoles();
-      }
-    } catch (err) {
-      console.error('Failed to save role:', err);
-    }
-  };
+  }, [loadRoles]);
 
   const handleEdit = (role: Role) => {
-    setEditingRole(role);
+    handleEditBase(role);
+    // Override formData to include permission_ids from the role
     setFormData({
       name: role.name,
       description: role.description,
       permission_ids: role.permissions?.map(p => p.id) || [],
+      user_count: role.user_count,
     });
-    setDialogOpen(true);
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('Вы уверены, что хотите удалить эту роль?')) return;
     
     try {
-      const response = await apiFetch(
-        `${API_ENDPOINTS.main}?endpoint=roles`,
-        { 
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id })
-        }
-      );
-
-      if (response.ok) {
-        loadRoles();
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Не удалось удалить роль');
-      }
+      await handleDeleteBase(id);
     } catch (err) {
       console.error('Failed to delete role:', err);
       alert('Ошибка при удалении роли');
@@ -279,11 +231,11 @@ const Roles = () => {
   const handleDialogOpenChange = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setEditingRole(null);
       setFormData({
         name: '',
         description: '',
         permission_ids: [],
+        user_count: 0,
       });
     }
   };

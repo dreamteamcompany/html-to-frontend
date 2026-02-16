@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
+import { useCrudPage } from '@/hooks/useCrudPage';
 import { getApiUrl } from '@/config/api';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useToast } from '@/hooks/use-toast';
@@ -45,13 +46,9 @@ interface Service {
 
 const Services = () => {
   const { hasPermission } = useAuth();
-  const [services, setServices] = useState<Service[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<CustomerDepartment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const { toast } = useToast();
@@ -64,12 +61,28 @@ const Services = () => {
     handleTouchEnd,
   } = useSidebarTouch();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    final_approver_id: '',
-    customer_department_id: '',
-    category_id: '',
+  const {
+    items: services,
+    loading,
+    dialogOpen,
+    setDialogOpen,
+    editingItem: editingService,
+    formData,
+    setFormData,
+    loadData: loadServices,
+    handleEdit: handleEditBase,
+    handleSubmit: handleSubmitBase,
+    handleDelete: handleDeleteBase,
+  } = useCrudPage<Service>({
+    endpoint: 'services',
+    initialFormData: {
+      name: '',
+      description: '',
+      intermediate_approver_id: 0,
+      final_approver_id: 0,
+      customer_department_id: undefined,
+      category_id: undefined,
+    },
   });
 
   useEffect(() => {
@@ -77,25 +90,7 @@ const Services = () => {
     loadUsers();
     loadDepartments();
     loadCategories();
-  }, []);
-
-  const loadServices = async () => {
-    try {
-      const response = await apiFetch(getApiUrl('services'));
-      const data = await response.json();
-      setServices(data.services || []);
-    } catch (error) {
-      console.error('Failed to load services:', error);
-      setServices([]);
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить сервисы',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [loadServices]);
 
   const loadUsers = async () => {
     try {
@@ -133,6 +128,7 @@ const Services = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Custom validation for Services
     if (!formData.name || !formData.final_approver_id) {
       toast({
         title: 'Ошибка',
@@ -143,37 +139,11 @@ const Services = () => {
     }
 
     try {
-      const url = getApiUrl('services');
-      const payload: Record<string, unknown> = {
-        name: formData.name,
-        description: formData.description,
-        intermediate_approver_id: parseInt(formData.final_approver_id),
-        final_approver_id: parseInt(formData.final_approver_id),
-        customer_department_id: formData.customer_department_id ? parseInt(formData.customer_department_id) : null,
-        category_id: formData.category_id ? parseInt(formData.category_id) : null,
-      };
-
-      if (editingService) {
-        payload.id = editingService.id;
-      }
-
-      const response = await apiFetch(url, {
-        method: editingService ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      await handleSubmitBase(e);
+      toast({
+        title: 'Успешно',
+        description: editingService ? 'Сервис обновлён' : 'Сервис создан',
       });
-
-      if (response.ok) {
-        toast({
-          title: 'Успешно',
-          description: editingService ? 'Сервис обновлён' : 'Сервис создан',
-        });
-        setDialogOpen(false);
-        resetForm();
-        loadServices();
-      } else {
-        throw new Error('Failed to save service');
-      }
     } catch (error) {
       console.error('Failed to save service:', error);
       toast({
@@ -185,36 +155,18 @@ const Services = () => {
   };
 
   const handleEdit = (service: Service) => {
-    setEditingService(service);
-    setFormData({
-      name: service.name,
-      description: service.description || '',
-      final_approver_id: service.final_approver_id.toString(),
-      customer_department_id: service.customer_department_id ? service.customer_department_id.toString() : '',
-      category_id: service.category_id ? service.category_id.toString() : '',
-    });
-    setDialogOpen(true);
+    handleEditBase(service);
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('Удалить этот сервис?')) return;
 
     try {
-      const response = await apiFetch(getApiUrl('services'), {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
+      await handleDeleteBase(id);
+      toast({
+        title: 'Успешно',
+        description: 'Сервис удалён',
       });
-
-      if (response.ok) {
-        toast({
-          title: 'Успешно',
-          description: 'Сервис удалён',
-        });
-        loadServices();
-      } else {
-        throw new Error('Failed to delete service');
-      }
     } catch (error) {
       console.error('Failed to delete service:', error);
       toast({
@@ -229,11 +181,11 @@ const Services = () => {
     setFormData({
       name: '',
       description: '',
-      final_approver_id: '',
-      customer_department_id: '',
-      category_id: '',
+      intermediate_approver_id: 0,
+      final_approver_id: 0,
+      customer_department_id: undefined,
+      category_id: undefined,
     });
-    setEditingService(null);
   };
 
   const handleDialogClose = (open: boolean) => {

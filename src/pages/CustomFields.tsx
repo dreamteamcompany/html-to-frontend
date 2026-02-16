@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
+import { useCrudPage } from '@/hooks/useCrudPage';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
-import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { API_ENDPOINTS } from '@/config/api';
 import {
   Dialog,
   DialogContent,
@@ -44,16 +43,6 @@ const fieldTypes = [
 
 const CustomFields = () => {
   const { hasPermission } = useAuth();
-  const [fields, setFields] = useState<CustomField[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingField, setEditingField] = useState<CustomField | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    field_type: 'text',
-    options: '',
-    file_extensions: '',
-  });
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
 
   const {
@@ -64,86 +53,36 @@ const CustomFields = () => {
     handleTouchEnd,
   } = useSidebarTouch();
 
-  const loadFields = () => {
-    apiFetch(`${API_ENDPOINTS.main}?endpoint=custom-fields`)
-      .then(res => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setFields(data);
-        } else {
-          setFields([]);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load custom fields:', err);
-        setFields([]);
-        setLoading(false);
-      });
-  };
+  const {
+    items: fields,
+    loading,
+    dialogOpen,
+    setDialogOpen,
+    editingItem: editingField,
+    formData,
+    setFormData,
+    loadData: loadFields,
+    handleEdit,
+    handleSubmit,
+    handleDelete: handleDeleteBase,
+  } = useCrudPage<CustomField>({
+    endpoint: 'custom-fields',
+    initialFormData: {
+      name: '',
+      field_type: 'text',
+      options: '',
+    },
+  });
 
   useEffect(() => {
     loadFields();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const url = '${API_ENDPOINTS.main}?endpoint=custom-fields';
-      const method = editingField ? 'PUT' : 'POST';
-      const body = editingField 
-        ? { id: editingField.id, ...formData }
-        : formData;
-
-      const response = await apiFetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.ok) {
-        setDialogOpen(false);
-        setEditingField(null);
-        setFormData({ name: '', field_type: 'text', options: '', file_extensions: '' });
-        loadFields();
-      }
-    } catch (err) {
-      console.error('Failed to save custom field:', err);
-    }
-  };
-
-  const handleEdit = (field: CustomField) => {
-    setEditingField(field);
-    setFormData({ 
-      name: field.name, 
-      field_type: field.field_type, 
-      options: field.options,
-      file_extensions: field.options || ''
-    });
-    setDialogOpen(true);
-  };
+  }, [loadFields]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Вы уверены, что хотите удалить это дополнительное поле?')) return;
 
     try {
-      const response = await apiFetch(
-        '${API_ENDPOINTS.main}?endpoint=custom-fields',
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id }),
-        }
-      );
-
-      if (response.ok) {
-        loadFields();
-      }
+      await handleDeleteBase(id);
     } catch (err) {
       console.error('Failed to delete custom field:', err);
     }
@@ -152,8 +91,7 @@ const CustomFields = () => {
   const handleDialogClose = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setEditingField(null);
-      setFormData({ name: '', field_type: 'text', options: '', file_extensions: '' });
+      setFormData({ name: '', field_type: 'text', options: '' });
     }
   };
 
@@ -300,8 +238,8 @@ const CustomFields = () => {
                     <Label htmlFor="file_extensions">Разрешённые форматы файлов</Label>
                     <Input
                       id="file_extensions"
-                      value={formData.file_extensions}
-                      onChange={(e) => setFormData({ ...formData, file_extensions: e.target.value, options: e.target.value })}
+                      value={formData.options}
+                      onChange={(e) => setFormData({ ...formData, options: e.target.value })}
                       placeholder="pdf, jpg, png, doc, docx"
                     />
                     <p className="text-xs text-muted-foreground">

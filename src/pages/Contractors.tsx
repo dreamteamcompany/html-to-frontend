@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
+import { useCrudPage } from '@/hooks/useCrudPage';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import ContractorsHeader from '@/components/contractors/ContractorsHeader';
 import ContractorForm from '@/components/contractors/ContractorForm';
 import ContractorsList from '@/components/contractors/ContractorsList';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
 
 interface Contractor {
   id: number;
@@ -28,12 +27,9 @@ interface Contractor {
 }
 
 const Contractors = () => {
-  const [contractors, setContractors] = useState<Contractor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingContractor, setEditingContractor] = useState<Contractor | null>(null);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     menuOpen,
@@ -43,84 +39,49 @@ const Contractors = () => {
     handleTouchEnd,
   } = useSidebarTouch();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: '',
-    inn: '',
-    kpp: '',
-    ogrn: '',
-    legal_address: '',
-    actual_address: '',
-    phone: '',
-    email: '',
-    contact_person: '',
-    bank_name: '',
-    bank_bik: '',
-    bank_account: '',
-    correspondent_account: '',
-    notes: '',
+  const {
+    items: contractors,
+    loading,
+    dialogOpen,
+    setDialogOpen,
+    editingItem: editingContractor,
+    formData,
+    setFormData,
+    loadData: loadContractors,
+    handleEdit,
+    handleSubmit: handleSubmitBase,
+    handleDelete: handleDeleteBase,
+  } = useCrudPage<Contractor>({
+    endpoint: 'contractors',
+    initialFormData: {
+      name: '',
+      inn: '',
+      kpp: '',
+      ogrn: '',
+      legal_address: '',
+      actual_address: '',
+      phone: '',
+      email: '',
+      contact_person: '',
+      bank_name: '',
+      bank_bik: '',
+      bank_account: '',
+      correspondent_account: '',
+      notes: '',
+      is_active: true,
+    },
   });
-
-  const loadContractors = () => {
-    apiFetch(`${API_ENDPOINTS.main}?endpoint=contractors`)
-      .then(res => res.json())
-      .then(data => {
-        setContractors(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load contractors:', err);
-        setContractors([]);
-        setLoading(false);
-      });
-  };
 
   useEffect(() => {
     loadContractors();
-  }, []);
+  }, [loadContractors]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
     
     try {
-      const url = '${API_ENDPOINTS.main}?endpoint=contractors';
-      const method = editingContractor ? 'PUT' : 'POST';
-      const body = editingContractor 
-        ? { ...formData, id: editingContractor.id }
-        : formData;
-
-      const response = await apiFetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.ok) {
-        setDialogOpen(false);
-        setEditingContractor(null);
-        setFormData({
-          name: '',
-          inn: '',
-          kpp: '',
-          ogrn: '',
-          legal_address: '',
-          actual_address: '',
-          phone: '',
-          email: '',
-          contact_person: '',
-          bank_name: '',
-          bank_bik: '',
-          bank_account: '',
-          correspondent_account: '',
-          notes: '',
-        });
-        loadContractors();
-      }
+      await handleSubmitBase(e);
     } catch (err) {
       console.error('Failed to save contractor:', err);
     } finally {
@@ -128,47 +89,11 @@ const Contractors = () => {
     }
   };
 
-  const handleEdit = (contractor: Contractor) => {
-    setEditingContractor(contractor);
-    setFormData({
-      name: contractor.name,
-      inn: contractor.inn,
-      kpp: contractor.kpp,
-      ogrn: contractor.ogrn,
-      legal_address: contractor.legal_address,
-      actual_address: contractor.actual_address,
-      phone: contractor.phone,
-      email: contractor.email,
-      contact_person: contractor.contact_person,
-      bank_name: contractor.bank_name,
-      bank_bik: contractor.bank_bik,
-      bank_account: contractor.bank_account,
-      correspondent_account: contractor.correspondent_account,
-      notes: contractor.notes,
-    });
-    setDialogOpen(true);
-  };
-
   const handleDelete = async (id: number) => {
     if (!confirm('Вы уверены, что хотите удалить этого контрагента?')) return;
     
     try {
-      const response = await apiFetch(
-        `${API_ENDPOINTS.main}?endpoint=contractors&id=${id}`,
-        { 
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.ok) {
-        loadContractors();
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Не удалось удалить контрагента');
-      }
+      await handleDeleteBase(id);
     } catch (err) {
       console.error('Failed to delete contractor:', err);
       alert('Ошибка при удалении контрагента');
@@ -178,7 +103,6 @@ const Contractors = () => {
   const handleDialogClose = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setEditingContractor(null);
       setFormData({
         name: '',
         inn: '',
@@ -194,6 +118,7 @@ const Contractors = () => {
         bank_account: '',
         correspondent_account: '',
         notes: '',
+        is_active: true,
       });
     }
   };

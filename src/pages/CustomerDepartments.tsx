@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
+import { useCrudPage } from '@/hooks/useCrudPage';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
-import { API_ENDPOINTS } from '@/config/api';
 import {
   Dialog,
   DialogContent,
@@ -39,18 +38,10 @@ interface CustomerDepartment {
 
 const CustomerDepartments = () => {
   const { hasPermission } = useAuth();
-  const [departments, setDepartments] = useState<CustomerDepartment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState<CustomerDepartment | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [departmentToDelete, setDepartmentToDelete] = useState<CustomerDepartment | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-  });
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [departmentToDelete, setDepartmentToDelete] = useState<CustomerDepartment | null>(null);
 
   const {
     menuOpen,
@@ -60,61 +51,30 @@ const CustomerDepartments = () => {
     handleTouchEnd,
   } = useSidebarTouch();
 
-  const loadDepartments = () => {
-    apiFetch(`${API_ENDPOINTS.main}?endpoint=customer_departments`)
-      .then(res => res.json())
-      .then((data) => {
-        setDepartments(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load departments:', err);
-        setDepartments([]);
-        setLoading(false);
-      });
-  };
+  const {
+    items: departments,
+    loading,
+    dialogOpen,
+    setDialogOpen,
+    editingItem: editingDepartment,
+    formData,
+    setFormData,
+    loadData: loadDepartments,
+    handleEdit,
+    handleSubmit,
+    handleDelete: handleDeleteBase,
+  } = useCrudPage<CustomerDepartment>({
+    endpoint: 'customer-departments',
+    initialFormData: {
+      name: '',
+      description: '',
+      is_active: true,
+    },
+  });
 
   useEffect(() => {
     loadDepartments();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const url = `${API_ENDPOINTS.main}?endpoint=customer_departments`;
-      const method = editingDepartment ? 'PUT' : 'POST';
-      const body = editingDepartment 
-        ? { id: editingDepartment.id, ...formData }
-        : formData;
-
-      const response = await apiFetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.ok) {
-        setDialogOpen(false);
-        setEditingDepartment(null);
-        setFormData({ name: '', description: '' });
-        loadDepartments();
-      }
-    } catch (error) {
-      console.error('Failed to save department:', error);
-    }
-  };
-
-  const handleEdit = (department: CustomerDepartment) => {
-    setEditingDepartment(department);
-    setFormData({
-      name: department.name,
-      description: department.description || '',
-    });
-    setDialogOpen(true);
-  };
+  }, [loadDepartments]);
 
   const handleDeleteClick = (department: CustomerDepartment) => {
     setDepartmentToDelete(department);
@@ -125,19 +85,9 @@ const CustomerDepartments = () => {
     if (!departmentToDelete) return;
 
     try {
-      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=customer_departments`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: departmentToDelete.id }),
-      });
-
-      if (response.ok) {
-        setDeleteDialogOpen(false);
-        setDepartmentToDelete(null);
-        loadDepartments();
-      }
+      await handleDeleteBase(departmentToDelete.id);
+      setDeleteDialogOpen(false);
+      setDepartmentToDelete(null);
     } catch (error) {
       console.error('Failed to delete department:', error);
     }
@@ -145,8 +95,7 @@ const CustomerDepartments = () => {
 
   const handleDialogClose = () => {
     setDialogOpen(false);
-    setEditingDepartment(null);
-    setFormData({ name: '', description: '' });
+    setFormData({ name: '', description: '', is_active: true });
   };
 
   return (
