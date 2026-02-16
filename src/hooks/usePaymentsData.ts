@@ -59,7 +59,7 @@ export const usePaymentsData = () => {
 
   const loadPayments = useCallback(() => {
     setLoading(true);
-    apiFetch(API_ENDPOINTS.payments)
+    apiFetch(API_ENDPOINTS.paymentsApi)
       .then(res => res.json())
       .then(data => {
         setPayments(Array.isArray(data) ? data : []);
