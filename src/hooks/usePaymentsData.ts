@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/utils/api';
-import { getApiUrl, API_ENDPOINTS } from '@/config/api';
+import { API_ENDPOINTS } from '@/config/api';
 import { Payment, CustomField } from '@/types/payment';
+import { useDictionaryContext } from '@/contexts/DictionaryContext';
 
 interface Category {
   id: number;
@@ -48,13 +49,8 @@ interface Service {
 }
 
 export const usePaymentsData = () => {
+  const dictionary = useDictionaryContext();
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
-  const [contractors, setContractors] = useState<Contractor[]>([]);
-  const [customerDepartments, setCustomerDepartments] = useState<CustomerDepartment[]>([]);
-  const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadPayments = useCallback(() => {
@@ -72,95 +68,29 @@ export const usePaymentsData = () => {
       });
   }, []);
 
-  const loadContractors = useCallback(() => {
-    return apiFetch(getApiUrl('contractors'))
-      .then(res => res.json())
-      .then(data => {
-        setContractors(Array.isArray(data) ? data : []);
-        return data;
-      })
-      .catch(err => {
-        console.error('Failed to load contractors:', err);
-        setContractors([]);
-        return [];
-      });
-  }, []);
+  const loadContractors = useCallback(async () => {
+    await dictionary.refresh('contractors');
+    return dictionary.contractors;
+  }, [dictionary]);
 
-  const loadLegalEntities = useCallback(() => {
-    return apiFetch(getApiUrl('legal-entities'))
-      .then(res => res.json())
-      .then(data => {
-        setLegalEntities(Array.isArray(data) ? data : []);
-        return data;
-      })
-      .catch(err => {
-        console.error('Failed to load legal entities:', err);
-        setLegalEntities([]);
-        return [];
-      });
-  }, []);
-
-  const loadCategories = useCallback(() => {
-    apiFetch(getApiUrl('categories'))
-      .then(res => res.json())
-      .then(data => setCategories(Array.isArray(data) ? data : []))
-      .catch(err => { 
-        console.error('Failed to load categories:', err); 
-        setCategories([]); 
-      });
-  }, []);
-
-  const loadCustomerDepartments = useCallback(() => {
-    apiFetch(getApiUrl('customer_departments'))
-      .then(res => res.json())
-      .then(data => setCustomerDepartments(Array.isArray(data) ? data : []))
-      .catch(err => { 
-        console.error('Failed to load customer departments:', err); 
-        setCustomerDepartments([]); 
-      });
-  }, []);
-
-  const loadServices = useCallback(() => {
-    apiFetch(getApiUrl('services'))
-      .then(res => res.json())
-      .then(data => setServices(data.services || []))
-      .catch(err => { 
-        console.error('Failed to load services:', err); 
-        setServices([]); 
-      });
-  }, []);
-
-  const loadCustomFields = useCallback(() => {
-    apiFetch(getApiUrl('custom-fields'))
-      .then(res => res.json())
-      .then((fields) => {
-        setCustomFields(Array.isArray(fields) ? fields : []);
-      })
-      .catch(err => { 
-        console.error('Failed to load custom fields:', err); 
-        setCustomFields([]); 
-      });
-  }, []);
+  const loadLegalEntities = useCallback(async () => {
+    await dictionary.refresh('legalEntities');
+    return dictionary.legalEntities;
+  }, [dictionary]);
 
   useEffect(() => {
     loadPayments();
-    loadCategories();
-    loadLegalEntities();
-    loadContractors();
-    loadCustomerDepartments();
-    loadServices();
-    loadCustomFields();
-  }, [loadPayments, loadCategories, loadLegalEntities, loadContractors, loadCustomerDepartments, loadServices, loadCustomFields]);
+  }, [loadPayments]);
 
   return {
     payments,
-    categories,
-    legalEntities,
-    contractors,
-    customerDepartments,
-    customFields,
-    services,
-    loading,
+    categories: dictionary.categories,
+    legalEntities: dictionary.legalEntities,
+    contractors: dictionary.contractors,
+    customerDepartments: dictionary.departments,
+    customFields: dictionary.customFields,
+    services: dictionary.services,
+    loading: loading || dictionary.loading.categories || dictionary.loading.services,
     loadPayments,
     loadContractors,
     loadLegalEntities,

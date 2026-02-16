@@ -509,7 +509,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cur.close()
                 conn.close()
-                return response(200, {'services': services})
+                return response(200, services)
             
             elif method == 'POST':
                 if not check_user_permission(conn, user_id, 'payments.create'):
