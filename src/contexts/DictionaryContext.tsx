@@ -141,9 +141,11 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
       const url = `${API_ENDPOINTS.dictionariesApi}?endpoint=${endpoint}`;
       const response = await apiFetch(url);
       if (!response.ok) {
+        console.error(`[Dict] HTTP ${response.status} for ${key}`);
         return;
       }
       const result = await response.json();
+      console.log(`[Dict] ${key}:`, Array.isArray(result) ? result.length : result);
       setData(prev => ({ ...prev, [key]: Array.isArray(result) ? result : [] }));
     } catch (error) {
       console.error(`Failed to load ${key}:`, error);
