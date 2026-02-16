@@ -162,7 +162,7 @@ const ServiceFormDialog = ({
           </div>
 
           <div>
-            <Label htmlFor="final">Согласующее лицо (CEO) *</Label>
+            <Label htmlFor="final">Согласующее лицо (CEO)</Label>
             <Select
               value={formData.final_approver_id}
               onValueChange={(value) =>

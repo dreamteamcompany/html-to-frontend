@@ -50,8 +50,8 @@ class CustomFieldRequest(BaseModel):
 class ServiceRequest(BaseModel):
     name: str = Field(..., min_length=1)
     description: str = Field(default='')
-    intermediate_approver_id: int = Field(..., gt=0)
-    final_approver_id: int = Field(..., gt=0)
+    intermediate_approver_id: Optional[int] = None
+    final_approver_id: Optional[int] = None
     customer_department_id: Optional[int] = None
     category_id: Optional[int] = None
 

@@ -129,7 +129,7 @@ const Services = () => {
     e.preventDefault();
 
     // Custom validation for Services
-    if (!formData.name || !formData.final_approver_id) {
+    if (!formData.name) {
       toast({
         title: 'Ошибка',
         description: 'Заполните все обязательные поля',
