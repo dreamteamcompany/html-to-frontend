@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface Approval {
   id: number;
@@ -49,7 +50,7 @@ const ApprovalsHistory = () => {
   const loadApprovals = () => {
     if (!token) return;
 
-    fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
+    fetch(`${API_ENDPOINTS.main}?endpoint=approvals`, {
       headers: {
         'X-Auth-Token': token,
       },
@@ -75,7 +76,7 @@ const ApprovalsHistory = () => {
     
     setDeletingId(approvalId);
     try {
-      const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals&id=${approvalId}`, {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=approvals&id=${approvalId}`, {
         method: 'DELETE',
         headers: { 'X-Auth-Token': token || '' },
       });

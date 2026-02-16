@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 import ApprovedPaymentDetailsModal from '@/components/payments/ApprovedPaymentDetailsModal';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface AuditLog {
   id: number;
@@ -69,7 +70,7 @@ const AuditLogs = () => {
           ...(actionFilter && actionFilter !== 'all' && { action: actionFilter }),
         });
 
-        const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=audit-logs&${params}`, {
+        const response = await fetch(`${API_ENDPOINTS.main}?endpoint=audit-logs&${params}`, {
           headers: { 'X-Auth-Token': token },
         });
 
@@ -103,7 +104,7 @@ const AuditLogs = () => {
     
     setDeletingLogId(logId);
     try {
-      const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=audit-logs&id=${logId}`, {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=audit-logs&id=${logId}`, {
         method: 'DELETE',
         headers: { 'X-Auth-Token': token || '' },
       });

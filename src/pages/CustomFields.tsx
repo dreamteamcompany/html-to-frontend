@@ -7,6 +7,7 @@ import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_ENDPOINTS } from '@/config/api';
 import {
   Dialog,
   DialogContent,
@@ -72,7 +73,7 @@ const CustomFields = () => {
   };
 
   const loadFields = () => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields')
+    apiFetch(`${API_ENDPOINTS.main}?endpoint=custom-fields`)
       .then(res => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -97,7 +98,7 @@ const CustomFields = () => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields';
+      const url = '${API_ENDPOINTS.main}?endpoint=custom-fields';
       const method = editingField ? 'PUT' : 'POST';
       const body = editingField 
         ? { id: editingField.id, ...formData }
@@ -138,7 +139,7 @@ const CustomFields = () => {
 
     try {
       const response = await apiFetch(
-        'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=custom-fields',
+        '${API_ENDPOINTS.main}?endpoint=custom-fields',
         {
           method: 'DELETE',
           headers: {

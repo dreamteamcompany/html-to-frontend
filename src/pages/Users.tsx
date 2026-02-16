@@ -6,6 +6,7 @@ import UsersHeader from '@/components/users/UsersHeader';
 import UserFormDialog from '@/components/users/UserFormDialog';
 import UsersTable from '@/components/users/UsersTable';
 import UsersMobileList from '@/components/users/UsersMobileList';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface User {
   id: number;
@@ -63,7 +64,7 @@ const Users = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=users`, {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -85,7 +86,7 @@ const Users = () => {
 
   const loadRoles = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=roles`, {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -113,8 +114,8 @@ const Users = () => {
     
     try {
       const url = editingUser 
-        ? `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users&id=${editingUser.id}`
-        : 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users';
+        ? `${API_ENDPOINTS.main}?endpoint=users&id=${editingUser.id}`
+        : `${API_ENDPOINTS.main}?endpoint=users`;
       
       const method = editingUser ? 'PUT' : 'POST';
       
@@ -166,7 +167,7 @@ const Users = () => {
 
   const toggleUserStatus = async (userId: number, currentStatus: boolean) => {
     try {
-      const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users&id=${userId}`, {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=users&id=${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +190,7 @@ const Users = () => {
     if (!confirm(`Вы уверены, что хотите удалить пользователя "${userName}"?`)) return;
     
     try {
-      const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users&id=${userId}`, {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=users&id=${userId}`, {
         method: 'DELETE',
         headers: {
           'X-Auth-Token': token || '',

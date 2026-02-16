@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
+import { API_ENDPOINTS } from '@/config/api';
 import {
   Dialog,
   DialogContent,
@@ -65,7 +66,7 @@ const SavingReasons = () => {
   };
 
   const loadReasons = () => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=saving-reasons')
+    apiFetch(`${API_ENDPOINTS.main}?endpoint=saving-reasons`)
       .then(res => res.json())
       .then((data) => {
         setReasons(Array.isArray(data) ? data : []);
@@ -86,7 +87,7 @@ const SavingReasons = () => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=saving-reasons';
+      const url = `${API_ENDPOINTS.main}?endpoint=saving-reasons`;
       const method = editingReason ? 'PUT' : 'POST';
       const body = editingReason 
         ? { id: editingReason.id, ...formData }
@@ -122,7 +123,7 @@ const SavingReasons = () => {
 
     try {
       const response = await apiFetch(
-        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=saving-reasons&id=${id}`,
+        `${API_ENDPOINTS.main}?endpoint=saving-reasons&id=${id}`,
         { method: 'DELETE' }
       );
 

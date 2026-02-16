@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '@/utils/api';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface Payment {
   service: string;
@@ -26,7 +27,7 @@ const Dashboard2BudgetBreakdown = () => {
   const [totalBudget, setTotalBudget] = useState(0);
 
   useEffect(() => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=budget-breakdown')
+    apiFetch(`${API_ENDPOINTS.main}?endpoint=budget-breakdown`)
       .then(res => res.json())
       .then((data: BudgetCategory[]) => {
         setCategories(Array.isArray(data) ? data : []);

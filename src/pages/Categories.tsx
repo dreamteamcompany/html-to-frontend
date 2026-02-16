@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
+import { API_ENDPOINTS } from '@/config/api';
 import {
   Dialog,
   DialogContent,
@@ -66,7 +67,7 @@ const Categories = () => {
   };
 
   const loadCategories = () => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories')
+    apiFetch(`${API_ENDPOINTS.main}?endpoint=categories`)
       .then(res => res.json())
       .then((data) => {
         setCategories(Array.isArray(data) ? data : []);
@@ -87,7 +88,7 @@ const Categories = () => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories';
+      const url = `${API_ENDPOINTS.main}?endpoint=categories`;
       const method = editingCategory ? 'PUT' : 'POST';
       const body = editingCategory 
         ? { id: editingCategory.id, ...formData }
@@ -123,7 +124,7 @@ const Categories = () => {
 
     try {
       const response = await apiFetch(
-        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=categories&id=${id}`,
+        `${API_ENDPOINTS.main}?endpoint=categories&id=${id}`,
         { method: 'DELETE' }
       );
 

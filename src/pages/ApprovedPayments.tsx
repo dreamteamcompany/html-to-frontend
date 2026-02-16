@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import ApprovedPaymentDetailsModal from '@/components/payments/ApprovedPaymentDetailsModal';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface CustomField {
   id: number;
@@ -65,7 +66,7 @@ const ApprovedPayments = () => {
   const fetchApprovedPayments = async () => {
     setLoading(true);
     try {
-      const response = await apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments');
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
       const data = await response.json();
       
       console.log('[ApprovedPayments] Total payments received:', data.length);

@@ -5,6 +5,7 @@ import Icon from '@/components/ui/icon';
 import SavingFormDialog from './Savings/SavingFormDialog';
 import SavingsTable from './Savings/SavingsTable';
 import { Saving, Service, Employee, SavingReason, SavingFormData, CustomerDepartment } from './Savings/types';
+import { API_ENDPOINTS } from '@/config/api';
 
 const Savings = () => {
   const [savings, setSavings] = useState<Saving[]>([]);
@@ -48,7 +49,7 @@ const Savings = () => {
 
   const loadSavings = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=savings', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=savings`, {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -70,7 +71,7 @@ const Savings = () => {
 
   const loadServices = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=services', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=services`, {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -96,7 +97,7 @@ const Savings = () => {
 
   const loadEmployees = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=users', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=users`, {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -114,7 +115,7 @@ const Savings = () => {
 
   const loadSavingReasons = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=saving-reasons', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=saving-reasons`, {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -131,7 +132,7 @@ const Savings = () => {
 
   const loadDepartments = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=customer-departments', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=customer-departments`, {
         headers: {
           'X-Auth-Token': token || '',
         },
@@ -158,7 +159,7 @@ const Savings = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=savings', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=savings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -203,7 +204,7 @@ const Savings = () => {
     if (!confirm('Вы уверены, что хотите удалить эту запись об экономии?')) return;
     
     try {
-      const response = await fetch(`https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=savings&id=${savingId}`, {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=savings&id=${savingId}`, {
         method: 'DELETE',
         headers: {
           'X-Auth-Token': token || '',

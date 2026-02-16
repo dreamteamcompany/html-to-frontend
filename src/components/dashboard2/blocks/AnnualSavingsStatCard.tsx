@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface Saving {
   id: number;
@@ -41,7 +42,7 @@ const AnnualSavingsStatCard = () => {
 
   const loadSavingsData = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=savings-dashboard', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=savings-dashboard`, {
         headers: {
           'X-Auth-Token': token || '',
         },

@@ -4,6 +4,7 @@ import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import RolesHeader from '@/components/roles/RolesHeader';
 import RoleFormDialog from '@/components/roles/RoleFormDialog';
 import RoleCard from '@/components/roles/RoleCard';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface Permission {
   id: number;
@@ -53,7 +54,7 @@ const Roles = () => {
   };
 
   const loadRoles = () => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles')
+    apiFetch(`${API_ENDPOINTS.main}?endpoint=roles`)
       .then(res => res.json())
       .then(data => {
         setRoles(Array.isArray(data) ? data : []);
@@ -67,7 +68,7 @@ const Roles = () => {
   };
 
   const loadPermissions = () => {
-    apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=permissions')
+    apiFetch(`${API_ENDPOINTS.main}?endpoint=permissions`)
       .then(res => res.json())
       .then(data => setPermissions(Array.isArray(data) ? data : []))
       .catch(err => {
@@ -85,7 +86,7 @@ const Roles = () => {
     e.preventDefault();
     
     try {
-      const url = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles';
+      const url = '${API_ENDPOINTS.main}?endpoint=roles';
       const method = editingRole ? 'PUT' : 'POST';
       const body = editingRole 
         ? { ...formData, id: editingRole.id }
@@ -129,7 +130,7 @@ const Roles = () => {
     
     try {
       const response = await apiFetch(
-        `https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=roles`,
+        `${API_ENDPOINTS.main}?endpoint=roles`,
         { 
           method: 'DELETE',
           headers: {

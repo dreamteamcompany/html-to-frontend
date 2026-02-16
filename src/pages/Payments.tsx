@@ -10,6 +10,7 @@ import PaymentsSearch from '@/components/payments/PaymentsSearch';
 import PaymentForm from '@/components/payments/PaymentForm';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface CustomField {
   id: number;
@@ -91,7 +92,7 @@ const Payments = () => {
 
   const handleSubmitForApproval = async (paymentId: number) => {
     try {
-      const response = await fetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=approvals', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=approvals`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
