@@ -311,11 +311,11 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         }
       });
 
-      const response = await fetch(API_ENDPOINTS.payments, {
+      const response = await fetch(API_ENDPOINTS.paymentsApi, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token || ''}`,
+          'X-Auth-Token': token || '',
         },
         body: JSON.stringify({
           category_id: formData.category_id ? parseInt(formData.category_id) : 0,
