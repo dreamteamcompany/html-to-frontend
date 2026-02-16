@@ -55,16 +55,17 @@ export const useCrudPage = <T extends { id: number }>({
     try {
       const url = `${API_ENDPOINTS[baseApi]}?endpoint=${endpoint}`;
       const method = editingItem ? 'PUT' : 'POST';
-      const body = editingItem 
+      const rawBody = editingItem 
         ? { id: editingItem.id, ...formData }
         : formData;
+      const body = JSON.stringify(rawBody, (_key, value) => value === undefined ? null : value);
 
       const response = await apiFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body,
       });
 
       if (response.ok) {
