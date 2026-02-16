@@ -207,15 +207,15 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     # Обновляем статус платежа
     cur.execute(f"""
         UPDATE {SCHEMA}.payments
-        SET status = %s, updated_at = CURRENT_TIMESTAMP
+        SET status = %s, submitted_at = CASE WHEN %s = 'pending_approval' THEN CURRENT_TIMESTAMP ELSE submitted_at END
         WHERE id = %s
-    """, (new_status, approval_action.payment_id))
+    """, (new_status, new_status, approval_action.payment_id))
     
     # Добавляем запись в историю утверждений
     cur.execute(f"""
-        INSERT INTO {SCHEMA}.approval_history (payment_id, approver_id, action, comment)
-        VALUES (%s, %s, %s, %s)
-    """, (approval_action.payment_id, user_id, approval_action.action, approval_action.comment))
+        INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (approval_action.payment_id, user_id, 'submitter', approval_action.action, approval_action.comment))
     
     conn.commit()
     cur.close()
