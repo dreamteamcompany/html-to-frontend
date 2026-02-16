@@ -8,11 +8,13 @@ import MyPaymentsTab from '@/components/payments/tabs/MyPaymentsTab';
 import PendingApprovalsTab from '@/components/payments/tabs/PendingApprovalsTab';
 import ApprovedPaymentsTab from '@/components/payments/tabs/ApprovedPaymentsTab';
 import RejectedPaymentsTab from '@/components/payments/tabs/RejectedPaymentsTab';
+import { usePendingApprovalsData } from '@/hooks/usePendingApprovalsData';
 
 const Payments = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('my');
+  const { payments } = usePendingApprovalsData();
 
   const {
     menuOpen,
@@ -60,10 +62,15 @@ const Payments = () => {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="pending" 
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 relative"
                 >
                   <Icon name="Clock" size={18} className="mr-2" />
                   На согласовании
+                  {payments.length > 0 && (
+                    <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                      {payments.length}
+                    </span>
+                  )}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="approved" 
