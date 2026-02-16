@@ -74,7 +74,14 @@ def get_db_connection():
 
 def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     headers = event.get('headers', {})
-    token = headers.get('X-Auth-Token') or headers.get('X-Authorization', '').replace('Bearer ', '')
+    # Try different case variations as cloud functions may normalize headers
+    token = (headers.get('X-Auth-Token') or 
+             headers.get('x-auth-token') or 
+             headers.get('X-Authorization') or
+             headers.get('x-authorization', ''))
+    
+    if token:
+        token = token.replace('Bearer ', '').strip()
     
     if not token:
         return None
