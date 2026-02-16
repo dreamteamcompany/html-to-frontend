@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
@@ -8,13 +8,37 @@ import MyPaymentsTab from '@/components/payments/tabs/MyPaymentsTab';
 import PendingApprovalsTab from '@/components/payments/tabs/PendingApprovalsTab';
 import ApprovedPaymentsTab from '@/components/payments/tabs/ApprovedPaymentsTab';
 import RejectedPaymentsTab from '@/components/payments/tabs/RejectedPaymentsTab';
-import { usePendingApprovalsData } from '@/hooks/usePendingApprovalsData';
+import { apiFetch } from '@/utils/api';
+import { API_ENDPOINTS } from '@/config/api';
 
 const Payments = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('my');
-  const { payments } = usePendingApprovalsData();
+  const [counters, setCounters] = useState({ my: 0, pending: 0, approved: 0, rejected: 0 });
+
+  useEffect(() => {
+    const fetchCounters = async () => {
+      try {
+        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        const data = await response.json();
+        const payments = Array.isArray(data) ? data : [];
+        
+        setCounters({
+          my: payments.filter(p => !p.status || p.status === 'draft').length,
+          pending: payments.filter(p => p.status === 'pending_ceo' || p.status === 'pending_tech_director').length,
+          approved: payments.filter(p => p.status === 'approved').length,
+          rejected: payments.filter(p => p.status === 'rejected').length,
+        });
+      } catch (error) {
+        console.error('Failed to fetch counters:', error);
+      }
+    };
+
+    fetchCounters();
+    const interval = setInterval(fetchCounters, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const {
     menuOpen,
@@ -59,6 +83,11 @@ const Payments = () => {
                 >
                   <Icon name="FileText" size={18} className="mr-2" />
                   Мои платежи
+                  {counters.my > 0 && (
+                    <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                      {counters.my}
+                    </span>
+                  )}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="pending" 
@@ -66,9 +95,9 @@ const Payments = () => {
                 >
                   <Icon name="Clock" size={18} className="mr-2" />
                   На согласовании
-                  {payments.length > 0 && (
+                  {counters.pending > 0 && (
                     <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
-                      {payments.length}
+                      {counters.pending}
                     </span>
                   )}
                 </TabsTrigger>
@@ -78,6 +107,11 @@ const Payments = () => {
                 >
                   <Icon name="CheckCircle" size={18} className="mr-2" />
                   Согласованные
+                  {counters.approved > 0 && (
+                    <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                      {counters.approved}
+                    </span>
+                  )}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="rejected" 
@@ -85,6 +119,11 @@ const Payments = () => {
                 >
                   <Icon name="XCircle" size={18} className="mr-2" />
                   Отклонённые
+                  {counters.rejected > 0 && (
+                    <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                      {counters.rejected}
+                    </span>
+                  )}
                 </TabsTrigger>
               </TabsList>
 

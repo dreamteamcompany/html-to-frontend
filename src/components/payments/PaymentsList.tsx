@@ -154,7 +154,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       </div>
                     )}
                     <div className="text-sm text-muted-foreground">{payment.description}</div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="text-xs text-muted-foreground">
                         {new Date(payment.planned_date || payment.payment_date || '').toLocaleDateString('ru-RU', {
                           day: '2-digit',
@@ -178,7 +178,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           onClick={() => onSubmitForApproval(payment.id)}
                           className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium"
                         >
-                          Отправить на согласование
+                          Отправить
                         </button>
                       )}
                       {!isPlannedPayments && (payment.status === 'pending_tech_director' || payment.status === 'pending_ceo') && onApprove && onReject && (
