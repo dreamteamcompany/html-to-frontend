@@ -71,7 +71,7 @@ def verify_token_and_permission(event: Dict[str, Any], conn, required_permission
 class ApprovalActionRequest(BaseModel):
     """Модель запроса на утверждение/отклонение"""
     payment_id: int = Field(..., gt=0)
-    action: str = Field(..., pattern='^(approve|reject)$')
+    action: str = Field(..., pattern='^(approve|reject|submit)$')
     comment: str = Field(default='')
 
 def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str, Any]:
@@ -181,24 +181,27 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         cur.close()
         return response(404, {'error': 'Платеж не найден'})
     
-    # Проверяем, что пользователь является утверждающим
     is_intermediate_approver = payment['intermediate_approver_id'] == user_id
     is_final_approver = payment['final_approver_id'] == user_id
     
-    if not is_intermediate_approver and not is_final_approver:
-        cur.close()
-        return response(403, {'error': 'Вы не являетесь утверждающим для этого платежа'})
-    
     # Определяем новый статус
-    if approval_action.action == 'approve':
+    if approval_action.action == 'submit':
+        if payment['status'] != 'draft':
+            cur.close()
+            return response(400, {'error': 'Только черновики можно отправить на согласование'})
+        new_status = 'pending_approval'
+    elif approval_action.action == 'approve':
+        if not is_intermediate_approver and not is_final_approver:
+            cur.close()
+            return response(403, {'error': 'Вы не являетесь утверждающим для этого платежа'})
         if payment['status'] == 'pending_approval' and is_intermediate_approver:
             new_status = 'intermediate_approved'
-        elif payment['status'] == 'intermediate_approved' and is_final_approver:
+        elif (payment['status'] in ('pending_approval', 'intermediate_approved')) and is_final_approver:
             new_status = 'approved'
         else:
             cur.close()
             return response(400, {'error': 'Неверный статус платежа для утверждения'})
-    else:  # reject
+    else:
         new_status = 'rejected'
     
     # Обновляем статус платежа
@@ -265,17 +268,15 @@ def handler(event: dict, context) -> dict:
             endpoint = path_parts[-1] if path_parts else ''
         
         if endpoint == 'approvers':
-            # GET /approvers - список утверждающих
             if method == 'GET':
-                payload, error = verify_token_and_permission(event, conn, 'approval:read')
+                payload, error = verify_token_and_permission(event, conn, 'approvals.read')
                 if error:
                     return error
                 return handle_approvers_list(event, conn)
             return response(405, {'error': 'Method not allowed'})
         
         else:
-            # /approvals endpoint
-            payload, error = verify_token_and_permission(event, conn, 'approval:read' if method == 'GET' else 'approval:execute')
+            payload, error = verify_token_and_permission(event, conn, 'approvals.read' if method == 'GET' else 'payments.update')
             if error:
                 return error
             

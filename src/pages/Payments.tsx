@@ -65,7 +65,7 @@ const Payments = () => {
           'Content-Type': 'application/json',
           'X-Auth-Token': token || '',
         },
-        body: JSON.stringify({ payment_id: paymentId }),
+        body: JSON.stringify({ payment_id: paymentId, action: 'submit' }),
       });
 
       if (response.ok) {
