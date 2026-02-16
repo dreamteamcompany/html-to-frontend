@@ -9,8 +9,8 @@ interface AuditLog {
   action: string;
   user_id: number;
   username: string;
-  changed_fields: Record<string, { old: any; new: any }> | null;
-  metadata: Record<string, any> | null;
+  changed_fields: Record<string, { old: unknown; new: unknown }> | null;
+  metadata: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -155,7 +155,7 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
               
               {log.metadata?.comment && (
                 <div className="mt-2 text-xs text-muted-foreground italic border-l-2 border-white/20 pl-2">
-                  {log.metadata.comment}
+                  {String(log.metadata.comment)}
                 </div>
               )}
             </div>

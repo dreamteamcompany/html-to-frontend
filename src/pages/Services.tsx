@@ -152,7 +152,7 @@ const Services = () => {
 
     try {
       const url = getApiUrl('services');
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         name: formData.name,
         description: formData.description,
         intermediate_approver_id: parseInt(formData.final_approver_id),

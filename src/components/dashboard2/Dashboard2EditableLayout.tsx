@@ -75,8 +75,8 @@ const Dashboard2EditableLayout = () => {
           
           if (data.layouts && data.layouts.length > 0) {
             const loadedLayouts = data.layouts
-              .filter((l: any) => dashboardCards.some((c: DashboardCard) => c.id === l.card_id))
-              .map((l: any) => ({
+              .filter((l: { card_id: string; x: number; y: number; width: number; height: number }) => dashboardCards.some((c: DashboardCard) => c.id === l.card_id))
+              .map((l: { card_id: string; x: number; y: number; width: number; height: number }) => ({
                 id: l.card_id,
                 x: l.x,
                 y: l.y,

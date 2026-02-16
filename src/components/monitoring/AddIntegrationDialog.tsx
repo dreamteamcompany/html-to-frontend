@@ -14,7 +14,15 @@ import { SERVICE_TEMPLATES, type ServiceTemplate } from './integration/serviceTe
 interface AddIntegrationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (integration: any) => Promise<void>;
+  onAdd: (integration: {
+    service_name: string;
+    description: string;
+    api_endpoint: string;
+    api_key_secret_name: string;
+    threshold_warning: number;
+    threshold_critical: number;
+    credentials: Record<string, string>;
+  }) => Promise<void>;
 }
 
 export default function AddIntegrationDialog({

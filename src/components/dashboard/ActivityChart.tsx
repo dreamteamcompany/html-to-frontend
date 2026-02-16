@@ -50,7 +50,7 @@ const ActivityChart = ({ data, title }: ActivityChartProps) => {
         padding: 12,
         displayColors: false,
         callbacks: {
-          label: (context: any) => `Операций: ${context.parsed.y}`,
+          label: (context: { parsed: { y: number } }) => `Операций: ${context.parsed.y}`,
         },
       },
     },

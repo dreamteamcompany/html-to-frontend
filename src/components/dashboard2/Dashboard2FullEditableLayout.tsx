@@ -102,7 +102,7 @@ const Dashboard2FullEditableLayout = () => {
         if (response.ok) {
           const data = await response.json();
           if (data.layouts && data.layouts.length > 0) {
-            const loadedLayouts = data.layouts.map((l: any) => ({
+            const loadedLayouts = data.layouts.map((l: { card_id: string; x: number; y: number; width: number; height: number }) => ({
               id: l.card_id,
               x: l.x,
               y: l.y,

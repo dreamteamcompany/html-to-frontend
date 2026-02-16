@@ -63,7 +63,7 @@ interface ServiceFormDialogProps {
     customer_department_id: string;
     category_id: string;
   };
-  setFormData: (data: any) => void;
+  setFormData: (data: ServiceFormDialogProps['formData']) => void;
   users: User[];
   departments: CustomerDepartment[];
   categories: Category[];

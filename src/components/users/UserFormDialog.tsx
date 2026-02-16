@@ -45,7 +45,7 @@ interface UserFormDialogProps {
     role_ids: number[];
     photo_url: string;
   };
-  setFormData: (data: any) => void;
+  setFormData: (data: UserFormDialogProps['formData']) => void;
   roles: Role[];
   handleSubmit: (e: React.FormEvent) => void;
 }

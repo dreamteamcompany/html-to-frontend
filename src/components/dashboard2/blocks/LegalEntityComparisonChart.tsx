@@ -3,6 +3,14 @@ import { Bar } from 'react-chartjs-2';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 
+interface PaymentRecord {
+  status: string;
+  payment_date: string;
+  amount: number;
+  legal_entity_name?: string;
+  [key: string]: unknown;
+}
+
 const LegalEntityComparisonChart = () => {
   const [legalEntityData, setLegalEntityData] = useState<{name: string, amount: number}[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,13 +31,13 @@ const LegalEntityComparisonChart = () => {
         const response = await apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments');
         const data = await response.json();
         
-        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: any) => 
+        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => 
           p.status === 'approved' || p.status === 'paid'
         );
         
         const entityMap: {[key: string]: number} = {};
         
-        approvedPayments.forEach((payment: any) => {
+        approvedPayments.forEach((payment: PaymentRecord) => {
           const entity = payment.legal_entity_name || 'Без юр. лица';
           if (!entityMap[entity]) {
             entityMap[entity] = 0;

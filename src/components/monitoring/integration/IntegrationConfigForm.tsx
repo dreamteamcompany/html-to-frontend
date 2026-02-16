@@ -14,7 +14,7 @@ interface IntegrationConfigFormProps {
     threshold_critical: number;
     credentials: Record<string, string>;
   };
-  setFormData: (data: any) => void;
+  setFormData: (data: IntegrationConfigFormProps['formData']) => void;
   onBack: () => void;
   onTest: () => void;
   onSubmit: () => void;

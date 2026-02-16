@@ -18,10 +18,10 @@ interface AuditLog {
   action: string;
   user_id: number;
   username: string;
-  changed_fields: Record<string, { old: any; new: any }> | null;
-  old_values: Record<string, any> | null;
-  new_values: Record<string, any> | null;
-  metadata: Record<string, any> | null;
+  changed_fields: Record<string, { old: unknown; new: unknown }> | null;
+  old_values: Record<string, unknown> | null;
+  new_values: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
   created_at: string;
 }
 

@@ -118,7 +118,7 @@ const Users = () => {
       
       const method = editingUser ? 'PUT' : 'POST';
       
-      const body: any = {
+      const body: Record<string, unknown> = {
         username: formData.username,
         full_name: formData.full_name,
         position: formData.position,

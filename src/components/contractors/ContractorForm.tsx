@@ -53,7 +53,7 @@ interface ContractorFormProps {
     correspondent_account: string;
     notes: string;
   };
-  setFormData: (data: any) => void;
+  setFormData: (data: ContractorFormProps['formData']) => void;
   handleSubmit: (e: React.FormEvent) => void;
   handleDialogClose: (open: boolean) => void;
 }

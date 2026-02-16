@@ -3,6 +3,13 @@ import { Line } from 'react-chartjs-2';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/utils/api';
 
+interface PaymentRecord {
+  status: string;
+  payment_date: string;
+  amount: number;
+  [key: string]: unknown;
+}
+
 const MonthlyDynamicsChart = () => {
   const [monthlyData, setMonthlyData] = useState<number[]>(Array(12).fill(0));
   const [loading, setLoading] = useState(true);
@@ -25,12 +32,12 @@ const MonthlyDynamicsChart = () => {
         const response = await apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments');
         const data = await response.json();
         
-        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: any) => 
+        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => 
           p.status === 'approved' || p.status === 'paid'
         );
         
         const monthsMap: { [key: number]: number } = {};
-        approvedPayments.forEach((payment: any) => {
+        approvedPayments.forEach((payment: PaymentRecord) => {
           const date = new Date(payment.payment_date);
           const month = date.getMonth();
           if (!monthsMap[month]) {
@@ -58,7 +65,7 @@ const MonthlyDynamicsChart = () => {
           <h3 className="text-sm sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Динамика Расходов по Месяцам</h3>
         </div>
         {loading ? (
-          <div className="flex items-center justify-center" style={{ height: '200px' }} className="sm:h-[250px]">
+          <div className="flex items-center justify-center sm:h-[250px]" style={{ height: '200px' }}>
             <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-purple-500"></div>
           </div>
         ) : (

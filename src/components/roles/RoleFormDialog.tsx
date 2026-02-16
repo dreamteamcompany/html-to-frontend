@@ -36,7 +36,7 @@ interface RoleFormDialogProps {
     description: string;
     permission_ids: number[];
   };
-  setFormData: (data: any) => void;
+  setFormData: (data: RoleFormDialogProps['formData']) => void;
   permissions: Permission[];
   onSubmit: (e: React.FormEvent) => void;
   togglePermission: (permId: number) => void;

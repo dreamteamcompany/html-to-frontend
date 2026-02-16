@@ -241,7 +241,15 @@ const Monitoring = () => {
     return () => clearInterval(interval);
   }, [token]);
 
-  const addIntegration = async (integration: any) => {
+  const addIntegration = async (integration: {
+    service_name: string;
+    description: string;
+    api_endpoint: string;
+    api_key_secret_name: string;
+    threshold_warning: number;
+    threshold_critical: number;
+    credentials: Record<string, string>;
+  }) => {
     try {
       const response = await fetch('https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d', {
         method: 'POST',

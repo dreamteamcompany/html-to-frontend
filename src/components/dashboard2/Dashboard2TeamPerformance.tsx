@@ -3,6 +3,14 @@ import { Radar } from 'react-chartjs-2';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 
+interface PaymentRecord {
+  status: string;
+  payment_date: string;
+  amount: number;
+  department_name?: string;
+  [key: string]: unknown;
+}
+
 const Dashboard2TeamPerformance = () => {
   const [currentData, setCurrentData] = useState<{name: string, amount: number}[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +31,7 @@ const Dashboard2TeamPerformance = () => {
         const response = await apiFetch('https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=payments');
         const data = await response.json();
         
-        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: any) => 
+        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => 
           p.status === 'approved' || p.status === 'paid'
         );
         
@@ -32,19 +40,19 @@ const Dashboard2TeamPerformance = () => {
         const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
         
-        const currentMonthPayments = approvedPayments.filter((p: any) => {
+        const currentMonthPayments = approvedPayments.filter((p: PaymentRecord) => {
           const paymentDate = new Date(p.payment_date);
           return paymentDate >= currentMonthStart;
         });
         
-        const previousMonthPayments = approvedPayments.filter((p: any) => {
+        const previousMonthPayments = approvedPayments.filter((p: PaymentRecord) => {
           const paymentDate = new Date(p.payment_date);
           return paymentDate >= previousMonthStart && paymentDate <= previousMonthEnd;
         });
         
-        const aggregateByDepartment = (payments: any[]) => {
+        const aggregateByDepartment = (payments: PaymentRecord[]) => {
           const deptMap: {[key: string]: number} = {};
-          payments.forEach((payment: any) => {
+          payments.forEach((payment: PaymentRecord) => {
             const dept = payment.department_name || 'Без отдела';
             if (!deptMap[dept]) {
               deptMap[dept] = 0;
