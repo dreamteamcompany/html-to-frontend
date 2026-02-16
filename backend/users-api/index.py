@@ -25,7 +25,13 @@ def response(status: int, body: Any) -> Dict[str, Any]:
 
 def verify_token(event: Dict[str, Any], conn) -> tuple:
     """Проверяет токен и возвращает (payload, error_response)"""
-    token = event.get('headers', {}).get('X-Authorization', '').replace('Bearer ', '')
+    headers = event.get('headers', {})
+    token = (headers.get('X-Auth-Token') or 
+             headers.get('x-auth-token') or 
+             headers.get('X-Authorization') or
+             headers.get('x-authorization', ''))
+    if token:
+        token = token.replace('Bearer ', '').strip()
     
     if not token:
         return None, response(401, {'error': 'Unauthorized'})

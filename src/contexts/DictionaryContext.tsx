@@ -139,15 +139,11 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
 
     try {
       const url = `${API_ENDPOINTS.dictionariesApi}?endpoint=${endpoint}`;
-      console.log(`[Dict] Fetching ${key} from ${url}`);
       const response = await apiFetch(url);
       if (!response.ok) {
-        const text = await response.text();
-        console.error(`Dict ${key}: HTTP ${response.status}`, text);
         return;
       }
       const result = await response.json();
-      console.log(`[Dict] ${key} loaded:`, Array.isArray(result) ? result.length : typeof result);
       setData(prev => ({ ...prev, [key]: Array.isArray(result) ? result : [] }));
     } catch (error) {
       console.error(`Failed to load ${key}:`, error);
@@ -189,7 +185,6 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
 
   useEffect(() => {
     if (token) {
-      console.log('[DictionaryContext] Token available, loading all dictionaries...');
       refreshAll();
     }
   }, [token, refreshAll]);
