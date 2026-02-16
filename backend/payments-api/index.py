@@ -43,7 +43,15 @@ def get_db_connection():
     return psycopg2.connect(dsn)
 
 def verify_token(event: Dict[str, Any]) -> Dict[str, Any]:
-    token = event.get('headers', {}).get('X-Authorization', '').replace('Bearer ', '')
+    headers = event.get('headers', {})
+    # Try different case variations as cloud functions may normalize headers
+    token = (headers.get('X-Auth-Token') or 
+             headers.get('x-auth-token') or 
+             headers.get('X-Authorization') or
+             headers.get('x-authorization', ''))
+    
+    if token:
+        token = token.replace('Bearer ', '').strip()
     
     if not token:
         return None

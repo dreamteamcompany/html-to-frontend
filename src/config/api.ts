@@ -5,7 +5,7 @@ export const API_ENDPOINTS = {
   approvalsApi: 'https://functions.poehali.dev/28de9a43-6aa7-491b-a20e-7a2e9ecebe49',
   savingsApi: 'https://functions.poehali.dev/97e7934f-259b-404b-9eae-6de53448c8c2',
   ticketsApi: 'https://functions.poehali.dev/36ca4c35-8625-4e62-b383-d5feac4de266',
-  dictionariesApi: 'https://functions.poehali.dev/b3ad2f9d-7ef7-471b-a7fc-2ff1e0855ff8',
+  dictionariesApi: 'https://functions.poehali.dev/4bd5899c-9f5b-4ac9-866e-8f4236f5c09c',
   authApi: 'https://functions.poehali.dev/cc3b9628-07ec-420e-b340-1c20cad986da',
   paymentsApi: 'https://functions.poehali.dev/7f682e02-1640-40e7-8e2a-7a4e7723b309',
   categoriesApi: 'https://functions.poehali.dev/57770127-fe63-43db-9fb1-87a2bbe27010',
