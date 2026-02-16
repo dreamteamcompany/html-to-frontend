@@ -307,7 +307,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     SELECT id, name, inn, kpp, ogrn, legal_address, actual_address, 
                            phone, email, contact_person, bank_name, bank_bik, 
                            bank_account, correspondent_account, notes 
-                    FROM {SCHEMA}.contractors ORDER BY name
+                    FROM {SCHEMA}.contractors WHERE is_active = true ORDER BY name
                 """)
                 contractors = [dict(row) for row in cur.fetchall()]
                 

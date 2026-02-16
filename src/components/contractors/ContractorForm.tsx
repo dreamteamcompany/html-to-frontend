@@ -56,6 +56,7 @@ interface ContractorFormProps {
   setFormData: (data: ContractorFormProps['formData']) => void;
   handleSubmit: (e: React.FormEvent) => void;
   handleDialogClose: (open: boolean) => void;
+  isSubmitting?: boolean;
 }
 
 const ContractorForm = ({
@@ -66,6 +67,7 @@ const ContractorForm = ({
   setFormData,
   handleSubmit,
   handleDialogClose,
+  isSubmitting = false,
 }: ContractorFormProps) => {
   const { hasPermission } = useAuth();
   
@@ -244,8 +246,8 @@ const ContractorForm = ({
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              {editingContractor ? 'Сохранить' : 'Добавить'}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Сохранение...' : (editingContractor ? 'Сохранить' : 'Добавить')}
             </Button>
           </form>
         </DialogContent>

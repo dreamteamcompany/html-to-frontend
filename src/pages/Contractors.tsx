@@ -36,6 +36,8 @@ const Contractors = () => {
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     inn: '',
@@ -87,6 +89,8 @@ const Contractors = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     
     try {
       const url = 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd?endpoint=contractors';
@@ -126,6 +130,8 @@ const Contractors = () => {
       }
     } catch (err) {
       console.error('Failed to save contractor:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -230,6 +236,7 @@ const Contractors = () => {
           setFormData={setFormData}
           handleSubmit={handleSubmit}
           handleDialogClose={handleDialogClose}
+          isSubmitting={isSubmitting}
         />
 
         <ContractorsList
