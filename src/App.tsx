@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { DictionaryProvider } from "@/contexts/DictionaryContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PushNotificationPrompt from "@/components/notifications/PushNotificationPrompt";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -42,10 +43,11 @@ const App = () => {
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <PushNotificationPrompt />
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <DictionaryProvider>
+          <Toaster />
+          <Sonner />
+          <PushNotificationPrompt />
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute><Dashboard2 /></ProtectedRoute>} />
@@ -75,6 +77,7 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </DictionaryProvider>
       </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>

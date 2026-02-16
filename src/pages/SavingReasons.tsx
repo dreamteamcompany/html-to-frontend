@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
-import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
+import { useCrudPage } from '@/hooks/useCrudPage';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
-import { API_ENDPOINTS } from '@/config/api';
 import {
   Dialog,
   DialogContent,
@@ -39,14 +38,6 @@ const availableIcons = [
 
 const SavingReasons = () => {
   const { hasPermission } = useAuth();
-  const [reasons, setReasons] = useState<SavingReason[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingReason, setEditingReason] = useState<SavingReason | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    icon: 'Target',
-  });
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
 
   const {
@@ -57,83 +48,41 @@ const SavingReasons = () => {
     handleTouchEnd,
   } = useSidebarTouch();
 
-  const loadReasons = () => {
-    apiFetch(`${API_ENDPOINTS.main}?endpoint=saving-reasons`)
-      .then(res => res.json())
-      .then((data) => {
-        setReasons(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load saving reasons:', err);
-        setReasons([]);
-        setLoading(false);
-      });
-  };
+  const {
+    items: reasons,
+    loading,
+    dialogOpen,
+    setDialogOpen,
+    editingItem: editingReason,
+    formData,
+    setFormData,
+    loadData: loadReasons,
+    handleEdit,
+    handleSubmit,
+    handleDelete: handleDeleteBase,
+    openDialog,
+  } = useCrudPage<SavingReason>({
+    endpoint: 'saving-reasons',
+    initialFormData: { name: '', icon: 'Target' },
+  });
 
   useEffect(() => {
     loadReasons();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const url = `${API_ENDPOINTS.main}?endpoint=saving-reasons`;
-      const method = editingReason ? 'PUT' : 'POST';
-      const body = editingReason 
-        ? { id: editingReason.id, ...formData }
-        : formData;
-
-      const response = await apiFetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.ok) {
-        setDialogOpen(false);
-        setEditingReason(null);
-        setFormData({ name: '', icon: 'Target' });
-        loadReasons();
-      }
-    } catch (err) {
-      console.error('Failed to save saving reason:', err);
-    }
-  };
-
-  const handleEdit = (reason: SavingReason) => {
-    setEditingReason(reason);
-    setFormData({ name: reason.name, icon: reason.icon });
-    setDialogOpen(true);
-  };
+  }, [loadReasons]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Вы уверены, что хотите удалить эту причину экономии?')) return;
 
     try {
-      const response = await apiFetch(
-        `${API_ENDPOINTS.main}?endpoint=saving-reasons&id=${id}`,
-        { method: 'DELETE' }
-      );
-
-      if (response.ok) {
-        loadReasons();
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Не удалось удалить причину экономии');
-      }
+      await handleDeleteBase(id);
     } catch (err) {
-      console.error('Failed to delete saving reason:', err);
+      alert('Не удалось удалить причину экономии');
     }
   };
 
   const handleDialogClose = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setEditingReason(null);
       setFormData({ name: '', icon: 'Target' });
     }
   };

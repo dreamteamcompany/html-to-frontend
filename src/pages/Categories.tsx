@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
-import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
+import { useCrudPage } from '@/hooks/useCrudPage';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
-import { API_ENDPOINTS } from '@/config/api';
 import {
   Dialog,
   DialogContent,
@@ -40,14 +39,6 @@ const availableIcons = [
 
 const Categories = () => {
   const { hasPermission } = useAuth();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    icon: 'Tag',
-  });
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
 
   const {
@@ -58,83 +49,41 @@ const Categories = () => {
     handleTouchEnd,
   } = useSidebarTouch();
 
-  const loadCategories = () => {
-    apiFetch(`${API_ENDPOINTS.main}?endpoint=categories`)
-      .then(res => res.json())
-      .then((data) => {
-        setCategories(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load categories:', err);
-        setCategories([]);
-        setLoading(false);
-      });
-  };
+  const {
+    items: categories,
+    loading,
+    dialogOpen,
+    setDialogOpen,
+    editingItem: editingCategory,
+    formData,
+    setFormData,
+    loadData: loadCategories,
+    handleEdit,
+    handleSubmit,
+    handleDelete: handleDeleteBase,
+    openDialog,
+  } = useCrudPage<Category>({
+    endpoint: 'categories',
+    initialFormData: { name: '', icon: 'Tag' },
+  });
 
   useEffect(() => {
     loadCategories();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const url = `${API_ENDPOINTS.main}?endpoint=categories`;
-      const method = editingCategory ? 'PUT' : 'POST';
-      const body = editingCategory 
-        ? { id: editingCategory.id, ...formData }
-        : formData;
-
-      const response = await apiFetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.ok) {
-        setDialogOpen(false);
-        setEditingCategory(null);
-        setFormData({ name: '', icon: 'Tag' });
-        loadCategories();
-      }
-    } catch (err) {
-      console.error('Failed to save category:', err);
-    }
-  };
-
-  const handleEdit = (category: Category) => {
-    setEditingCategory(category);
-    setFormData({ name: category.name, icon: category.icon });
-    setDialogOpen(true);
-  };
+  }, [loadCategories]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Вы уверены, что хотите удалить эту категорию?')) return;
 
     try {
-      const response = await apiFetch(
-        `${API_ENDPOINTS.main}?endpoint=categories&id=${id}`,
-        { method: 'DELETE' }
-      );
-
-      if (response.ok) {
-        loadCategories();
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Не удалось удалить категорию');
-      }
+      await handleDeleteBase(id);
     } catch (err) {
-      console.error('Failed to delete category:', err);
+      alert('Не удалось удалить категорию');
     }
   };
 
   const handleDialogClose = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setEditingCategory(null);
       setFormData({ name: '', icon: 'Tag' });
     }
   };

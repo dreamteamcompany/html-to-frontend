@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
+import { useCrudPage } from '@/hooks/useCrudPage';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
-import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { API_ENDPOINTS } from '@/config/api';
 import {
   Dialog,
   DialogContent,
@@ -32,17 +31,6 @@ interface LegalEntity {
 
 const LegalEntities = () => {
   const { hasPermission } = useAuth();
-  const [entities, setEntities] = useState<LegalEntity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingEntity, setEditingEntity] = useState<LegalEntity | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    inn: '',
-    kpp: '',
-    address: '',
-    city: '',
-  });
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
 
   const {
@@ -53,81 +41,40 @@ const LegalEntities = () => {
     handleTouchEnd,
   } = useSidebarTouch();
 
-  const loadEntities = () => {
-    apiFetch(`${API_ENDPOINTS.main}?endpoint=legal-entities`)
-      .then(res => res.json())
-      .then((data) => {
-        setEntities(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load legal entities:', err);
-        setEntities([]);
-        setLoading(false);
-      });
-  };
+  const {
+    items: entities,
+    loading,
+    dialogOpen,
+    setDialogOpen,
+    editingItem: editingEntity,
+    formData,
+    setFormData,
+    loadData: loadEntities,
+    handleEdit,
+    handleSubmit,
+    handleDelete: handleDeleteBase,
+    openDialog,
+  } = useCrudPage<LegalEntity>({
+    endpoint: 'legal-entities',
+    initialFormData: { 
+      name: '', 
+      inn: '', 
+      kpp: '', 
+      address: '', 
+      city: '' 
+    },
+  });
 
   useEffect(() => {
     loadEntities();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const url = `${API_ENDPOINTS.main}?endpoint=legal-entities`;
-      const method = editingEntity ? 'PUT' : 'POST';
-      const body = editingEntity 
-        ? { id: editingEntity.id, ...formData }
-        : formData;
-
-      const response = await apiFetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.ok) {
-        setDialogOpen(false);
-        setEditingEntity(null);
-        setFormData({ name: '', inn: '', kpp: '', address: '', city: '' });
-        loadEntities();
-      }
-    } catch (err) {
-      console.error('Failed to save legal entity:', err);
-    }
-  };
-
-  const handleEdit = (entity: LegalEntity) => {
-    setEditingEntity(entity);
-    setFormData({ name: entity.name, inn: entity.inn, kpp: entity.kpp, address: entity.address, city: entity.city || '' });
-    setDialogOpen(true);
-  };
+  }, [loadEntities]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Вы уверены, что хотите удалить это юридическое лицо?')) return;
 
     try {
-      const response = await apiFetch(
-        `${API_ENDPOINTS.main}?endpoint=legal-entities&id=${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.ok) {
-        loadEntities();
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Ошибка при удалении юридического лица');
-      }
+      await handleDeleteBase(id);
     } catch (err) {
-      console.error('Failed to delete legal entity:', err);
       alert('Ошибка при удалении юридического лица');
     }
   };
@@ -135,7 +82,6 @@ const LegalEntities = () => {
   const handleDialogClose = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setEditingEntity(null);
       setFormData({ name: '', inn: '', kpp: '', address: '', city: '' });
     }
   };
