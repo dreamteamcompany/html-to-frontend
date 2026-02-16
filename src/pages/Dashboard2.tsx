@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import Dashboard2AllCards from '@/components/dashboard2/Dashboard2AllCards';
@@ -43,26 +44,17 @@ ChartJS.register(
 );
 
 const Dashboard2 = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month' | 'year' | 'custom'>('month');
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
-      setMenuOpen(false);
-    }
-  };
+  const {
+    menuOpen,
+    setMenuOpen,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useSidebarTouch();
 
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/utils/api';
+import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import RolesHeader from '@/components/roles/RolesHeader';
 import RoleFormDialog from '@/components/roles/RoleFormDialog';
@@ -28,9 +29,6 @@ const Roles = () => {
   const [loading, setLoading] = useState(true);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [formData, setFormData] = useState({
@@ -39,19 +37,13 @@ const Roles = () => {
     permission_ids: [] as number[],
   });
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
-      setMenuOpen(false);
-    }
-  };
+  const {
+    menuOpen,
+    setMenuOpen,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useSidebarTouch();
 
   const loadRoles = () => {
     apiFetch(`${API_ENDPOINTS.main}?endpoint=roles`)

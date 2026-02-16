@@ -48,13 +48,18 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+const getStorageToken = (): string | null => {
+  const rememberMe = localStorage.getItem('remember_me') === 'true';
+  return rememberMe 
+    ? localStorage.getItem('auth_token')
+    : sessionStorage.getItem('auth_token');
+};
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(() => {
+    const token = getStorageToken();
     const rememberMe = localStorage.getItem('remember_me') === 'true';
-    const token = rememberMe 
-      ? localStorage.getItem('auth_token')
-      : sessionStorage.getItem('auth_token');
     console.log('[Auth Init] rememberMe:', rememberMe, 'token:', token ? 'exists' : 'null');
     return token;
   });
@@ -76,10 +81,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
   
   const refreshToken = useCallback(async () => {
-    const rememberMe = localStorage.getItem('remember_me') === 'true';
-    const currentToken = rememberMe 
-      ? localStorage.getItem('auth_token')
-      : sessionStorage.getItem('auth_token');
+    const currentToken = getStorageToken();
     
     if (!currentToken) return;
 
@@ -92,6 +94,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (response.ok) {
         const data = await response.json();
+        const rememberMe = localStorage.getItem('remember_me') === 'true';
         setToken(data.token);
         setUser(data.user);
         
@@ -107,10 +110,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const checkAuth = async () => {
+    const savedToken = getStorageToken();
     const rememberMe = localStorage.getItem('remember_me') === 'true';
-    const savedToken = rememberMe 
-      ? localStorage.getItem('auth_token')
-      : sessionStorage.getItem('auth_token');
     
     console.log('[checkAuth] rememberMe:', rememberMe, 'savedToken:', savedToken ? 'exists' : 'null');
     
@@ -164,10 +165,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
       
       const doRefresh = async () => {
-        const rememberMe = localStorage.getItem('remember_me') === 'true';
-        const currentToken = rememberMe 
-          ? localStorage.getItem('auth_token')
-          : sessionStorage.getItem('auth_token');
+        const currentToken = getStorageToken();
         
         if (!currentToken) return;
 
@@ -180,6 +178,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
           if (response.ok) {
             const data = await response.json();
+            const rememberMe = localStorage.getItem('remember_me') === 'true';
             setToken(data.token);
             setUser(data.user);
             

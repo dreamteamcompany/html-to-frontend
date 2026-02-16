@@ -1,40 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/config/api';
-
-interface CustomField {
-  id: number;
-  name: string;
-  field_type: string;
-  value: string;
-}
-
-interface Payment {
-  id: number;
-  category_id: number;
-  category_name: string;
-  category_icon: string;
-  description: string;
-  amount: number;
-  payment_date: string;
-  legal_entity_id?: number;
-  legal_entity_name?: string;
-  status?: string;
-  created_by?: number;
-  created_by_name?: string;
-  service_id?: number;
-  service_name?: string;
-  contractor_name?: string;
-  contractor_id?: number;
-  department_name?: string;
-  department_id?: number;
-  invoice_number?: string;
-  invoice_date?: string;
-  created_at?: string;
-  submitted_at?: string;
-  custom_fields?: CustomField[];
-}
+import { Payment, CustomField } from '@/types/payment';
 
 interface Service {
   id: number;
@@ -46,66 +14,73 @@ interface Service {
 export const usePendingApprovalsData = () => {
   const { token, user } = useAuth();
   const { toast } = useToast();
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [allPayments, setAllPayments] = useState<Payment[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!token || !user) return;
 
-    const loadData = async () => {
-      try {
-        const [paymentsRes, servicesRes] = await Promise.all([
-          fetch(`${API_ENDPOINTS.main}?endpoint=payments`, {
-            headers: { 'X-Auth-Token': token },
-          }),
-          fetch(`${API_ENDPOINTS.main}?endpoint=services`, {
-            headers: { 'X-Auth-Token': token },
-          }),
-        ]);
+    setLoading(true);
+    try {
+      const [paymentsRes, servicesRes] = await Promise.all([
+        fetch(`${API_ENDPOINTS.main}?endpoint=payments`, {
+          headers: { 'X-Auth-Token': token },
+        }),
+        fetch(`${API_ENDPOINTS.main}?endpoint=services`, {
+          headers: { 'X-Auth-Token': token },
+        }),
+      ]);
 
-        const paymentsData = await paymentsRes.json();
-        const servicesData = await servicesRes.json();
+      const paymentsData = await paymentsRes.json();
+      const servicesData = await servicesRes.json();
 
-        const servicesList = Array.isArray(servicesData) ? servicesData : (servicesData.services || []);
-        setServices(servicesList);
-        
-        const allPayments = Array.isArray(paymentsData) ? paymentsData : [];
-        
-        const myPendingPayments = allPayments.filter((payment: Payment) => {
-          if (!payment.status || !payment.service_id) {
-            return false;
-          }
-          
-          const service = servicesList.find((s: Service) => s.id === payment.service_id);
-          if (!service) {
-            return false;
-          }
-          
-          if (payment.status === 'pending_ceo' && service.final_approver_id === user.id) {
-            return true;
-          }
-          
-          return false;
-        });
-
-        setPayments(myPendingPayments);
-      } catch (err) {
-        console.error('Failed to load data:', err);
-        toast({
-          title: 'Ошибка',
-          description: 'Не удалось загрузить платежи',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
+      const servicesList = Array.isArray(servicesData) ? servicesData : (servicesData.services || []);
+      setServices(servicesList);
+      
+      const allPaymentsData = Array.isArray(paymentsData) ? paymentsData : [];
+      setAllPayments(allPaymentsData);
+    } catch (err) {
+      console.error('Failed to load data:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось загрузить платежи',
+        variant: 'destructive',
+      });
+      setAllPayments([]);
+      setServices([]);
+    } finally {
+      setLoading(false);
+    }
   }, [token, user, toast]);
 
-  const handleApprove = async (paymentId: number, approveComment?: string) => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Memoize filtered payments to avoid recalculation on every render
+  const payments = useMemo(() => {
+    if (!user) return [];
+
+    return allPayments.filter((payment: Payment) => {
+      if (!payment.status || !payment.service_id) {
+        return false;
+      }
+      
+      const service = services.find((s: Service) => s.id === payment.service_id);
+      if (!service) {
+        return false;
+      }
+      
+      if (payment.status === 'pending_ceo' && service.final_approver_id === user.id) {
+        return true;
+      }
+      
+      return false;
+    });
+  }, [allPayments, services, user]);
+
+  const handleApprove = useCallback(async (paymentId: number, approveComment?: string) => {
     console.log('[handleApprove] Called with paymentId:', paymentId, 'comment:', approveComment);
     try {
       const response = await fetch('${API_ENDPOINTS.main}?endpoint=approvals', {
@@ -126,7 +101,7 @@ export const usePendingApprovalsData = () => {
           title: 'Успешно',
           description: 'Платёж согласован',
         });
-        setPayments(prevPayments => prevPayments.filter(p => p.id !== paymentId));
+        setAllPayments(prevPayments => prevPayments.filter(p => p.id !== paymentId));
       } else {
         const errorData = await response.json();
         toast({
@@ -143,9 +118,9 @@ export const usePendingApprovalsData = () => {
         variant: 'destructive',
       });
     }
-  };
+  }, [token, toast]);
 
-  const handleReject = async (paymentId: number, rejectComment?: string) => {
+  const handleReject = useCallback(async (paymentId: number, rejectComment?: string) => {
     console.log('[handleReject] Called with paymentId:', paymentId, 'comment:', rejectComment);
     try {
       const response = await fetch('${API_ENDPOINTS.main}?endpoint=approvals', {
@@ -166,7 +141,7 @@ export const usePendingApprovalsData = () => {
           title: 'Успешно',
           description: 'Платёж отклонён',
         });
-        setPayments(prevPayments => prevPayments.filter(p => p.id !== paymentId));
+        setAllPayments(prevPayments => prevPayments.filter(p => p.id !== paymentId));
       } else {
         const errorData = await response.json();
         toast({
@@ -183,7 +158,7 @@ export const usePendingApprovalsData = () => {
         variant: 'destructive',
       });
     }
-  };
+  }, [token, toast]);
 
   return {
     payments,

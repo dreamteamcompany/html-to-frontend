@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import { Card } from '@/components/ui/card';
@@ -25,9 +26,6 @@ interface ServiceBalance {
 }
 
 const Monitoring = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [services, setServices] = useState<ServiceBalance[]>([]);
@@ -44,19 +42,13 @@ const Monitoring = () => {
   const { token } = useAuth();
   const { toast } = useToast();
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
-      setMenuOpen(false);
-    }
-  };
+  const {
+    menuOpen,
+    setMenuOpen,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useSidebarTouch();
 
   const loadServices = async () => {
     try {

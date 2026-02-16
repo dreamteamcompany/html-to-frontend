@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 
@@ -82,9 +82,10 @@ export const useTicketsData = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
     if (!token) return;
 
+    setLoading(true);
     try {
       const apiUrl = `${API_ENDPOINTS.main}?endpoint=tickets`;
       const response = await fetch(apiUrl, {
@@ -103,10 +104,12 @@ export const useTicketsData = () => {
     } catch (err) {
       console.error('Failed to load tickets:', err);
       setTickets([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [token]);
 
-  const loadServices = async () => {
+  const loadServices = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -120,13 +123,16 @@ export const useTicketsData = () => {
       if (response.ok) {
         const data = await response.json();
         setServices(data.services || []);
+      } else {
+        setServices([]);
       }
     } catch (err) {
       console.error('Failed to load services:', err);
+      setServices([]);
     }
-  };
+  }, [token]);
 
-  const loadDictionaries = async () => {
+  const loadDictionaries = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -147,6 +153,7 @@ export const useTicketsData = () => {
       } else {
         console.error('Dictionaries response not OK:', response.status, await response.text());
         // Fallback данные
+        setCategories([]);
         setPriorities([
           { id: 1, name: 'Низкий', level: 1, color: '#6b7280' },
           { id: 2, name: 'Средний', level: 2, color: '#3b82f6' },
@@ -160,18 +167,22 @@ export const useTicketsData = () => {
           { id: 4, name: 'Решена', color: '#22c55e', is_closed: true },
           { id: 5, name: 'Закрыта', color: '#6b7280', is_closed: true }
         ]);
+        setDepartments([]);
+        setCustomFields([]);
       }
     } catch (err) {
       console.error('Failed to load dictionaries:', err);
-    }
-  };
-
-  useEffect(() => {
-    if (token) {
-      setLoading(true);
-      loadTickets().finally(() => setLoading(false));
+      setCategories([]);
+      setPriorities([]);
+      setStatuses([]);
+      setDepartments([]);
+      setCustomFields([]);
     }
   }, [token]);
+
+  useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
 
   return {
     tickets,

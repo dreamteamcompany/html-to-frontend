@@ -1,14 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/config/api';
-
-interface CustomField {
-  id: number;
-  name: string;
-  field_type: string;
-  value: string;
-}
+import { CustomField } from '@/types/payment';
 
 interface PlannedPayment {
   id: number;
@@ -96,143 +90,160 @@ export const usePlannedPaymentsData = () => {
     services: false,
   });
 
-  const loadPayments = async () => {
+  const loadPayments = useCallback(async () => {
+    if (!token) return;
+
+    setLoading(true);
     try {
       const response = await fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments`, {
         headers: {
-          'X-Auth-Token': token || '',
+          'X-Auth-Token': token,
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setPayments(data);
+        setPayments(Array.isArray(data) ? data : []);
+      } else {
+        setPayments([]);
       }
     } catch (err) {
       console.error('Failed to load planned payments:', err);
+      setPayments([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [token]);
 
-  const loadCategories = async () => {
-    if (dataLoaded.categories) return;
+  const loadCategories = useCallback(async () => {
+    if (dataLoaded.categories || !token) return;
+    
     try {
       const response = await fetch('${API_ENDPOINTS.main}?endpoint=categories', {
         headers: {
-          'X-Auth-Token': token || '',
+          'X-Auth-Token': token,
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setCategories(data);
+        setCategories(Array.isArray(data) ? data : []);
         setDataLoaded(prev => ({ ...prev, categories: true }));
       }
     } catch (err) {
       console.error('Failed to load categories:', err);
+      setCategories([]);
     }
-  };
+  }, [dataLoaded.categories, token]);
 
-  const loadLegalEntities = async () => {
-    if (dataLoaded.legalEntities) return;
+  const loadLegalEntities = useCallback(async () => {
+    if (dataLoaded.legalEntities || !token) return;
+    
     try {
       const response = await fetch('${API_ENDPOINTS.main}?endpoint=legal-entities', {
         headers: {
-          'X-Auth-Token': token || '',
+          'X-Auth-Token': token,
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setLegalEntities(data);
+        setLegalEntities(Array.isArray(data) ? data : []);
         setDataLoaded(prev => ({ ...prev, legalEntities: true }));
       }
     } catch (err) {
       console.error('Failed to load legal entities:', err);
+      setLegalEntities([]);
     }
-  };
+  }, [dataLoaded.legalEntities, token]);
 
-  const loadContractors = async () => {
-    if (dataLoaded.contractors) return;
+  const loadContractors = useCallback(async () => {
+    if (dataLoaded.contractors || !token) return;
+    
     try {
       const response = await fetch('${API_ENDPOINTS.main}?endpoint=contractors', {
         headers: {
-          'X-Auth-Token': token || '',
+          'X-Auth-Token': token,
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setContractors(data);
+        setContractors(Array.isArray(data) ? data : []);
         setDataLoaded(prev => ({ ...prev, contractors: true }));
       }
     } catch (err) {
       console.error('Failed to load contractors:', err);
+      setContractors([]);
     }
-  };
+  }, [dataLoaded.contractors, token]);
 
-  const loadCustomerDepartments = async () => {
-    if (dataLoaded.customerDepartments) return;
+  const loadCustomerDepartments = useCallback(async () => {
+    if (dataLoaded.customerDepartments || !token) return;
+    
     try {
       const response = await fetch('${API_ENDPOINTS.main}?endpoint=customer-departments', {
         headers: {
-          'X-Auth-Token': token || '',
+          'X-Auth-Token': token,
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setCustomerDepartments(data);
+        setCustomerDepartments(Array.isArray(data) ? data : []);
         setDataLoaded(prev => ({ ...prev, customerDepartments: true }));
       }
     } catch (err) {
       console.error('Failed to load customer departments:', err);
+      setCustomerDepartments([]);
     }
-  };
+  }, [dataLoaded.customerDepartments, token]);
 
-  const loadCustomFields = async () => {
-    if (dataLoaded.customFields) return;
+  const loadCustomFields = useCallback(async () => {
+    if (dataLoaded.customFields || !token) return;
+    
     try {
       const response = await fetch('${API_ENDPOINTS.main}?endpoint=custom-fields', {
         headers: {
-          'X-Auth-Token': token || '',
+          'X-Auth-Token': token,
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setCustomFields(data);
+        setCustomFields(Array.isArray(data) ? data : []);
         setDataLoaded(prev => ({ ...prev, customFields: true }));
       }
     } catch (err) {
       console.error('Failed to load custom fields:', err);
+      setCustomFields([]);
     }
-  };
+  }, [dataLoaded.customFields, token]);
 
-  const loadServices = async () => {
-    if (dataLoaded.services) return;
+  const loadServices = useCallback(async () => {
+    if (dataLoaded.services || !token) return;
+    
     try {
       const response = await fetch('${API_ENDPOINTS.main}?endpoint=services', {
         headers: {
-          'X-Auth-Token': token || '',
+          'X-Auth-Token': token,
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setServices(data);
+        setServices(Array.isArray(data) ? data : (data.services || []));
         setDataLoaded(prev => ({ ...prev, services: true }));
       }
     } catch (err) {
       console.error('Failed to load services:', err);
+      setServices([]);
     }
-  };
+  }, [dataLoaded.services, token]);
 
   useEffect(() => {
-    if (token) {
-      setLoading(true);
-      loadPayments().finally(() => setLoading(false));
-    }
-  }, [token]);
+    loadPayments();
+  }, [loadPayments]);
 
   return {
     payments,

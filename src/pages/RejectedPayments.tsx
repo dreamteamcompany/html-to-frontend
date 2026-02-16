@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import { Input } from '@/components/ui/input';
@@ -10,54 +11,30 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 import { API_ENDPOINTS } from '@/config/api';
+import { Payment, CustomField } from '@/types/payment';
 
-interface CustomField {
-  id: number;
-  name: string;
-  field_type: string;
-  value: string;
-}
-
-interface Payment {
-  id: number;
-  category_id: number;
-  category_name: string;
-  category_icon: string;
-  description: string;
-  amount: number;
-  payment_date: string;
-  legal_entity_id?: number;
-  legal_entity_name?: string;
-  status?: string;
-  created_by?: number;
-  created_by_name?: string;
-  service_id?: number;
-  service_name?: string;
-  contractor_name?: string;
-  contractor_id?: number;
-  department_name?: string;
-  department_id?: number;
-  invoice_number?: string;
-  invoice_date?: string;
-  created_at?: string;
-  submitted_at?: string;
+interface ExtendedPayment extends Payment {
   rejected_at?: string;
   rejection_comment?: string;
-  custom_fields?: CustomField[];
 }
 
 const RejectedPayments = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [payments, setPayments] = useState<ExtendedPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<ExtendedPayment | null>(null);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+
+  const {
+    menuOpen,
+    setMenuOpen,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useSidebarTouch();
 
   useEffect(() => {
     fetchRejectedPayments();
@@ -69,7 +46,7 @@ const RejectedPayments = () => {
       const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
       const data = await response.json();
       
-      const rejectedPayments = (Array.isArray(data) ? data : []).filter((p: Payment) => 
+      const rejectedPayments = (Array.isArray(data) ? data : []).filter((p: ExtendedPayment) => 
         p.status === 'rejected'
       );
       
@@ -79,20 +56,6 @@ const RejectedPayments = () => {
       setPayments([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
-      setMenuOpen(false);
     }
   };
 

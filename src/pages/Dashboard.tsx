@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import KPICard from '@/components/dashboard/KPICard';
@@ -12,28 +13,19 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
 
 const Dashboard = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
   const [dictionariesOpen, setDictionariesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   
+  const {
+    menuOpen,
+    setMenuOpen,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useSidebarTouch();
+  
   const { data, retry } = useDashboardData();
   const navigate = useNavigate();
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
-      setMenuOpen(false);
-    }
-  };
 
   const renderContent = () => {
     switch (data.state) {

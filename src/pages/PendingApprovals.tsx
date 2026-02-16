@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
@@ -10,39 +11,7 @@ import PendingApprovalsList from '@/components/approvals/PendingApprovalsList';
 import PendingApprovalsModal from '@/components/approvals/PendingApprovalsModal';
 import { usePendingApprovalsData } from '@/hooks/usePendingApprovalsData';
 import { usePendingApprovalsFilters } from '@/hooks/usePendingApprovalsFilters';
-
-interface CustomField {
-  id: number;
-  name: string;
-  field_type: string;
-  value: string;
-}
-
-interface Payment {
-  id: number;
-  category_id: number;
-  category_name: string;
-  category_icon: string;
-  description: string;
-  amount: number;
-  payment_date: string;
-  legal_entity_id?: number;
-  legal_entity_name?: string;
-  status?: string;
-  created_by?: number;
-  created_by_name?: string;
-  service_id?: number;
-  service_name?: string;
-  contractor_name?: string;
-  contractor_id?: number;
-  department_name?: string;
-  department_id?: number;
-  invoice_number?: string;
-  invoice_date?: string;
-  created_at?: string;
-  submitted_at?: string;
-  custom_fields?: CustomField[];
-}
+import { Payment, CustomField } from '@/types/payment';
 
 const PendingApprovals = () => {
   const { requestNotificationPermission } = usePendingApprovals();
@@ -70,31 +39,22 @@ const PendingApprovals = () => {
 
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+
+  const {
+    menuOpen,
+    setMenuOpen,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useSidebarTouch();
 
   useEffect(() => {
     if ('Notification' in window) {
       setNotificationPermission(Notification.permission);
     }
   }, []);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
-      setMenuOpen(false);
-    }
-  };
 
   const getStatusBadge = (status?: string) => {
     switch (status) {

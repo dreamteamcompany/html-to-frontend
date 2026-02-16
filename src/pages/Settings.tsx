@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -21,28 +22,19 @@ import { Input } from '@/components/ui/input';
 const CLEAR_DATA_API = 'https://functions.poehali.dev/69d0e8e7-3feb-4d34-9a63-64521e899118';
 
 const Settings = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
   const [clearing, setClearing] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const { toast } = useToast();
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
-      setMenuOpen(false);
-    }
-  };
+  const {
+    menuOpen,
+    setMenuOpen,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useSidebarTouch();
 
   const handleClearAllData = async () => {
     if (confirmText !== 'УДАЛИТЬ ВСЁ') {

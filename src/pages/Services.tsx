@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import { getApiUrl } from '@/config/api';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useToast } from '@/hooks/use-toast';
@@ -51,12 +52,17 @@ const Services = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
   const { toast } = useToast();
+
+  const {
+    menuOpen,
+    setMenuOpen,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useSidebarTouch();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -65,20 +71,6 @@ const Services = () => {
     customer_department_id: '',
     category_id: '',
   });
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
-      setMenuOpen(false);
-    }
-  };
 
   useEffect(() => {
     loadServices();
