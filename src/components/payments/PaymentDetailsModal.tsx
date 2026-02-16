@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Icon from '@/components/ui/icon';
 import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -43,6 +44,8 @@ interface PaymentDetailsModalProps {
 }
 
 const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval }: PaymentDetailsModalProps) => {
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  
   if (!payment) return null;
 
   const getStatusBadge = (status?: string) => {
@@ -218,15 +221,37 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval }: PaymentD
             
             {(!payment.status || payment.status === 'draft') && onSubmitForApproval && (
               <div className="p-4 sm:p-6 border-t border-white/10">
-                <button
-                  onClick={() => {
-                    onSubmitForApproval(payment.id);
-                    onClose();
-                  }}
-                  className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium transition-colors"
-                >
-                  Отправить на согласование
-                </button>
+                {!showConfirmation ? (
+                  <button
+                    onClick={() => setShowConfirmation(true)}
+                    className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium transition-colors"
+                  >
+                    Отправить на согласование
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground text-center">
+                      Отправить платёж на согласование?
+                    </p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setShowConfirmation(false)}
+                        className="flex-1 px-4 py-3 rounded-lg bg-white/5 text-white hover:bg-white/10 font-medium transition-colors"
+                      >
+                        Отмена
+                      </button>
+                      <button
+                        onClick={() => {
+                          onSubmitForApproval(payment.id);
+                          onClose();
+                        }}
+                        className="flex-1 px-4 py-3 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium transition-colors"
+                      >
+                        Отправить
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
