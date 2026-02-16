@@ -32,7 +32,7 @@ def response(status_code: int, data: Any) -> Dict[str, Any]:
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
         },
-        'body': json.dumps(data, ensure_ascii=False),
+        'body': json.dumps(data, ensure_ascii=False, default=str),
         'isBase64Encoded': False
     }
 
@@ -244,6 +244,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 result['payment_date'] = result['payment_date'].isoformat()
             if result['created_at']:
                 result['created_at'] = result['created_at'].isoformat()
+            if result.get('invoice_date'):
+                result['invoice_date'] = result['invoice_date'].isoformat()
             
             cur.close()
             conn.close()
