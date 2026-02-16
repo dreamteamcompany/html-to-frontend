@@ -18,12 +18,12 @@ class PaymentRequest(BaseModel):
     amount: float = Field(..., gt=0)
     description: str = Field(default='')
     payment_date: str = Field(default='')
-    legal_entity_id: int = Field(default=None)
-    contractor_id: int = Field(default=None)
-    department_id: int = Field(default=None)
-    service_id: int = Field(default=None)
-    invoice_number: str = Field(default=None)
-    invoice_date: str = Field(default=None)
+    legal_entity_id: int | None = None
+    contractor_id: int | None = None
+    department_id: int | None = None
+    service_id: int | None = None
+    invoice_number: str | None = None
+    invoice_date: str | None = None
 
 def response(status_code: int, data: Any) -> Dict[str, Any]:
     return {
