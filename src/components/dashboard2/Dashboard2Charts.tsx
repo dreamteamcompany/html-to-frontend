@@ -1,11 +1,9 @@
-import Dashboard2ChartsSection from './Dashboard2ChartsSection';
 import Dashboard2NeonCards from './Dashboard2NeonCards';
 
 
 const Dashboard2Charts = () => {
   return (
     <>
-      <Dashboard2ChartsSection />
       <Dashboard2NeonCards />
 
 
