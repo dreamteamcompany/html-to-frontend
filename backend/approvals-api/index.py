@@ -2,6 +2,7 @@
 import json
 import os
 from typing import Dict, Any
+import jwt
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel, Field
@@ -23,27 +24,27 @@ def response(status: int, body: Any) -> Dict[str, Any]:
         'body': json.dumps(body, ensure_ascii=False, default=str)
     }
 
-def verify_token(event: Dict[str, Any], conn) -> tuple:
-    """Проверяет токен и возвращает (payload, error_response)"""
-    token = event.get('headers', {}).get('X-Authorization', '').replace('Bearer ', '')
+def verify_token(event: Dict[str, Any], conn=None) -> tuple:
+    """Проверяет JWT токен"""
+    headers = event.get('headers', {})
+    token = (headers.get('X-Auth-Token') or 
+             headers.get('x-auth-token') or 
+             headers.get('X-Authorization') or
+             headers.get('x-authorization', ''))
+    if token:
+        token = token.replace('Bearer ', '').strip()
     
     if not token:
         return None, response(401, {'error': 'Unauthorized'})
     
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute(f"""
-        SELECT user_id, expires_at 
-        FROM {SCHEMA}.auth_tokens 
-        WHERE token = %s AND expires_at > NOW()
-    """, (token,))
-    
-    row = cur.fetchone()
-    cur.close()
-    
-    if not row:
-        return None, response(401, {'error': 'Invalid or expired token'})
-    
-    return {'user_id': row['user_id']}, None
+    try:
+        secret = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
+        payload = jwt.decode(token, secret, algorithms=['HS256'])
+        return payload, None
+    except jwt.ExpiredSignatureError:
+        return None, response(401, {'error': 'Token expired'})
+    except jwt.InvalidTokenError:
+        return None, response(401, {'error': 'Invalid token'})
 
 def verify_token_and_permission(event: Dict[str, Any], conn, required_permission: str) -> tuple:
     """Проверяет токен и права доступа"""
