@@ -1,0 +1,148 @@
+import { useEffect, useState } from 'react';
+import Icon from '@/components/ui/icon';
+import { Input } from '@/components/ui/input';
+import { usePendingApprovals } from '@/hooks/usePendingApprovals';
+import PendingApprovalsFilters from '@/components/approvals/PendingApprovalsFilters';
+import PendingApprovalsList from '@/components/approvals/PendingApprovalsList';
+import PendingApprovalsModal from '@/components/approvals/PendingApprovalsModal';
+import { usePendingApprovalsData } from '@/hooks/usePendingApprovalsData';
+import { usePendingApprovalsFilters } from '@/hooks/usePendingApprovalsFilters';
+import { Payment } from '@/types/payment';
+
+const PendingApprovalsTab = () => {
+  const { requestNotificationPermission } = usePendingApprovals();
+  const { payments, services, loading, handleApprove, handleReject } = usePendingApprovalsData();
+  
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedService,
+    setSelectedService,
+    amountFrom,
+    setAmountFrom,
+    amountTo,
+    setAmountTo,
+    dateFrom,
+    setDateFrom,
+    dateTo,
+    setDateTo,
+    showFilters,
+    setShowFilters,
+    filteredPayments,
+    activeFiltersCount,
+    clearFilters,
+  } = usePendingApprovalsFilters(payments);
+
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'pending_ceo':
+        return <span className="px-3 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">Ожидает CEO</span>;
+      default:
+        return null;
+    }
+  };
+
+  const handleModalApprove = (paymentId: number, comment?: string) => {
+    if (typeof handleApprove === 'function') {
+      handleApprove(paymentId, comment);
+      setSelectedPayment(null);
+    }
+  };
+
+  const handleModalReject = (paymentId: number, comment?: string) => {
+    if (typeof handleReject === 'function') {
+      handleReject(paymentId, comment);
+      setSelectedPayment(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 relative">
+          <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Поиск по описанию, категории, сумме..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-background border-white/10"
+          />
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="relative p-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+        >
+          <Icon name="SlidersHorizontal" size={20} />
+          {activeFiltersCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              {activeFiltersCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {showFilters && (
+        <PendingApprovalsFilters
+          services={services}
+          selectedService={selectedService}
+          setSelectedService={setSelectedService}
+          amountFrom={amountFrom}
+          setAmountFrom={setAmountFrom}
+          amountTo={amountTo}
+          setAmountTo={setAmountTo}
+          dateFrom={dateFrom}
+          setDateFrom={setDateFrom}
+          dateTo={dateTo}
+          setDateTo={setDateTo}
+          activeFiltersCount={activeFiltersCount}
+          clearFilters={clearFilters}
+        />
+      )}
+
+      {notificationPermission !== 'granted' && (
+        <div className="px-4 py-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-yellow-200">
+              <Icon name="Bell" size={16} />
+              <span>Включите уведомления, чтобы не пропустить новые заявки</span>
+            </div>
+            <button
+              onClick={requestNotificationPermission}
+              className="text-sm text-yellow-200 hover:text-yellow-100 font-medium whitespace-nowrap"
+            >
+              Включить
+            </button>
+          </div>
+        </div>
+      )}
+
+      <PendingApprovalsList
+        loading={loading}
+        payments={filteredPayments}
+        searchQuery={searchQuery}
+        handleApprove={handleApprove}
+        handleReject={handleReject}
+        getStatusBadge={getStatusBadge}
+        onPaymentClick={setSelectedPayment}
+      />
+
+      <PendingApprovalsModal
+        payment={selectedPayment}
+        onClose={() => setSelectedPayment(null)}
+        onApprove={handleModalApprove}
+        onReject={handleModalReject}
+      />
+    </div>
+  );
+};
+
+export default PendingApprovalsTab;

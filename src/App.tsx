@@ -21,9 +21,6 @@ import Roles from "./pages/Roles";
 import Contractors from "./pages/Contractors";
 import CustomerDepartments from "./pages/CustomerDepartments";
 import ApprovalsHistory from "./pages/ApprovalsHistory";
-import PendingApprovals from "./pages/PendingApprovals";
-import ApprovedPayments from "./pages/ApprovedPayments";
-import RejectedPayments from "./pages/RejectedPayments";
 import Services from "./pages/Services";
 import AuditLogs from "./pages/AuditLogs";
 import Savings from "./pages/Savings";
@@ -60,9 +57,6 @@ const App = () => {
             <Route path="/users" element={<ProtectedRoute requiredPermission={{ resource: 'users', action: 'read' }}><Users /></ProtectedRoute>} />
             <Route path="/roles" element={<ProtectedRoute requiredPermission={{ resource: 'roles', action: 'read' }}><Roles /></ProtectedRoute>} />
             <Route path="/approvals-history" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><ApprovalsHistory /></ProtectedRoute>} />
-            <Route path="/pending-approvals" element={<ProtectedRoute requiredPermission={{ resource: 'approvals', action: 'read' }}><PendingApprovals /></ProtectedRoute>} />
-            <Route path="/approved-payments" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><ApprovedPayments /></ProtectedRoute>} />
-            <Route path="/rejected-payments" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><RejectedPayments /></ProtectedRoute>} />
             <Route path="/services" element={<ProtectedRoute requiredPermission={{ resource: 'services', action: 'read' }}><Services /></ProtectedRoute>} />
             <Route path="/audit-logs" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><AuditLogs /></ProtectedRoute>} />
             <Route path="/savings" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><Savings /></ProtectedRoute>} />

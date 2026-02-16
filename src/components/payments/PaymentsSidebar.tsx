@@ -100,21 +100,7 @@ const PaymentsSidebar = ({
             </Link>
           </li>
         )}
-        {(hasPermission('payments', 'read') || hasPermission('approvals', 'read')) && (
-          <li>
-            <Link to="/pending-approvals" className={`flex items-center justify-between px-[15px] py-3 rounded-lg ${isActive('/pending-approvals') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
-              <div className="flex items-center gap-3">
-                <Icon name="ClipboardCheck" size={20} />
-                <span>На согласовании</span>
-              </div>
-              {pendingCount > 0 && (
-                <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
-                  {pendingCount}
-                </span>
-              )}
-            </Link>
-          </li>
-        )}
+
         {hasPermission('savings', 'read') && (
           <li>
             <Link to="/savings" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/savings') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>

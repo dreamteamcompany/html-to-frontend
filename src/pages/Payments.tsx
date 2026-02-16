@@ -1,53 +1,18 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { usePaymentsData } from '@/hooks/usePaymentsData';
-import { usePaymentForm } from '@/hooks/usePaymentForm';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
-import PaymentsSearch from '@/components/payments/PaymentsSearch';
-import PaymentForm from '@/components/payments/PaymentForm';
-import PaymentsList from '@/components/payments/PaymentsList';
-import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
-import { API_ENDPOINTS } from '@/config/api';
-import { Payment, CustomField } from '@/types/payment';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Icon from '@/components/ui/icon';
+import MyPaymentsTab from '@/components/payments/tabs/MyPaymentsTab';
+import PendingApprovalsTab from '@/components/payments/tabs/PendingApprovalsTab';
+import ApprovedPaymentsTab from '@/components/payments/tabs/ApprovedPaymentsTab';
+import RejectedPaymentsTab from '@/components/payments/tabs/RejectedPaymentsTab';
 
 const Payments = () => {
-  const { token } = useAuth();
-  const { toast } = useToast();
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const {
-    payments,
-    categories,
-    legalEntities,
-    contractors,
-    customerDepartments,
-    customFields,
-    services,
-    loading,
-    loadPayments,
-    loadContractors,
-    loadLegalEntities,
-  } = usePaymentsData();
-
-  const {
-    dialogOpen,
-    setDialogOpen,
-    formData,
-    setFormData,
-    handleSubmit,
-    invoicePreview,
-    isProcessingInvoice,
-    handleFileSelect,
-    handleExtractData,
-    fileName,
-    fileType,
-  } = usePaymentForm(customFields, loadPayments, loadContractors, loadLegalEntities);
+  const [activeTab, setActiveTab] = useState('my');
 
   const {
     menuOpen,
@@ -56,57 +21,6 @@ const Payments = () => {
     handleTouchMove,
     handleTouchEnd,
   } = useSidebarTouch();
-
-  const handleSubmitForApproval = async (paymentId: number) => {
-    try {
-      const response = await fetch(API_ENDPOINTS.approvalsApi, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Auth-Token': token || '',
-        },
-        body: JSON.stringify({ payment_id: paymentId, action: 'submit' }),
-      });
-
-      if (response.ok) {
-        toast({
-          title: 'Успешно',
-          description: 'Платёж отправлен на согласование',
-        });
-        loadPayments();
-      } else {
-        const error = await response.json();
-        toast({
-          title: 'Ошибка',
-          description: error.error || 'Не удалось отправить на согласование',
-          variant: 'destructive',
-        });
-      }
-    } catch (err) {
-      console.error('Failed to submit for approval:', err);
-      toast({
-        title: 'Ошибка сети',
-        description: 'Проверьте подключение к интернету',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const filteredPayments = payments.filter(payment => {
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = (
-        payment.description.toLowerCase().includes(query) ||
-        payment.category_name.toLowerCase().includes(query) ||
-        payment.amount.toString().includes(query) ||
-        payment.service_name?.toLowerCase().includes(query) ||
-        payment.contractor_name?.toLowerCase().includes(query) ||
-        payment.legal_entity_name?.toLowerCase().includes(query)
-      );
-      if (!matchesSearch) return false;
-    }
-    return true;
-  });
 
   return (
     <div className="flex min-h-screen">
@@ -128,42 +42,65 @@ const Payments = () => {
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <main className="lg:ml-[250px] min-h-screen flex-1 overflow-x-hidden max-w-full">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-white/10">
+          <div className="px-4 sm:px-6 py-4">
+            <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+          </div>
 
-        <PaymentsSearch searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+          <div className="px-4 sm:px-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="w-full justify-start border-b border-white/10 rounded-none bg-transparent p-0 h-auto">
+                <TabsTrigger 
+                  value="my" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Icon name="FileText" size={18} className="mr-2" />
+                  Мои платежи
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="pending" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Icon name="Clock" size={18} className="mr-2" />
+                  На согласовании
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="approved" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Icon name="CheckCircle" size={18} className="mr-2" />
+                  Согласованные
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="rejected" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Icon name="XCircle" size={18} className="mr-2" />
+                  Отклонённые
+                </TabsTrigger>
+              </TabsList>
 
-        <PaymentForm
-          dialogOpen={dialogOpen}
-          setDialogOpen={setDialogOpen}
-          formData={formData}
-          setFormData={setFormData}
-          categories={categories}
-          legalEntities={legalEntities}
-          contractors={contractors}
-          customerDepartments={customerDepartments}
-          customFields={customFields}
-          services={services}
-          handleSubmit={handleSubmit}
-          invoicePreview={invoicePreview}
-          isProcessingInvoice={isProcessingInvoice}
-          handleFileSelect={handleFileSelect}
-          handleExtractData={handleExtractData}
-          fileName={fileName}
-          fileType={fileType}
-        />
+              <div className="p-4 sm:p-6">
+                <TabsContent value="my" className="mt-0">
+                  <MyPaymentsTab />
+                </TabsContent>
 
-        <PaymentsList 
-          payments={filteredPayments} 
-          loading={loading} 
-          onSubmitForApproval={handleSubmitForApproval}
-          onPaymentClick={setSelectedPayment}
-        />
+                <TabsContent value="pending" className="mt-0">
+                  <PendingApprovalsTab />
+                </TabsContent>
 
-        <PaymentDetailsModal
-          payment={selectedPayment}
-          onClose={() => setSelectedPayment(null)}
-        />
+                <TabsContent value="approved" className="mt-0">
+                  <ApprovedPaymentsTab />
+                </TabsContent>
+
+                <TabsContent value="rejected" className="mt-0">
+                  <RejectedPaymentsTab />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
+        </div>
       </main>
     </div>
   );
