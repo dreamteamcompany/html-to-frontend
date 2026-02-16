@@ -3,7 +3,7 @@ import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import { useCrudPage } from '@/hooks/useCrudPage';
-import { getApiUrl } from '@/config/api';
+import { getApiUrl, API_ENDPOINTS } from '@/config/api';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useToast } from '@/hooks/use-toast';
 import ServicesHeader from '@/components/services/ServicesHeader';
@@ -75,11 +75,12 @@ const Services = () => {
     handleDelete: handleDeleteBase,
   } = useCrudPage<Service>({
     endpoint: 'services',
+    baseApi: 'dictionariesApi',
     initialFormData: {
       name: '',
       description: '',
-      intermediate_approver_id: 0,
-      final_approver_id: 0,
+      intermediate_approver_id: undefined,
+      final_approver_id: undefined,
       customer_department_id: undefined,
       category_id: undefined,
     },
@@ -94,11 +95,11 @@ const Services = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await apiFetch(getApiUrl('approvers'));
+      const response = await apiFetch(API_ENDPOINTS.usersApi);
       const data = await response.json();
-      setUsers(data.approvers || []);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Failed to load approvers:', error);
+      console.error('Failed to load users:', error);
       setUsers([]);
     }
   };
@@ -181,8 +182,8 @@ const Services = () => {
     setFormData({
       name: '',
       description: '',
-      intermediate_approver_id: 0,
-      final_approver_id: 0,
+      intermediate_approver_id: undefined,
+      final_approver_id: undefined,
       customer_department_id: undefined,
       category_id: undefined,
     });
