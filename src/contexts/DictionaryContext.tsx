@@ -99,14 +99,13 @@ interface DictionaryProviderProps {
   children: ReactNode;
 }
 
-const ENDPOINTS_MAP: Record<keyof DictionaryData, string> = {
+const DICT_ENDPOINTS_MAP: Record<string, string> = {
   categories: 'categories',
   contractors: 'contractors',
   legalEntities: 'legal-entities',
   departments: 'customer-departments',
   services: 'services',
   customFields: 'custom-fields',
-  users: 'users',
 };
 
 export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
@@ -139,12 +138,16 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
     setLoading(prev => ({ ...prev, [key]: true }));
 
     try {
-      const response = await apiFetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=${endpoint}`);
+      const url = `${API_ENDPOINTS.dictionariesApi}?endpoint=${endpoint}`;
+      console.log(`[Dict] Fetching ${key} from ${url}`);
+      const response = await apiFetch(url);
       if (!response.ok) {
-        console.error(`Dict ${key}: HTTP ${response.status}`);
+        const text = await response.text();
+        console.error(`Dict ${key}: HTTP ${response.status}`, text);
         return;
       }
       const result = await response.json();
+      console.log(`[Dict] ${key} loaded:`, Array.isArray(result) ? result.length : typeof result);
       setData(prev => ({ ...prev, [key]: Array.isArray(result) ? result : [] }));
     } catch (error) {
       console.error(`Failed to load ${key}:`, error);
@@ -153,14 +156,36 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
     }
   }, []);
 
+  const fetchUsers = useCallback(async () => {
+    setLoading(prev => ({ ...prev, users: true }));
+    try {
+      const response = await apiFetch(`${API_ENDPOINTS.usersApi}`);
+      if (response.ok) {
+        const result = await response.json();
+        setData(prev => ({ ...prev, users: Array.isArray(result) ? result : [] }));
+      }
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, users: false }));
+    }
+  }, []);
+
   const refresh = useCallback(async (key: keyof DictionaryData) => {
-    await fetchDictionary(key, ENDPOINTS_MAP[key]);
-  }, [fetchDictionary]);
+    if (key === 'users') {
+      await fetchUsers();
+      return;
+    }
+    await fetchDictionary(key, DICT_ENDPOINTS_MAP[key]);
+  }, [fetchDictionary, fetchUsers]);
 
   const refreshAll = useCallback(async () => {
-    const keys = Object.keys(ENDPOINTS_MAP) as (keyof DictionaryData)[];
-    await Promise.all(keys.map(key => fetchDictionary(key, ENDPOINTS_MAP[key])));
-  }, [fetchDictionary]);
+    const dictKeys = Object.keys(DICT_ENDPOINTS_MAP);
+    await Promise.all([
+      ...dictKeys.map(key => fetchDictionary(key as keyof DictionaryData, DICT_ENDPOINTS_MAP[key])),
+      fetchUsers(),
+    ]);
+  }, [fetchDictionary, fetchUsers]);
 
   useEffect(() => {
     if (token) {

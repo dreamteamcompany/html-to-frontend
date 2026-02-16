@@ -82,6 +82,8 @@ export const usePaymentsData = () => {
     loadPayments();
   }, [loadPayments]);
 
+  console.log('[usePaymentsData] categories:', dictionary.categories.length, 'services:', dictionary.services.length, 'contractors:', dictionary.contractors.length, 'legalEntities:', dictionary.legalEntities.length, 'departments:', dictionary.departments.length);
+
   return {
     payments,
     categories: dictionary.categories,
