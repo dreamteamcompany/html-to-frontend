@@ -59,7 +59,7 @@ const Payments = () => {
 
   const handleSubmitForApproval = async (paymentId: number) => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=approvals`, {
+      const response = await fetch(API_ENDPOINTS.approvalsApi, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
