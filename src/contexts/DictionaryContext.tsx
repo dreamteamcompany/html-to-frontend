@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef, useCallback } from 'react';
 import { API_ENDPOINTS } from '@/config/api';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from './AuthContext';
@@ -39,6 +39,10 @@ interface Service {
   name: string;
   description?: string;
   category_id?: number;
+  intermediate_approver_id?: number;
+  final_approver_id?: number;
+  category_name?: string;
+  category_icon?: string;
 }
 
 interface CustomField {
@@ -95,11 +99,19 @@ interface DictionaryProviderProps {
   children: ReactNode;
 }
 
-const CACHE_DURATION = 5 * 60 * 1000;
+const ENDPOINTS_MAP: Record<keyof DictionaryData, string> = {
+  categories: 'categories',
+  contractors: 'contractors',
+  legalEntities: 'legal-entities',
+  departments: 'customer-departments',
+  services: 'services',
+  customFields: 'custom-fields',
+  users: 'users',
+};
 
 export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
   const { token } = useAuth();
-  
+
   const [data, setData] = useState<DictionaryData>({
     categories: [],
     contractors: [],
@@ -120,78 +132,42 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
     users: false,
   });
 
-  const lastFetchRef = useRef<Record<keyof DictionaryData, number>>({
-    categories: 0,
-    contractors: 0,
-    legalEntities: 0,
-    departments: 0,
-    services: 0,
-    customFields: 0,
-    users: 0,
-  });
-
-  const fetchDictionary = async <K extends keyof DictionaryData>(
+  const fetchDictionary = useCallback(async <K extends keyof DictionaryData>(
     key: K,
     endpoint: string,
-    force = false
   ): Promise<void> => {
-    if (!token) return;
-
-    const now = Date.now();
-    if (!force && now - lastFetchRef.current[key] < CACHE_DURATION && data[key].length > 0) {
-      return;
-    }
-
     setLoading(prev => ({ ...prev, [key]: true }));
 
     try {
-      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=${endpoint}`);
+      const response = await apiFetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=${endpoint}`);
+      if (!response.ok) {
+        console.error(`Dict ${key}: HTTP ${response.status}`);
+        return;
+      }
       const result = await response.json();
-      
       setData(prev => ({ ...prev, [key]: Array.isArray(result) ? result : [] }));
-      lastFetchRef.current[key] = now;
     } catch (error) {
       console.error(`Failed to load ${key}:`, error);
-      setData(prev => ({ ...prev, [key]: [] }));
     } finally {
       setLoading(prev => ({ ...prev, [key]: false }));
     }
-  };
+  }, []);
 
-  const refresh = async (key: keyof DictionaryData) => {
-    const endpoints: Record<keyof DictionaryData, string> = {
-      categories: 'categories',
-      contractors: 'contractors',
-      legalEntities: 'legal-entities',
-      departments: 'customer-departments',
-      services: 'services',
-      customFields: 'custom-fields',
-      users: 'users',
-    };
+  const refresh = useCallback(async (key: keyof DictionaryData) => {
+    await fetchDictionary(key, ENDPOINTS_MAP[key]);
+  }, [fetchDictionary]);
 
-    await fetchDictionary(key, endpoints[key], true);
-  };
-
-  const refreshAll = async () => {
-    await Promise.all([
-      fetchDictionary('categories', 'categories', true),
-      fetchDictionary('contractors', 'contractors', true),
-      fetchDictionary('legalEntities', 'legal-entities', true),
-      fetchDictionary('departments', 'customer-departments', true),
-      fetchDictionary('services', 'services', true),
-      fetchDictionary('customFields', 'custom-fields', true),
-      fetchDictionary('users', 'users', true),
-    ]);
-  };
-
-  const hasLoadedRef = useRef(false);
+  const refreshAll = useCallback(async () => {
+    const keys = Object.keys(ENDPOINTS_MAP) as (keyof DictionaryData)[];
+    await Promise.all(keys.map(key => fetchDictionary(key, ENDPOINTS_MAP[key])));
+  }, [fetchDictionary]);
 
   useEffect(() => {
-    if (token && !hasLoadedRef.current) {
-      hasLoadedRef.current = true;
+    if (token) {
+      console.log('[DictionaryContext] Token available, loading all dictionaries...');
       refreshAll();
     }
-  }, [token]);
+  }, [token, refreshAll]);
 
   return (
     <DictionaryContext.Provider
