@@ -129,6 +129,7 @@ const MyPaymentsTab = () => {
       <PaymentDetailsModal
         payment={selectedPayment}
         onClose={() => setSelectedPayment(null)}
+        onSubmitForApproval={handleSubmitForApproval}
       />
     </div>
   );

@@ -39,9 +39,10 @@ interface Payment {
 interface PaymentDetailsModalProps {
   payment: Payment | null;
   onClose: () => void;
+  onSubmitForApproval?: (paymentId: number) => void;
 }
 
-const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => {
+const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval }: PaymentDetailsModalProps) => {
   if (!payment) return null;
 
   const getStatusBadge = (status?: string) => {
@@ -214,6 +215,20 @@ const PaymentDetailsModal = ({ payment, onClose }: PaymentDetailsModalProps) => 
                 <PaymentAuditLog paymentId={payment.id} />
               </TabsContent>
             </Tabs>
+            
+            {(!payment.status || payment.status === 'draft') && onSubmitForApproval && (
+              <div className="p-4 sm:p-6 border-t border-white/10">
+                <button
+                  onClick={() => {
+                    onSubmitForApproval(payment.id);
+                    onClose();
+                  }}
+                  className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium transition-colors"
+                >
+                  Отправить на согласование
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
