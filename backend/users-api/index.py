@@ -7,7 +7,7 @@ from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel, Field
 
 # Environment
-SCHEMA = os.environ.get('DB_SCHEMA', 'public')
+SCHEMA = 't_p61788166_html_to_frontend'
 DSN = os.environ['DATABASE_URL']
 
 def response(status: int, body: Any) -> Dict[str, Any]:
