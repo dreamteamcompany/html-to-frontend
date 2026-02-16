@@ -50,10 +50,10 @@ class CustomFieldRequest(BaseModel):
 class ServiceRequest(BaseModel):
     name: str = Field(..., min_length=1)
     description: str = Field(default='')
-    intermediate_approver_id: Optional[int] = Field(default=None)
-    final_approver_id: Optional[int] = Field(default=None)
-    customer_department_id: Optional[int] = Field(default=None)
-    category_id: Optional[int] = Field(default=None)
+    intermediate_approver_id: int | None = None
+    final_approver_id: int | None = None
+    customer_department_id: int | None = None
+    category_id: int | None = None
 
 def response(status_code: int, data: Any) -> Dict[str, Any]:
     return {
