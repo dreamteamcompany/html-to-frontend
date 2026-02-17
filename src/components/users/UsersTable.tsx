@@ -73,7 +73,7 @@ const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps
               </td>
               <td className="p-4 text-muted-foreground text-sm">
                 {user.last_login 
-                  ? new Date(user.last_login).toLocaleDateString('ru-RU')
+                  ? new Date(user.last_login).toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' })
                   : 'Никогда'
                 }
               </td>
@@ -178,7 +178,7 @@ const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps
 
             <div className="text-xs text-muted-foreground">
               Последний вход: {user.last_login 
-                ? new Date(user.last_login).toLocaleDateString('ru-RU')
+                ? new Date(user.last_login).toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' })
                 : 'Никогда'
               }
             </div>

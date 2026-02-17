@@ -83,7 +83,7 @@ const SystemStatusBlock = ({ status }: SystemStatusBlockProps) => {
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground shrink-0">
-                  {new Date(alert.timestamp).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(alert.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' })}
                 </span>
               </div>
             );

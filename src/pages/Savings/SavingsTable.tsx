@@ -68,7 +68,7 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                       <td className="p-4 text-muted-foreground">{frequencyLabels[saving.frequency]}</td>
                       <td className="p-4 text-muted-foreground">{saving.employee_name}</td>
                       <td className="p-4 text-muted-foreground">
-                        {new Date(saving.created_at).toLocaleDateString('ru-RU')}
+                        {new Date(saving.created_at).toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' })}
                       </td>
                       <td className="p-4">
                         <Button
@@ -123,7 +123,7 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                     Автор: {saving.employee_name}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {new Date(saving.created_at).toLocaleDateString('ru-RU')}
+                    {new Date(saving.created_at).toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' })}
                   </div>
                 </div>
               ))}

@@ -88,6 +88,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       </td>
                       <td className="p-4 text-muted-foreground">
                         {new Date(payment.planned_date || payment.payment_date || '').toLocaleDateString('ru-RU', {
+                          timeZone: 'Europe/Moscow',
                           day: '2-digit',
                           month: 'long',
                           year: 'numeric'

@@ -109,7 +109,7 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                     <p className="text-sm text-red-200">{payment.rejection_comment}</p>
                     {payment.rejected_at && (
                       <p className="text-xs text-red-300/70 mt-2">
-                        {new Date(payment.rejected_at).toLocaleString('ru-RU')}
+                        {new Date(payment.rejected_at).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}
                       </p>
                     )}
                   </div>
@@ -208,12 +208,12 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Дата платежа:</span>
-                  <span className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</span>
+                  <span className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' })}</span>
                 </div>
                 {payment.submitted_at && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Дата отправки:</span>
-                    <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
+                    <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' })}</span>
                   </div>
                 )}
                 {payment.invoice_date && (

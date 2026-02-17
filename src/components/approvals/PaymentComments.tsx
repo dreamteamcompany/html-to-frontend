@@ -171,7 +171,7 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
               <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2 mb-1">
                 <span className="font-medium text-xs sm:text-sm">{comment.full_name || comment.username}</span>
                 <span className="text-[10px] sm:text-xs text-muted-foreground">
-                  {new Date(comment.created_at).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' })}
+                  {new Date(comment.created_at).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', dateStyle: 'short', timeStyle: 'short' })}
                 </span>
               </div>
               <p className="text-xs sm:text-sm whitespace-pre-wrap">{comment.comment_text}</p>

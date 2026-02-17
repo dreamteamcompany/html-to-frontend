@@ -22,7 +22,7 @@ const ScheduledPaymentsSettings = () => {
 
       if (response.ok) {
         const result = await response.json();
-        setLastRun(new Date().toLocaleString('ru-RU'));
+        setLastRun(new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }));
         
         toast({
           title: 'Обработка завершена',
