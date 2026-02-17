@@ -221,18 +221,18 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
               </TabsContent>
             </Tabs>
             
-            {((!payment.status || payment.status === 'draft') && onSubmitForApproval) || (onApprove || onReject) ? (
+            {((!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval) || (onApprove || onReject) ? (
               <div className="p-4 sm:p-6 border-t border-white/10">
-                {(!payment.status || payment.status === 'draft') && onSubmitForApproval && !showConfirmation && (
+                {(!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval && !showConfirmation && (
                   <button
                     onClick={() => setShowConfirmation(true)}
                     className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium transition-colors"
                   >
-                    Отправить на согласование
+                    {payment.status === 'rejected' ? 'Отправить на повторное согласование' : 'Отправить на согласование'}
                   </button>
                 )}
                 
-                {(!payment.status || payment.status === 'draft') && onSubmitForApproval && showConfirmation && (
+                {(!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval && showConfirmation && (
                   <div className="space-y-3">
                     <p className="text-sm text-muted-foreground text-center">
                       Отправить платёж на согласование?
