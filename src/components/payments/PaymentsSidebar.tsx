@@ -149,7 +149,7 @@ const PaymentsSidebar = ({
                 {hasPermission('custom_fields', 'read') && (
                   <button 
                     onClick={() => navigate('/custom-fields')}
-                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/custom-fields') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/custom-fields') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors text-left`}
                   >
                     <Icon name="Settings" size={18} />
                     <span>Дополнительные поля</span>
@@ -158,7 +158,7 @@ const PaymentsSidebar = ({
                 {hasPermission('contractors', 'read') && (
                   <button 
                     onClick={() => navigate('/contractors')}
-                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/contractors') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/contractors') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors text-left`}
                   >
                     <Icon name="Briefcase" size={18} />
                     <span>Контрагенты</span>
@@ -167,7 +167,7 @@ const PaymentsSidebar = ({
                 {hasPermission('customer_departments', 'read') && (
                   <button 
                     onClick={() => navigate('/customer-departments')}
-                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/customer-departments') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/customer-departments') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors text-left`}
                   >
                     <Icon name="Building" size={18} />
                     <span>Отделы-заказчики</span>
@@ -176,7 +176,7 @@ const PaymentsSidebar = ({
                 {hasPermission('services', 'read') && (
                   <button 
                     onClick={() => navigate('/services')}
-                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/services') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/services') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors text-left`}
                   >
                     <Icon name="Box" size={18} />
                     <span>Сервисы</span>
@@ -185,7 +185,7 @@ const PaymentsSidebar = ({
                 {hasPermission('saving_reasons', 'read') && (
                   <button 
                     onClick={() => navigate('/saving-reasons')}
-                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/saving-reasons') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}
+                    className={`w-full flex items-center gap-3 px-[15px] py-2 ml-[35px] rounded-lg ${isActive('/saving-reasons') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors text-left`}
                   >
                     <Icon name="Target" size={18} />
                     <span>Причины экономии</span>
