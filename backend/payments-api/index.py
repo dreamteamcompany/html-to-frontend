@@ -153,8 +153,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 LEFT JOIN {SCHEMA}.customer_departments cd ON p.department_id = cd.id
                 LEFT JOIN {SCHEMA}.users u ON p.created_by = u.id
                 LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+                WHERE p.created_by = %s
                 ORDER BY p.payment_date DESC
-            """)
+            """, (payload['user_id'],))
             rows = cur.fetchall()
             payments = []
             
