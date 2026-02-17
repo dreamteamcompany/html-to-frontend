@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
+import EditPaymentModal from '@/components/payments/EditPaymentModal';
 import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
 
@@ -17,6 +18,7 @@ const RejectedPaymentsTab = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<ExtendedPayment | null>(null);
+  const [editingPayment, setEditingPayment] = useState<ExtendedPayment | null>(null);
 
   useEffect(() => {
     fetchRejectedPayments();
@@ -179,6 +181,19 @@ const RejectedPaymentsTab = () => {
         payment={selectedPayment}
         onClose={() => setSelectedPayment(null)}
         onSubmitForApproval={handleResubmit}
+        onEdit={(payment) => {
+          setEditingPayment(payment as ExtendedPayment);
+          setSelectedPayment(null);
+        }}
+      />
+
+      <EditPaymentModal
+        payment={editingPayment}
+        onClose={() => setEditingPayment(null)}
+        onSuccess={() => {
+          setEditingPayment(null);
+          fetchRejectedPayments();
+        }}
       />
     </div>
   );
