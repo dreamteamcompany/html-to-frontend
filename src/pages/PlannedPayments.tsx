@@ -137,8 +137,6 @@ const PlannedPayments = () => {
       <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
         <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
-        <PaymentsSearch searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-
         <PlannedPaymentForm
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}

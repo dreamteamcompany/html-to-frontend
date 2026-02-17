@@ -141,8 +141,6 @@ const MyPaymentsTab = () => {
 
   return (
     <div className="space-y-6">
-      <PaymentsSearch searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-
       <PaymentForm
         dialogOpen={dialogOpen}
         setDialogOpen={setDialogOpen}
