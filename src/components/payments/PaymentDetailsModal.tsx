@@ -41,9 +41,11 @@ interface PaymentDetailsModalProps {
   payment: Payment | null;
   onClose: () => void;
   onSubmitForApproval?: (paymentId: number) => void;
+  onApprove?: (paymentId: number) => void;
+  onReject?: (paymentId: number) => void;
 }
 
-const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval }: PaymentDetailsModalProps) => {
+const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove, onReject }: PaymentDetailsModalProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   
   if (!payment) return null;
@@ -219,16 +221,18 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval }: PaymentD
               </TabsContent>
             </Tabs>
             
-            {(!payment.status || payment.status === 'draft') && onSubmitForApproval && (
+            {((!payment.status || payment.status === 'draft') && onSubmitForApproval) || (onApprove || onReject) ? (
               <div className="p-4 sm:p-6 border-t border-white/10">
-                {!showConfirmation ? (
+                {(!payment.status || payment.status === 'draft') && onSubmitForApproval && !showConfirmation && (
                   <button
                     onClick={() => setShowConfirmation(true)}
                     className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium transition-colors"
                   >
                     Отправить на согласование
                   </button>
-                ) : (
+                )}
+                
+                {(!payment.status || payment.status === 'draft') && onSubmitForApproval && showConfirmation && (
                   <div className="space-y-3">
                     <p className="text-sm text-muted-foreground text-center">
                       Отправить платёж на согласование?
@@ -252,8 +256,35 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval }: PaymentD
                     </div>
                   </div>
                 )}
+
+                {(onApprove || onReject) && (
+                  <div className="flex gap-3">
+                    {onApprove && (
+                      <button
+                        onClick={() => {
+                          onApprove(payment.id);
+                          onClose();
+                        }}
+                        className="flex-1 px-4 py-3 rounded-lg bg-green-500/20 text-green-300 hover:bg-green-500/30 font-medium transition-colors"
+                      >
+                        Одобрить
+                      </button>
+                    )}
+                    {onReject && (
+                      <button
+                        onClick={() => {
+                          onReject(payment.id);
+                          onClose();
+                        }}
+                        className="flex-1 px-4 py-3 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium transition-colors"
+                      >
+                        Отклонить
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

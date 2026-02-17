@@ -176,6 +176,8 @@ const MyPaymentsTab = () => {
         payment={selectedPayment}
         onClose={() => setSelectedPayment(null)}
         onSubmitForApproval={handleSubmitForApproval}
+        onApprove={handleApprove}
+        onReject={handleReject}
       />
     </div>
   );
