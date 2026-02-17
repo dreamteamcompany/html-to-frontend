@@ -184,9 +184,9 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     
     # Определяем новый статус
     if approval_action.action == 'submit':
-        if payment['status'] != 'draft':
+        if payment['status'] not in ('draft', 'rejected', None):
             cur.close()
-            return response(400, {'error': 'Только черновики можно отправить на согласование'})
+            return response(400, {'error': 'Только черновики и отклонённые платежи можно отправить на согласование'})
         new_status = 'pending_ceo'
     elif approval_action.action == 'approve':
         if not is_intermediate_approver and not is_final_approver:

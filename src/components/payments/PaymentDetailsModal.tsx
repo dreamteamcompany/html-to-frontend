@@ -45,9 +45,10 @@ interface PaymentDetailsModalProps {
   onSubmitForApproval?: (paymentId: number) => void;
   onApprove?: (paymentId: number) => void;
   onReject?: (paymentId: number) => void;
+  onEdit?: (payment: Payment) => void;
 }
 
-const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove, onReject }: PaymentDetailsModalProps) => {
+const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove, onReject, onEdit }: PaymentDetailsModalProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   
   if (!payment) return null;
@@ -241,7 +242,20 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
             </Tabs>
             
             {((!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval) || (onApprove || onReject) ? (
-              <div className="p-4 sm:p-6 border-t border-white/10">
+              <div className="p-4 sm:p-6 border-t border-white/10 space-y-3">
+                {payment.status === 'rejected' && onEdit && (
+                  <button
+                    onClick={() => {
+                      onEdit(payment);
+                      onClose();
+                    }}
+                    className="w-full px-4 py-3 rounded-lg bg-white/5 text-white hover:bg-white/10 font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Icon name="Edit" size={18} />
+                    Редактировать платёж
+                  </button>
+                )}
+                
                 {(!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval && !showConfirmation && (
                   <button
                     onClick={() => setShowConfirmation(true)}
