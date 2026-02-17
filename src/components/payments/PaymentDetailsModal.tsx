@@ -34,6 +34,8 @@ interface Payment {
   invoice_date?: string;
   created_at?: string;
   submitted_at?: string;
+  rejection_comment?: string;
+  rejected_at?: string;
   custom_fields?: CustomField[];
 }
 
@@ -96,6 +98,23 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                 <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
               </div>
             </div>
+
+            {payment.rejection_comment && payment.status === 'rejected' && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <Icon name="AlertCircle" size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-red-300 mb-1">Причина отклонения</p>
+                    <p className="text-sm text-red-200">{payment.rejection_comment}</p>
+                    {payment.rejected_at && (
+                      <p className="text-xs text-red-300/70 mt-2">
+                        {new Date(payment.rejected_at).toLocaleString('ru-RU')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {payment.description && (
               <div>
