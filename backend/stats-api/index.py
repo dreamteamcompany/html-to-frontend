@@ -172,6 +172,30 @@ def handler(event: dict, context) -> dict:
         
         savings_stats = dict(cur.fetchone())
         
+        # Активные пользователи (создавшие хотя бы 1 платёж за последние 30 дней)
+        cur.execute(f"""
+            SELECT COUNT(DISTINCT created_by) as active_users
+            FROM {SCHEMA}.payments
+            WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+        """)
+        
+        active_users_stat = dict(cur.fetchone())
+        
+        # Пользователи по отделам (на основе платежей за последние 30 дней)
+        cur.execute(f"""
+            SELECT 
+                COALESCE(d.name, 'Без отдела') as department_name,
+                COUNT(DISTINCT p.created_by) as user_count
+            FROM {SCHEMA}.payments p
+            LEFT JOIN {SCHEMA}.customer_departments d ON p.department_id = d.id
+            WHERE p.created_at >= CURRENT_DATE - INTERVAL '30 days'
+            GROUP BY d.name
+            ORDER BY user_count DESC
+            LIMIT 5
+        """)
+        
+        department_users = [dict(row) for row in cur.fetchall()]
+        
         cur.close()
         
         return response(200, {
@@ -180,6 +204,8 @@ def handler(event: dict, context) -> dict:
             'top_payments': top_payments,
             'approval_speed': approval_speed,
             'prev_month_speed': prev_month_speed,
+            'active_users': active_users_stat,
+            'department_users': department_users,
             'monthly_trend': monthly_trend,
             'savings': savings_stats
         })

@@ -1,7 +1,58 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import { apiFetch } from '@/utils/api';
+import { API_ENDPOINTS } from '@/config/api';
+
+interface DepartmentUser {
+  department_name: string;
+  user_count: number;
+}
 
 const ActiveTeamCard = () => {
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [departments, setDepartments] = useState<DepartmentUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const response = await apiFetch(API_ENDPOINTS.statsApi);
+      const data = await response.json();
+      
+      setActiveUsers(data.active_users?.active_users || 0);
+      setDepartments(data.department_users || []);
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getColor = (index: number) => {
+    const colors = ['#7551e9', '#01b574', '#ffb547', '#3965ff', '#ff6b6b'];
+    return colors[index] || '#7551e9';
+  };
+
+  if (loading) {
+    return (
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+        border: '1px solid rgba(117, 81, 233, 0.3)',
+        boxShadow: '0 0 30px rgba(117, 81, 233, 0.15)'
+      }}>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-center h-48">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card style={{ 
       background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
@@ -41,45 +92,39 @@ const ActiveTeamCard = () => {
           textShadow: '0 0 30px rgba(117, 81, 233, 0.6)',
           marginBottom: '8px'
         }} className="sm:text-[42px] sm:mb-3">
-          24
+          {activeUsers}
         </div>
         <div style={{ color: '#a3aed0', fontSize: '12px', marginBottom: '14px' }} className="sm:text-sm sm:mb-5">
           Сотрудников работают с системой
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} className="sm:gap-2.5">
-          <div style={{ 
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '8px 10px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: '6px',
-            border: '1px solid rgba(255, 255, 255, 0.05)'
-          }}>
-            <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">Финансисты</span>
-            <span style={{ color: '#7551e9', fontSize: '12px', fontWeight: '700' }} className="sm:text-sm">12</span>
-          </div>
-          <div style={{ 
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '8px 10px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: '6px',
-            border: '1px solid rgba(255, 255, 255, 0.05)'
-          }}>
-            <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">IT отдел</span>
-            <span style={{ color: '#01b574', fontSize: '12px', fontWeight: '700' }} className="sm:text-sm">8</span>
-          </div>
-          <div style={{ 
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '8px 10px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: '6px',
-            border: '1px solid rgba(255, 255, 255, 0.05)'
-          }}>
-            <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">Менеджеры</span>
-            <span style={{ color: '#ffb547', fontSize: '12px', fontWeight: '700' }} className="sm:text-sm">4</span>
-          </div>
+          {departments.length === 0 ? (
+            <div className="text-center py-4 text-muted-foreground text-sm">
+              Нет данных об активности
+            </div>
+          ) : (
+            departments.map((dept, index) => (
+              <div key={index} style={{ 
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '8px 10px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                borderRadius: '6px',
+                border: '1px solid rgba(255, 255, 255, 0.05)'
+              }}>
+                <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">
+                  {dept.department_name}
+                </span>
+                <span style={{ 
+                  color: getColor(index), 
+                  fontSize: '12px', 
+                  fontWeight: '700' 
+                }} className="sm:text-sm">
+                  {dept.user_count}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </CardContent>
     </Card>
