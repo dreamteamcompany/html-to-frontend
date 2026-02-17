@@ -158,7 +158,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(401, {'error': 'Неверный логин или пароль'})
             
             moscow_tz = ZoneInfo('Europe/Moscow')
-            now_moscow = datetime.now(moscow_tz)
+            now_moscow = datetime.now(moscow_tz).replace(tzinfo=None)
             
             cur = conn.cursor()
             cur.execute(f"""

@@ -242,7 +242,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 if updates:
                     moscow_tz = ZoneInfo('Europe/Moscow')
-                    now_moscow = datetime.now(moscow_tz)
+                    now_moscow = datetime.now(moscow_tz).replace(tzinfo=None)
                     params.append(now_moscow)
                     params.append(ticket_id)
                     cur.execute(f"""

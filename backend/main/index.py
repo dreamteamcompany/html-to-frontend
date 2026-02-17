@@ -2420,7 +2420,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
             return response(400, {'error': 'Для отправки на согласование необходимо указать сервис'})
         
         moscow_tz = ZoneInfo('Europe/Moscow')
-        now_moscow = datetime.now(moscow_tz)
+        now_moscow = datetime.now(moscow_tz).replace(tzinfo=None)
         
         cur.execute(f"""
             UPDATE {SCHEMA}.payments 
@@ -2466,7 +2466,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
         
         if current_status == 'pending_ceo' and user_id == final_approver:
             moscow_tz = ZoneInfo('Europe/Moscow')
-            now_moscow = datetime.now(moscow_tz)
+            now_moscow = datetime.now(moscow_tz).replace(tzinfo=None)
             
             if req.action == 'approve':
                 new_status = 'approved'

@@ -237,9 +237,9 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     else:
         new_status = 'rejected'
     
-    # Московское время
+    # Московское время без timezone info (для timestamp without time zone)
     moscow_tz = ZoneInfo('Europe/Moscow')
-    now_moscow = datetime.now(moscow_tz)
+    now_moscow = datetime.now(moscow_tz).replace(tzinfo=None)
     
     # Обновляем статус платежа
     if new_status == 'approved' and is_final_approver:

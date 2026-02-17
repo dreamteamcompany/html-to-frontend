@@ -24,7 +24,7 @@ def process_scheduled_payments() -> Dict[str, Any]:
     created_payments = []
     
     moscow_tz = ZoneInfo('Europe/Moscow')
-    now_moscow = datetime.now(moscow_tz)
+    now_moscow = datetime.now(moscow_tz).replace(tzinfo=None)
     
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:

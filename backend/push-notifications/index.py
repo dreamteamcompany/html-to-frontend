@@ -54,7 +54,7 @@ def subscribe_push(event: dict):
         }
     
     moscow_tz = ZoneInfo('Europe/Moscow')
-    now_moscow = datetime.now(moscow_tz)
+    now_moscow = datetime.now(moscow_tz).replace(tzinfo=None)
     
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
