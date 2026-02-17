@@ -204,7 +204,7 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     
     # Проверяем существование платежа и получаем его статус
     cur.execute(f"""
-        SELECT p.id, p.status, p.service_id, s.intermediate_approver_id, s.final_approver_id
+        SELECT p.id, p.status, p.service_id, p.created_by, s.intermediate_approver_id, s.final_approver_id
         FROM {SCHEMA}.payments p
         LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
         WHERE p.id = %s
@@ -245,11 +245,12 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         
         # Проверяем, является ли пользователь администратором
         cur.execute(f"""
-            SELECT COUNT(*) FROM {SCHEMA}.user_roles ur
+            SELECT COUNT(*) as cnt FROM {SCHEMA}.user_roles ur
             JOIN {SCHEMA}.roles r ON ur.role_id = r.id
             WHERE ur.user_id = %s AND r.name = 'Администратор'
         """, (user_id,))
-        is_admin = cur.fetchone()[0] > 0
+        result = cur.fetchone()
+        is_admin = result['cnt'] > 0 if result else False
         
         if not is_creator and not is_admin:
             cur.close()
