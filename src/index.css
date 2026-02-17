@@ -88,3 +88,26 @@
       0 0 60px rgba(239, 68, 68, 0.3);
   }
 }
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--secondary));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--secondary) / 0.8);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--secondary)) transparent;
+}
