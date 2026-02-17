@@ -51,13 +51,17 @@ interface ApprovedPaymentDetailsModalProps {
 }
 
 const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPaymentDetailsModalProps) => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { toast } = useToast();
   const [showRevokeForm, setShowRevokeForm] = useState(false);
   const [revokeReason, setRevokeReason] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
 
   if (!payment) return null;
+
+  const isCreator = user?.id === payment.created_by;
+  const isAdmin = user?.roles?.some(role => role.name === 'Администратор');
+  const canRevoke = isCreator || isAdmin;
 
   const handleRevoke = async () => {
     if (!revokeReason.trim()) {
@@ -315,6 +319,56 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
                 <PaymentAuditLog paymentId={payment.id} />
               </TabsContent>
             </Tabs>
+
+            {canRevoke && !showRevokeForm && (
+              <div className="border-t border-white/10 p-4">
+                <Button
+                  onClick={() => setShowRevokeForm(true)}
+                  variant="outline"
+                  className="w-full border-orange-500/50 text-orange-400 hover:bg-orange-500/10"
+                >
+                  <Icon name="RotateCcw" size={16} className="mr-2" />
+                  Отозвать платёж
+                </Button>
+              </div>
+            )}
+
+            {showRevokeForm && (
+              <div className="border-t border-white/10 p-4 space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Причина отзыва <span className="text-red-500">*</span>
+                  </label>
+                  <Textarea
+                    value={revokeReason}
+                    onChange={(e) => setRevokeReason(e.target.value)}
+                    placeholder="Укажите причину отзыва платежа..."
+                    rows={4}
+                    className="resize-none"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      setShowRevokeForm(false);
+                      setRevokeReason('');
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                    disabled={isRevoking}
+                  >
+                    Отмена
+                  </Button>
+                  <Button
+                    onClick={handleRevoke}
+                    className="flex-1 bg-orange-600 hover:bg-orange-700"
+                    disabled={isRevoking || !revokeReason.trim()}
+                  >
+                    {isRevoking ? 'Отзыв...' : 'Отозвать'}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

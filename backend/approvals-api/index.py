@@ -239,10 +239,22 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         if payment['status'] not in ('pending_ceo', 'pending_tech_director', 'approved'):
             cur.close()
             return response(400, {'error': 'Можно отозвать только платежи на согласовании или одобренные'})
-        # Проверяем, что отзывает создатель платежа
-        if payment.get('created_by') != user_id:
+        
+        # Проверяем, что отзывает создатель платежа или администратор
+        is_creator = payment.get('created_by') == user_id
+        
+        # Проверяем, является ли пользователь администратором
+        cur.execute(f"""
+            SELECT COUNT(*) FROM {SCHEMA}.user_roles ur
+            JOIN {SCHEMA}.roles r ON ur.role_id = r.id
+            WHERE ur.user_id = %s AND r.name = 'Администратор'
+        """, (user_id,))
+        is_admin = cur.fetchone()[0] > 0
+        
+        if not is_creator and not is_admin:
             cur.close()
-            return response(403, {'error': 'Только создатель платежа может его отозвать'})
+            return response(403, {'error': 'Только создатель платежа или администратор может его отозвать'})
+        
         # Проверяем наличие причины отзыва
         if not approval_action.comment or not approval_action.comment.strip():
             cur.close()

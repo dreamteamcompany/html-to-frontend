@@ -61,7 +61,8 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
   if (!payment) return null;
 
   const isCreator = user?.id === payment.created_by;
-  const canRevoke = isCreator && (payment.status === 'pending_ceo' || payment.status === 'pending_tech_director');
+  const isAdmin = user?.roles?.some(role => role.name === 'Администратор');
+  const canRevoke = (isCreator || isAdmin) && (payment.status === 'pending_ceo' || payment.status === 'pending_tech_director');
 
   const handleApprove = () => {
     console.log('[PendingApprovalsModal handleApprove] onClick triggered');
