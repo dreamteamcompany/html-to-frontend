@@ -98,6 +98,24 @@ def handler(event: dict, context) -> dict:
         
         top_categories = [dict(row) for row in cur.fetchall()]
         
+        # Топ-5 платежей
+        cur.execute(f"""
+            SELECT 
+                p.id,
+                p.description,
+                p.amount,
+                c.name as category_name,
+                c.icon as category_icon,
+                p.status
+            FROM {SCHEMA}.payments p
+            LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
+            WHERE p.status IN ('approved', 'pending_ceo')
+            ORDER BY p.amount DESC
+            LIMIT 5
+        """)
+        
+        top_payments = [dict(row) for row in cur.fetchall()]
+        
         # Динамика по месяцам
         cur.execute(f"""
             SELECT 
@@ -132,6 +150,7 @@ def handler(event: dict, context) -> dict:
         return response(200, {
             'general': general_stats,
             'top_categories': top_categories,
+            'top_payments': top_payments,
             'monthly_trend': monthly_trend,
             'savings': savings_stats
         })
