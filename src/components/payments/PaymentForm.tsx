@@ -202,7 +202,7 @@ const PaymentForm = ({
                 <Label>Сервис *</Label>
                 <SearchableSelect
                   options={serviceOptions}
-                  value={formData.service_id}
+                  value={formData.service_id || ''}
                   onValueChange={handleServiceChange}
                   placeholder="Выберите сервис"
                   searchPlaceholder="Поиск сервиса..."
@@ -213,7 +213,7 @@ const PaymentForm = ({
                 <Label>Категория *</Label>
                 <SearchableSelect
                   options={categoryOptions}
-                  value={formData.category_id}
+                  value={formData.category_id || ''}
                   onValueChange={(v) => setFormData({ ...formData, category_id: v })}
                   placeholder="Выберите категорию"
                   searchPlaceholder="Поиск категории..."
@@ -224,7 +224,7 @@ const PaymentForm = ({
                 <Label>Юридическое лицо</Label>
                 <SearchableSelect
                   options={legalEntityOptions}
-                  value={formData.legal_entity_id}
+                  value={formData.legal_entity_id || ''}
                   onValueChange={(v) => setFormData({ ...formData, legal_entity_id: v })}
                   placeholder="Выберите юрлицо"
                   searchPlaceholder="Поиск по названию или ИНН..."
@@ -235,7 +235,7 @@ const PaymentForm = ({
                 <Label>Контрагент</Label>
                 <SearchableSelect
                   options={contractorOptions}
-                  value={formData.contractor_id}
+                  value={formData.contractor_id || ''}
                   onValueChange={(v) => setFormData({ ...formData, contractor_id: v })}
                   placeholder="Выберите контрагента"
                   searchPlaceholder="Поиск по названию или ИНН..."
@@ -246,7 +246,7 @@ const PaymentForm = ({
                 <Label>Отдел-заказчик</Label>
                 <SearchableSelect
                   options={departmentOptions}
-                  value={formData.department_id}
+                  value={formData.department_id || ''}
                   onValueChange={(v) => setFormData({ ...formData, department_id: v })}
                   placeholder="Выберите отдел"
                   searchPlaceholder="Поиск отдела..."

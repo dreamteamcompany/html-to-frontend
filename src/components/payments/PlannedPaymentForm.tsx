@@ -128,7 +128,7 @@ const PlannedPaymentForm = ({
             <div className="space-y-2">
               <Label htmlFor="category_id">Категория *</Label>
               <Select
-                value={formData.category_id}
+                value={formData.category_id || ''}
                 onValueChange={(value) =>
                   setFormData({ ...formData, category_id: value })
                 }
@@ -196,7 +196,7 @@ const PlannedPaymentForm = ({
             <div className="space-y-2">
               <Label htmlFor="legal_entity_id">Юридическое лицо</Label>
               <Select
-                value={formData.legal_entity_id}
+                value={formData.legal_entity_id || ''}
                 onValueChange={(value) =>
                   setFormData({ ...formData, legal_entity_id: value })
                 }
@@ -225,7 +225,7 @@ const PlannedPaymentForm = ({
               <div className="space-y-2">
                 <Label htmlFor="recurrence_type">Тип повторения</Label>
                 <Select
-                  value={formData.recurrence_type}
+                  value={formData.recurrence_type || 'once'}
                   onValueChange={(value) =>
                     setFormData({ ...formData, recurrence_type: value })
                   }
@@ -263,7 +263,7 @@ const PlannedPaymentForm = ({
             <div className="space-y-2">
               <Label htmlFor="contractor_id">Контрагент</Label>
               <Select
-                value={formData.contractor_id}
+                value={formData.contractor_id || ''}
                 onValueChange={(value) =>
                   setFormData({ ...formData, contractor_id: value })
                 }
@@ -284,7 +284,7 @@ const PlannedPaymentForm = ({
             <div className="space-y-2">
               <Label htmlFor="department_id">Отдел-заказчик</Label>
               <Select
-                value={formData.department_id}
+                value={formData.department_id || ''}
                 onValueChange={(value) =>
                   setFormData({ ...formData, department_id: value })
                 }
@@ -307,7 +307,7 @@ const PlannedPaymentForm = ({
             <div className="space-y-2">
               <Label htmlFor="service_id">Сервис</Label>
               <Select
-                value={formData.service_id}
+                value={formData.service_id || ''}
                 onValueChange={(value) =>
                   setFormData({ ...formData, service_id: value })
                 }
