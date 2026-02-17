@@ -106,21 +106,21 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                               Отправить
                             </button>
                           )}
-                          {!isPlannedPayments && (payment.status === 'pending_tech_director' || payment.status === 'pending_ceo') && onApprove && onReject && (
-                            <>
-                              <button
-                                onClick={() => onApprove(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30"
-                              >
-                                Одобрить
-                              </button>
-                              <button
-                                onClick={() => onReject(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30"
-                              >
-                                Отклонить
-                              </button>
-                            </>
+                          {!isPlannedPayments && onApprove && (
+                            <button
+                              onClick={() => onApprove(payment.id)}
+                              className="px-3 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                            >
+                              Одобрить
+                            </button>
+                          )}
+                          {!isPlannedPayments && onReject && (
+                            <button
+                              onClick={() => onReject(payment.id)}
+                              className="px-3 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                            >
+                              Отклонить
+                            </button>
                           )}
                         </div>
                       </td>
@@ -181,21 +181,21 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           Отправить
                         </button>
                       )}
-                      {!isPlannedPayments && (payment.status === 'pending_tech_director' || payment.status === 'pending_ceo') && onApprove && onReject && (
-                        <>
-                          <button
-                            onClick={() => onApprove(payment.id)}
-                            className="flex-1 px-3 py-2 text-sm rounded bg-green-500/20 text-green-300 hover:bg-green-500/30 font-medium"
-                          >
-                            Одобрить
-                          </button>
-                          <button
-                            onClick={() => onReject(payment.id)}
-                            className="flex-1 px-3 py-2 text-sm rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium"
-                          >
-                            Отклонить
-                          </button>
-                        </>
+                      {!isPlannedPayments && onApprove && (
+                        <button
+                          onClick={() => onApprove(payment.id)}
+                          className="flex-1 px-3 py-2 text-sm rounded bg-green-500/20 text-green-300 hover:bg-green-500/30 font-medium"
+                        >
+                          Одобрить
+                        </button>
+                      )}
+                      {!isPlannedPayments && onReject && (
+                        <button
+                          onClick={() => onReject(payment.id)}
+                          className="flex-1 px-3 py-2 text-sm rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium"
+                        >
+                          Отклонить
+                        </button>
                       )}
                     </div>
                   </CardContent>
