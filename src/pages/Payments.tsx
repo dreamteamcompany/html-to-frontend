@@ -73,79 +73,77 @@ const Payments = () => {
           <div className="px-4 sm:px-6 py-4">
             <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
           </div>
+        </div>
 
-          <div className="px-4 sm:px-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full justify-start border-b border-white/10 rounded-none bg-transparent p-0 h-auto">
-                <TabsTrigger 
-                  value="my" 
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-                >
-                  <Icon name="FileText" size={18} className="mr-2" />
-                  Мои платежи
-                  {counters.my > 0 && (
-                    <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
-                      {counters.my}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="pending" 
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 relative"
-                >
-                  <Icon name="Clock" size={18} className="mr-2" />
-                  На согласовании
-                  {counters.pending > 0 && (
-                    <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
-                      {counters.pending}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="approved" 
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-                >
-                  <Icon name="CheckCircle" size={18} className="mr-2" />
-                  Согласованные
-                  {counters.approved > 0 && (
-                    <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
-                      {counters.approved}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="rejected" 
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-                >
-                  <Icon name="XCircle" size={18} className="mr-2" />
-                  Отклонённые
-                  {counters.rejected > 0 && (
-                    <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
-                      {counters.rejected}
-                    </span>
-                  )}
-                </TabsTrigger>
-              </TabsList>
+        <div className="px-4 sm:px-6 py-4 sm:py-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full justify-start border-b border-white/10 rounded-none bg-transparent p-0 h-auto mb-6">
+              <TabsTrigger 
+                value="my" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+              >
+                <Icon name="FileText" size={18} className="mr-2" />
+                Мои платежи
+                {counters.my > 0 && (
+                  <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                    {counters.my}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="pending" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 relative"
+              >
+                <Icon name="Clock" size={18} className="mr-2" />
+                На согласовании
+                {counters.pending > 0 && (
+                  <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                    {counters.pending}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="approved" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+              >
+                <Icon name="CheckCircle" size={18} className="mr-2" />
+                Согласованные
+                {counters.approved > 0 && (
+                  <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                    {counters.approved}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="rejected" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+              >
+                <Icon name="XCircle" size={18} className="mr-2" />
+                Отклонённые
+                {counters.rejected > 0 && (
+                  <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                    {counters.rejected}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
 
-              <div className="p-4 sm:p-6">
-                <TabsContent value="my" className="mt-0">
-                  <MyPaymentsTab />
-                </TabsContent>
+            <TabsContent value="my" className="mt-0">
+              <MyPaymentsTab />
+            </TabsContent>
 
-                <TabsContent value="pending" className="mt-0">
-                  <PendingApprovalsTab />
-                </TabsContent>
+            <TabsContent value="pending" className="mt-0">
+              <PendingApprovalsTab />
+            </TabsContent>
 
-                <TabsContent value="approved" className="mt-0">
-                  <ApprovedPaymentsTab />
-                </TabsContent>
+            <TabsContent value="approved" className="mt-0">
+              <ApprovedPaymentsTab />
+            </TabsContent>
 
-                <TabsContent value="rejected" className="mt-0">
-                  <RejectedPaymentsTab />
-                </TabsContent>
-              </div>
-            </Tabs>
-          </div>
+            <TabsContent value="rejected" className="mt-0">
+              <RejectedPaymentsTab />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
