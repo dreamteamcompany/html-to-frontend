@@ -127,12 +127,19 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
         apiFetch(`${API_ENDPOINTS.dictionariesApi}?type=custom_fields`),
       ]);
 
-      setCategories(await categoriesRes.json());
-      setLegalEntities(await legalEntitiesRes.json());
-      setContractors(await contractorsRes.json());
-      setDepartments(await departmentsRes.json());
-      setServices(await servicesRes.json());
-      setCustomFields(await customFieldsRes.json());
+      const categoriesData = await categoriesRes.json();
+      const legalEntitiesData = await legalEntitiesRes.json();
+      const contractorsData = await contractorsRes.json();
+      const departmentsData = await departmentsRes.json();
+      const servicesData = await servicesRes.json();
+      const customFieldsData = await customFieldsRes.json();
+
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setLegalEntities(Array.isArray(legalEntitiesData) ? legalEntitiesData : []);
+      setContractors(Array.isArray(contractorsData) ? contractorsData : []);
+      setDepartments(Array.isArray(departmentsData) ? departmentsData : []);
+      setServices(Array.isArray(servicesData) ? servicesData : []);
+      setCustomFields(Array.isArray(customFieldsData) ? customFieldsData : []);
     } catch (error) {
       console.error('Failed to load dictionaries:', error);
     }
