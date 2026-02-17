@@ -256,10 +256,6 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
             cur.close()
             return response(403, {'error': 'Только создатель платежа или администратор может его отозвать'})
         
-        # Проверяем наличие причины отзыва
-        if not approval_action.comment or not approval_action.comment.strip():
-            cur.close()
-            return response(400, {'error': 'Причина отзыва обязательна'})
         new_status = 'draft'  # Возвращаем в черновики
     elif approval_action.action == 'reject':
         new_status = 'rejected'

@@ -55,7 +55,6 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
   const { token, user } = useAuth();
   const { toast } = useToast();
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
-  const [revokeReason, setRevokeReason] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
 
   if (!payment) return null;
@@ -91,15 +90,6 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
   };
 
   const handleRevokeConfirm = async () => {
-    if (!revokeReason.trim()) {
-      toast({
-        title: 'Ошибка',
-        description: 'Укажите причину отзыва',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setIsRevoking(true);
     try {
       const response = await fetch(API_ENDPOINTS.approvalsApi, {
@@ -111,7 +101,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
         body: JSON.stringify({
           payment_id: payment.id,
           action: 'revoke',
-          comment: revokeReason.trim(),
+          comment: '',
         }),
       });
 
@@ -329,39 +319,25 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
           <DialogHeader>
             <DialogTitle>Отзыв платежа</DialogTitle>
             <DialogDescription>
-              Платёж будет возвращён в черновики. Укажите причину отзыва.
+              Платёж будет возвращён в черновики.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Причина отзыва <span className="text-red-500">*</span>
-              </label>
-              <Textarea
-                value={revokeReason}
-                onChange={(e) => setRevokeReason(e.target.value)}
-                placeholder="Укажите причину отзыва платежа..."
-                rows={4}
-                className="resize-none"
-              />
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setShowRevokeDialog(false)}
-                variant="outline"
-                className="flex-1"
-                disabled={isRevoking}
-              >
-                Отмена
-              </Button>
-              <Button
-                onClick={handleRevokeConfirm}
-                className="flex-1 bg-orange-600 hover:bg-orange-700"
-                disabled={isRevoking || !revokeReason.trim()}
-              >
-                {isRevoking ? 'Отзыв...' : 'Отозвать'}
-              </Button>
-            </div>
+          <div className="flex gap-3 pt-4">
+            <Button
+              onClick={() => setShowRevokeDialog(false)}
+              variant="outline"
+              className="flex-1"
+              disabled={isRevoking}
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={handleRevokeConfirm}
+              className="flex-1 bg-orange-600 hover:bg-orange-700"
+              disabled={isRevoking}
+            >
+              {isRevoking ? 'Отзыв...' : 'Отозвать'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -53,8 +53,6 @@ interface ApprovedPaymentDetailsModalProps {
 const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPaymentDetailsModalProps) => {
   const { token, user } = useAuth();
   const { toast } = useToast();
-  const [showRevokeForm, setShowRevokeForm] = useState(false);
-  const [revokeReason, setRevokeReason] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
 
   if (!payment) return null;
@@ -64,15 +62,6 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
   const canRevoke = isCreator || isAdmin;
 
   const handleRevoke = async () => {
-    if (!revokeReason.trim()) {
-      toast({
-        title: 'Ошибка',
-        description: 'Укажите причину отзыва',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setIsRevoking(true);
     try {
       const response = await fetch(API_ENDPOINTS.approvalsApi, {
@@ -84,7 +73,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
         body: JSON.stringify({
           payment_id: payment.id,
           action: 'revoke',
-          comment: revokeReason.trim(),
+          comment: '',
         }),
       });
 
@@ -223,50 +212,15 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
             )}
 
             <div className="pt-4 border-t border-white/10">
-              {!showRevokeForm ? (
-                <Button 
-                  variant="destructive"
-                  className="w-full"
-                  onClick={() => setShowRevokeForm(true)}
-                >
-                  <Icon name="XCircle" size={18} />
-                  Отозвать платеж
-                </Button>
-              ) : (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-2 block">
-                      Причина отзыва <span className="text-red-400">*</span>
-                    </label>
-                    <Textarea
-                      value={revokeReason}
-                      onChange={(e) => setRevokeReason(e.target.value)}
-                      placeholder="Укажите причину отзыва платежа..."
-                      className="min-h-[100px]"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="destructive"
-                      className="flex-1"
-                      onClick={handleRevoke}
-                      disabled={isRevoking || !revokeReason.trim()}
-                    >
-                      {isRevoking ? 'Отзываем...' : 'Подтвердить отзыв'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setShowRevokeForm(false);
-                        setRevokeReason('');
-                      }}
-                      disabled={isRevoking}
-                    >
-                      Отмена
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <Button 
+                variant="destructive"
+                className="w-full"
+                onClick={handleRevoke}
+                disabled={isRevoking}
+              >
+                <Icon name="XCircle" size={18} />
+                {isRevoking ? 'Отзываем...' : 'Отозвать платеж'}
+              </Button>
             </div>
           </div>
 
