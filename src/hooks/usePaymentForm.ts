@@ -23,13 +23,13 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
   const [invoicePreview, setInvoicePreview] = useState<string | null>(null);
   const [isProcessingInvoice, setIsProcessingInvoice] = useState(false);
   const [formData, setFormData] = useState<Record<string, string | undefined>>({
-    category_id: undefined,
+    category_id: '',
     description: '',
     amount: '',
-    legal_entity_id: undefined,
-    contractor_id: undefined,
-    department_id: undefined,
-    service_id: undefined,
+    legal_entity_id: '',
+    contractor_id: '',
+    department_id: '',
+    service_id: '',
     invoice_number: '',
     invoice_date: '',
     invoice_file_url: '',
@@ -37,19 +37,19 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
 
   useEffect(() => {
     const initialData: Record<string, string | undefined> = {
-      category_id: undefined,
+      category_id: '',
       description: '',
       amount: '',
-      legal_entity_id: undefined,
-      contractor_id: undefined,
-      department_id: undefined,
-      service_id: undefined,
+      legal_entity_id: '',
+      contractor_id: '',
+      department_id: '',
+      service_id: '',
       invoice_number: '',
       invoice_date: '',
       invoice_file_url: '',
     };
     customFields.forEach((field) => {
-      initialData[`custom_field_${field.id}`] = undefined;
+      initialData[`custom_field_${field.id}`] = '';
     });
     setFormData(initialData);
   }, [customFields]);
@@ -339,19 +339,19 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         });
         setDialogOpen(false);
         const resetData: Record<string, string | undefined> = {
-          category_id: undefined,
+          category_id: '',
           description: '',
           amount: '',
-          legal_entity_id: undefined,
-          contractor_id: undefined,
-          department_id: undefined,
-          service_id: undefined,
+          legal_entity_id: '',
+          contractor_id: '',
+          department_id: '',
+          service_id: '',
           invoice_number: '',
           invoice_date: '',
           invoice_file_url: '',
         };
         customFields.forEach(field => {
-          resetData[`custom_field_${field.id}`] = undefined;
+          resetData[`custom_field_${field.id}`] = '';
         });
         setFormData(resetData);
         setInvoiceFile(null);

@@ -75,7 +75,18 @@ interface EditPaymentModalProps {
 }
 
 const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps) => {
-  const [formData, setFormData] = useState<Record<string, string | undefined>>({});
+  const [formData, setFormData] = useState<Record<string, string | undefined>>({
+    category_id: '',
+    description: '',
+    amount: '',
+    payment_date: '',
+    legal_entity_id: '',
+    service_id: '',
+    contractor_id: '',
+    department_id: '',
+    invoice_number: '',
+    invoice_date: '',
+  });
   const [categories, setCategories] = useState<Category[]>([]);
   const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
   const [contractors, setContractors] = useState<Contractor[]>([]);
@@ -95,21 +106,21 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
     if (!payment) return;
     
     const data: Record<string, string | undefined> = {
-      category_id: payment.category_id?.toString(),
-      description: payment.description,
-      amount: payment.amount?.toString(),
-      payment_date: payment.payment_date,
-      legal_entity_id: payment.legal_entity_id?.toString(),
-      service_id: payment.service_id?.toString(),
-      contractor_id: payment.contractor_id?.toString(),
-      department_id: payment.department_id?.toString(),
-      invoice_number: payment.invoice_number,
-      invoice_date: payment.invoice_date,
+      category_id: payment.category_id?.toString() || '',
+      description: payment.description || '',
+      amount: payment.amount?.toString() || '',
+      payment_date: payment.payment_date || '',
+      legal_entity_id: payment.legal_entity_id?.toString() || '',
+      service_id: payment.service_id?.toString() || '',
+      contractor_id: payment.contractor_id?.toString() || '',
+      department_id: payment.department_id?.toString() || '',
+      invoice_number: payment.invoice_number || '',
+      invoice_date: payment.invoice_date || '',
     };
 
     if (payment.custom_fields) {
       payment.custom_fields.forEach(field => {
-        data[`custom_field_${field.id}`] = field.value;
+        data[`custom_field_${field.id}`] = field.value || '';
       });
     }
 

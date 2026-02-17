@@ -141,13 +141,13 @@ const PaymentForm = ({
 
   const handleServiceChange = (value: string | undefined) => {
     if (!value) {
-      setFormData({ ...formData, service_id: undefined, service_description: '' });
+      setFormData({ ...formData, service_id: '', service_description: '' });
       return;
     }
     const service = services.find((s) => s.id.toString() === value);
     const updates: Record<string, string | undefined> = {
       ...formData,
-      service_id: value,
+      service_id: value || '',
       service_description: service?.description || '',
       description: service?.description || formData.description || '', // Дублируем в назначение платежа
     };
