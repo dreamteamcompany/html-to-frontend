@@ -55,6 +55,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
   const { token, user } = useAuth();
   const { toast } = useToast();
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
+  const [revokeComment, setRevokeComment] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
 
   if (!payment) return null;
@@ -90,6 +91,15 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
   };
 
   const handleRevokeConfirm = async () => {
+    if (!revokeComment.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Укажите причину отзыва',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsRevoking(true);
     try {
       const response = await fetch(API_ENDPOINTS.approvalsApi, {
@@ -101,7 +111,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
         body: JSON.stringify({
           payment_id: payment.id,
           action: 'revoke',
-          comment: '',
+          comment: revokeComment.trim(),
         }),
       });
 
@@ -116,6 +126,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
       });
 
       setShowRevokeDialog(false);
+      setRevokeComment('');
       if (onRevoke) onRevoke();
       onClose();
     } catch (error) {
@@ -319,12 +330,29 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
           <DialogHeader>
             <DialogTitle>Отзыв платежа</DialogTitle>
             <DialogDescription>
-              Платёж будет возвращён в черновики.
+              Платёж будет возвращён в черновики. Укажите причину отзыва.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex gap-3 pt-4">
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Причина отзыва <span className="text-red-500">*</span>
+              </label>
+              <Textarea
+                value={revokeComment}
+                onChange={(e) => setRevokeComment(e.target.value)}
+                placeholder="Укажите причину отзыва платежа..."
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3">
             <Button
-              onClick={() => setShowRevokeDialog(false)}
+              onClick={() => {
+                setShowRevokeDialog(false);
+                setRevokeComment('');
+              }}
               variant="outline"
               className="flex-1"
               disabled={isRevoking}
@@ -334,7 +362,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
             <Button
               onClick={handleRevokeConfirm}
               className="flex-1 bg-orange-600 hover:bg-orange-700"
-              disabled={isRevoking}
+              disabled={isRevoking || !revokeComment.trim()}
             >
               {isRevoking ? 'Отзыв...' : 'Отозвать'}
             </Button>

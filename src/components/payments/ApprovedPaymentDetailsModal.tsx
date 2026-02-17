@@ -3,6 +3,8 @@ import Icon from '@/components/ui/icon';
 import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +53,8 @@ interface ApprovedPaymentDetailsModalProps {
 const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPaymentDetailsModalProps) => {
   const { token, user } = useAuth();
   const { toast } = useToast();
+  const [showRevokeDialog, setShowRevokeDialog] = useState(false);
+  const [revokeComment, setRevokeComment] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
 
   if (!payment) return null;
@@ -59,7 +63,20 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
   const isAdmin = user?.roles?.some(role => role.name === 'Администратор');
   const canRevoke = isCreator || isAdmin;
 
-  const handleRevoke = async () => {
+  const handleRevokeClick = () => {
+    setShowRevokeDialog(true);
+  };
+
+  const handleRevokeConfirm = async () => {
+    if (!revokeComment.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Укажите причину отзыва',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsRevoking(true);
     try {
       const response = await fetch(API_ENDPOINTS.approvalsApi, {
@@ -71,7 +88,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
         body: JSON.stringify({
           payment_id: payment.id,
           action: 'revoke',
-          comment: '',
+          comment: revokeComment.trim(),
         }),
       });
 
@@ -85,6 +102,8 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
         description: 'Платёж отозван и возвращён в черновики',
       });
 
+      setShowRevokeDialog(false);
+      setRevokeComment('');
       if (onRevoked) onRevoked();
       onClose();
     } catch (error) {
@@ -214,11 +233,10 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
                 <Button 
                   variant="destructive"
                   className="w-full"
-                  onClick={handleRevoke}
-                  disabled={isRevoking}
+                  onClick={handleRevokeClick}
                 >
                   <Icon name="XCircle" size={18} />
-                  {isRevoking ? 'Отзываем...' : 'Отозвать платеж'}
+                  Отозвать платеж
                 </Button>
               </div>
             )}
@@ -273,6 +291,52 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
           </div>
         </div>
       </div>
+
+      <Dialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Отзыв платежа</DialogTitle>
+            <DialogDescription>
+              Платёж будет возвращён в черновики. Укажите причину отзыва.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Причина отзыва <span className="text-red-500">*</span>
+              </label>
+              <Textarea
+                value={revokeComment}
+                onChange={(e) => setRevokeComment(e.target.value)}
+                placeholder="Укажите причину отзыва платежа..."
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => {
+                setShowRevokeDialog(false);
+                setRevokeComment('');
+              }}
+              variant="outline"
+              className="flex-1"
+              disabled={isRevoking}
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={handleRevokeConfirm}
+              variant="destructive"
+              className="flex-1"
+              disabled={isRevoking || !revokeComment.trim()}
+            >
+              {isRevoking ? 'Отзываем...' : 'Отозвать'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
