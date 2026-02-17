@@ -201,11 +201,28 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         new_status = 'rejected'
     
     # Обновляем статус платежа
-    cur.execute(f"""
-        UPDATE {SCHEMA}.payments
-        SET status = %s, submitted_at = CASE WHEN %s = 'pending_approval' THEN CURRENT_TIMESTAMP ELSE submitted_at END
-        WHERE id = %s
-    """, (new_status, new_status, approval_action.payment_id))
+    if new_status == 'approved' and is_final_approver:
+        cur.execute(f"""
+            UPDATE {SCHEMA}.payments
+            SET status = %s, 
+                ceo_approved_at = CURRENT_TIMESTAMP,
+                ceo_approved_by = %s,
+                submitted_at = CASE WHEN submitted_at IS NULL THEN CURRENT_TIMESTAMP ELSE submitted_at END
+            WHERE id = %s
+        """, (new_status, user_id, approval_action.payment_id))
+    elif new_status == 'pending_ceo':
+        cur.execute(f"""
+            UPDATE {SCHEMA}.payments
+            SET status = %s,
+                submitted_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """, (new_status, approval_action.payment_id))
+    else:
+        cur.execute(f"""
+            UPDATE {SCHEMA}.payments
+            SET status = %s
+            WHERE id = %s
+        """, (new_status, approval_action.payment_id))
     
     # Добавляем запись в историю утверждений
     cur.execute(f"""
