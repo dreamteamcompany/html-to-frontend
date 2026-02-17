@@ -3,8 +3,6 @@ import Icon from '@/components/ui/icon';
 import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@/hooks/use-toast';
@@ -211,17 +209,19 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
               </>
             )}
 
-            <div className="pt-4 border-t border-white/10">
-              <Button 
-                variant="destructive"
-                className="w-full"
-                onClick={handleRevoke}
-                disabled={isRevoking}
-              >
-                <Icon name="XCircle" size={18} />
-                {isRevoking ? 'Отзываем...' : 'Отозвать платеж'}
-              </Button>
-            </div>
+            {canRevoke && (
+              <div className="pt-4 border-t border-white/10">
+                <Button 
+                  variant="destructive"
+                  className="w-full"
+                  onClick={handleRevoke}
+                  disabled={isRevoking}
+                >
+                  <Icon name="XCircle" size={18} />
+                  {isRevoking ? 'Отзываем...' : 'Отозвать платеж'}
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10 overflow-hidden">
@@ -237,92 +237,39 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
                     <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
                   </div>
                 )}
-                {payment.ceo_approved_at && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Одобрено CEO:</span>
-                    <span className="font-medium">{new Date(payment.ceo_approved_at).toLocaleDateString('ru-RU')}</span>
-                  </div>
-                )}
-                {payment.tech_director_approved_at && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Одобрено Техдиром:</span>
-                    <span className="font-medium">{new Date(payment.tech_director_approved_at).toLocaleDateString('ru-RU')}</span>
-                  </div>
-                )}
                 {payment.invoice_date && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Дата счёта:</span>
                     <span className="font-medium">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
                   </div>
                 )}
+                {payment.ceo_approved_at && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Одобрено CEO:</span>
+                    <span className="font-medium">{new Date(payment.ceo_approved_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}, {new Date(payment.ceo_approved_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                )}
                 {payment.created_at && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Создана:</span>
-                    <span className="font-medium">{new Date(payment.created_at).toLocaleDateString('ru-RU')}</span>
+                    <span className="font-medium">{new Date(payment.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}, {new Date(payment.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 )}
               </div>
             </div>
 
             <Tabs defaultValue="history" className="flex-1 flex flex-col overflow-hidden">
-              <TabsList className="px-4 sm:px-6 pt-4 grid w-auto grid-cols-1">
-                <TabsTrigger value="history">История согласований</TabsTrigger>
+              <TabsList className="mx-4 mt-2">
+                <TabsTrigger value="history" className="flex items-center gap-2">
+                  <Icon name="History" size={16} />
+                  История согласования
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="history" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
                 <PaymentAuditLog paymentId={payment.id} />
               </TabsContent>
             </Tabs>
-
-            {canRevoke && !showRevokeForm && (
-              <div className="border-t border-white/10 p-4">
-                <Button
-                  onClick={() => setShowRevokeForm(true)}
-                  variant="outline"
-                  className="w-full border-orange-500/50 text-orange-400 hover:bg-orange-500/10"
-                >
-                  <Icon name="RotateCcw" size={16} className="mr-2" />
-                  Отозвать платёж
-                </Button>
-              </div>
-            )}
-
-            {showRevokeForm && (
-              <div className="border-t border-white/10 p-4 space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Причина отзыва <span className="text-red-500">*</span>
-                  </label>
-                  <Textarea
-                    value={revokeReason}
-                    onChange={(e) => setRevokeReason(e.target.value)}
-                    placeholder="Укажите причину отзыва платежа..."
-                    rows={4}
-                    className="resize-none"
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() => {
-                      setShowRevokeForm(false);
-                      setRevokeReason('');
-                    }}
-                    variant="outline"
-                    className="flex-1"
-                    disabled={isRevoking}
-                  >
-                    Отмена
-                  </Button>
-                  <Button
-                    onClick={handleRevoke}
-                    className="flex-1 bg-orange-600 hover:bg-orange-700"
-                    disabled={isRevoking || !revokeReason.trim()}
-                  >
-                    {isRevoking ? 'Отзыв...' : 'Отозвать'}
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
