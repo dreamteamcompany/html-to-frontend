@@ -138,7 +138,6 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
                 </div>
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                   {new Date(log.created_at).toLocaleString('ru-RU', {
-                    timeZone: 'Europe/Moscow',
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric',

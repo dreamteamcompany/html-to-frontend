@@ -230,7 +230,7 @@ const LogAnalyzer = () => {
   const formatTimestamp = (timestamp: string | null) => {
     if (!timestamp) return 'N/A';
     try {
-      return new Date(timestamp).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+      return new Date(timestamp).toLocaleString('ru-RU');
     } catch {
       return timestamp;
     }

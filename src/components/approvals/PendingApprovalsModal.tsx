@@ -194,12 +194,12 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Дата платежа:</span>
-                  <span className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' })}</span>
+                  <span className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</span>
                 </div>
                 {payment.submitted_at && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Дата отправки:</span>
-                    <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' })}</span>
+                    <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
                   </div>
                 )}
                 {payment.invoice_date && (

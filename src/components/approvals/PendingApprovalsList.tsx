@@ -121,7 +121,6 @@ const PendingApprovalsList = ({
                         <Icon name="Calendar" size={14} />
                         <span>
                           {new Date(payment.payment_date).toLocaleDateString('ru-RU', {
-                            timeZone: 'Europe/Moscow',
                             day: '2-digit',
                             month: 'long',
                             year: 'numeric'
