@@ -8,8 +8,13 @@ interface PaymentsListProps {
   onApprove?: (paymentId: number) => void;
   onReject?: (paymentId: number) => void;
   onSubmitForApproval?: (paymentId: number) => void;
+  onRevoke?: (paymentId: number) => void;
+  onResubmit?: (paymentId: number) => void;
   onPaymentClick?: (payment: Payment) => void;
   isPlannedPayments?: boolean;
+  showApproveReject?: boolean;
+  showRevoke?: boolean;
+  showResubmit?: boolean;
 }
 
 const getStatusBadge = (status?: string) => {
@@ -31,7 +36,7 @@ const getStatusBadge = (status?: string) => {
   return null;
 };
 
-const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForApproval, onPaymentClick, isPlannedPayments = false }: PaymentsListProps) => {
+const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForApproval, onRevoke, onResubmit, onPaymentClick, isPlannedPayments = false, showApproveReject = false, showRevoke = false, showResubmit = false }: PaymentsListProps) => {
   return (
     <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
       <CardContent className="p-0">
@@ -103,18 +108,10 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                               onClick={() => onSubmitForApproval(payment.id)}
                               className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
                             >
-                              Отправить
-                            </button>
-                          )}
-                          {!isPlannedPayments && payment.status === 'pending_ceo' && onSubmitForApproval && (
-                            <button
-                              onClick={() => onSubmitForApproval(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
-                            >
                               Отправить на согласование
                             </button>
                           )}
-                          {!isPlannedPayments && onApprove && (
+                          {showApproveReject && onApprove && (
                             <button
                               onClick={() => onApprove(payment.id)}
                               className="px-3 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700"
@@ -122,12 +119,28 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                               Одобрить
                             </button>
                           )}
-                          {!isPlannedPayments && onReject && (
+                          {showApproveReject && onReject && (
                             <button
                               onClick={() => onReject(payment.id)}
                               className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
                             >
                               Отклонить
+                            </button>
+                          )}
+                          {showRevoke && onRevoke && (
+                            <button
+                              onClick={() => onRevoke(payment.id)}
+                              className="px-3 py-1 text-xs rounded bg-orange-600 text-white hover:bg-orange-700"
+                            >
+                              Отозвать согласование
+                            </button>
+                          )}
+                          {showResubmit && onResubmit && (
+                            <button
+                              onClick={() => onResubmit(payment.id)}
+                              className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                            >
+                              Отправить на повторное согласование
                             </button>
                           )}
                         </div>
@@ -186,18 +199,10 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           onClick={() => onSubmitForApproval(payment.id)}
                           className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium"
                         >
-                          Отправить
-                        </button>
-                      )}
-                      {!isPlannedPayments && payment.status === 'pending_ceo' && onSubmitForApproval && (
-                        <button
-                          onClick={() => onSubmitForApproval(payment.id)}
-                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium"
-                        >
                           Отправить на согласование
                         </button>
                       )}
-                      {!isPlannedPayments && onApprove && (
+                      {showApproveReject && onApprove && (
                         <button
                           onClick={() => onApprove(payment.id)}
                           className="flex-1 px-3 py-2 text-sm rounded bg-green-600 text-white hover:bg-green-700 font-medium"
@@ -205,12 +210,28 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           Одобрить
                         </button>
                       )}
-                      {!isPlannedPayments && onReject && (
+                      {showApproveReject && onReject && (
                         <button
                           onClick={() => onReject(payment.id)}
                           className="flex-1 px-3 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 font-medium"
                         >
                           Отклонить
+                        </button>
+                      )}
+                      {showRevoke && onRevoke && (
+                        <button
+                          onClick={() => onRevoke(payment.id)}
+                          className="flex-1 px-3 py-2 text-sm rounded bg-orange-600 text-white hover:bg-orange-700 font-medium"
+                        >
+                          Отозвать согласование
+                        </button>
+                      )}
+                      {showResubmit && onResubmit && (
+                        <button
+                          onClick={() => onResubmit(payment.id)}
+                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium"
+                        >
+                          Отправить на повторное согласование
                         </button>
                       )}
                     </div>

@@ -143,7 +143,7 @@ const PendingApprovalsList = ({
                       e.stopPropagation();
                       handleApprove(payment.id);
                     }}
-                    className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-green-500/20 text-green-300 hover:bg-green-500/30 transition-colors font-medium flex items-center justify-center gap-2"
+                    className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
                   >
                     <Icon name="Check" size={18} />
                     Одобрить
@@ -153,7 +153,7 @@ const PendingApprovalsList = ({
                       e.stopPropagation();
                       handleReject(payment.id);
                     }}
-                    className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors font-medium flex items-center justify-center gap-2"
+                    className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
                   >
                     <Icon name="X" size={18} />
                     Отклонить

@@ -167,8 +167,6 @@ const MyPaymentsTab = () => {
         payments={filteredPayments} 
         loading={loading} 
         onSubmitForApproval={handleSubmitForApproval}
-        onApprove={handleApprove}
-        onReject={handleReject}
         onPaymentClick={setSelectedPayment}
       />
 
@@ -176,8 +174,6 @@ const MyPaymentsTab = () => {
         payment={selectedPayment}
         onClose={() => setSelectedPayment(null)}
         onSubmitForApproval={handleSubmitForApproval}
-        onApprove={handleApprove}
-        onReject={handleReject}
       />
     </div>
   );

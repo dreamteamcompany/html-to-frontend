@@ -41,6 +41,18 @@ const RejectedPaymentsTab = () => {
     }
   };
 
+  const handleResubmit = async (paymentId: number) => {
+    try {
+      await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments&id=${paymentId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'pending_ceo' })
+      });
+      fetchRejectedPayments();
+    } catch (error) {
+      console.error('Failed to resubmit payment:', error);
+    }
+  };
+
   const filteredPayments = payments.filter(payment => {
     if (!searchQuery) return true;
     
@@ -141,9 +153,20 @@ const RejectedPaymentsTab = () => {
                     </div>
                   </div>
                   
-                  <div className="text-center lg:text-right lg:border-l lg:border-white/10 lg:pl-6">
-                    <div className="text-sm text-muted-foreground mb-1">Сумма платежа</div>
-                    <div className="text-2xl font-bold">{formatAmount(payment.amount)}</div>
+                  <div className="text-center lg:text-right lg:border-l lg:border-white/10 lg:pl-6 space-y-3">
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Сумма платежа</div>
+                      <div className="text-2xl font-bold">{formatAmount(payment.amount)}</div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResubmit(payment.id);
+                      }}
+                      className="px-4 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium w-full lg:w-auto"
+                    >
+                      Отправить на повторное согласование
+                    </button>
                   </div>
                 </div>
               </CardContent>

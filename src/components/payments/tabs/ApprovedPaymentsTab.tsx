@@ -41,6 +41,18 @@ const ApprovedPaymentsTab = () => {
     }
   };
 
+  const handleRevoke = async (paymentId: number) => {
+    try {
+      await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments&id=${paymentId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'revoked' })
+      });
+      fetchApprovedPayments();
+    } catch (error) {
+      console.error('Failed to revoke payment:', error);
+    }
+  };
+
   const filteredPayments = payments.filter(payment => {
     if (!searchQuery) return true;
     
@@ -147,9 +159,20 @@ const ApprovedPaymentsTab = () => {
                     </div>
                   </div>
                   
-                  <div className="text-center lg:text-right lg:border-l lg:border-white/10 lg:pl-6">
-                    <div className="text-sm text-muted-foreground mb-1">Сумма платежа</div>
-                    <div className="text-2xl font-bold">{formatAmount(payment.amount)}</div>
+                  <div className="text-center lg:text-right lg:border-l lg:border-white/10 lg:pl-6 space-y-3">
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Сумма платежа</div>
+                      <div className="text-2xl font-bold">{formatAmount(payment.amount)}</div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRevoke(payment.id);
+                      }}
+                      className="px-4 py-2 text-sm rounded bg-orange-600 text-white hover:bg-orange-700 font-medium w-full lg:w-auto"
+                    >
+                      Отозвать согласование
+                    </button>
                   </div>
                 </div>
               </CardContent>
