@@ -18,7 +18,7 @@ def response(status: int, body: Any) -> Dict[str, Any]:
         'headers': {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Authorization, X-Auth-Token, X-User-Id, X-Session-Id'
         },
         'body': json.dumps(body, ensure_ascii=False, default=str)
@@ -280,7 +280,7 @@ def handler(event: dict, context) -> dict:
             
             if method == 'GET':
                 return handle_approvals_list(event, conn, user_id)
-            elif method == 'POST':
+            elif method == 'POST' or method == 'PUT':
                 return handle_approval_action(event, conn, user_id)
             
             return response(405, {'error': 'Method not allowed'})
