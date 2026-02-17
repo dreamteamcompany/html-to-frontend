@@ -269,12 +269,32 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             try:
                 body = json.loads(event.get('body', '{}'))
-                payment_id = body.get('id')
+                payment_id = body.get('payment_id') or body.get('id')
+                
+                # Извлекаем ID из пути, если он есть
+                path = event.get('path', '')
+                if not payment_id and '/' in path:
+                    path_parts = path.rstrip('/').split('/')
+                    if path_parts[-1].isdigit():
+                        payment_id = int(path_parts[-1])
                 
                 if not payment_id:
                     conn.close()
                     return response(400, {'error': 'Payment ID is required'})
                 
+                # Если передан только статус, обновляем только его
+                if 'status' in body and len(body) <= 2:  # payment_id/id + status
+                    new_status = body.get('status')
+                    cur.execute(
+                        f"""UPDATE {SCHEMA}.payments SET status = %s WHERE id = %s""",
+                        (new_status, payment_id)
+                    )
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    return response(200, {'success': True, 'payment_id': payment_id})
+                
+                # Полное обновление платежа
                 pay_req = PaymentRequest(**body)
             except Exception as e:
                 conn.close()
