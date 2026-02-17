@@ -44,6 +44,50 @@ const MyPaymentsTab = () => {
     fileType,
   } = usePaymentForm(customFields, loadPayments, loadContractors, loadLegalEntities);
 
+  const handleApprove = async (paymentId: number) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.approvalsApi, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({ payment_id: paymentId, action: 'approve', comment: '' }),
+      });
+      if (response.ok) {
+        toast({ title: 'Успешно', description: 'Платёж одобрен' });
+        loadPayments();
+      } else {
+        const error = await response.json();
+        toast({ title: 'Ошибка', description: error.error || 'Не удалось одобрить', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Ошибка сети', description: 'Проверьте подключение к интернету', variant: 'destructive' });
+    }
+  };
+
+  const handleReject = async (paymentId: number) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.approvalsApi, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({ payment_id: paymentId, action: 'reject', comment: '' }),
+      });
+      if (response.ok) {
+        toast({ title: 'Успешно', description: 'Платёж отклонён' });
+        loadPayments();
+      } else {
+        const error = await response.json();
+        toast({ title: 'Ошибка', description: error.error || 'Не удалось отклонить', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Ошибка сети', description: 'Проверьте подключение к интернету', variant: 'destructive' });
+    }
+  };
+
   const handleSubmitForApproval = async (paymentId: number) => {
     try {
       const response = await fetch(API_ENDPOINTS.approvalsApi, {
@@ -123,6 +167,8 @@ const MyPaymentsTab = () => {
         payments={filteredPayments} 
         loading={loading} 
         onSubmitForApproval={handleSubmitForApproval}
+        onApprove={handleApprove}
+        onReject={handleReject}
         onPaymentClick={setSelectedPayment}
       />
 
