@@ -106,6 +106,14 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                               Отправить
                             </button>
                           )}
+                          {!isPlannedPayments && payment.status === 'pending_ceo' && onSubmitForApproval && (
+                            <button
+                              onClick={() => onSubmitForApproval(payment.id)}
+                              className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                            >
+                              Отправить на согласование
+                            </button>
+                          )}
                           {!isPlannedPayments && onApprove && (
                             <button
                               onClick={() => onApprove(payment.id)}
@@ -179,6 +187,14 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium"
                         >
                           Отправить
+                        </button>
+                      )}
+                      {!isPlannedPayments && payment.status === 'pending_ceo' && onSubmitForApproval && (
+                        <button
+                          onClick={() => onSubmitForApproval(payment.id)}
+                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium"
+                        >
+                          Отправить на согласование
                         </button>
                       )}
                       {!isPlannedPayments && onApprove && (
