@@ -118,7 +118,7 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
   }
 
   return (
-    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+    <div className="space-y-3">
       {logs.map((log) => (
         <div
           key={log.id}
