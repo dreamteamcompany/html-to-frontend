@@ -35,7 +35,7 @@ const AverageSpeedCard = () => {
   };
 
   const formatTime = (hours: number | null) => {
-    if (!hours) return '—';
+    if (hours === null || hours === undefined || typeof hours !== 'number') return '—';
     if (hours < 1) {
       return `${Math.round(hours * 60)}м`;
     }
