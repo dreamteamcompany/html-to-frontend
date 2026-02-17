@@ -265,7 +265,7 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                           onApprove(payment.id);
                           onClose();
                         }}
-                        className="flex-1 px-4 py-3 rounded-lg bg-green-500/20 text-green-300 hover:bg-green-500/30 font-medium transition-colors"
+                        className="flex-1 px-4 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 font-medium transition-colors"
                       >
                         Одобрить
                       </button>
@@ -276,7 +276,7 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                           onReject(payment.id);
                           onClose();
                         }}
-                        className="flex-1 px-4 py-3 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium transition-colors"
+                        className="flex-1 px-4 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors"
                       >
                         Отклонить
                       </button>

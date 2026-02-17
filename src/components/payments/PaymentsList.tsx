@@ -109,7 +109,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           {!isPlannedPayments && onApprove && (
                             <button
                               onClick={() => onApprove(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                              className="px-3 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700"
                             >
                               Одобрить
                             </button>
@@ -117,7 +117,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           {!isPlannedPayments && onReject && (
                             <button
                               onClick={() => onReject(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                              className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
                             >
                               Отклонить
                             </button>
@@ -168,7 +168,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       {isPlannedPayments && onSubmitForApproval && (
                         <button
                           onClick={() => onSubmitForApproval(payment.id)}
-                          className="flex-1 px-3 py-2 text-sm rounded bg-green-500/20 text-green-300 hover:bg-green-500/30 font-medium"
+                          className="flex-1 px-3 py-2 text-sm rounded bg-green-600 text-white hover:bg-green-700 font-medium"
                         >
                           Создать платёж
                         </button>
@@ -184,7 +184,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       {!isPlannedPayments && onApprove && (
                         <button
                           onClick={() => onApprove(payment.id)}
-                          className="flex-1 px-3 py-2 text-sm rounded bg-green-500/20 text-green-300 hover:bg-green-500/30 font-medium"
+                          className="flex-1 px-3 py-2 text-sm rounded bg-green-600 text-white hover:bg-green-700 font-medium"
                         >
                           Одобрить
                         </button>
@@ -192,7 +192,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       {!isPlannedPayments && onReject && (
                         <button
                           onClick={() => onReject(payment.id)}
-                          className="flex-1 px-3 py-2 text-sm rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium"
+                          className="flex-1 px-3 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700 font-medium"
                         >
                           Отклонить
                         </button>
