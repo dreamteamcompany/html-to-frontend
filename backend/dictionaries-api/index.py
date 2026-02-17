@@ -54,6 +54,8 @@ class ServiceRequest(BaseModel):
     final_approver_id: int | None = None
     customer_department_id: int | None = None
     category_id: int | None = None
+    legal_entity_id: int | None = None
+    contractor_id: int | None = None
 
 def response(status_code: int, data: Any) -> Dict[str, Any]:
     return {
@@ -493,7 +495,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cur.execute(f"""
                     SELECT s.id, s.name, s.description, s.intermediate_approver_id, s.final_approver_id,
-                           s.customer_department_id, s.category_id, 
+                           s.customer_department_id, s.category_id, s.legal_entity_id, s.contractor_id,
                            c.name as category_name, c.icon as category_icon,
                            cd.name as department_name,
                            u1.username as intermediate_approver_name,
@@ -521,11 +523,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cur.execute(f"""
                     INSERT INTO {SCHEMA}.services 
-                    (name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                    RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id
+                    (name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id
                 """, (svc_req.name, svc_req.description, svc_req.intermediate_approver_id, 
-                      svc_req.final_approver_id, svc_req.customer_department_id, svc_req.category_id))
+                      svc_req.final_approver_id, svc_req.customer_department_id, svc_req.category_id,
+                      svc_req.legal_entity_id, svc_req.contractor_id))
                 row = cur.fetchone()
                 conn.commit()
                 
@@ -549,11 +552,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 cur.execute(f"""
                     UPDATE {SCHEMA}.services 
                     SET name = %s, description = %s, intermediate_approver_id = %s, final_approver_id = %s,
-                        customer_department_id = %s, category_id = %s
+                        customer_department_id = %s, category_id = %s, legal_entity_id = %s, contractor_id = %s
                     WHERE id = %s
-                    RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id
+                    RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id
                 """, (svc_req.name, svc_req.description, svc_req.intermediate_approver_id,
-                      svc_req.final_approver_id, svc_req.customer_department_id, svc_req.category_id, svc_id))
+                      svc_req.final_approver_id, svc_req.customer_department_id, svc_req.category_id,
+                      svc_req.legal_entity_id, svc_req.contractor_id, svc_id))
                 row = cur.fetchone()
                 
                 if not row:

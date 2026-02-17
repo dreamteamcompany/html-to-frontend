@@ -57,6 +57,9 @@ interface Service {
   category_id?: number;
   category_name?: string;
   category_icon?: string;
+  legal_entity_id?: number;
+  contractor_id?: number;
+  customer_department_id?: number;
 }
 
 interface PaymentFormProps {
@@ -146,10 +149,23 @@ const PaymentForm = ({
       ...formData,
       service_id: value,
       service_description: service?.description || '',
+      description: service?.description || formData.description || '', // Дублируем в назначение платежа
     };
+    
+    // Автозаполнение связанных полей
     if (service?.category_id) {
       updates.category_id = service.category_id.toString();
     }
+    if (service?.legal_entity_id) {
+      updates.legal_entity_id = service.legal_entity_id.toString();
+    }
+    if (service?.contractor_id) {
+      updates.contractor_id = service.contractor_id.toString();
+    }
+    if (service?.customer_department_id) {
+      updates.department_id = service.customer_department_id.toString();
+    }
+    
     setFormData(updates);
   };
 
