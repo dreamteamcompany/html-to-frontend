@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePaymentsData } from '@/hooks/usePaymentsData';
 import { usePaymentForm } from '@/hooks/usePaymentForm';
-import PaymentsSearch from '@/components/payments/PaymentsSearch';
 import PaymentForm from '@/components/payments/PaymentForm';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
@@ -14,7 +13,6 @@ const MyPaymentsTab = () => {
   const { token } = useAuth();
   const { toast } = useToast();
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const {
     payments,
@@ -123,21 +121,7 @@ const MyPaymentsTab = () => {
     }
   };
 
-  const filteredPayments = payments.filter(payment => {
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = (
-        payment.description.toLowerCase().includes(query) ||
-        payment.category_name.toLowerCase().includes(query) ||
-        payment.amount.toString().includes(query) ||
-        payment.service_name?.toLowerCase().includes(query) ||
-        payment.contractor_name?.toLowerCase().includes(query) ||
-        payment.legal_entity_name?.toLowerCase().includes(query)
-      );
-      if (!matchesSearch) return false;
-    }
-    return true;
-  });
+
 
   return (
     <div className="space-y-6">
@@ -162,7 +146,7 @@ const MyPaymentsTab = () => {
       />
 
       <PaymentsList 
-        payments={filteredPayments} 
+        payments={payments} 
         loading={loading} 
         onSubmitForApproval={handleSubmitForApproval}
         onPaymentClick={setSelectedPayment}

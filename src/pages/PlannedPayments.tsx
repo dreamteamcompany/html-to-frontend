@@ -6,7 +6,6 @@ import { usePlannedPaymentForm } from '@/hooks/usePlannedPaymentForm';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import PaymentsHeader from '@/components/payments/PaymentsHeader';
-import PaymentsSearch from '@/components/payments/PaymentsSearch';
 import PlannedPaymentForm from '@/components/payments/PlannedPaymentForm';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
@@ -18,7 +17,6 @@ const PlannedPayments = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const {
     payments,
@@ -98,21 +96,7 @@ const PlannedPayments = () => {
     }
   };
 
-  const filteredPayments = payments.filter(payment => {
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = (
-        payment.description.toLowerCase().includes(query) ||
-        payment.category_name.toLowerCase().includes(query) ||
-        payment.amount.toString().includes(query) ||
-        payment.service_name?.toLowerCase().includes(query) ||
-        payment.contractor_name?.toLowerCase().includes(query) ||
-        payment.legal_entity_name?.toLowerCase().includes(query)
-      );
-      if (!matchesSearch) return false;
-    }
-    return true;
-  });
+
 
   return (
     <div className="flex min-h-screen">
@@ -153,7 +137,7 @@ const PlannedPayments = () => {
         />
 
         <PaymentsList 
-          payments={filteredPayments} 
+          payments={payments} 
           loading={loading} 
           onSubmitForApproval={handleConvertToPayment}
           onPaymentClick={setSelectedPayment}
