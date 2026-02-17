@@ -178,6 +178,7 @@ const RejectedPaymentsTab = () => {
       <PaymentDetailsModal
         payment={selectedPayment}
         onClose={() => setSelectedPayment(null)}
+        onSubmitForApproval={handleResubmit}
       />
     </div>
   );
