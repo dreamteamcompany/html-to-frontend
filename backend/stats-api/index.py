@@ -116,6 +116,33 @@ def handler(event: dict, context) -> dict:
         
         top_payments = [dict(row) for row in cur.fetchall()]
         
+        # Средняя скорость согласования (в часах)
+        cur.execute(f"""
+            SELECT 
+                AVG(EXTRACT(EPOCH FROM (ceo_approved_at - submitted_at)) / 3600) as avg_hours,
+                COUNT(*) as total_approved
+            FROM {SCHEMA}.payments
+            WHERE status = 'approved' 
+            AND submitted_at IS NOT NULL 
+            AND ceo_approved_at IS NOT NULL
+        """)
+        
+        approval_speed = dict(cur.fetchone())
+        
+        # Средняя скорость за прошлый месяц для сравнения
+        cur.execute(f"""
+            SELECT 
+                AVG(EXTRACT(EPOCH FROM (ceo_approved_at - submitted_at)) / 3600) as avg_hours
+            FROM {SCHEMA}.payments
+            WHERE status = 'approved' 
+            AND submitted_at IS NOT NULL 
+            AND ceo_approved_at IS NOT NULL
+            AND ceo_approved_at >= CURRENT_DATE - INTERVAL '2 months'
+            AND ceo_approved_at < CURRENT_DATE - INTERVAL '1 month'
+        """)
+        
+        prev_month_speed = dict(cur.fetchone())
+        
         # Динамика по месяцам
         cur.execute(f"""
             SELECT 
@@ -151,6 +178,8 @@ def handler(event: dict, context) -> dict:
             'general': general_stats,
             'top_categories': top_categories,
             'top_payments': top_payments,
+            'approval_speed': approval_speed,
+            'prev_month_speed': prev_month_speed,
             'monthly_trend': monthly_trend,
             'savings': savings_stats
         })

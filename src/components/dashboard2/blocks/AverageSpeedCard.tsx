@@ -1,7 +1,63 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import { apiFetch } from '@/utils/api';
+import { API_ENDPOINTS } from '@/config/api';
 
 const AverageSpeedCard = () => {
+  const [avgHours, setAvgHours] = useState<number | null>(null);
+  const [changePercent, setChangePercent] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const response = await apiFetch(API_ENDPOINTS.statsApi);
+      const data = await response.json();
+      
+      const currentAvg = data.approval_speed?.avg_hours;
+      const prevAvg = data.prev_month_speed?.avg_hours;
+      
+      setAvgHours(currentAvg);
+      
+      if (currentAvg && prevAvg) {
+        const change = ((currentAvg - prevAvg) / prevAvg) * 100;
+        setChangePercent(change);
+      }
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTime = (hours: number | null) => {
+    if (!hours) return '—';
+    if (hours < 1) {
+      return `${Math.round(hours * 60)}м`;
+    }
+    return `${hours.toFixed(1)}ч`;
+  };
+
+  if (loading) {
+    return (
+      <Card style={{ 
+        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+        border: '1px solid rgba(168, 85, 247, 0.3)',
+        boxShadow: '0 0 30px rgba(168, 85, 247, 0.15)'
+      }}>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-center h-48">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card style={{ 
       background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
@@ -40,23 +96,31 @@ const AverageSpeedCard = () => {
           textShadow: '0 0 30px rgba(168, 85, 247, 0.6)',
           marginBottom: '8px'
         }} className="sm:text-[42px] sm:mb-3">
-          1.8ч
+          {formatTime(avgHours)}
         </div>
         <div style={{ color: '#a3aed0', fontSize: '12px', marginBottom: '14px' }} className="sm:text-sm sm:mb-5">
           Обработка платежного запроса
         </div>
         <div style={{ display: 'flex', gap: '6px' }} className="sm:gap-2">
-          <div style={{ 
-            flex: 1,
-            background: 'rgba(1, 181, 116, 0.15)',
-            padding: '8px',
-            borderRadius: '6px',
-            border: '1px solid rgba(1, 181, 116, 0.3)',
-            textAlign: 'center'
-          }}>
-            <div style={{ color: '#01b574', fontSize: '16px', fontWeight: '700' }} className="sm:text-xl">-24%</div>
-            <div style={{ color: '#a3aed0', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">vs месяц назад</div>
-          </div>
+          {changePercent !== null && (
+            <div style={{ 
+              flex: 1,
+              background: changePercent < 0 ? 'rgba(1, 181, 116, 0.15)' : 'rgba(255, 107, 107, 0.15)',
+              padding: '8px',
+              borderRadius: '6px',
+              border: changePercent < 0 ? '1px solid rgba(1, 181, 116, 0.3)' : '1px solid rgba(255, 107, 107, 0.3)',
+              textAlign: 'center'
+            }}>
+              <div style={{ 
+                color: changePercent < 0 ? '#01b574' : '#ff6b6b', 
+                fontSize: '16px', 
+                fontWeight: '700' 
+              }} className="sm:text-xl">
+                {changePercent > 0 ? '+' : ''}{changePercent.toFixed(0)}%
+              </div>
+              <div style={{ color: '#a3aed0', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">vs месяц назад</div>
+            </div>
+          )}
           <div style={{ 
             flex: 1,
             background: 'rgba(117, 81, 233, 0.15)',
@@ -65,7 +129,9 @@ const AverageSpeedCard = () => {
             border: '1px solid rgba(117, 81, 233, 0.3)',
             textAlign: 'center'
           }}>
-            <div style={{ color: '#7551e9', fontSize: '16px', fontWeight: '700' }} className="sm:text-xl">94%</div>
+            <div style={{ color: '#7551e9', fontSize: '16px', fontWeight: '700' }} className="sm:text-xl">
+              {avgHours ? 'Вкл' : '—'}
+            </div>
             <div style={{ color: '#a3aed0', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">Автоматизация</div>
           </div>
         </div>
