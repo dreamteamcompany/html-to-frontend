@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
-import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -328,13 +327,13 @@ const Monitoring = () => {
       />
 
       <div className="flex-1 flex flex-col w-full overflow-x-hidden">
-        <PaymentsHeader 
-          title="Мониторинг балансов" 
-          menuOpen={menuOpen}
-          setMenuOpen={setMenuOpen}
-        />
-
         <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="lg:hidden p-2 text-white hover:bg-white/5 rounded-lg transition-colors mb-4"
+          >
+            <Icon name="Menu" size={24} />
+          </button>
           <div className="max-w-7xl mx-auto space-y-6">
             <MonitoringHeader
               onAddClick={() => setShowAddDialog(true)}

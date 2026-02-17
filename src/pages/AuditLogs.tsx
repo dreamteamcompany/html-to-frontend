@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
-import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
@@ -197,9 +196,13 @@ const AuditLogs = () => {
       />
 
       <main className="flex-1 lg:ml-64 bg-background min-h-screen overflow-x-hidden max-w-full">
-        <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-
         <div className="p-4 sm:p-6 space-y-6">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="lg:hidden p-2 text-white hover:bg-white/5 rounded-lg transition-colors mb-4"
+          >
+            <Icon name="Menu" size={24} />
+          </button>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-2">История изменений</h1>
             <p className="text-sm md:text-base text-muted-foreground">Все действия в системе</p>

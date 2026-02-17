@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
-import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import KPICard from '@/components/dashboard/KPICard';
 import SystemStatusBlock from '@/components/dashboard/SystemStatusBlock';
 import ActivityChart from '@/components/dashboard/ActivityChart';
@@ -107,7 +106,12 @@ const Dashboard = () => {
       )}
 
       <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="lg:hidden p-2 text-white hover:bg-white/5 rounded-lg transition-colors mb-4"
+        >
+          <Icon name="Menu" size={24} />
+        </button>
 
         <div className="mt-6">
           <div className="mb-6">

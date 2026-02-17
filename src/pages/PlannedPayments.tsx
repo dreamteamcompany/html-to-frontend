@@ -5,10 +5,10 @@ import { usePlannedPaymentsData } from '@/hooks/usePlannedPaymentsData';
 import { usePlannedPaymentForm } from '@/hooks/usePlannedPaymentForm';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
-import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import PlannedPaymentForm from '@/components/payments/PlannedPaymentForm';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
+import Icon from '@/components/ui/icon';
 import { Payment, CustomField } from '@/types/payment';
 
 const PlannedPayments = () => {
@@ -119,7 +119,14 @@ const PlannedPayments = () => {
       )}
 
       <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+        <div className="mb-6">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="lg:hidden p-2 -ml-2 text-white hover:bg-white/5 rounded-lg transition-colors"
+          >
+            <Icon name="Menu" size={24} />
+          </button>
+        </div>
 
         <PlannedPaymentForm
           dialogOpen={dialogOpen}

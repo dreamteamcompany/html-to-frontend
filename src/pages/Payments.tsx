@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
-import PaymentsHeader from '@/components/payments/PaymentsHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import MyPaymentsTab from '@/components/payments/tabs/MyPaymentsTab';
@@ -69,16 +68,18 @@ const Payments = () => {
       )}
 
       <main className="lg:ml-[250px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-white/10">
-          <div className="px-4 sm:px-6 py-4">
-            <PaymentsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-          </div>
-        </div>
-
         <div className="px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">История платежей</h1>
+          <div className="flex justify-between items-start gap-4 mb-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="lg:hidden p-2 -ml-2 text-white hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <Icon name="Menu" size={24} />
+                </button>
+                <h1 className="text-2xl md:text-3xl font-bold">История платежей</h1>
+              </div>
               <p className="text-sm md:text-base text-muted-foreground">Все операции по IT расходам</p>
             </div>
           </div>
