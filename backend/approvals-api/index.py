@@ -75,6 +75,32 @@ class ApprovalActionRequest(BaseModel):
     action: str = Field(..., pattern='^(approve|reject|submit)$')
     comment: str = Field(default='')
 
+def handle_payment_history(event: Dict[str, Any], conn, payment_id: int) -> Dict[str, Any]:
+    """Получение истории согласования платежа"""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    cur.execute(f"""
+        SELECT 
+            a.id,
+            a.payment_id,
+            a.approver_id,
+            a.approver_role,
+            a.action,
+            a.comment,
+            a.created_at,
+            u.username,
+            u.full_name
+        FROM {SCHEMA}.approvals a
+        LEFT JOIN {SCHEMA}.users u ON a.approver_id = u.id
+        WHERE a.payment_id = %s
+        ORDER BY a.created_at DESC
+    """, (payment_id,))
+    
+    history = [dict(row) for row in cur.fetchall()]
+    cur.close()
+    
+    return response(200, {'history': history})
+
 def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str, Any]:
     """Получение списка платежей на утверждение"""
     cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -305,6 +331,11 @@ def handler(event: dict, context) -> dict:
             user_id = payload['user_id']
             
             if method == 'GET':
+                # Проверяем, запрашивается ли история конкретного платежа
+                query_params = event.get('queryStringParameters') or {}
+                if query_params.get('history') == 'true' and query_params.get('payment_id'):
+                    payment_id = int(query_params.get('payment_id'))
+                    return handle_payment_history(event, conn, payment_id)
                 return handle_approvals_list(event, conn, user_id)
             elif method == 'POST' or method == 'PUT':
                 return handle_approval_action(event, conn, user_id)

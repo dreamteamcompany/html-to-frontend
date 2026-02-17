@@ -5,14 +5,14 @@ import { API_ENDPOINTS } from '@/config/api';
 
 interface AuditLog {
   id: number;
-  entity_type: string;
-  entity_id: number;
+  payment_id: number;
+  approver_id: number;
+  approver_role: string;
   action: string;
-  user_id: number;
-  username: string;
-  changed_fields: Record<string, { old: unknown; new: unknown }> | null;
-  metadata: Record<string, unknown> | null;
+  comment: string;
   created_at: string;
+  username?: string;
+  full_name?: string;
 }
 
 interface PaymentAuditLogProps {
@@ -30,14 +30,14 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
     const loadLogs = async () => {
       try {
         const response = await fetch(
-          `${API_ENDPOINTS.main}?endpoint=audit-logs&entity_type=payment&entity_id=${paymentId}`,
+          `${API_ENDPOINTS.approvalsApi}?payment_id=${paymentId}&history=true`,
           {
             headers: { 'X-Auth-Token': token },
           }
         );
 
         const data = await response.json();
-        setLogs(Array.isArray(data) ? data : []);
+        setLogs(Array.isArray(data.history) ? data.history : []);
       } catch (err) {
         console.error('Failed to load audit logs:', err);
       } finally {
@@ -52,9 +52,10 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
     switch (action) {
       case 'created': return 'Plus';
       case 'updated': return 'Edit';
-      case 'approved': return 'Check';
-      case 'rejected': return 'X';
-      case 'submitted': return 'Send';
+      case 'approve': return 'Check';
+      case 'reject': return 'X';
+      case 'submit': return 'Send';
+      case 'revoke': return 'RotateCcw';
       default: return 'Activity';
     }
   };
@@ -63,9 +64,10 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
     switch (action) {
       case 'created': return 'text-green-400';
       case 'updated': return 'text-blue-400';
-      case 'approved': return 'text-green-500';
-      case 'rejected': return 'text-red-500';
-      case 'submitted': return 'text-yellow-400';
+      case 'approve': return 'text-green-500';
+      case 'reject': return 'text-red-500';
+      case 'submit': return 'text-yellow-400';
+      case 'revoke': return 'text-orange-400';
       default: return 'text-gray-400';
     }
   };
@@ -74,9 +76,10 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
     const labels: Record<string, string> = {
       created: 'Создан',
       updated: 'Изменён',
-      approved: 'Согласован',
-      rejected: 'Отклонён',
-      submitted: 'Отправлен на согласование',
+      approve: 'Согласован',
+      reject: 'Отклонён',
+      submit: 'Отправлен на согласование',
+      revoke: 'Отозван',
     };
     return labels[action] || action;
   };
@@ -129,34 +132,24 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
               <div className="flex items-start justify-between gap-2 mb-1">
                 <div>
                   <p className="text-sm font-medium">{getActionLabel(log.action)}</p>
-                  <p className="text-xs text-muted-foreground">{log.username || 'Система'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {log.full_name || log.username || 'Система'}
+                  </p>
                 </div>
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                   {new Date(log.created_at).toLocaleString('ru-RU', {
                     day: '2-digit',
                     month: '2-digit',
+                    year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
                   })}
                 </span>
               </div>
               
-              {log.changed_fields && Object.keys(log.changed_fields).length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {Object.entries(log.changed_fields).map(([field, values]) => (
-                    <div key={field} className="text-xs">
-                      <span className="text-muted-foreground">{getFieldLabel(field)}:</span>{' '}
-                      <span className="text-red-400 line-through">{String(values.old)}</span>
-                      {' → '}
-                      <span className="text-green-400">{String(values.new)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {log.metadata?.comment && (
+              {log.comment && (
                 <div className="mt-2 text-xs text-muted-foreground italic border-l-2 border-white/20 pl-2">
-                  {String(log.metadata.comment)}
+                  {log.comment}
                 </div>
               )}
             </div>
