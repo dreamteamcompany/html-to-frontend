@@ -1,6 +1,7 @@
 """API для управления согласованиями платежей"""
 import json
 import os
+import base64
 from typing import Dict, Any
 import jwt
 import psycopg2
@@ -158,7 +159,13 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
 def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[str, Any]:
     """Утверждение или отклонение платежа"""
     try:
-        body = json.loads(event.get('body', '{}'))
+        body_str = event.get('body', '{}')
+        
+        # Проверяем, закодировано ли body в base64
+        if event.get('isBase64Encoded', False):
+            body_str = base64.b64decode(body_str).decode('utf-8')
+        
+        body = json.loads(body_str)
         print(f"[DEBUG] Received body: {body}")
         approval_action = ApprovalActionRequest(**body)
     except Exception as e:
