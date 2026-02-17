@@ -24,7 +24,7 @@ export const usePendingApprovalsData = () => {
     setLoading(true);
     try {
       const [paymentsRes, servicesRes] = await Promise.all([
-        fetch(`${API_ENDPOINTS.main}?endpoint=payments`, {
+        fetch(`${API_ENDPOINTS.paymentsApi}?scope=all`, {
           headers: { 'X-Auth-Token': token },
         }),
         fetch(`${API_ENDPOINTS.main}?endpoint=services`, {

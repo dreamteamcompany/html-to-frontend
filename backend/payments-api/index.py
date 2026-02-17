@@ -117,6 +117,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 conn.close()
                 return response(403, {'error': 'Forbidden'})
             
+            query_params = event.get('queryStringParameters') or {}
+            scope = query_params.get('scope', 'my')
+            
+            if scope == 'all':
+                where_clause = ""
+                params = tuple()
+            else:
+                where_clause = "WHERE p.created_by = %s AND (p.status IS NULL OR p.status IN ('draft', 'approved', 'rejected'))"
+                params = (payload['user_id'],)
+            
             cur.execute(f"""
                 SELECT 
                     p.id, 
@@ -153,9 +163,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 LEFT JOIN {SCHEMA}.customer_departments cd ON p.department_id = cd.id
                 LEFT JOIN {SCHEMA}.users u ON p.created_by = u.id
                 LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
-                WHERE p.created_by = %s
+                {where_clause}
                 ORDER BY p.payment_date DESC
-            """, (payload['user_id'],))
+            """, params)
             rows = cur.fetchall()
             payments = []
             

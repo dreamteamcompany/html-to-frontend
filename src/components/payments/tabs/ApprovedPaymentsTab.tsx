@@ -25,7 +25,7 @@ const ApprovedPaymentsTab = () => {
   const fetchApprovedPayments = async () => {
     setLoading(true);
     try {
-      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+      const response = await apiFetch(`${API_ENDPOINTS.paymentsApi}?scope=all`);
       const data = await response.json();
       
       const approvedPayments = (Array.isArray(data) ? data : []).filter((p: ExtendedPayment) => 
@@ -43,9 +43,9 @@ const ApprovedPaymentsTab = () => {
 
   const handleRevoke = async (paymentId: number) => {
     try {
-      await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments&id=${paymentId}`, {
+      await apiFetch(`${API_ENDPOINTS.paymentsApi}/${paymentId}`, {
         method: 'PUT',
-        body: JSON.stringify({ status: 'revoked' })
+        body: JSON.stringify({ status: 'draft' })
       });
       fetchApprovedPayments();
     } catch (error) {

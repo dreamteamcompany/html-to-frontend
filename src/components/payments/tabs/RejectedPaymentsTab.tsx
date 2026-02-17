@@ -25,7 +25,7 @@ const RejectedPaymentsTab = () => {
   const fetchRejectedPayments = async () => {
     setLoading(true);
     try {
-      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+      const response = await apiFetch(`${API_ENDPOINTS.paymentsApi}?scope=all`);
       const data = await response.json();
       
       const rejectedPayments = (Array.isArray(data) ? data : []).filter((p: ExtendedPayment) => 
@@ -43,9 +43,9 @@ const RejectedPaymentsTab = () => {
 
   const handleResubmit = async (paymentId: number) => {
     try {
-      await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments&id=${paymentId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ status: 'pending_ceo' })
+      await apiFetch(`${API_ENDPOINTS.approvalsApi}`, {
+        method: 'POST',
+        body: JSON.stringify({ payment_id: paymentId, action: 'submit' })
       });
       fetchRejectedPayments();
     } catch (error) {
