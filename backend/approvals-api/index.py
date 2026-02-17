@@ -159,8 +159,10 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     """Утверждение или отклонение платежа"""
     try:
         body = json.loads(event.get('body', '{}'))
+        print(f"[DEBUG] Received body: {body}")
         approval_action = ApprovalActionRequest(**body)
     except Exception as e:
+        print(f"[ERROR] Validation failed: {str(e)}, body: {event.get('body', '{}')}")
         return response(400, {'error': f'Ошибка валидации: {str(e)}'})
     
     cur = conn.cursor(cursor_factory=RealDictCursor)
