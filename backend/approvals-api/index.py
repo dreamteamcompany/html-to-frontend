@@ -235,10 +235,10 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
             cur.close()
             return response(400, {'error': 'Неверный статус платежа для утверждения'})
     elif approval_action.action == 'revoke':
-        # Проверяем, что платёж на согласовании
-        if payment['status'] not in ('pending_ceo', 'pending_tech_director'):
+        # Проверяем, что платёж можно отозвать (на согласовании или одобрен)
+        if payment['status'] not in ('pending_ceo', 'pending_tech_director', 'approved'):
             cur.close()
-            return response(400, {'error': 'Можно отозвать только платежи на согласовании'})
+            return response(400, {'error': 'Можно отозвать только платежи на согласовании или одобренные'})
         # Проверяем, что отзывает создатель платежа
         if payment.get('created_by') != user_id:
             cur.close()

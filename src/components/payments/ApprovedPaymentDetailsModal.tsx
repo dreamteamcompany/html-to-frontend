@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_ENDPOINTS } from '@/config/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface CustomField {
   id: number;
@@ -50,6 +52,7 @@ interface ApprovedPaymentDetailsModalProps {
 
 const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPaymentDetailsModalProps) => {
   const { token } = useAuth();
+  const { toast } = useToast();
   const [showRevokeForm, setShowRevokeForm] = useState(false);
   const [revokeReason, setRevokeReason] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
@@ -58,34 +61,48 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
 
   const handleRevoke = async () => {
     if (!revokeReason.trim()) {
-      alert('Пожалуйста, укажите причину отзыва');
+      toast({
+        title: 'Ошибка',
+        description: 'Укажите причину отзыва',
+        variant: 'destructive',
+      });
       return;
     }
 
     setIsRevoking(true);
     try {
-      const response = await fetch('https://functions.poehali.dev/b79dfca0-9f01-41a8-92bb-7a6d9212d2f1', {
-        method: 'POST',
+      const response = await fetch(API_ENDPOINTS.approvalsApi, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': localStorage.getItem('user_id') || '1'
+          'X-Auth-Token': token || '',
         },
         body: JSON.stringify({
           payment_id: payment.id,
-          reason: revokeReason.trim()
-        })
+          action: 'revoke',
+          comment: revokeReason.trim(),
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка отзыва');
+        const error = await response.json();
+        throw new Error(error.error || 'Не удалось отозвать платёж');
       }
+
+      toast({
+        title: 'Успешно',
+        description: 'Платёж отозван и возвращён в черновики',
+      });
 
       if (onRevoked) onRevoked();
       onClose();
     } catch (error) {
       console.error('Ошибка отзыва платежа:', error);
-      alert('Не удалось отозвать платеж');
+      toast({
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Не удалось отозвать платеж',
+        variant: 'destructive',
+      });
     } finally {
       setIsRevoking(false);
     }
