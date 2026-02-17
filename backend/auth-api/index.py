@@ -7,6 +7,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 SCHEMA = 't_p61788166_html_to_frontend'
 
@@ -156,10 +157,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 conn.close()
                 return response(401, {'error': 'Неверный логин или пароль'})
             
+            moscow_tz = ZoneInfo('Europe/Moscow')
+            now_moscow = datetime.now(moscow_tz)
+            
             cur = conn.cursor()
             cur.execute(f"""
-                UPDATE {SCHEMA}.users SET last_login = CURRENT_TIMESTAMP WHERE id = %s
-            """, (user['id'],))
+                UPDATE {SCHEMA}.users SET last_login = %s WHERE id = %s
+            """, (now_moscow, user['id']))
             conn.commit()
             cur.close()
             

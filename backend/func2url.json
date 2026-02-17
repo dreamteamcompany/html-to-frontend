@@ -13,6 +13,7 @@
   "invoice-ocr": "https://functions.poehali.dev/b41527a2-cf8d-4623-8504-e8717507b9d0",
   "monitoring": "https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d",
   "push-notifications": "https://functions.poehali.dev/cc67e884-8946-4bcd-939d-ea3c195a6598",
+  "process-scheduled-payments": "https://functions.poehali.dev/eeefc720-2351-43cd-804d-44fbd748ab8f",
   "clear-all-data": "https://functions.poehali.dev/69d0e8e7-3feb-4d34-9a63-64521e899118",
   "collect-logs": "https://functions.poehali.dev/acbb6915-96bf-4e7f-ab66-c34c3fa4b26c",
   "log-analyzer": "https://functions.poehali.dev/dd221a88-cc33-4a30-a59f-830b0a41862f",

@@ -3,6 +3,8 @@ API для управления push-уведомлениями
 """
 import json
 import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from pywebpush import webpush, WebPushException
@@ -51,6 +53,9 @@ def subscribe_push(event: dict):
             'body': json.dumps({'error': 'user_id and subscription required'})
         }
     
+    moscow_tz = ZoneInfo('Europe/Moscow')
+    now_moscow = datetime.now(moscow_tz)
+    
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
@@ -64,8 +69,8 @@ def subscribe_push(event: dict):
         (user_id, endpoint, p256dh, auth)
         VALUES (%s, %s, %s, %s)
         ON CONFLICT (user_id, endpoint) 
-        DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, updated_at = CURRENT_TIMESTAMP
-    """, (user_id, endpoint, p256dh, auth))
+        DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, updated_at = %s
+    """, (user_id, endpoint, p256dh, auth, now_moscow))
     
     conn.commit()
     cur.close()

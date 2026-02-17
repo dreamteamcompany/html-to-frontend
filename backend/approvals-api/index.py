@@ -3,6 +3,8 @@ import json
 import os
 import base64
 from typing import Dict, Any
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import jwt
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -235,23 +237,27 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     else:
         new_status = 'rejected'
     
+    # Московское время
+    moscow_tz = ZoneInfo('Europe/Moscow')
+    now_moscow = datetime.now(moscow_tz)
+    
     # Обновляем статус платежа
     if new_status == 'approved' and is_final_approver:
         cur.execute(f"""
             UPDATE {SCHEMA}.payments
             SET status = %s, 
-                ceo_approved_at = CURRENT_TIMESTAMP,
+                ceo_approved_at = %s,
                 ceo_approved_by = %s,
-                submitted_at = CASE WHEN submitted_at IS NULL THEN CURRENT_TIMESTAMP ELSE submitted_at END
+                submitted_at = CASE WHEN submitted_at IS NULL THEN %s ELSE submitted_at END
             WHERE id = %s
-        """, (new_status, user_id, approval_action.payment_id))
+        """, (new_status, now_moscow, user_id, now_moscow, approval_action.payment_id))
     elif new_status == 'pending_ceo':
         cur.execute(f"""
             UPDATE {SCHEMA}.payments
             SET status = %s,
-                submitted_at = CURRENT_TIMESTAMP
+                submitted_at = %s
             WHERE id = %s
-        """, (new_status, approval_action.payment_id))
+        """, (new_status, now_moscow, approval_action.payment_id))
     else:
         cur.execute(f"""
             UPDATE {SCHEMA}.payments
@@ -259,11 +265,11 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
             WHERE id = %s
         """, (new_status, approval_action.payment_id))
     
-    # Добавляем запись в историю утверждений
+    # Добавляем запись в историю утверждений с московским временем
     cur.execute(f"""
-        INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (approval_action.payment_id, user_id, 'submitter', approval_action.action, approval_action.comment))
+        INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s)
+    """, (approval_action.payment_id, user_id, 'submitter', approval_action.action, approval_action.comment, now_moscow))
     
     conn.commit()
     cur.close()

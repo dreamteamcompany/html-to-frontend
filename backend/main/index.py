@@ -7,6 +7,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from pydantic import BaseModel, Field
 # Deploy version: v2.5.2 - fixed approvers endpoint handlers
 
@@ -2418,11 +2419,14 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
             cur.close()
             return response(400, {'error': 'Для отправки на согласование необходимо указать сервис'})
         
+        moscow_tz = ZoneInfo('Europe/Moscow')
+        now_moscow = datetime.now(moscow_tz)
+        
         cur.execute(f"""
             UPDATE {SCHEMA}.payments 
-            SET status = 'pending_ceo', submitted_at = NOW()
+            SET status = 'pending_ceo', submitted_at = %s
             WHERE id = %s
-        """, (payment_id,))
+        """, (now_moscow, payment_id))
         
         cur.execute(f"""
             INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment)
@@ -2461,20 +2465,23 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
         final_approver = payment.get('final_approver_id')
         
         if current_status == 'pending_ceo' and user_id == final_approver:
+            moscow_tz = ZoneInfo('Europe/Moscow')
+            now_moscow = datetime.now(moscow_tz)
+            
             if req.action == 'approve':
                 new_status = 'approved'
                 cur.execute(f"""
                     UPDATE {SCHEMA}.payments 
-                    SET status = %s, ceo_approved_at = NOW(), ceo_approved_by = %s
+                    SET status = %s, ceo_approved_at = %s, ceo_approved_by = %s
                     WHERE id = %s
-                """, (new_status, user_id, req.payment_id))
+                """, (new_status, now_moscow, user_id, req.payment_id))
             else:
                 new_status = 'rejected'
                 cur.execute(f"""
                     UPDATE {SCHEMA}.payments 
-                    SET status = %s, ceo_approved_at = NOW(), ceo_approved_by = %s
+                    SET status = %s, ceo_approved_at = %s, ceo_approved_by = %s
                     WHERE id = %s
-                """, (new_status, user_id, req.payment_id))
+                """, (new_status, now_moscow, user_id, req.payment_id))
         
         else:
             cur.close()

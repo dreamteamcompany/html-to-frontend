@@ -6,6 +6,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 SCHEMA = 't_p61788166_html_to_frontend'
 
@@ -240,10 +241,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     params.append(data['due_date'])
                 
                 if updates:
+                    moscow_tz = ZoneInfo('Europe/Moscow')
+                    now_moscow = datetime.now(moscow_tz)
+                    params.append(now_moscow)
                     params.append(ticket_id)
                     cur.execute(f"""
                         UPDATE {SCHEMA}.tickets 
-                        SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP
+                        SET {', '.join(updates)}, updated_at = %s
                         WHERE id = %s
                     """, params)
                     conn.commit()

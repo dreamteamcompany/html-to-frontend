@@ -6,6 +6,7 @@ import json
 import os
 from typing import Any, Dict
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -22,16 +23,19 @@ def process_scheduled_payments() -> Dict[str, Any]:
     processed_count = 0
     created_payments = []
     
+    moscow_tz = ZoneInfo('Europe/Moscow')
+    now_moscow = datetime.now(moscow_tz)
+    
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             # Получаем все активные запланированные платежи, у которых planned_date <= сегодня
             cur.execute(f"""
                 SELECT * FROM {SCHEMA}.planned_payments
                 WHERE is_active = true
-                AND planned_date <= NOW()
+                AND planned_date <= %s
                 AND converted_to_payment_id IS NULL
                 ORDER BY planned_date ASC
-            """)
+            """, (now_moscow,))
             
             planned_payments = cur.fetchall()
             
@@ -43,7 +47,7 @@ def process_scheduled_payments() -> Dict[str, Any]:
                         (category_id, amount, description, payment_date, legal_entity_id,
                          contractor_id, department_id, service_id, invoice_number, invoice_date,
                          status, created_by, created_at, category)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft', %s, NOW(), 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft', %s, %s, 
                                 (SELECT name FROM {SCHEMA}.categories WHERE id = %s))
                         RETURNING id
                     """, (
@@ -58,6 +62,7 @@ def process_scheduled_payments() -> Dict[str, Any]:
                         planned['invoice_number'],
                         planned['invoice_date'],
                         planned['created_by'],
+                        now_moscow,
                         planned['category_id']
                     ))
                     
@@ -105,18 +110,18 @@ def process_scheduled_payments() -> Dict[str, Any]:
                             cur.execute(f"""
                                 UPDATE {SCHEMA}.planned_payments 
                                 SET converted_to_payment_id = %s,
-                                    converted_at = NOW(),
+                                    converted_at = %s,
                                     is_active = false
                                 WHERE id = %s
-                            """, (new_payment_id, planned['id']))
+                            """, (new_payment_id, now_moscow, planned['id']))
                     else:
                         # Одноразовый платёж, помечаем как конвертированный
                         cur.execute(f"""
                             UPDATE {SCHEMA}.planned_payments 
                             SET converted_to_payment_id = %s,
-                                converted_at = NOW()
+                                converted_at = %s
                             WHERE id = %s
-                        """, (new_payment_id, planned['id']))
+                        """, (new_payment_id, now_moscow, planned['id']))
                     
                     processed_count += 1
                     created_payments.append({
