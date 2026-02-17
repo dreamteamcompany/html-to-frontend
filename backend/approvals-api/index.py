@@ -99,11 +99,9 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
         LEFT JOIN {SCHEMA}.customer_departments dep ON p.department_id = dep.id
         LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
         LEFT JOIN {SCHEMA}.users u ON p.created_by_user_id = u.id
-        WHERE 
-            (p.status = 'pending_approval' AND s.intermediate_approver_id = %s)
-            OR (p.status = 'intermediate_approved' AND s.final_approver_id = %s)
+        WHERE p.status = 'pending_ceo'
         ORDER BY p.created_at DESC
-    """, (user_id, user_id))
+    """)
     
     payments_data = cur.fetchall()
     payments = []
@@ -189,14 +187,12 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         if payment['status'] != 'draft':
             cur.close()
             return response(400, {'error': 'Только черновики можно отправить на согласование'})
-        new_status = 'pending_approval'
+        new_status = 'pending_ceo'
     elif approval_action.action == 'approve':
         if not is_intermediate_approver and not is_final_approver:
             cur.close()
             return response(403, {'error': 'Вы не являетесь утверждающим для этого платежа'})
-        if payment['status'] == 'pending_approval' and is_intermediate_approver:
-            new_status = 'intermediate_approved'
-        elif (payment['status'] in ('pending_approval', 'intermediate_approved')) and is_final_approver:
+        if payment['status'] == 'pending_ceo' and is_final_approver:
             new_status = 'approved'
         else:
             cur.close()
