@@ -106,7 +106,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           {!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status === 'pending_approval') && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit && (
                             <button
                               onClick={() => onSubmitForApproval(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                              className="px-3 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700"
                             >
                               Отправить на согласование
                             </button>
@@ -197,7 +197,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       {!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status === 'pending_approval') && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit && (
                         <button
                           onClick={() => onSubmitForApproval(payment.id)}
-                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium"
+                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 font-medium"
                         >
                           Отправить на согласование
                         </button>
