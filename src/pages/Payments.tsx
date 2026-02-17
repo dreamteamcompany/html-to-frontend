@@ -76,6 +76,11 @@ const Payments = () => {
         </div>
 
         <div className="px-4 sm:px-6 py-4 sm:py-6">
+          <div className="mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">История платежей</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Все операции по IT расходам</p>
+          </div>
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full justify-start border-b border-white/10 rounded-none bg-transparent p-0 h-auto mb-6">
               <TabsTrigger 
