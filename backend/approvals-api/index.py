@@ -72,9 +72,9 @@ def verify_token_and_permission(event: Dict[str, Any], conn, required_permission
     return payload, None
 
 class ApprovalActionRequest(BaseModel):
-    """Модель запроса на утверждение/отклонение"""
+    """Модель запроса на утверждение/отклонение/отзыв"""
     payment_id: int = Field(..., gt=0)
-    action: str = Field(..., pattern='^(approve|reject|submit)$')
+    action: str = Field(..., pattern='^(approve|reject|submit|revoke)$')
     comment: str = Field(default='')
 
 def handle_payment_history(event: Dict[str, Any], conn, payment_id: int) -> Dict[str, Any]:
@@ -234,6 +234,22 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         else:
             cur.close()
             return response(400, {'error': 'Неверный статус платежа для утверждения'})
+    elif approval_action.action == 'revoke':
+        # Проверяем, что платёж на согласовании
+        if payment['status'] not in ('pending_ceo', 'pending_tech_director'):
+            cur.close()
+            return response(400, {'error': 'Можно отозвать только платежи на согласовании'})
+        # Проверяем, что отзывает создатель платежа
+        if payment.get('created_by') != user_id:
+            cur.close()
+            return response(403, {'error': 'Только создатель платежа может его отозвать'})
+        # Проверяем наличие причины отзыва
+        if not approval_action.comment or not approval_action.comment.strip():
+            cur.close()
+            return response(400, {'error': 'Причина отзыва обязательна'})
+        new_status = 'draft'  # Возвращаем в черновики
+    elif approval_action.action == 'reject':
+        new_status = 'rejected'
     else:
         new_status = 'rejected'
     

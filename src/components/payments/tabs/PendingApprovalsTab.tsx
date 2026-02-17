@@ -140,6 +140,10 @@ const PendingApprovalsTab = () => {
         onClose={() => setSelectedPayment(null)}
         onApprove={handleModalApprove}
         onReject={handleModalReject}
+        onRevoke={() => {
+          // Перезагружаем данные после отзыва
+          window.location.reload();
+        }}
       />
     </div>
   );

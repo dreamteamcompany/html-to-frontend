@@ -4,6 +4,11 @@ import { useState } from 'react';
 import PaymentComments from './PaymentComments';
 import PaymentAuditLog from './PaymentAuditLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface CustomField {
   id: number;
@@ -43,10 +48,20 @@ interface PendingApprovalsModalProps {
   onClose: () => void;
   onApprove: (paymentId: number, comment?: string) => void;
   onReject: (paymentId: number, comment?: string) => void;
+  onRevoke?: () => void;
 }
 
-const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: PendingApprovalsModalProps) => {
+const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke }: PendingApprovalsModalProps) => {
+  const { token, user } = useAuth();
+  const { toast } = useToast();
+  const [showRevokeDialog, setShowRevokeDialog] = useState(false);
+  const [revokeReason, setRevokeReason] = useState('');
+  const [isRevoking, setIsRevoking] = useState(false);
+
   if (!payment) return null;
+
+  const isCreator = user?.id === payment.created_by;
+  const canRevoke = isCreator && (payment.status === 'pending_ceo' || payment.status === 'pending_tech_director');
 
   const handleApprove = () => {
     console.log('[PendingApprovalsModal handleApprove] onClick triggered');
@@ -67,6 +82,60 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
       onReject(payment.id);
     } else {
       console.error('[PendingApprovalsModal handleReject] onReject is not a function!', onReject);
+    }
+  };
+
+  const handleRevokeClick = () => {
+    setShowRevokeDialog(true);
+  };
+
+  const handleRevokeConfirm = async () => {
+    if (!revokeReason.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Укажите причину отзыва',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsRevoking(true);
+    try {
+      const response = await fetch(API_ENDPOINTS.approvalsApi, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({
+          payment_id: payment.id,
+          action: 'revoke',
+          comment: revokeReason.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Не удалось отозвать платёж');
+      }
+
+      toast({
+        title: 'Успешно',
+        description: 'Платёж отозван и возвращён в черновики',
+      });
+
+      setShowRevokeDialog(false);
+      if (onRevoke) onRevoke();
+      onClose();
+    } catch (error) {
+      console.error('Failed to revoke payment:', error);
+      toast({
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Не удалось отозвать платёж',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRevoking(false);
     }
   };
 
@@ -237,9 +306,64 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject }: Pendin
                 </TabsContent>
               </Tabs>
             </div>
+
+            {canRevoke && (
+              <div className="border-t border-white/10 p-4">
+                <Button
+                  onClick={handleRevokeClick}
+                  variant="outline"
+                  className="w-full border-orange-500/50 text-orange-400 hover:bg-orange-500/10"
+                >
+                  <Icon name="RotateCcw" size={16} className="mr-2" />
+                  Отозвать платёж
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      <Dialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Отзыв платежа</DialogTitle>
+            <DialogDescription>
+              Платёж будет возвращён в черновики. Укажите причину отзыва.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Причина отзыва <span className="text-red-500">*</span>
+              </label>
+              <Textarea
+                value={revokeReason}
+                onChange={(e) => setRevokeReason(e.target.value)}
+                placeholder="Укажите причину отзыва платежа..."
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowRevokeDialog(false)}
+                variant="outline"
+                className="flex-1"
+                disabled={isRevoking}
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={handleRevokeConfirm}
+                className="flex-1 bg-orange-600 hover:bg-orange-700"
+                disabled={isRevoking || !revokeReason.trim()}
+              >
+                {isRevoking ? 'Отзыв...' : 'Отозвать'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
