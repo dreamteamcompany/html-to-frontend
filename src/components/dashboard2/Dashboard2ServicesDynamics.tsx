@@ -1,6 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { apiFetch } from '@/utils/api';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface Service {
   name: string;
@@ -8,21 +10,88 @@ interface Service {
   trend: number;
 }
 
+interface Payment {
+  amount: number;
+  payment_date: string;
+  service_name?: string;
+  status: string;
+}
+
 const Dashboard2ServicesDynamics = () => {
   const [hoveredService, setHoveredService] = useState<number | null>(null);
+  const [servicesData, setServicesData] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const servicesData: Service[] = [
-    { name: 'Облачные сервисы', amount: 150000, trend: 12 },
-    { name: 'CRM-система', amount: 85000, trend: -5 },
-    { name: 'Аналитика', amount: 65000, trend: 8 },
-    { name: 'Хостинг', amount: 45000, trend: 0 },
-    { name: 'Email-рассылки', amount: 35000, trend: 15 },
-    { name: 'Видеоконференции', amount: 55000, trend: 10 },
-    { name: 'Бухгалтерия', amount: 72000, trend: -3 },
-    { name: 'Антивирус', amount: 28000, trend: 5 },
-    { name: 'VPN-сервисы', amount: 42000, trend: 18 },
-    { name: 'Мониторинг', amount: 38000, trend: 7 },
-  ];
+  useEffect(() => {
+    loadServicesData();
+  }, []);
+
+  const loadServicesData = async () => {
+    try {
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+      const data = await response.json();
+      
+      const approvedPayments = (Array.isArray(data) ? data : []).filter((p: Payment) => 
+        p.status === 'approved' || p.status === 'paid'
+      );
+
+      const now = new Date();
+      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+      // Платежи текущего месяца
+      const currentMonthPayments = approvedPayments.filter((p: Payment) => {
+        const paymentDate = new Date(p.payment_date);
+        return paymentDate >= currentMonthStart;
+      });
+
+      // Платежи предыдущего месяца
+      const previousMonthPayments = approvedPayments.filter((p: Payment) => {
+        const paymentDate = new Date(p.payment_date);
+        return paymentDate >= previousMonthStart && paymentDate <= previousMonthEnd;
+      });
+
+      // Группируем по сервисам для текущего месяца
+      const currentByService: {[key: string]: number} = {};
+      currentMonthPayments.forEach((p: Payment) => {
+        const serviceName = p.service_name || 'Без сервиса';
+        currentByService[serviceName] = (currentByService[serviceName] || 0) + p.amount;
+      });
+
+      // Группируем по сервисам для предыдущего месяца
+      const previousByService: {[key: string]: number} = {};
+      previousMonthPayments.forEach((p: Payment) => {
+        const serviceName = p.service_name || 'Без сервиса';
+        previousByService[serviceName] = (previousByService[serviceName] || 0) + p.amount;
+      });
+
+      // Формируем данные с трендами
+      const services: Service[] = Object.keys(currentByService).map(serviceName => {
+        const currentAmount = currentByService[serviceName];
+        const previousAmount = previousByService[serviceName] || 0;
+        
+        let trend = 0;
+        if (previousAmount > 0) {
+          trend = Math.round(((currentAmount - previousAmount) / previousAmount) * 100);
+        } else if (currentAmount > 0) {
+          trend = 100; // Новый сервис
+        }
+
+        return {
+          name: serviceName,
+          amount: currentAmount,
+          trend: trend
+        };
+      });
+
+      setServicesData(services);
+    } catch (error) {
+      console.error('Failed to load services data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const sortedData = [...servicesData].sort((a, b) => b.amount - a.amount);
   const maxAmount = Math.max(...sortedData.map(s => s.amount));
@@ -64,6 +133,16 @@ const Dashboard2ServicesDynamics = () => {
           </div>
         </div>
 
+        {loading ? (
+          <div className="flex items-center justify-center" style={{ height: '200px' }}>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          </div>
+        ) : sortedData.length === 0 ? (
+          <div className="flex items-center justify-center" style={{ height: '200px', color: '#a3aed0' }}>
+            Нет данных о платежах
+          </div>
+        ) : (
+          <>
         <div style={{ 
           display: 'flex',
           flexDirection: 'column',
@@ -200,6 +279,8 @@ const Dashboard2ServicesDynamics = () => {
             </div>
           ))}
         </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );
