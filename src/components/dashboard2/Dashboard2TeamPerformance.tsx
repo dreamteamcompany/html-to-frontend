@@ -78,8 +78,17 @@ const Dashboard2TeamPerformance = () => {
 
   const activeData = currentData;
 
+  const colors = [
+    'rgb(1, 181, 116)',
+    'rgb(0, 155, 98)',
+    'rgb(0, 207, 142)',
+    'rgb(78, 205, 196)',
+    'rgb(0, 230, 160)',
+    'rgb(52, 168, 83)',
+  ];
+
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)', maxWidth: '550px' }}>
+    <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)' }}>
       <CardContent className="p-6">
         <div style={{ marginBottom: '16px' }}>
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Отделам-Заказчикам</h3>
@@ -93,108 +102,80 @@ const Dashboard2TeamPerformance = () => {
             <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
-        <>
-        <div className="h-[240px] sm:h-[320px]" style={{ position: 'relative', padding: isMobile ? '10px' : '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Radar
+        <div className="h-[250px] sm:h-[350px]" style={{ position: 'relative' }}>
+          <Bar
             data={{
               labels: activeData.map(d => d.name),
               datasets: [{
-                label: 'Расходы по отделам',
+                label: 'Расходы',
                 data: activeData.map(d => d.amount),
-                backgroundColor: 'rgba(1, 181, 116, 0.15)',
-                borderColor: 'rgb(1, 181, 116)',
-                borderWidth: 3,
-                pointBackgroundColor: 'rgb(1, 181, 116)',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: 'rgb(1, 181, 116)',
-                pointHoverBorderWidth: 3,
-                pointStyle: 'circle'
+                backgroundColor: activeData.map((_, i) => colors[i % colors.length]),
+                borderRadius: isMobile ? 4 : 8,
+                barThickness: isMobile ? 20 : 30
               }]
             }}
             options={{
+              indexAxis: 'y' as const,
               responsive: true,
               maintainAspectRatio: false,
+              interaction: {
+                mode: 'index' as const,
+                intersect: false
+              },
+              elements: {
+                bar: {
+                  hoverBackgroundColor: undefined
+                }
+              },
               plugins: {
                 legend: {
                   display: false
                 },
                 tooltip: {
-                  enabled: true,
-                  backgroundColor: 'rgba(17, 28, 68, 0.95)',
-                  titleColor: '#fff',
-                  bodyColor: '#01b574',
-                  borderColor: 'rgba(1, 181, 116, 0.5)',
-                  borderWidth: 1,
-                  padding: 12,
-                  displayColors: false,
-                  titleFont: {
-                    size: 13,
-                    weight: 'bold'
-                  },
-                  bodyFont: {
-                    size: 14,
-                    weight: 'bold'
-                  },
+                  enabled: !isMobile,
                   callbacks: {
                     label: function(context) {
-                      return `${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`;
+                      return `Расходы: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`;
                     }
                   }
                 }
               },
               scales: {
-                r: {
+                x: {
                   beginAtZero: true,
-                  min: 0,
                   ticks: {
-                    display: false
+                    color: '#a3aed0',
+                    font: {
+                      size: isMobile ? 10 : 12
+                    },
+                    maxTicksLimit: isMobile ? 5 : 8,
+                    callback: function(value) {
+                      const numValue = value as number;
+                      if (isMobile && numValue >= 1000) {
+                        return (numValue / 1000).toFixed(0) + 'k ₽';
+                      }
+                      return new Intl.NumberFormat('ru-RU').format(numValue) + ' ₽';
+                    }
                   },
                   grid: {
-                    color: 'rgba(1, 181, 116, 0.15)',
-                    lineWidth: 1
-                  },
-                  angleLines: {
-                    color: 'rgba(1, 181, 116, 0.2)',
-                    lineWidth: 2
-                  },
-                  pointLabels: {
-                    padding: isMobile ? 10 : 15,
+                    color: 'rgba(255, 255, 255, 0.05)'
+                  }
+                },
+                y: {
+                  ticks: {
+                    color: '#a3aed0',
                     font: {
-                      size: isMobile ? 11 : 14,
-                      weight: '700'
-                    },
-                    callback: function(label: string, index: number) {
-                      const dept = activeData[index];
-                      const formatted = new Intl.NumberFormat('ru-RU').format(dept.amount);
-                      return [`${label}`, `${formatted} ₽`];
-                    },
-                    color: '#fff'
+                      size: isMobile ? 9 : 12
+                    }
+                  },
+                  grid: {
+                    display: false
                   }
                 }
               }
             }}
           />
         </div>
-        
-        <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(1, 181, 116, 0.08)', borderRadius: '12px', border: '1px solid rgba(1, 181, 116, 0.2)' }}>
-          <h4 style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '800', color: '#fff', marginBottom: '12px' }}>Топ-3 Отделов по Затратам</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {activeData.slice(0, 3).map((dept, index) => (
-              <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(1, 181, 116, 0.15)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', color: '#01b574', minWidth: '24px' }}>{index + 1}</span>
-                  <span style={{ fontSize: isMobile ? '12px' : '13px', color: '#fff', fontWeight: '600' }}>{dept.name}</span>
-                </div>
-                <span style={{ fontSize: isMobile ? '14px' : '16px', color: '#01b574', fontWeight: '800', textShadow: '0 0 10px rgba(1, 181, 116, 0.5)' }}>{new Intl.NumberFormat('ru-RU').format(dept.amount)} ₽</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        </>
         )}
       </CardContent>
     </Card>
