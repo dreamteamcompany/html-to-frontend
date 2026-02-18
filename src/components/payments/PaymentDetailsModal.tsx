@@ -17,7 +17,8 @@ interface Payment {
   category_icon: string;
   description: string;
   amount: number;
-  payment_date: string;
+  payment_date?: string;
+  planned_date?: string;
   legal_entity_id?: number;
   legal_entity_name?: string;
   status?: string;
@@ -46,9 +47,10 @@ interface PaymentDetailsModalProps {
   onApprove?: (paymentId: number) => void;
   onReject?: (paymentId: number) => void;
   onEdit?: (payment: Payment) => void;
+  isPlannedPayment?: boolean;
 }
 
-const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove, onReject, onEdit }: PaymentDetailsModalProps) => {
+const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove, onReject, onEdit, isPlannedPayment = false }: PaymentDetailsModalProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   
   if (!payment) return null;
@@ -207,8 +209,14 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
             <div className="p-4 sm:p-6 border-b border-white/10">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Дата платежа:</span>
-                  <span className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</span>
+                  <span className="text-muted-foreground">{isPlannedPayment ? 'Дата планирования:' : 'Дата платежа:'}</span>
+                  <span className="font-medium">
+                    {payment.planned_date 
+                      ? new Date(payment.planned_date).toLocaleDateString('ru-RU')
+                      : payment.payment_date 
+                        ? new Date(payment.payment_date).toLocaleDateString('ru-RU')
+                        : 'Invalid Date'}
+                  </span>
                 </div>
                 {payment.submitted_at && (
                   <div className="flex justify-between">
@@ -231,15 +239,27 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
               </div>
             </div>
 
-            <Tabs defaultValue="history" className="flex-1 flex flex-col overflow-hidden">
-              <TabsList className="px-4 sm:px-6 pt-4 grid w-auto grid-cols-1">
-                <TabsTrigger value="history">История согласований</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="history" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
-                <PaymentAuditLog paymentId={payment.id} />
-              </TabsContent>
-            </Tabs>
+            {!isPlannedPayment && (
+              <Tabs defaultValue="history" className="flex-1 flex flex-col overflow-hidden">
+                <TabsList className="px-4 sm:px-6 pt-4 grid w-auto grid-cols-1">
+                  <TabsTrigger value="history">История согласований</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="history" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
+                  <PaymentAuditLog paymentId={payment.id} />
+                </TabsContent>
+              </Tabs>
+            )}
+            
+            {isPlannedPayment && (
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+                <div className="text-center text-muted-foreground py-8">
+                  <Icon name="Clock" size={48} className="mx-auto mb-4 opacity-50" />
+                  <p className="text-sm">Запланированный платёж</p>
+                  <p className="text-xs mt-2">История согласований появится после создания платежа</p>
+                </div>
+              </div>
+            )}
             
             {((!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval) || (onApprove || onReject) ? (
               <div className="p-4 sm:p-6 border-t border-white/10 space-y-3">

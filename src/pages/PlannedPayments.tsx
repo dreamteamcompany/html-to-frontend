@@ -154,6 +154,7 @@ const PlannedPayments = () => {
         <PaymentDetailsModal
           payment={selectedPayment}
           onClose={() => setSelectedPayment(null)}
+          isPlannedPayment={true}
         />
       </main>
     </div>
