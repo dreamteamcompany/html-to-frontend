@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface CustomFieldDefinition {
   id: number;
@@ -53,6 +54,15 @@ export const usePlannedPaymentForm = (
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.category_id || !formData.amount || !formData.description || !formData.planned_date) {
+      toast({
+        title: 'Ошибка',
+        description: 'Заполните обязательные поля: категория, сумма, описание, дата планирования',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const requiredFields = customFields.filter((field) => field.is_required);
     const missingFields = requiredFields.filter(
       (field) => !formData.custom_fields[field.id]
@@ -68,7 +78,7 @@ export const usePlannedPaymentForm = (
     }
 
     try {
-      const response = await fetch('https://functions.poehali.dev/a0000b1e-3d3e-4094-b08e-2893df500d3f', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
