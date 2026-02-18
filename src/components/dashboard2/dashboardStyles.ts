@@ -1,25 +1,26 @@
 // Единая типографика для всех компонентов Dashboard2
+// Все тексты приведены к единому размеру text-sm
 export const dashboardTypography = {
   // Заголовки карточек
-  cardTitle: 'text-base sm:text-lg font-bold',
+  cardTitle: 'text-sm font-bold',
   
   // Подзаголовки / описания
-  cardSubtitle: 'text-xs sm:text-sm font-medium text-[#a3aed0]',
+  cardSubtitle: 'text-sm font-medium text-[#a3aed0]',
   
   // Основные цифры / метрики
-  cardValue: 'text-2xl sm:text-3xl font-extrabold',
+  cardValue: 'text-xl font-extrabold',
   
   // Вторичный текст
-  cardSecondary: 'text-xs sm:text-sm font-medium text-[#a3aed0]',
+  cardSecondary: 'text-sm font-medium text-[#a3aed0]',
   
   // Статус / бейджи
-  cardBadge: 'text-xs sm:text-sm font-semibold',
+  cardBadge: 'text-sm font-semibold',
   
   // Мелкий текст (labels, hints)
-  cardSmall: 'text-[10px] sm:text-xs font-medium text-[#a3aed0]',
+  cardSmall: 'text-sm font-medium text-[#a3aed0]',
   
   // Очень мелкий текст
-  cardTiny: 'text-[8px] sm:text-[10px] font-medium text-[#a3aed0]',
+  cardTiny: 'text-sm font-medium text-[#a3aed0]',
 } as const;
 
 // Цвета для единообразия
