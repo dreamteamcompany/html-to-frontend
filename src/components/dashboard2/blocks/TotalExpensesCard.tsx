@@ -72,7 +72,7 @@ const TotalExpensesCard = () => {
     };
 
     fetchStats();
-  }, [token, period]);
+  }, [token, period, getDateRange]);
 
   const formatAmount = (amount: number) =>
     amount.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' ₽';

@@ -71,7 +71,7 @@ const LegalEntityComparisonChart = () => {
     };
 
     fetchLegalEntityData();
-  }, [period]);
+  }, [period, getDateRange]);
 
   return (
     <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }} className="w-full lg:w-[760px] h-auto lg:h-[400px]">

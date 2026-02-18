@@ -111,7 +111,7 @@ const CategoryExpensesChart = () => {
     };
 
     fetchCategoryData();
-  }, [period]);
+  }, [period, getDateRange]);
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,

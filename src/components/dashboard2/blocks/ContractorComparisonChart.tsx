@@ -72,7 +72,7 @@ const ContractorComparisonChart = () => {
     };
 
     fetchContractorData();
-  }, [period]);
+  }, [period, getDateRange]);
 
   const displayData = showAll ? contractorData : contractorData.slice(0, 5);
 

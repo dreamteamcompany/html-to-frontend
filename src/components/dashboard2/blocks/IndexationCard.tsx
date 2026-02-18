@@ -83,7 +83,7 @@ const IndexationCard = () => {
     };
 
     fetchIndexationData();
-  }, [period]);
+  }, [period, getDateRange]);
 
   return (
     <Card className="h-full" style={{ background: '#111c44', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547', boxShadow: '0 0 30px rgba(255, 181, 71, 0.2), inset 0 0 15px rgba(255, 181, 71, 0.05)' }}>

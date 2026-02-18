@@ -60,7 +60,7 @@ const Dashboard2TeamPerformance = () => {
     };
 
     fetchDepartmentData();
-  }, [period]);
+  }, [period, getDateRange]);
 
   return (
     <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)' }}>

@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useCallback } from 'react';
 
 export type PeriodType = 'today' | 'week' | 'month' | 'year' | 'custom';
 
@@ -68,7 +68,7 @@ interface PeriodProviderProps {
 }
 
 export const PeriodProvider = ({ children, period, dateFrom, dateTo }: PeriodProviderProps) => {
-  const getDateRange = () => getPeriodRange(period, dateFrom, dateTo);
+  const getDateRange = useCallback(() => getPeriodRange(period, dateFrom, dateTo), [period, dateFrom, dateTo]);
 
   return (
     <PeriodContext.Provider value={{ period, dateFrom, dateTo, getDateRange }}>
