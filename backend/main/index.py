@@ -23,12 +23,12 @@ class PaymentRequest(BaseModel):
     amount: float = Field(..., gt=0)
     description: str = Field(default='')
     payment_date: str = Field(default='')
-    legal_entity_id: int = Field(default=None)
-    contractor_id: int = Field(default=None)
-    department_id: int = Field(default=None)
-    service_id: int = Field(default=None)
-    invoice_number: str = Field(default=None)
-    invoice_date: str = Field(default=None)
+    legal_entity_id: Optional[int] = None
+    contractor_id: Optional[int] = None
+    department_id: Optional[int] = None
+    service_id: Optional[int] = None
+    invoice_number: Optional[str] = None
+    invoice_date: Optional[str] = None
 
 class CategoryRequest(BaseModel):
     name: str = Field(..., min_length=1)
