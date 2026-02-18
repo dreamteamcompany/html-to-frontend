@@ -90,14 +90,14 @@ const IndexationCard = () => {
   }, []);
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547', boxShadow: '0 0 30px rgba(255, 181, 71, 0.2), inset 0 0 15px rgba(255, 181, 71, 0.05)' }}>
-      <CardContent className="p-4 sm:p-6">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }} className="sm:mb-5">
+    <Card className="h-full" style={{ background: '#111c44', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547', boxShadow: '0 0 30px rgba(255, 181, 71, 0.2), inset 0 0 15px rgba(255, 181, 71, 0.05)' }}>
+      <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
+        <div className="flex justify-between items-start mb-4 sm:mb-5">
           <div>
-            <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '6px', color: '#fff' }} className="sm:text-lg sm:mb-2">Индексация</div>
-            <div style={{ color: '#a3aed0', fontSize: '12px', fontWeight: '500' }} className="sm:text-sm">Корректировка цен</div>
+            <div className="text-base sm:text-lg font-bold mb-2" style={{ color: '#fff' }}>Индексация</div>
+            <div className="text-xs sm:text-sm font-medium" style={{ color: '#a3aed0' }}>Корректировка цен</div>
           </div>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255, 181, 71, 0.1)', color: '#ffb547', border: '1px solid rgba(255, 181, 71, 0.2)' }} className="sm:w-12 sm:h-12">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255, 181, 71, 0.1)', color: '#ffb547', border: '1px solid rgba(255, 181, 71, 0.2)' }}>
             <Icon name="TrendingUp" size={18} className="sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -107,12 +107,12 @@ const IndexationCard = () => {
           </div>
         ) : (
           <>
-            <div style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px', color: '#fff' }} className="sm:text-3xl sm:mb-2">
+            <div className="text-2xl sm:text-3xl font-extrabold mb-2" style={{ color: '#fff' }}>
               {new Intl.NumberFormat('ru-RU').format(indexationAmount)} ₽
             </div>
-            <div style={{ color: '#a3aed0', fontSize: '12px', fontWeight: '500', marginBottom: '10px' }} className="sm:text-sm sm:mb-3">за текущий период</div>
-            <div style={{ display: 'flex', alignItems: 'center', fontSize: '12px', fontWeight: '600', gap: '4px', color: indexationPercent >= 0 ? '#01b574' : '#ff6b6b' }} className="sm:text-sm sm:gap-1.5">
-              <Icon name={indexationPercent >= 0 ? "ArrowUp" : "ArrowDown"} size={12} className="sm:w-3.5 sm:h-3.5" /> 
+            <div className="text-xs sm:text-sm font-medium mb-3" style={{ color: '#a3aed0' }}>за текущий период</div>
+            <div className="flex items-center text-xs sm:text-sm font-semibold gap-1.5" style={{ color: indexationPercent >= 0 ? '#01b574' : '#ff6b6b' }}>
+              <Icon name={indexationPercent >= 0 ? "ArrowUp" : "ArrowDown"} size={14} /> 
               {indexationPercent >= 0 ? '+' : ''}{indexationPercent}% к предыдущему периоду
             </div>
           </>
