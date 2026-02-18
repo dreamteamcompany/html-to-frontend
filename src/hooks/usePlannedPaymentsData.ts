@@ -119,7 +119,7 @@ export const usePlannedPaymentsData = () => {
     if (dataLoaded.categories || !token) return;
     
     try {
-      const response = await fetch('${API_ENDPOINTS.main}?endpoint=categories', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=categories`, {
         headers: {
           'X-Auth-Token': token,
         },
@@ -140,7 +140,7 @@ export const usePlannedPaymentsData = () => {
     if (dataLoaded.legalEntities || !token) return;
     
     try {
-      const response = await fetch('${API_ENDPOINTS.main}?endpoint=legal-entities', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=legal-entities`, {
         headers: {
           'X-Auth-Token': token,
         },
@@ -161,7 +161,7 @@ export const usePlannedPaymentsData = () => {
     if (dataLoaded.contractors || !token) return;
     
     try {
-      const response = await fetch('${API_ENDPOINTS.main}?endpoint=contractors', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=contractors`, {
         headers: {
           'X-Auth-Token': token,
         },
@@ -182,7 +182,7 @@ export const usePlannedPaymentsData = () => {
     if (dataLoaded.customerDepartments || !token) return;
     
     try {
-      const response = await fetch('${API_ENDPOINTS.main}?endpoint=customer-departments', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=customer-departments`, {
         headers: {
           'X-Auth-Token': token,
         },
@@ -203,7 +203,7 @@ export const usePlannedPaymentsData = () => {
     if (dataLoaded.customFields || !token) return;
     
     try {
-      const response = await fetch('${API_ENDPOINTS.main}?endpoint=custom-fields', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=custom-fields`, {
         headers: {
           'X-Auth-Token': token,
         },
@@ -224,7 +224,7 @@ export const usePlannedPaymentsData = () => {
     if (dataLoaded.services || !token) return;
     
     try {
-      const response = await fetch('${API_ENDPOINTS.main}?endpoint=services', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=services`, {
         headers: {
           'X-Auth-Token': token,
         },
