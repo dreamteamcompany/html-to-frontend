@@ -10,6 +10,7 @@ interface PaymentsListProps {
   onSubmitForApproval?: (paymentId: number) => void;
   onRevoke?: (paymentId: number) => void;
   onResubmit?: (paymentId: number) => void;
+  onDelete?: (paymentId: number) => void;
   onPaymentClick?: (payment: Payment) => void;
   isPlannedPayments?: boolean;
   showApproveReject?: boolean;
@@ -36,7 +37,7 @@ const getStatusBadge = (status?: string) => {
   return null;
 };
 
-const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForApproval, onRevoke, onResubmit, onPaymentClick, isPlannedPayments = false, showApproveReject = false, showRevoke = false, showResubmit = false }: PaymentsListProps) => {
+const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForApproval, onRevoke, onResubmit, onDelete, onPaymentClick, isPlannedPayments = false, showApproveReject = false, showRevoke = false, showResubmit = false }: PaymentsListProps) => {
   return (
     <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
       <CardContent className="p-0">
@@ -109,6 +110,16 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                               className="px-3 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700"
                             >
                               Отправить на согласование
+                            </button>
+                          )}
+                          {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (
+                            <button
+                              onClick={() => onDelete(payment.id)}
+                              className="px-3 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 flex items-center gap-1"
+                              title="Удалить черновик"
+                            >
+                              <Icon name="Trash2" size={14} />
+                              Удалить
                             </button>
                           )}
                           {showApproveReject && onApprove && (
@@ -200,6 +211,16 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           className="flex-1 px-3 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 font-medium"
                         >
                           Отправить на согласование
+                        </button>
+                      )}
+                      {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (
+                        <button
+                          onClick={() => onDelete(payment.id)}
+                          className="px-3 py-2 text-sm rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium flex items-center gap-1 justify-center"
+                          title="Удалить черновик"
+                        >
+                          <Icon name="Trash2" size={16} />
+                          Удалить
                         </button>
                       )}
                       {showApproveReject && onApprove && (

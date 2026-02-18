@@ -1287,9 +1287,48 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if not payment_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute('DELETE FROM payments WHERE id = %s', (payment_id,))
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # Проверяем статус платежа
+            cur.execute(f'SELECT status, created_by FROM {SCHEMA}.payments WHERE id = %s', (payment_id,))
+            payment = cur.fetchone()
+            
+            if not payment:
+                cur.close()
+                return response(404, {'error': 'Платёж не найден'})
+            
+            # Разрешаем удаление только черновиков
+            if payment['status'] != 'draft':
+                cur.close()
+                return response(403, {'error': 'Можно удалять только платежи со статусом "Черновик"'})
+            
+            # Проверяем, что пользователь является создателем платежа
+            if payment['created_by'] != payload['user_id']:
+                cur.close()
+                return response(403, {'error': 'Вы можете удалять только свои платежи'})
+            
+            # Удаляем связанные записи из custom_field_values
+            cur.execute(f'DELETE FROM {SCHEMA}.custom_field_values WHERE payment_id = %s', (payment_id,))
+            
+            # Удаляем платёж
+            cur.execute(f'DELETE FROM {SCHEMA}.payments WHERE id = %s', (payment_id,))
             conn.commit()
             
+            # Audit log
+            cur.execute(f"SELECT username FROM {SCHEMA}.users WHERE id = %s", (payload['user_id'],))
+            username_row = cur.fetchone()
+            username = username_row['username'] if username_row else 'Unknown'
+            
+            create_audit_log(
+                conn,
+                'payment',
+                int(payment_id),
+                'deleted',
+                payload['user_id'],
+                username
+            )
+            
+            cur.close()
             return response(200, {'success': True})
         
         return response(405, {'error': 'Method not allowed'})

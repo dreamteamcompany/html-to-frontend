@@ -131,6 +131,44 @@ const MyPaymentsTab = () => {
     }
   };
 
+  const handleDelete = async (paymentId: number) => {
+    if (!confirm('Вы уверены, что хотите удалить этот черновик?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=payments&id=${paymentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Успешно',
+          description: 'Черновик платежа удалён',
+        });
+        loadPayments();
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Ошибка',
+          description: error.error || 'Не удалось удалить платёж',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to delete payment:', err);
+      toast({
+        title: 'Ошибка сети',
+        description: 'Проверьте подключение к интернету',
+        variant: 'destructive',
+      });
+    }
+  };
+
 
 
   return (
@@ -175,6 +213,7 @@ const MyPaymentsTab = () => {
         payments={payments} 
         loading={loading} 
         onSubmitForApproval={handleSubmitForApproval}
+        onDelete={handleDelete}
         onPaymentClick={setSelectedPayment}
       />
 
