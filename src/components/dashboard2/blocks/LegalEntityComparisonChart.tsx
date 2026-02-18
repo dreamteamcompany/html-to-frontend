@@ -79,11 +79,11 @@ const LegalEntityComparisonChart = () => {
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Юридическим Лицам</h3>
         </div>
         {loading ? (
-          <div className="flex items-center justify-center" style={{ height: '350px' }}>
+          <div className="flex items-center justify-center" style={{ height: '500px' }}>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
           </div>
         ) : (
-        <div style={{ position: 'relative', height: '350px' }}>
+        <div style={{ position: 'relative', height: '500px' }}>
           <Bar
             data={{
               labels: legalEntityData.map(d => d.name),

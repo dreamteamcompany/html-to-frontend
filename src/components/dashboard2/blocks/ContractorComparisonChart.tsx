@@ -116,11 +116,11 @@ const ContractorComparisonChart = () => {
           </div>
         </div>
         {loading ? (
-          <div className="flex items-center justify-center" style={{ height: '350px' }}>
+          <div className="flex items-center justify-center" style={{ height: '500px' }}>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-        <div style={{ position: 'relative', height: '350px' }}>
+        <div style={{ position: 'relative', height: '500px' }}>
           <Bar
             data={{
               labels: displayData.map(d => d.name),
