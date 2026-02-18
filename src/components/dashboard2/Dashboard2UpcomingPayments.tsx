@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useEffect, useState } from 'react';
+import { dashboardTypography } from './dashboardStyles';
 
 const Dashboard2UpcomingPayments = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -58,8 +59,8 @@ const Dashboard2UpcomingPayments = () => {
               <Icon name="Clock" size={20} style={{ color: '#fff' }} className="sm:w-7 sm:h-7" />
             </div>
             <div>
-              <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }} className="sm:text-xl md:text-2xl">Предстоящие Платежи</h3>
-              <p style={{ fontSize: '11px', color: '#a3aed0', marginTop: '2px' }} className="sm:text-sm sm:mt-1">Ближайшие 7 дней • Следите за дедлайнами</p>
+              <h3 className={`${dashboardTypography.cardTitle} text-white`}>Предстоящие Платежи</h3>
+              <p className={`${dashboardTypography.cardSmall} mt-1`}>Ближайшие 7 дней • Следите за дедлайнами</p>
             </div>
           </div>
           <div style={{ 
@@ -72,7 +73,7 @@ const Dashboard2UpcomingPayments = () => {
             gap: '8px'
           }} className="sm:px-6 sm:py-3">
             <Icon name="AlertCircle" size={16} style={{ color: '#ffb547' }} className="sm:w-[18px] sm:h-[18px]" />
-            <span style={{ color: '#ffb547', fontSize: '12px', fontWeight: '700' }} className="sm:text-sm">7 платежей</span>
+            <span className={`${dashboardTypography.cardBadge} text-[#ffb547]`}>7 платежей</span>
           </div>
         </div>
 

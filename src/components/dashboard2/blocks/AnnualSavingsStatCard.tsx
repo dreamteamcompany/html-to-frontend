@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
+import { dashboardTypography } from '../dashboardStyles';
 
 interface Saving {
   id: number;
@@ -81,34 +82,34 @@ const AnnualSavingsStatCard = () => {
       <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between" style={{ position: 'relative', zIndex: 1 }}>
         <div className="flex justify-between items-start mb-4 sm:mb-5">
           <div>
-            <div className="text-base sm:text-lg font-bold mb-2 text-white">Экономия</div>
-            <div className="text-xs sm:text-sm font-medium" style={{ color: '#a3aed0' }}>Общая экономия по реестру</div>
+            <div className={`${dashboardTypography.cardTitle} text-white mb-2`}>Экономия</div>
+            <div className={dashboardTypography.cardSubtitle}>Общая экономия по реестру</div>
           </div>
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(1, 181, 116, 0.1)', color: '#01b574', border: '1px solid rgba(1, 181, 116, 0.2)' }}>
             <Icon name="PiggyBank" size={18} className="sm:w-5 sm:h-5" />
           </div>
         </div>
 
-        <div className="text-2xl sm:text-3xl font-extrabold mb-2" style={{ color: '#01b574', textShadow: '0 0 20px rgba(1, 181, 116, 0.4)' }}>
+        <div className={`${dashboardTypography.cardValue} mb-2`} style={{ color: '#01b574', textShadow: '0 0 20px rgba(1, 181, 116, 0.4)' }}>
           {savingsData ? formatAmount(savingsData.total_amount) : '—'}
         </div>
-        <div className="text-xs sm:text-sm font-medium mb-3" style={{ color: '#a3aed0' }}>
+        <div className={`${dashboardTypography.cardSecondary} mb-3`}>
           {savingsData ? `${savingsData.count} ${savingsData.count === 1 ? 'запись' : savingsData.count < 5 ? 'записи' : 'записей'} в реестре` : 'Загрузка...'}
         </div>
 
         {savingsData && savingsData.top_departments && savingsData.top_departments.length > 0 && (
           <div className="border-t border-white/10 pt-3 mt-3">
-            <div className="text-xs sm:text-sm font-semibold mb-2" style={{ color: '#a3aed0' }}>
+            <div className={`${dashboardTypography.cardBadge} mb-2 text-[#a3aed0]`}>
               Топ отделов-заказчиков:
             </div>
             <div className="flex flex-col gap-1.5">
               {savingsData.top_departments.slice(0, 3).map((dept, index) => (
                 <div 
                   key={index}
-                  className="flex justify-between items-center text-xs"
+                  className={`flex justify-between items-center ${dashboardTypography.cardSmall}`}
                 >
                   <div className="flex items-center gap-1.5 text-white min-w-0 flex-1">
-                    <span className="w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{
+                    <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center ${dashboardTypography.cardTiny} font-bold flex-shrink-0`} style={{
                       background: index === 0 ? 'rgba(1, 181, 116, 0.2)' : 'rgba(163, 174, 208, 0.1)',
                       color: index === 0 ? '#01b574' : '#a3aed0'
                     }}>

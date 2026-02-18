@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
+import { dashboardTypography } from '../dashboardStyles';
 
 interface DashboardStats {
   total_amount: number;
@@ -50,8 +51,8 @@ const TotalExpensesCard = () => {
       <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
         <div className="flex justify-between items-start mb-4 sm:mb-5">
           <div>
-            <div className="text-base sm:text-lg font-bold mb-2" style={{ color: '#fff' }}>Общие IT Расходы</div>
-            <div className="text-xs sm:text-sm font-medium" style={{ color: '#a3aed0' }}>
+            <div className={`${dashboardTypography.cardTitle} text-white mb-2`}>Общие IT Расходы</div>
+            <div className={dashboardTypography.cardSubtitle}>
               {loading ? 'Загрузка...' : `${stats?.total_count || 0} платежей`}
             </div>
           </div>
@@ -59,12 +60,12 @@ const TotalExpensesCard = () => {
             <Icon name="Server" size={18} className="sm:w-5 sm:h-5" />
           </div>
         </div>
-        <div className="text-2xl sm:text-3xl font-extrabold mb-2" style={{ color: '#fff' }}>
+        <div className={`${dashboardTypography.cardValue} text-white mb-2`}>
           {loading ? '...' : formatAmount(stats?.total_amount || 0)}
         </div>
-        <div className="text-xs sm:text-sm font-medium mb-3" style={{ color: '#a3aed0' }}>Общая сумма расходов</div>
+        <div className={`${dashboardTypography.cardSecondary} mb-3`}>Общая сумма расходов</div>
         {!loading && stats && (
-          <div className="flex items-center text-xs sm:text-sm font-semibold gap-1.5" style={{ color: stats.is_increase ? '#e31a1a' : '#01b574' }}>
+          <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5`} style={{ color: stats.is_increase ? '#e31a1a' : '#01b574' }}>
             <Icon name={stats.is_increase ? "ArrowUp" : "ArrowDown"} size={14} />
             {stats.is_increase ? '+' : ''}{stats.change_percent}% с прошлого месяца
           </div>

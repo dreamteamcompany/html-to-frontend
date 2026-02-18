@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
+import { dashboardTypography } from './dashboardStyles';
 
 interface Service {
   name: string;
@@ -129,7 +130,7 @@ const Dashboard2ServicesDynamics = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 sm:mb-6">
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="sm:gap-2">
             <Icon name="Activity" size={16} style={{ color: '#2CD9FF' }} className="sm:w-[18px] sm:h-[18px]" />
-            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff' }} className="sm:text-base">Динамика расходов по сервисам</h3>
+            <h3 className={`${dashboardTypography.cardTitle} text-white`}>Динамика расходов по сервисам</h3>
           </div>
         </div>
 

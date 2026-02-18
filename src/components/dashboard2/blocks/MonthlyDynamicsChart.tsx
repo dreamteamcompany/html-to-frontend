@@ -3,6 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
+import { dashboardTypography } from '../dashboardStyles';
 
 interface PaymentRecord {
   status: string;
@@ -63,7 +64,7 @@ const MonthlyDynamicsChart = () => {
     <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
       <CardContent className="p-3 sm:p-6">
         <div style={{ marginBottom: '12px' }} className="sm:mb-4">
-          <h3 className="text-sm sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Динамика Расходов по Месяцам</h3>
+          <h3 className={`${dashboardTypography.cardTitle} text-white`}>Динамика Расходов по Месяцам</h3>
         </div>
         {loading ? (
           <div className="flex items-center justify-center sm:h-[250px]" style={{ height: '200px' }}>
