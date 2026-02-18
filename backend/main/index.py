@@ -3240,6 +3240,130 @@ def handle_audit_logs(method: str, event: Dict[str, Any], conn, payload: Dict[st
     
     return response(405, {'error': 'Method not allowed'})
 
+def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Обработчик для запланированных платежей"""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'payments.read')
+            if error:
+                return error
+            
+            cur.execute(f"""
+                SELECT 
+                    pp.id,
+                    pp.category_id,
+                    c.name as category_name,
+                    c.icon as category_icon,
+                    pp.amount,
+                    pp.description,
+                    pp.planned_date,
+                    pp.legal_entity_id,
+                    le.name as legal_entity_name,
+                    pp.contractor_id,
+                    con.name as contractor_name,
+                    pp.department_id,
+                    cd.name as department_name,
+                    pp.service_id,
+                    s.name as service_name,
+                    s.description as service_description,
+                    pp.invoice_number,
+                    pp.invoice_date,
+                    pp.recurrence_type,
+                    pp.recurrence_end_date,
+                    pp.is_active,
+                    pp.created_by,
+                    u.full_name as created_by_name,
+                    pp.created_at,
+                    pp.converted_to_payment_id,
+                    pp.converted_at
+                FROM {SCHEMA}.planned_payments pp
+                LEFT JOIN {SCHEMA}.categories c ON pp.category_id = c.id
+                LEFT JOIN {SCHEMA}.legal_entities le ON pp.legal_entity_id = le.id
+                LEFT JOIN {SCHEMA}.contractors con ON pp.contractor_id = con.id
+                LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
+                LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
+                LEFT JOIN {SCHEMA}.users u ON pp.created_by = u.id
+                WHERE pp.is_active = true
+                ORDER BY pp.planned_date ASC
+            """)
+            
+            rows = cur.fetchall()
+            return response(200, [dict(row) for row in rows])
+        
+        elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'payments.create')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            
+            category_id = body.get('category_id')
+            amount = body.get('amount')
+            description = body.get('description', '')
+            planned_date = body.get('planned_date')
+            legal_entity_id = body.get('legal_entity_id')
+            contractor_id = body.get('contractor_id')
+            department_id = body.get('department_id')
+            service_id = body.get('service_id')
+            invoice_number = body.get('invoice_number')
+            invoice_date = body.get('invoice_date')
+            recurrence_type = body.get('recurrence_type', 'once')
+            recurrence_end_date = body.get('recurrence_end_date')
+            
+            if not category_id or not amount or not planned_date:
+                return response(400, {'error': 'category_id, amount и planned_date обязательны'})
+            
+            cur.execute(
+                f"""INSERT INTO {SCHEMA}.planned_payments 
+                   (category_id, amount, description, planned_date, legal_entity_id, 
+                    contractor_id, department_id, service_id, invoice_number, invoice_date,
+                    recurrence_type, recurrence_end_date, created_by, is_active) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, true) 
+                   RETURNING id, category_id, amount, description, planned_date, created_at""",
+                (category_id, amount, description, planned_date, legal_entity_id,
+                 contractor_id, department_id, service_id, invoice_number, invoice_date,
+                 recurrence_type, recurrence_end_date, payload['user_id'])
+            )
+            
+            row = cur.fetchone()
+            conn.commit()
+            
+            return response(201, dict(row))
+        
+        elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'payments.delete')
+            if error:
+                return error
+            
+            params = event.get('queryStringParameters') or {}
+            planned_payment_id = params.get('id')
+            
+            if not planned_payment_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(
+                f"UPDATE {SCHEMA}.planned_payments SET is_active = false WHERE id = %s RETURNING id", 
+                (planned_payment_id,)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Planned payment not found'})
+            
+            conn.commit()
+            return response(200, {'message': 'Planned payment deleted'})
+        
+        return response(405, {'error': 'Method not allowed'})
+    
+    except Exception as e:
+        conn.rollback()
+        log(f"[HANDLE_PLANNED_PAYMENTS ERROR] {str(e)}")
+        return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Главная функция-роутер для обработки всех запросов.
@@ -3345,6 +3469,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_budget_breakdown(method, event, conn, payload)
         elif endpoint == 'savings-dashboard':
             result = handle_savings_dashboard(method, event, conn, payload)
+        elif endpoint == 'planned-payments':
+            result = handle_planned_payments(method, event, conn)
         else:
             result = response(404, {'error': f'Endpoint not found: {endpoint}'})
         
