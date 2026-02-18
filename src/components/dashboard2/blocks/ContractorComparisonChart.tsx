@@ -78,7 +78,7 @@ const ContractorComparisonChart = () => {
   return (
     <Card style={{ background: '#111c44', border: '1px solid rgba(57, 101, 255, 0.4)', boxShadow: '0 0 30px rgba(57, 101, 255, 0.2), inset 0 0 15px rgba(57, 101, 255, 0.05)' }}>
       <CardContent className="p-6">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', minHeight: '32px' }}>
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Контрагентам</h3>
           <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '10px' }}>
             <button 
@@ -116,11 +116,11 @@ const ContractorComparisonChart = () => {
           </div>
         </div>
         {loading ? (
-          <div className="flex items-center justify-center" style={{ height: '250px' }}>
+          <div className="flex items-center justify-center" style={{ height: '350px' }}>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-        <div className="h-[250px] sm:h-[350px]" style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', height: '350px' }}>
           <Bar
             data={{
               labels: displayData.map(d => d.name),
