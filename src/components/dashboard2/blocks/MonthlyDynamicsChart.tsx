@@ -28,7 +28,7 @@ const getChartConfig = (period: string, from: Date, to: Date) => {
       days.push(cur.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }));
       cur.setDate(cur.getDate() + 1);
     }
-    return { labels: days, unit: 'day' as const };
+    return { labels: days, unit: 'week_day' as const };
   }
   if (period === 'month') {
     const days: string[] = [];
@@ -37,7 +37,7 @@ const getChartConfig = (period: string, from: Date, to: Date) => {
       days.push(cur.getDate().toString());
       cur.setDate(cur.getDate() + 1);
     }
-    return { labels: days, unit: 'day' as const };
+    return { labels: days, unit: 'month_day' as const };
   }
   if (period === 'year') {
     return { labels: MONTHS, unit: 'month' as const };
@@ -51,39 +51,45 @@ const getChartConfig = (period: string, from: Date, to: Date) => {
     const days: string[] = [];
     const cur = new Date(from);
     while (cur <= to) {
-      days.push(cur.getDate() + '.' + (cur.getMonth() + 1));
+      days.push(`${cur.getDate()}.${cur.getMonth() + 1}`);
       cur.setDate(cur.getDate() + 1);
     }
-    return { labels: days, unit: 'day' as const };
+    return { labels: days, unit: 'custom_day' as const };
   }
   return { labels: MONTHS, unit: 'month' as const };
 };
 
-const buildData = (payments: PaymentRecord[], labels: string[], unit: 'hour' | 'day' | 'month', from: Date) => {
+type UnitType = 'hour' | 'week_day' | 'month_day' | 'custom_day' | 'month';
+
+const buildData = (payments: PaymentRecord[], labels: string[], unit: UnitType, from: Date) => {
   const map: { [key: string]: number } = {};
 
   payments.forEach((p) => {
     const d = new Date(p.payment_date);
     let key: string;
+
     if (unit === 'hour') {
       key = `${d.getHours()}:00`;
     } else if (unit === 'month') {
       key = MONTHS[d.getMonth()];
+    } else if (unit === 'month_day') {
+      key = d.getDate().toString();
+    } else if (unit === 'custom_day') {
+      key = `${d.getDate()}.${d.getMonth() + 1}`;
+    } else if (unit === 'week_day') {
+      key = d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' });
     } else {
-      key = d.getDate() + '.' + (d.getMonth() + 1);
+      key = d.getDate().toString();
     }
+
     map[key] = (map[key] || 0) + p.amount;
   });
 
-  return labels.map((label) => {
-    if (unit === 'hour') return map[label] || 0;
-    if (unit === 'month') return map[label] || 0;
-    return map[label] || 0;
-  });
+  return labels.map((label) => map[label] || 0);
 };
 
 const MonthlyDynamicsChart = () => {
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [chartData, setChartData] = useState<number[]>([]);
   const [labels, setLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,9 +129,9 @@ const MonthlyDynamicsChart = () => {
     };
 
     fetchData();
-  }, [period]);
+  }, [period, dateFrom, dateTo]);
 
-  const chartLabels = isMobile && labels === MONTHS ? MONTHS_SHORT : labels;
+  const chartLabels = isMobile && labels.length === MONTHS.length && labels[0] === MONTHS[0] ? MONTHS_SHORT : labels;
   const isBarChart = period === 'today' || period === 'week';
 
   const commonDataset = {
