@@ -499,12 +499,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                            c.name as category_name, c.icon as category_icon,
                            cd.name as department_name,
                            u1.username as intermediate_approver_name,
-                           u2.username as final_approver_name
+                           u2.username as final_approver_name,
+                           le.name as legal_entity_name,
+                           ct.name as contractor_name
                     FROM {SCHEMA}.services s
                     LEFT JOIN {SCHEMA}.categories c ON s.category_id = c.id
                     LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
                     LEFT JOIN {SCHEMA}.users u1 ON s.intermediate_approver_id = u1.id
                     LEFT JOIN {SCHEMA}.users u2 ON s.final_approver_id = u2.id
+                    LEFT JOIN {SCHEMA}.legal_entities le ON s.legal_entity_id = le.id
+                    LEFT JOIN {SCHEMA}.contractors ct ON s.contractor_id = ct.id
                     ORDER BY s.name
                 """)
                 services = [dict(row) for row in cur.fetchall()]

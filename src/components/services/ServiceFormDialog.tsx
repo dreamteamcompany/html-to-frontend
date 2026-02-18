@@ -36,6 +36,32 @@ interface Category {
   icon: string;
 }
 
+interface LegalEntity {
+  id: number;
+  name: string;
+  inn: string;
+  kpp: string;
+  address: string;
+}
+
+interface Contractor {
+  id: number;
+  name: string;
+  inn: string;
+}
+
+interface LegalEntity {
+  id: number;
+  name: string;
+  inn?: string;
+}
+
+interface Contractor {
+  id: number;
+  name: string;
+  inn?: string;
+}
+
 interface Service {
   id: number;
   name: string;
@@ -49,6 +75,10 @@ interface Service {
   category_id?: number;
   category_name?: string;
   category_icon?: string;
+  legal_entity_id?: number;
+  legal_entity_name?: string;
+  contractor_id?: number;
+  contractor_name?: string;
   created_at: string;
 }
 
@@ -62,11 +92,15 @@ interface ServiceFormDialogProps {
     final_approver_id: string;
     customer_department_id: string;
     category_id: string;
+    legal_entity_id: string;
+    contractor_id: string;
   };
   setFormData: (data: ServiceFormDialogProps['formData']) => void;
   users: User[];
   departments: CustomerDepartment[];
   categories: Category[];
+  legalEntities: LegalEntity[];
+  contractors: Contractor[];
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -79,6 +113,8 @@ const ServiceFormDialog = ({
   users,
   departments,
   categories,
+  legalEntities,
+  contractors,
   onSubmit,
 }: ServiceFormDialogProps) => {
   return (
@@ -119,7 +155,7 @@ const ServiceFormDialog = ({
           <div>
             <Label htmlFor="category">Категория сервиса</Label>
             <Select
-              value={formData.category_id}
+              value={formData.category_id || ''}
               onValueChange={(value) =>
                 setFormData({ ...formData, category_id: value })
               }
@@ -143,7 +179,7 @@ const ServiceFormDialog = ({
           <div>
             <Label htmlFor="department">Отдел-заказчик</Label>
             <Select
-              value={formData.customer_department_id}
+              value={formData.customer_department_id || ''}
               onValueChange={(value) =>
                 setFormData({ ...formData, customer_department_id: value })
               }
@@ -164,7 +200,7 @@ const ServiceFormDialog = ({
           <div>
             <Label htmlFor="final">Согласующее лицо (CEO)</Label>
             <Select
-              value={formData.final_approver_id}
+              value={formData.final_approver_id || ''}
               onValueChange={(value) =>
                 setFormData({ ...formData, final_approver_id: value })
               }
@@ -176,6 +212,48 @@ const ServiceFormDialog = ({
                 {users.map((user) => (
                   <SelectItem key={user.id} value={user.id.toString()}>
                     {user.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="legal_entity">Юридическое лицо</Label>
+            <Select
+              value={formData.legal_entity_id || ''}
+              onValueChange={(value) =>
+                setFormData({ ...formData, legal_entity_id: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите юридическое лицо" />
+              </SelectTrigger>
+              <SelectContent>
+                {legalEntities.map((entity) => (
+                  <SelectItem key={entity.id} value={entity.id.toString()}>
+                    {entity.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="contractor">Контрагент</Label>
+            <Select
+              value={formData.contractor_id || ''}
+              onValueChange={(value) =>
+                setFormData({ ...formData, contractor_id: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите контрагента" />
+              </SelectTrigger>
+              <SelectContent>
+                {contractors.map((contractor) => (
+                  <SelectItem key={contractor.id} value={contractor.id.toString()}>
+                    {contractor.name}
                   </SelectItem>
                 ))}
               </SelectContent>

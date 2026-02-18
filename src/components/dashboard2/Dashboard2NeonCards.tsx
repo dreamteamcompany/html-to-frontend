@@ -11,10 +11,9 @@ const Dashboard2NeonCards = () => {
     <>
       <Dashboard2StatsRow />
       <Dashboard2KPIRow />
+      <Dashboard2TeamPerformance />
       <Dashboard2PaymentCalendar />
       <Dashboard2UpcomingPayments />
-
-      <Dashboard2TeamPerformance />
       <Dashboard2ServicesDynamics />
     </>
   );

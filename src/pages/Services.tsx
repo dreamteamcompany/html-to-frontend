@@ -28,6 +28,18 @@ interface Category {
   icon: string;
 }
 
+interface LegalEntity {
+  id: number;
+  name: string;
+  inn?: string;
+}
+
+interface Contractor {
+  id: number;
+  name: string;
+  inn?: string;
+}
+
 interface Service {
   id: number;
   name: string;
@@ -41,6 +53,10 @@ interface Service {
   category_id?: number;
   category_name?: string;
   category_icon?: string;
+  legal_entity_id?: number;
+  legal_entity_name?: string;
+  contractor_id?: number;
+  contractor_name?: string;
   created_at: string;
 }
 
@@ -49,6 +65,8 @@ const Services = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<CustomerDepartment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
+  const [contractors, setContractors] = useState<Contractor[]>([]);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const { toast } = useToast();
@@ -79,10 +97,12 @@ const Services = () => {
     initialFormData: {
       name: '',
       description: '',
-      intermediate_approver_id: undefined,
-      final_approver_id: undefined,
-      customer_department_id: undefined,
-      category_id: undefined,
+      intermediate_approver_id: '',
+      final_approver_id: '',
+      customer_department_id: '',
+      category_id: '',
+      legal_entity_id: '',
+      contractor_id: '',
     },
   });
 
@@ -91,6 +111,8 @@ const Services = () => {
     loadUsers();
     loadDepartments();
     loadCategories();
+    loadLegalEntities();
+    loadContractors();
   }, [loadServices]);
 
   const loadUsers = async () => {
@@ -123,6 +145,28 @@ const Services = () => {
     } catch (error) {
       console.error('Failed to load categories:', error);
       setCategories([]);
+    }
+  };
+
+  const loadLegalEntities = async () => {
+    try {
+      const response = await apiFetch(getApiUrl('legal-entities'));
+      const data = await response.json();
+      setLegalEntities(Array.isArray(data) ? data : data.legalEntities || []);
+    } catch (error) {
+      console.error('Failed to load legal entities:', error);
+      setLegalEntities([]);
+    }
+  };
+
+  const loadContractors = async () => {
+    try {
+      const response = await apiFetch(getApiUrl('contractors'));
+      const data = await response.json();
+      setContractors(Array.isArray(data) ? data : data.contractors || []);
+    } catch (error) {
+      console.error('Failed to load contractors:', error);
+      setContractors([]);
     }
   };
 
@@ -182,10 +226,12 @@ const Services = () => {
     setFormData({
       name: '',
       description: '',
-      intermediate_approver_id: undefined,
-      final_approver_id: undefined,
-      customer_department_id: undefined,
-      category_id: undefined,
+      intermediate_approver_id: '',
+      final_approver_id: '',
+      customer_department_id: '',
+      category_id: '',
+      legal_entity_id: '',
+      contractor_id: '',
     });
   };
 
@@ -236,6 +282,8 @@ const Services = () => {
           users={users}
           departments={departments}
           categories={categories}
+          legalEntities={legalEntities}
+          contractors={contractors}
           onSubmit={handleSubmit}
         />
 
