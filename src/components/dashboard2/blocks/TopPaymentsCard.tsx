@@ -10,6 +10,7 @@ interface TopPayment {
   amount: number;
   category_name: string;
   category_icon: string;
+  service_name: string;
   status: string;
 }
 
@@ -114,11 +115,16 @@ const TopPaymentsCard = () => {
                   e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
                   e.currentTarget.style.boxShadow = 'none';
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }} className="sm:mb-2">
-                    <span style={{ color: '#fff', fontSize: '12px', fontWeight: '600' }} className="sm:text-sm">
-                      {payment.description || payment.category_name}
-                    </span>
-                    <span style={{ color: color, fontSize: '12px', fontWeight: '700' }} className="sm:text-sm">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start' }} className="sm:mb-2">
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: '#fff', fontSize: '12px', fontWeight: '600', marginBottom: '2px' }} className="sm:text-sm">
+                        {payment.service_name || 'Без сервиса'}
+                      </div>
+                      <div style={{ color: '#a3aed0', fontSize: '10px', fontWeight: '500' }} className="sm:text-xs">
+                        {payment.category_name || 'Без категории'}
+                      </div>
+                    </div>
+                    <span style={{ color: color, fontSize: '12px', fontWeight: '700', marginLeft: '8px', whiteSpace: 'nowrap' }} className="sm:text-sm">
                       {new Intl.NumberFormat('ru-RU').format(payment.amount)} ₽
                     </span>
                   </div>

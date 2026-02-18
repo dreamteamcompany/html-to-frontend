@@ -106,10 +106,12 @@ def handler(event: dict, context) -> dict:
                 p.amount,
                 c.name as category_name,
                 c.icon as category_icon,
+                s.name as service_name,
                 p.status
             FROM {SCHEMA}.payments p
             LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
-            WHERE p.status IN ('approved', 'pending_ceo')
+            LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+            WHERE p.status IN ('approved', 'paid')
             ORDER BY p.amount DESC
             LIMIT 5
         """)
