@@ -2,9 +2,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useEffect, useState } from 'react';
 import { dashboardTypography } from './dashboardStyles';
+import { apiFetch } from '@/utils/api';
+import { API_ENDPOINTS } from '@/config/api';
+import { Payment } from '@/types/payment';
 
 const Dashboard2UpcomingPayments = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -13,11 +18,42 @@ const Dashboard2UpcomingPayments = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const getTimeUntil = (daysFromNow: number, hours: number = 14, minutes: number = 0) => {
-    const target = new Date();
-    target.setDate(target.getDate() + daysFromNow);
-    target.setHours(hours, minutes, 0, 0);
-    
+  useEffect(() => {
+    const fetchPayments = async () => {
+      setLoading(true);
+      try {
+        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        const data = await response.json();
+        
+        const now = new Date();
+        const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        
+        const upcoming = (Array.isArray(data) ? data : [])
+          .filter((p: Payment) => {
+            if (!p.planned_date) return false;
+            if (p.status === 'paid' || p.status === 'cancelled') return false;
+            const plannedDate = new Date(p.planned_date);
+            return plannedDate >= now && plannedDate <= sevenDaysFromNow;
+          })
+          .sort((a: Payment, b: Payment) => {
+            const dateA = new Date(a.planned_date!);
+            const dateB = new Date(b.planned_date!);
+            return dateA.getTime() - dateB.getTime();
+          });
+        
+        setPayments(upcoming);
+      } catch (error) {
+        console.error('Failed to fetch upcoming payments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPayments();
+  }, []);
+
+  const getTimeUntil = (targetDate: string) => {
+    const target = new Date(targetDate);
     const diff = target.getTime() - currentTime.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hrs = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -25,6 +61,26 @@ const Dashboard2UpcomingPayments = () => {
     const secs = Math.floor((diff % (1000 * 60)) / 1000);
     
     return { days, hours: hrs, minutes: mins, seconds: secs, total: diff };
+  };
+
+  const getPaymentColor = (plannedDate: string) => {
+    const diff = new Date(plannedDate).getTime() - currentTime.getTime();
+    const daysUntil = diff / (1000 * 60 * 60 * 24);
+    
+    if (daysUntil <= 1) return '#ff6b6b';
+    if (daysUntil <= 3) return '#ffb547';
+    return '#01b574';
+  };
+
+  const getCategoryIcon = (categoryName: string): string => {
+    const lowerName = categoryName.toLowerCase();
+    if (lowerName.includes('сервер') || lowerName.includes('хостинг')) return 'Server';
+    if (lowerName.includes('облак') || lowerName.includes('saas')) return 'Cloud';
+    if (lowerName.includes('софт') || lowerName.includes('програм')) return 'Code';
+    if (lowerName.includes('дизайн') || lowerName.includes('figma')) return 'Palette';
+    if (lowerName.includes('безопасн')) return 'Shield';
+    if (lowerName.includes('база') || lowerName.includes('данн')) return 'Database';
+    return 'DollarSign';
   };
 
   return (
@@ -73,116 +129,60 @@ const Dashboard2UpcomingPayments = () => {
             gap: '8px'
           }} className="sm:px-6 sm:py-3">
             <Icon name="AlertCircle" size={16} style={{ color: '#ffb547' }} className="sm:w-[18px] sm:h-[18px]" />
-            <span className={`${dashboardTypography.cardBadge} text-[#ffb547]`}>7 платежей</span>
+            <span className={`${dashboardTypography.cardBadge} text-[#ffb547]`}>{payments.length} платежей</span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {[
-            { 
-              name: 'AWS Cloud Services', 
-              amount: 45000, 
-              category: 'Серверы', 
-              icon: 'Server',
-              daysFromNow: 0,
-              hours: 18,
-              urgent: true,
-              color: '#ff6b6b'
-            },
-            { 
-              name: 'Microsoft 365 Business', 
-              amount: 42000, 
-              category: 'SaaS', 
-              icon: 'Cloud',
-              daysFromNow: 1,
-              hours: 10,
-              urgent: true,
-              color: '#ff6b6b'
-            },
-            { 
-              name: 'Adobe Creative Cloud', 
-              amount: 28000, 
-              category: 'Софт', 
-              icon: 'Palette',
-              daysFromNow: 2,
-              hours: 14,
-              urgent: false,
-              color: '#ffb547'
-            },
-            { 
-              name: 'GitHub Enterprise', 
-              amount: 18500, 
-              category: 'Dev Tools', 
-              icon: 'Code',
-              daysFromNow: 3,
-              hours: 12,
-              urgent: false,
-              color: '#ffb547'
-            },
-            { 
-              name: 'CloudFlare Pro Plan', 
-              amount: 12000, 
-              category: 'Безопасность', 
-              icon: 'Shield',
-              daysFromNow: 5,
-              hours: 9,
-              urgent: false,
-              color: '#01b574'
-            },
-            { 
-              name: 'Figma Organization', 
-              amount: 15000, 
-              category: 'Дизайн', 
-              icon: 'Figma',
-              daysFromNow: 6,
-              hours: 16,
-              urgent: false,
-              color: '#01b574'
-            },
-            { 
-              name: 'MongoDB Atlas', 
-              amount: 22000, 
-              category: 'База Данных', 
-              icon: 'Database',
-              daysFromNow: 7,
-              hours: 11,
-              urgent: false,
-              color: '#7551e9'
-            }
-          ].map((payment, idx) => {
-            const countdown = getTimeUntil(payment.daysFromNow, payment.hours);
-            const isExpiringSoon = countdown.days === 0;
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+          </div>
+        ) : payments.length === 0 ? (
+          <div className="text-center py-12">
+            <Icon name="CheckCircle" size={48} style={{ color: '#01b574', margin: '0 auto 16px' }} />
+            <p className={`${dashboardTypography.cardSmall} text-gray-400`}>
+              Нет предстоящих платежей на ближайшие 7 дней
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {payments.map((payment) => {
+              const countdown = getTimeUntil(payment.planned_date!);
+              const isExpiringSoon = countdown.days === 0;
+              const color = getPaymentColor(payment.planned_date!);
+              const icon = getCategoryIcon(payment.category_name);
+              const urgent = countdown.days <= 1;
             
             return (
-              <div key={idx} style={{ 
-                background: payment.urgent 
+              <div key={payment.id} style={{ 
+                background: urgent 
                   ? 'linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 107, 107, 0.08) 100%)'
                   : 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
                 padding: '18px',
                 borderRadius: '14px',
-                border: payment.urgent 
+                border: urgent 
                   ? '1px solid rgba(255, 107, 107, 0.4)' 
                   : '1px solid rgba(255, 255, 255, 0.08)',
                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                 cursor: 'pointer',
                 position: 'relative',
                 overflow: 'hidden',
-                boxShadow: payment.urgent ? '0 0 20px rgba(255, 107, 107, 0.2)' : 'none',
-                animation: payment.urgent ? 'glow 2s infinite' : 'none'
+                boxShadow: urgent ? '0 0 20px rgba(255, 107, 107, 0.2)' : 'none',
+                animation: urgent ? 'glow 2s infinite' : 'none'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateX(8px)';
-                e.currentTarget.style.boxShadow = `0 10px 40px ${payment.color}40`;
-                e.currentTarget.style.borderColor = payment.color;
+                e.currentTarget.style.boxShadow = `0 10px 40px ${color}40`;
+                e.currentTarget.style.borderColor = color;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateX(0)';
-                e.currentTarget.style.boxShadow = payment.urgent ? '0 0 20px rgba(255, 107, 107, 0.2)' : 'none';
-                e.currentTarget.style.borderColor = payment.urgent 
+                e.currentTarget.style.boxShadow = urgent ? '0 0 20px rgba(255, 107, 107, 0.2)' : 'none';
+                e.currentTarget.style.borderColor = urgent 
                   ? 'rgba(255, 107, 107, 0.4)' 
                   : 'rgba(255, 255, 255, 0.08)';
               }}>
-                {payment.urgent && (
+                {urgent && (
                   <div style={{
                     position: 'absolute',
                     top: '0',
@@ -198,21 +198,21 @@ const Dashboard2UpcomingPayments = () => {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div style={{ 
-                      background: `linear-gradient(135deg, ${payment.color} 0%, ${payment.color}cc 100%)`,
+                      background: `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`,
                       padding: '12px',
                       borderRadius: '12px',
-                      boxShadow: `0 0 20px ${payment.color}60`,
+                      boxShadow: `0 0 20px ${color}60`,
                       flexShrink: 0
                     }}>
-                      <Icon name={payment.icon} size={20} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
+                      <Icon name={icon} size={20} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="flex items-center gap-2 mb-1 overflow-hidden">
                         <h4 style={{ color: '#fff', fontSize: '14px', fontWeight: '700', overflow: 'hidden', textOverflow: 'ellipsis' }} className="sm:text-base whitespace-nowrap flex-1">
-                          {payment.name}
+                          {payment.description || payment.contractor_name || 'Платёж без описания'}
                         </h4>
-                        {payment.urgent && (
+                        {urgent && (
                           <div style={{
                             background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
                             padding: '2px 6px',
@@ -229,125 +229,84 @@ const Dashboard2UpcomingPayments = () => {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm">
+                      <div className="flex items-center gap-2">
                         <span style={{ 
-                          color: '#a3aed0',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
-                          <Icon name="Tag" size={12} style={{ color: payment.color }} className="sm:w-[14px] sm:h-[14px]" />
-                          {payment.category}
-                        </span>
-                        <span style={{ color: '#7551e9', fontWeight: '700' }}>
-                          {new Intl.NumberFormat('ru-RU').format(payment.amount)} ₽
+                          color: color,
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          padding: '2px 7px',
+                          background: `${color}20`,
+                          borderRadius: '6px',
+                          border: `1px solid ${color}40`
+                        }} className="sm:text-xs">
+                          {payment.category_name}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ 
-                    background: isExpiringSoon 
-                      ? 'rgba(255, 107, 107, 0.15)' 
-                      : 'rgba(255, 255, 255, 0.05)',
-                    padding: '10px 12px',
-                    borderRadius: '10px',
-                    border: isExpiringSoon 
-                      ? '1px solid rgba(255, 107, 107, 0.3)' 
-                      : '1px solid rgba(255, 255, 255, 0.08)',
-                    width: '100%',
-                    textAlign: 'center'
-                  }} className="sm:w-auto sm:min-w-[160px] sm:p-3">
+                  <div className="flex flex-col items-end gap-2 sm:gap-3">
                     <div style={{ 
-                      color: isExpiringSoon ? '#ff6b6b' : '#a3aed0', 
-                      fontSize: '10px', 
-                      fontWeight: '600',
-                      marginBottom: '6px',
-                      textTransform: 'uppercase'
-                    }} className="sm:text-[11px]">
-                      {isExpiringSoon ? 'Осталось' : 'До платежа'}
+                      fontSize: '18px', 
+                      fontWeight: '900', 
+                      color: '#fff',
+                      textShadow: `0 0 10px ${color}80`
+                    }} className="sm:text-xl">
+                      {new Intl.NumberFormat('ru-RU').format(payment.amount)} ₽
                     </div>
-                    <div className="flex gap-1.5 justify-center items-center sm:gap-2">
-                      {countdown.days > 0 && (
-                        <>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ 
-                              color: isExpiringSoon ? '#ff6b6b' : payment.color, 
-                              fontSize: '18px', 
-                              fontWeight: '900',
-                              textShadow: `0 0 15px ${isExpiringSoon ? '#ff6b6b' : payment.color}60`,
-                              lineHeight: 1
-                            }} className="sm:text-xl">
-                              {countdown.days}
-                            </div>
-                            <div style={{ color: '#a3aed0', fontSize: '8px', fontWeight: '600', marginTop: '2px' }} className="sm:text-[9px]">
-                              дн
-                            </div>
-                          </div>
-                          <div style={{ 
-                            color: isExpiringSoon ? '#ff6b6b' : payment.color, 
-                            fontSize: '16px', 
-                            fontWeight: '900'
-                          }}>:</div>
-                        </>
-                      )}
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ 
-                          color: isExpiringSoon ? '#ff6b6b' : payment.color, 
-                          fontSize: '18px', 
-                          fontWeight: '900',
-                          textShadow: `0 0 15px ${isExpiringSoon ? '#ff6b6b' : payment.color}60`,
-                          lineHeight: 1
-                        }} className="sm:text-xl">
-                          {String(countdown.hours).padStart(2, '0')}
-                        </div>
-                        <div style={{ color: '#a3aed0', fontSize: '8px', fontWeight: '600', marginTop: '2px' }} className="sm:text-[9px]">
-                          чс
-                        </div>
+
+                    <div style={{ 
+                      background: isExpiringSoon 
+                        ? 'linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(255, 107, 107, 0.1) 100%)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      border: isExpiringSoon 
+                        ? '1px solid rgba(255, 107, 107, 0.4)' 
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      minWidth: '110px'
+                    }} className="sm:min-w-[130px]">
+                      <Icon 
+                        name="Clock" 
+                        size={14} 
+                        style={{ 
+                          color: isExpiringSoon ? '#ff6b6b' : '#a3aed0',
+                          flexShrink: 0
+                        }} 
+                        className="sm:w-4 sm:h-4"
+                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px' }}>
+                        {countdown.days > 0 ? (
+                          <>
+                            <span style={{ 
+                              fontSize: '13px', 
+                              fontWeight: '800', 
+                              color: isExpiringSoon ? '#ff6b6b' : '#fff'
+                            }} className="sm:text-sm">
+                              {countdown.days}д {countdown.hours}ч
+                            </span>
+                            <span style={{ fontSize: '9px', color: '#a3aed0', fontWeight: '600' }} className="sm:text-[10px]">
+                              {countdown.minutes}м {countdown.seconds}с
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span style={{ 
+                              fontSize: '13px', 
+                              fontWeight: '800', 
+                              color: '#ff6b6b'
+                            }} className="sm:text-sm">
+                              {countdown.hours}:{countdown.minutes.toString().padStart(2, '0')}
+                            </span>
+                            <span style={{ fontSize: '9px', color: '#ff6b6b', fontWeight: '600' }} className="sm:text-[10px]">
+                              осталось
+                            </span>
+                          </>
+                        )}
                       </div>
-                      <div style={{ 
-                        color: isExpiringSoon ? '#ff6b6b' : payment.color, 
-                        fontSize: '16px', 
-                        fontWeight: '900'
-                      }}>:</div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ 
-                          color: isExpiringSoon ? '#ff6b6b' : payment.color, 
-                          fontSize: '18px', 
-                          fontWeight: '900',
-                          textShadow: `0 0 15px ${isExpiringSoon ? '#ff6b6b' : payment.color}60`,
-                          lineHeight: 1
-                        }} className="sm:text-xl">
-                          {String(countdown.minutes).padStart(2, '0')}
-                        </div>
-                        <div style={{ color: '#a3aed0', fontSize: '8px', fontWeight: '600', marginTop: '2px' }} className="sm:text-[9px]">
-                          мин
-                        </div>
-                      </div>
-                      {isExpiringSoon && (
-                        <>
-                          <div style={{ 
-                            color: '#ff6b6b', 
-                            fontSize: '20px', 
-                            fontWeight: '900',
-                            display: 'flex',
-                            alignItems: 'center'
-                          }}>:</div>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ 
-                              color: '#ff6b6b', 
-                              fontSize: '20px', 
-                              fontWeight: '900',
-                              textShadow: '0 0 15px rgba(255, 107, 107, 0.6)'
-                            }}>
-                              {String(countdown.seconds).padStart(2, '0')}
-                            </div>
-                            <div style={{ color: '#a3aed0', fontSize: '9px', fontWeight: '600' }}>
-                              СК
-                            </div>
-                          </div>
-                        </>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -355,66 +314,7 @@ const Dashboard2UpcomingPayments = () => {
             );
           })}
         </div>
-
-        {/* Summary footer */}
-        <div style={{ 
-          marginTop: '24px',
-          paddingTop: '24px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div style={{ display: 'flex', gap: '24px' }}>
-            <div>
-              <div style={{ color: '#a3aed0', fontSize: '12px', marginBottom: '4px' }}>
-                Общая сумма
-              </div>
-              <div style={{ 
-                color: '#ffb547', 
-                fontSize: '24px', 
-                fontWeight: '800',
-                textShadow: '0 0 20px rgba(255, 181, 71, 0.5)'
-              }}>
-                ₽182.5K
-              </div>
-            </div>
-            <div style={{ width: '1px', background: 'rgba(255, 255, 255, 0.05)' }} />
-            <div>
-              <div style={{ color: '#a3aed0', fontSize: '12px', marginBottom: '4px' }}>
-                Срочных платежей
-              </div>
-              <div style={{ 
-                color: '#ff6b6b', 
-                fontSize: '24px', 
-                fontWeight: '800',
-                textShadow: '0 0 20px rgba(255, 107, 107, 0.5)'
-              }}>
-                2
-              </div>
-            </div>
-          </div>
-          <div style={{ 
-            background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
-            padding: '12px 24px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 0 20px rgba(117, 81, 233, 0.4)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 10px 30px rgba(117, 81, 233, 0.6)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 0 20px rgba(117, 81, 233, 0.4)';
-          }}>
-            <span style={{ color: '#fff', fontSize: '14px', fontWeight: '700' }}>
-              Запланировать платежи
-            </span>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
