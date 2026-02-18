@@ -115,11 +115,11 @@ const Dashboard2AllCards = () => {
         ))}
       </div>
 
-      {/* Contractor & Expense Structure Row */}
+      {/* Department & Expense Structure Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        {contractorCard && (
+        {departmentCard && (
           <div className="min-w-0 max-w-full overflow-hidden">
-            {renderCard(contractorCard)}
+            {renderCard(departmentCard)}
           </div>
         )}
         {expenseStructureCard && (
@@ -129,11 +129,11 @@ const Dashboard2AllCards = () => {
         )}
       </div>
 
-      {/* Department & Legal Entity Row */}
+      {/* Contractor & Legal Entity Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {departmentCard && (
+        {contractorCard && (
           <div className="min-w-0 max-w-full overflow-hidden">
-            {renderCard(departmentCard)}
+            {renderCard(contractorCard)}
           </div>
         )}
         {legalEntityCard && (
