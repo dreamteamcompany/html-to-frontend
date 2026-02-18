@@ -119,15 +119,6 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
               </div>
             )}
 
-            {(isPlannedPayment || payment.is_planned) && (
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <Icon name="CalendarClock" size={20} className="text-blue-400 flex-shrink-0" />
-                  <p className="text-sm font-semibold text-blue-300">Запланированный платёж</p>
-                </div>
-              </div>
-            )}
-
             {payment.description && (
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Описание</p>
@@ -163,6 +154,20 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Отдел-заказчик</p>
                 <p className="font-medium">{payment.department_name}</p>
+              </div>
+            )}
+
+            {(isPlannedPayment || payment.is_planned) && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Запланированный платеж</p>
+                <div className="flex items-center gap-2 font-medium text-blue-300">
+                  <Icon name="CalendarClock" size={18} />
+                  {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                  }) : 'Дата не указана'}
+                </div>
               </div>
             )}
 
