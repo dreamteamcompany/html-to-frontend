@@ -73,17 +73,17 @@ const LegalEntityComparisonChart = () => {
   ];
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
-      <CardContent className="p-6">
-        <div style={{ marginBottom: '16px', minHeight: '32px', display: 'flex', alignItems: 'center' }}>
+    <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)', width: '540px', height: '270px' }}>
+      <CardContent className="p-4" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ marginBottom: '8px', minHeight: '32px', display: 'flex', alignItems: 'center' }}>
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Юридическим Лицам</h3>
         </div>
         {loading ? (
-          <div className="flex items-center justify-center" style={{ height: '500px' }}>
+          <div className="flex items-center justify-center" style={{ flex: 1 }}>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
           </div>
         ) : (
-        <div style={{ position: 'relative', height: '500px' }}>
+        <div style={{ position: 'relative', flex: 1 }}>
           <Bar
             data={{
               labels: legalEntityData.map(d => d.name),
