@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { dashboardTypography } from '../dashboardStyles';
+import { usePeriod } from '@/contexts/PeriodContext';
 
 interface PaymentRecord {
   status: string;
@@ -14,68 +15,62 @@ interface PaymentRecord {
 }
 
 const IndexationCard = () => {
+  const { getDateRange, period } = usePeriod();
   const [indexationAmount, setIndexationAmount] = useState(0);
   const [indexationPercent, setIndexationPercent] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchIndexationData = async () => {
+      setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
         const data = await response.json();
-        
-        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => 
+
+        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) =>
           p.status === 'approved' || p.status === 'paid'
         );
 
-        const now = new Date();
-        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+        const { from, to } = getDateRange();
+        const periodMs = to.getTime() - from.getTime();
 
-        const currentMonthPayments = approvedPayments.filter((p: PaymentRecord) => {
-          const paymentDate = new Date(p.payment_date);
-          return paymentDate >= currentMonthStart;
+        const prevTo = new Date(from.getTime() - 1);
+        const prevFrom = new Date(prevTo.getTime() - periodMs);
+
+        const currentPayments = approvedPayments.filter((p: PaymentRecord) => {
+          const d = new Date(p.payment_date);
+          return d >= from && d <= to;
         });
 
-        const previousMonthPayments = approvedPayments.filter((p: PaymentRecord) => {
-          const paymentDate = new Date(p.payment_date);
-          return paymentDate >= previousMonthStart && paymentDate <= previousMonthEnd;
+        const previousPayments = approvedPayments.filter((p: PaymentRecord) => {
+          const d = new Date(p.payment_date);
+          return d >= prevFrom && d <= prevTo;
         });
 
-        // Группируем платежи по сервисам для текущего месяца
-        const currentByService: {[key: string]: number} = {};
-        currentMonthPayments.forEach((p: PaymentRecord) => {
+        const currentByService: { [key: string]: number } = {};
+        currentPayments.forEach((p: PaymentRecord) => {
           const serviceKey = p.service_id ? `service_${p.service_id}` : 'no_service';
           currentByService[serviceKey] = (currentByService[serviceKey] || 0) + p.amount;
         });
 
-        // Группируем платежи по сервисам для предыдущего месяца
-        const previousByService: {[key: string]: number} = {};
-        previousMonthPayments.forEach((p: PaymentRecord) => {
+        const previousByService: { [key: string]: number } = {};
+        previousPayments.forEach((p: PaymentRecord) => {
           const serviceKey = p.service_id ? `service_${p.service_id}` : 'no_service';
           previousByService[serviceKey] = (previousByService[serviceKey] || 0) + p.amount;
         });
 
-        // Вычисляем индексацию только для сервисов, которые были в оба периода
         let totalIndexation = 0;
-        let servicesWithIndexation = 0;
-
         Object.keys(currentByService).forEach((serviceKey) => {
           if (previousByService[serviceKey]) {
-            const currentAmount = currentByService[serviceKey];
-            const previousAmount = previousByService[serviceKey];
-            const diff = currentAmount - previousAmount;
-            totalIndexation += diff;
-            servicesWithIndexation++;
+            totalIndexation += currentByService[serviceKey] - previousByService[serviceKey];
           }
         });
 
         const currentTotal = Object.values(currentByService).reduce((sum, val) => sum + val, 0);
         const previousTotal = Object.values(previousByService).reduce((sum, val) => sum + val, 0);
-        
-        const percentChange = previousTotal > 0 
-          ? ((currentTotal - previousTotal) / previousTotal) * 100 
+
+        const percentChange = previousTotal > 0
+          ? ((currentTotal - previousTotal) / previousTotal) * 100
           : 0;
 
         setIndexationAmount(Math.abs(totalIndexation));
@@ -88,7 +83,7 @@ const IndexationCard = () => {
     };
 
     fetchIndexationData();
-  }, []);
+  }, [period]);
 
   return (
     <Card className="h-full" style={{ background: '#111c44', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547', boxShadow: '0 0 30px rgba(255, 181, 71, 0.2), inset 0 0 15px rgba(255, 181, 71, 0.05)' }}>
@@ -111,9 +106,9 @@ const IndexationCard = () => {
             <div className={`${dashboardTypography.cardValue} text-white mb-2`}>
               {new Intl.NumberFormat('ru-RU').format(indexationAmount)} ₽
             </div>
-            <div className={`${dashboardTypography.cardSecondary} mb-3`}>за текущий период</div>
+            <div className={`${dashboardTypography.cardSecondary} mb-3`}>за выбранный период</div>
             <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5`} style={{ color: indexationPercent >= 0 ? '#01b574' : '#ff6b6b' }}>
-              <Icon name={indexationPercent >= 0 ? "ArrowUp" : "ArrowDown"} size={14} /> 
+              <Icon name={indexationPercent >= 0 ? "ArrowUp" : "ArrowDown"} size={14} />
               {indexationPercent >= 0 ? '+' : ''}{indexationPercent}% к предыдущему периоду
             </div>
           </>

@@ -3,9 +3,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Doughnut } from 'react-chartjs-2';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
+import { usePeriod } from '@/contexts/PeriodContext';
 
 interface PaymentRecord {
   status: string;
+  payment_date: string;
   amount: number;
   category_name?: string;
   [key: string]: unknown;
@@ -40,7 +42,31 @@ const defaultColors = [
   'rgb(255, 159, 243)',
 ];
 
+const activeStyle = {
+  background: '#7551e9',
+  border: 'none',
+  color: 'white',
+  padding: '8px 16px',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  fontSize: '13px',
+  fontWeight: '600' as const,
+  boxShadow: '0 2px 8px rgba(117, 81, 233, 0.3)',
+};
+
+const inactiveStyle = {
+  background: 'transparent',
+  border: 'none',
+  color: '#a3aed0',
+  padding: '8px 16px',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  fontSize: '13px',
+  fontWeight: '600' as const,
+};
+
 const ExpenseStructureChart = () => {
+  const { period, getDateRange } = usePeriod();
   const [activeTab, setActiveTab] = useState<'general' | 'details'>('general');
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,26 +74,28 @@ const ExpenseStructureChart = () => {
 
   useEffect(() => {
     const fetchExpenseStructure = async () => {
+      setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
         const data = await response.json();
-        
-        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => 
-          p.status === 'approved' || p.status === 'paid'
-        );
-        
+
+        const { from, to } = getDateRange();
+
+        const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
+          if (p.status !== 'approved' && p.status !== 'paid') return false;
+          const d = new Date(p.payment_date);
+          return d >= from && d <= to;
+        });
+
         const categoryMap: Record<string, number> = {};
         let total = 0;
-        
-        approvedPayments.forEach((payment: PaymentRecord) => {
+
+        filtered.forEach((payment: PaymentRecord) => {
           const categoryName = payment.category_name || 'Прочее';
-          if (!categoryMap[categoryName]) {
-            categoryMap[categoryName] = 0;
-          }
-          categoryMap[categoryName] += payment.amount;
+          categoryMap[categoryName] = (categoryMap[categoryName] || 0) + payment.amount;
           total += payment.amount;
         });
-        
+
         const categoriesData = Object.entries(categoryMap)
           .map(([name, amount], index) => ({
             name,
@@ -76,7 +104,7 @@ const ExpenseStructureChart = () => {
             color: categoryColors[name] || defaultColors[index % defaultColors.length],
           }))
           .sort((a, b) => b.amount - a.amount);
-        
+
         setCategories(categoriesData);
         setTotalAmount(total);
       } catch (error) {
@@ -85,32 +113,9 @@ const ExpenseStructureChart = () => {
         setLoading(false);
       }
     };
-    
+
     fetchExpenseStructure();
-  }, []);
-
-  const activeStyle = {
-    background: '#7551e9',
-    border: 'none',
-    color: 'white',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '600' as const,
-    boxShadow: '0 2px 8px rgba(117, 81, 233, 0.3)',
-  };
-
-  const inactiveStyle = {
-    background: 'transparent',
-    border: 'none',
-    color: '#a3aed0',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '600' as const,
-  };
+  }, [period]);
 
   return (
     <Card style={{ background: '#111c44', border: '1px solid rgba(255, 181, 71, 0.4)', boxShadow: '0 0 30px rgba(255, 181, 71, 0.2), inset 0 0 15px rgba(255, 181, 71, 0.05)' }}>
@@ -118,16 +123,10 @@ const ExpenseStructureChart = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Структура Расходов</h3>
           <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '10px' }}>
-            <button
-              style={activeTab === 'general' ? activeStyle : inactiveStyle}
-              onClick={() => setActiveTab('general')}
-            >
+            <button style={activeTab === 'general' ? activeStyle : inactiveStyle} onClick={() => setActiveTab('general')}>
               Общие
             </button>
-            <button
-              style={activeTab === 'details' ? activeStyle : inactiveStyle}
-              onClick={() => setActiveTab('details')}
-            >
+            <button style={activeTab === 'details' ? activeStyle : inactiveStyle} onClick={() => setActiveTab('details')}>
               Детали
             </button>
           </div>
@@ -139,7 +138,7 @@ const ExpenseStructureChart = () => {
           </div>
         ) : categories.length === 0 ? (
           <div className="flex items-center justify-center" style={{ height: '350px' }}>
-            <p style={{ color: '#a3aed0' }}>Нет данных о расходах</p>
+            <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
           </div>
         ) : activeTab === 'general' ? (
           <div style={{ height: '350px', position: 'relative' }}>
@@ -164,15 +163,12 @@ const ExpenseStructureChart = () => {
                       padding: 20,
                       usePointStyle: true,
                       color: '#a3aed0',
-                      font: {
-                        family: 'Plus Jakarta Sans, sans-serif',
-                        size: 13
-                      }
+                      font: { family: 'Plus Jakarta Sans, sans-serif', size: 13 }
                     }
                   },
                   tooltip: {
                     callbacks: {
-                      label: function(context) {
+                      label: (context) => {
                         const category = categories[context.dataIndex];
                         return `${context.label}: ${context.parsed}% (${new Intl.NumberFormat('ru-RU').format(category.amount)} ₽)`;
                       }
@@ -213,8 +209,10 @@ const ExpenseStructureChart = () => {
             </table>
 
             <div style={{ marginTop: '16px', padding: '14px 12px', background: 'rgba(117, 81, 233, 0.1)', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '600' }}>Итого</span>
-              <span style={{ color: '#fff', fontSize: '16px', fontWeight: '700' }}>{new Intl.NumberFormat('ru-RU').format(totalAmount)} ₽</span>
+              <span style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '500' }}>Итого</span>
+              <span style={{ color: '#fff', fontSize: '16px', fontWeight: '700' }}>
+                {new Intl.NumberFormat('ru-RU').format(totalAmount)} ₽
+              </span>
             </div>
           </div>
         )}
