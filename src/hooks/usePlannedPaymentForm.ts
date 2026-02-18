@@ -21,6 +21,8 @@ interface PlannedPaymentFormData {
   service_id: string;
   invoice_number: string;
   invoice_date: string;
+  recurrence_type: string;
+  recurrence_end_date: string;
   custom_fields: Record<string, string>;
 }
 
@@ -35,6 +37,8 @@ const initialFormData: PlannedPaymentFormData = {
   service_id: '',
   invoice_number: '',
   invoice_date: '',
+  recurrence_type: 'once',
+  recurrence_end_date: '',
   custom_fields: {},
 };
 
@@ -74,7 +78,7 @@ export const usePlannedPaymentForm = (
     }
 
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=payments`, {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,20 +88,23 @@ export const usePlannedPaymentForm = (
           category_id: parseInt(formData.category_id),
           amount: parseFloat(formData.amount),
           description: formData.description,
-          payment_date: formData.planned_date,
+          planned_date: formData.planned_date,
           legal_entity_id: formData.legal_entity_id ? parseInt(formData.legal_entity_id) : null,
           contractor_id: formData.contractor_id ? parseInt(formData.contractor_id) : null,
           department_id: formData.department_id ? parseInt(formData.department_id) : null,
           service_id: formData.service_id ? parseInt(formData.service_id) : null,
           invoice_number: formData.invoice_number,
           invoice_date: formData.invoice_date || null,
+          recurrence_type: formData.recurrence_type,
+          recurrence_end_date: formData.recurrence_end_date || null,
+          custom_fields: formData.custom_fields,
         }),
       });
 
       if (response.ok) {
         toast({
           title: 'Успешно',
-          description: 'Платёж создан в статусе "Черновик"',
+          description: 'Запланированный платёж создан',
         });
         setDialogOpen(false);
         setFormData(initialFormData);
@@ -111,7 +118,7 @@ export const usePlannedPaymentForm = (
         });
       }
     } catch (err) {
-      console.error('Failed to create payment:', err);
+      console.error('Failed to create planned payment:', err);
       toast({
         title: 'Ошибка сети',
         description: 'Проверьте подключение к интернету',

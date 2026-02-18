@@ -64,6 +64,8 @@ interface PlannedPaymentFormData {
   service_id: string;
   invoice_number: string;
   invoice_date: string;
+  recurrence_type: string;
+  recurrence_end_date: string;
   custom_fields: Record<string, string>;
 }
 
@@ -215,6 +217,50 @@ const PlannedPaymentForm = ({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+            <div className="flex items-center gap-2 mb-3">
+              <Icon name="Repeat" size={18} className="text-blue-400" />
+              <Label className="text-blue-200">Настройки повторения</Label>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="recurrence_type">Тип повторения</Label>
+                <Select
+                  value={formData.recurrence_type || 'once'}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, recurrence_type: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="once">Однократно</SelectItem>
+                    <SelectItem value="daily">Ежедневно</SelectItem>
+                    <SelectItem value="weekly">Еженедельно</SelectItem>
+                    <SelectItem value="monthly">Ежемесячно</SelectItem>
+                    <SelectItem value="yearly">Ежегодно</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.recurrence_type !== 'once' && (
+                <div className="space-y-2">
+                  <Label htmlFor="recurrence_end_date">Дата окончания повторений</Label>
+                  <Input
+                    id="recurrence_end_date"
+                    type="date"
+                    value={formData.recurrence_end_date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, recurrence_end_date: e.target.value })
+                    }
+                  />
+                </div>
+              )}
             </div>
           </div>
 
