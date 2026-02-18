@@ -75,6 +75,18 @@ const Dashboard2AllCards = () => {
   const statCards = cardOrder.filter(card => card.type === 'stat');
   const chartCards = cardOrder.filter(card => card.type === 'chart');
 
+  const contractorCard = chartCards.find(c => c.id === 'contractor-comparison');
+  const expenseStructureCard = chartCards.find(c => c.id === 'expense-structure');
+  const legalEntityCard = chartCards.find(c => c.id === 'legal-entity-comparison');
+  const departmentCard = chartCards.find(c => c.id === 'department-comparison');
+  
+  const otherCharts = chartCards.filter(c => 
+    c.id !== 'contractor-comparison' && 
+    c.id !== 'expense-structure' && 
+    c.id !== 'legal-entity-comparison' && 
+    c.id !== 'department-comparison'
+  );
+
   return (
     <div className="mb-6 sm:mb-8 overflow-x-hidden max-w-full">
       {/* Stat Cards Row */}
@@ -91,9 +103,9 @@ const Dashboard2AllCards = () => {
         })}
       </div>
 
-      {/* Chart Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {chartCards.map((card) => (
+      {/* Other Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        {otherCharts.map((card) => (
           <div 
             key={card.id} 
             className="min-w-0 max-w-full overflow-hidden"
@@ -101,6 +113,34 @@ const Dashboard2AllCards = () => {
             {renderCard(card)}
           </div>
         ))}
+      </div>
+
+      {/* Contractor & Expense Structure Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        {contractorCard && (
+          <div className="min-w-0 max-w-full overflow-hidden">
+            {renderCard(contractorCard)}
+          </div>
+        )}
+        {expenseStructureCard && (
+          <div className="min-w-0 max-w-full overflow-hidden">
+            {renderCard(expenseStructureCard)}
+          </div>
+        )}
+      </div>
+
+      {/* Department & Legal Entity Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {departmentCard && (
+          <div className="min-w-0 max-w-full overflow-hidden">
+            {renderCard(departmentCard)}
+          </div>
+        )}
+        {legalEntityCard && (
+          <div className="min-w-0 max-w-full overflow-hidden">
+            {renderCard(legalEntityCard)}
+          </div>
+        )}
       </div>
     </div>
   );
