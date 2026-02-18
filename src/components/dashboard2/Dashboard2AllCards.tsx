@@ -7,6 +7,7 @@ import CategoryExpensesChart from './blocks/CategoryExpensesChart';
 import ContractorComparisonChart from './blocks/ContractorComparisonChart';
 import ExpenseStructureChart from './blocks/ExpenseStructureChart';
 import LegalEntityComparisonChart from './blocks/LegalEntityComparisonChart';
+import Dashboard2TeamPerformance from './Dashboard2TeamPerformance';
 
 interface DashboardCard {
   id: string;
@@ -25,6 +26,7 @@ const Dashboard2AllCards = () => {
     { id: 'category-expenses', title: 'IT Расходы по Категориям', type: 'chart' },
     { id: 'contractor-comparison', title: 'Сравнение по Контрагентам', type: 'chart' },
     { id: 'expense-structure', title: 'Структура Расходов', type: 'chart' },
+    { id: 'department-comparison', title: 'Сравнение по Отделам-Заказчикам', type: 'chart' },
     { id: 'legal-entity-comparison', title: 'Сравнение по Юридическим Лицам', type: 'chart' },
   ];
 
@@ -59,6 +61,8 @@ const Dashboard2AllCards = () => {
         return <ContractorComparisonChart />;
       case 'expense-structure':
         return <ExpenseStructureChart />;
+      case 'department-comparison':
+        return <Dashboard2TeamPerformance />;
       case 'legal-entity-comparison':
         return <LegalEntityComparisonChart />;
       default:
