@@ -78,6 +78,8 @@ export const usePlannedPaymentForm = (
     }
 
     try {
+      const cleanAmount = formData.amount.replace(/\s+/g, '');
+      
       const response = await fetch(`${API_ENDPOINTS.main}?endpoint=payments`, {
         method: 'POST',
         headers: {
@@ -86,7 +88,7 @@ export const usePlannedPaymentForm = (
         },
         body: JSON.stringify({
           category_id: parseInt(formData.category_id),
-          amount: parseFloat(formData.amount),
+          amount: parseFloat(cleanAmount),
           description: formData.description,
           payment_date: formData.planned_date,
           legal_entity_id: formData.legal_entity_id ? parseInt(formData.legal_entity_id) : null,
