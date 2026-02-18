@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Category {
   id: number;
@@ -97,6 +98,8 @@ const PlannedPaymentForm = ({
   handleSubmit,
   onDialogOpen,
 }: PlannedPaymentFormProps) => {
+  const { hasPermission } = useAuth();
+  
   const handleOpenChange = (open: boolean) => {
     if (open && onDialogOpen) {
       onDialogOpen();
@@ -105,13 +108,15 @@ const PlannedPaymentForm = ({
   };
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="lg" className="gap-2 shadow-lg">
-          <Icon name="Plus" size={20} />
-          Запланировать платёж
-        </Button>
-      </DialogTrigger>
+    <>
+      {hasPermission('payments', 'create') && (
+        <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-500 hover:bg-blue-600 gap-2 w-full sm:w-auto">
+              <Icon name="CalendarPlus" size={18} />
+              <span>Запланировать платёж</span>
+            </Button>
+          </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -381,6 +386,8 @@ const PlannedPaymentForm = ({
         </form>
       </DialogContent>
     </Dialog>
+      )}
+    </>
   );
 };
 

@@ -3,7 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePaymentsData } from '@/hooks/usePaymentsData';
 import { usePaymentForm } from '@/hooks/usePaymentForm';
+import { usePlannedPaymentForm } from '@/hooks/usePlannedPaymentForm';
 import PaymentForm from '@/components/payments/PaymentForm';
+import PlannedPaymentForm from '@/components/payments/PlannedPaymentForm';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 import { API_ENDPOINTS } from '@/config/api';
@@ -41,6 +43,14 @@ const MyPaymentsTab = () => {
     fileName,
     fileType,
   } = usePaymentForm(customFields, loadPayments, loadContractors, loadLegalEntities);
+
+  const {
+    dialogOpen: plannedDialogOpen,
+    setDialogOpen: setPlannedDialogOpen,
+    formData: plannedFormData,
+    setFormData: setPlannedFormData,
+    handleSubmit: handlePlannedSubmit,
+  } = usePlannedPaymentForm(customFields, loadPayments);
 
   const handleApprove = async (paymentId: number) => {
     try {
@@ -125,25 +135,41 @@ const MyPaymentsTab = () => {
 
   return (
     <div className="space-y-6">
-      <PaymentForm
-        dialogOpen={dialogOpen}
-        setDialogOpen={setDialogOpen}
-        formData={formData}
-        setFormData={setFormData}
-        categories={categories}
-        legalEntities={legalEntities}
-        contractors={contractors}
-        customerDepartments={customerDepartments}
-        customFields={customFields}
-        services={services}
-        handleSubmit={handleSubmit}
-        invoicePreview={invoicePreview}
-        isProcessingInvoice={isProcessingInvoice}
-        handleFileSelect={handleFileSelect}
-        handleExtractData={handleExtractData}
-        fileName={fileName}
-        fileType={fileType}
-      />
+      <div className="flex flex-wrap gap-3">
+        <PaymentForm
+          dialogOpen={dialogOpen}
+          setDialogOpen={setDialogOpen}
+          formData={formData}
+          setFormData={setFormData}
+          categories={categories}
+          legalEntities={legalEntities}
+          contractors={contractors}
+          customerDepartments={customerDepartments}
+          customFields={customFields}
+          services={services}
+          handleSubmit={handleSubmit}
+          invoicePreview={invoicePreview}
+          isProcessingInvoice={isProcessingInvoice}
+          handleFileSelect={handleFileSelect}
+          handleExtractData={handleExtractData}
+          fileName={fileName}
+          fileType={fileType}
+        />
+
+        <PlannedPaymentForm
+          dialogOpen={plannedDialogOpen}
+          setDialogOpen={setPlannedDialogOpen}
+          formData={plannedFormData}
+          setFormData={setPlannedFormData}
+          categories={categories}
+          legalEntities={legalEntities}
+          contractors={contractors}
+          customerDepartments={customerDepartments}
+          customFields={customFields}
+          services={services}
+          handleSubmit={handlePlannedSubmit}
+        />
+      </div>
 
       <PaymentsList 
         payments={payments} 
