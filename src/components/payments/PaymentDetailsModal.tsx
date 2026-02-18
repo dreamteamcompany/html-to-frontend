@@ -50,7 +50,7 @@ interface PaymentDetailsModalProps {
   isPlannedPayment?: boolean;
 }
 
-const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove, onReject, onEdit, isPlannedPayment = false }: PaymentDetailsModalProps) => {
+const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove, onReject, onEdit, isPlannedPayment }: PaymentDetailsModalProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   
   if (!payment) return null;
@@ -115,6 +115,15 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                       </p>
                     )}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {(isPlannedPayment || payment.is_planned) && (
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <Icon name="CalendarClock" size={20} className="text-blue-400 flex-shrink-0" />
+                  <p className="text-sm font-semibold text-blue-300">Запланированный платёж</p>
                 </div>
               </div>
             )}
@@ -209,7 +218,7 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
             <div className="p-4 sm:p-6 border-b border-white/10">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{isPlannedPayment ? 'Дата планирования:' : 'Дата платежа:'}</span>
+                  <span className="text-muted-foreground">{(isPlannedPayment || payment.is_planned) ? 'Дата планирования:' : 'Дата платежа:'}</span>
                   <span className="font-medium">
                     {payment.planned_date 
                       ? new Date(payment.planned_date).toLocaleDateString('ru-RU')

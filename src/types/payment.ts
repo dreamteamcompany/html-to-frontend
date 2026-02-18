@@ -30,6 +30,7 @@ export interface Payment {
   invoice_date?: string;
   created_at?: string;
   submitted_at?: string;
+  is_planned?: boolean;
   custom_fields?: CustomField[];
   [key: string]: string | number | boolean | undefined | CustomField[] | null;
 }

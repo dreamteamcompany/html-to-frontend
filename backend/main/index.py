@@ -29,6 +29,7 @@ class PaymentRequest(BaseModel):
     service_id: Optional[int] = None
     invoice_number: Optional[str] = None
     invoice_date: Optional[str] = None
+    is_planned: Optional[bool] = False
 
 class CategoryRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -1032,7 +1033,8 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     s.name as service_name,
                     s.description as service_description,
                     p.invoice_number,
-                    p.invoice_date
+                    p.invoice_date,
+                    p.is_planned
                 FROM {SCHEMA}.payments p
                 LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
                 LEFT JOIN {SCHEMA}.legal_entities le ON p.legal_entity_id = le.id
@@ -1071,7 +1073,8 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'service_name': row[23],
                     'service_description': row[24],
                     'invoice_number': row[25],
-                    'invoice_date': row[26].isoformat() if row[26] else None
+                    'invoice_date': row[26].isoformat() if row[26] else None,
+                    'is_planned': row[27] if len(row) > 27 else False
                 }
                 for row in rows
             ]
@@ -1125,12 +1128,12 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 category_name = category['name']
                 
                 cur.execute(
-                    f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, created_by, status) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
-                       RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, status, created_by""",
+                    f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, created_by, status, is_planned) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft', %s) 
+                       RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, status, created_by, is_planned""",
                     (category_name, pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
                      pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, pay_req.service_id, 
-                     pay_req.invoice_number, pay_req.invoice_date, payload['user_id'])
+                     pay_req.invoice_number, pay_req.invoice_date, payload['user_id'], pay_req.is_planned)
                 )
                 row = cur.fetchone()
                 payment_id = row['id']

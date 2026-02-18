@@ -97,6 +97,7 @@ export const usePlannedPaymentForm = (
           service_id: formData.service_id ? parseInt(formData.service_id) : null,
           invoice_number: formData.invoice_number,
           invoice_date: formData.invoice_date || null,
+          is_planned: true,
         }),
       });
 
