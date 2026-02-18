@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Radar } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';

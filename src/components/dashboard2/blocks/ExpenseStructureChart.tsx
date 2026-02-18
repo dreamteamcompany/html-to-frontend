@@ -1,17 +1,93 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Doughnut } from 'react-chartjs-2';
+import { apiFetch } from '@/utils/api';
+import { API_ENDPOINTS } from '@/config/api';
 
-const categories = [
-  { name: 'IT', value: 45, amount: '4 500 000 ₽', color: 'rgb(117, 81, 233)' },
-  { name: 'Маркетинг', value: 25, amount: '2 500 000 ₽', color: 'rgb(57, 101, 255)' },
-  { name: 'HR', value: 15, amount: '1 500 000 ₽', color: 'rgb(255, 181, 71)' },
-  { name: 'Офис', value: 10, amount: '1 000 000 ₽', color: 'rgb(1, 181, 116)' },
-  { name: 'Прочее', value: 5, amount: '500 000 ₽', color: 'rgb(255, 107, 107)' },
+interface PaymentRecord {
+  status: string;
+  amount: number;
+  category_name?: string;
+  [key: string]: unknown;
+}
+
+interface CategoryData {
+  name: string;
+  value: number;
+  amount: number;
+  color: string;
+}
+
+const categoryColors: Record<string, string> = {
+  'IT': 'rgb(117, 81, 233)',
+  'Маркетинг': 'rgb(57, 101, 255)',
+  'HR': 'rgb(255, 181, 71)',
+  'Офис': 'rgb(1, 181, 116)',
+  'Прочее': 'rgb(255, 107, 107)',
+  'Разработка': 'rgb(78, 205, 196)',
+  'Инфраструктура': 'rgb(227, 26, 26)',
+  'Лицензии': 'rgb(255, 159, 243)',
+};
+
+const defaultColors = [
+  'rgb(117, 81, 233)',
+  'rgb(57, 101, 255)',
+  'rgb(255, 181, 71)',
+  'rgb(1, 181, 116)',
+  'rgb(255, 107, 107)',
+  'rgb(78, 205, 196)',
+  'rgb(227, 26, 26)',
+  'rgb(255, 159, 243)',
 ];
 
 const ExpenseStructureChart = () => {
   const [activeTab, setActiveTab] = useState<'general' | 'details'>('general');
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalAmount, setTotalAmount] = useState(0);
+
+  useEffect(() => {
+    const fetchExpenseStructure = async () => {
+      try {
+        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        const data = await response.json();
+        
+        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => 
+          p.status === 'approved' || p.status === 'paid'
+        );
+        
+        const categoryMap: Record<string, number> = {};
+        let total = 0;
+        
+        approvedPayments.forEach((payment: PaymentRecord) => {
+          const categoryName = payment.category_name || 'Прочее';
+          if (!categoryMap[categoryName]) {
+            categoryMap[categoryName] = 0;
+          }
+          categoryMap[categoryName] += payment.amount;
+          total += payment.amount;
+        });
+        
+        const categoriesData = Object.entries(categoryMap)
+          .map(([name, amount], index) => ({
+            name,
+            amount,
+            value: total > 0 ? Math.round((amount / total) * 100) : 0,
+            color: categoryColors[name] || defaultColors[index % defaultColors.length],
+          }))
+          .sort((a, b) => b.amount - a.amount);
+        
+        setCategories(categoriesData);
+        setTotalAmount(total);
+      } catch (error) {
+        console.error('Failed to fetch expense structure:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchExpenseStructure();
+  }, []);
 
   const activeStyle = {
     background: '#7551e9',
@@ -57,7 +133,15 @@ const ExpenseStructureChart = () => {
           </div>
         </div>
 
-        {activeTab === 'general' ? (
+        {loading ? (
+          <div className="flex items-center justify-center" style={{ height: '350px' }}>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="flex items-center justify-center" style={{ height: '350px' }}>
+            <p style={{ color: '#a3aed0' }}>Нет данных о расходах</p>
+          </div>
+        ) : activeTab === 'general' ? (
           <div style={{ height: '350px', position: 'relative' }}>
             <Doughnut
               data={{
@@ -89,7 +173,8 @@ const ExpenseStructureChart = () => {
                   tooltip: {
                     callbacks: {
                       label: function(context) {
-                        return `${context.label}: ${context.parsed}%`;
+                        const category = categories[context.dataIndex];
+                        return `${context.label}: ${context.parsed}% (${new Intl.NumberFormat('ru-RU').format(category.amount)} ₽)`;
                       }
                     }
                   }
@@ -120,7 +205,7 @@ const ExpenseStructureChart = () => {
                       <span style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>{cat.value}%</span>
                     </td>
                     <td style={{ textAlign: 'right', padding: '14px 12px' }}>
-                      <span style={{ color: '#a3aed0', fontSize: '14px' }}>{cat.amount}</span>
+                      <span style={{ color: '#a3aed0', fontSize: '14px' }}>{new Intl.NumberFormat('ru-RU').format(cat.amount)} ₽</span>
                     </td>
                   </tr>
                 ))}
@@ -129,7 +214,7 @@ const ExpenseStructureChart = () => {
 
             <div style={{ marginTop: '16px', padding: '14px 12px', background: 'rgba(117, 81, 233, 0.1)', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#a3aed0', fontSize: '14px', fontWeight: '600' }}>Итого</span>
-              <span style={{ color: '#fff', fontSize: '16px', fontWeight: '700' }}>10 000 000 ₽</span>
+              <span style={{ color: '#fff', fontSize: '16px', fontWeight: '700' }}>{new Intl.NumberFormat('ru-RU').format(totalAmount)} ₽</span>
             </div>
           </div>
         )}
