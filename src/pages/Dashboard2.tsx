@@ -3,7 +3,6 @@ import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import Dashboard2AllCards from '@/components/dashboard2/Dashboard2AllCards';
 import Dashboard2Charts from '@/components/dashboard2/Dashboard2Charts';
-import Dashboard2BudgetBreakdown from '@/components/dashboard2/Dashboard2BudgetBreakdown';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -127,27 +126,22 @@ const Dashboard2 = () => {
             <TabsContent value="today" className="space-y-6 mt-6">
               <Dashboard2AllCards />
               <Dashboard2Charts />
-              <Dashboard2BudgetBreakdown />
             </TabsContent>
             <TabsContent value="week" className="space-y-6 mt-6">
               <Dashboard2AllCards />
               <Dashboard2Charts />
-              <Dashboard2BudgetBreakdown />
             </TabsContent>
             <TabsContent value="month" className="space-y-6 mt-6">
               <Dashboard2AllCards />
               <Dashboard2Charts />
-              <Dashboard2BudgetBreakdown />
             </TabsContent>
             <TabsContent value="year" className="space-y-6 mt-6">
               <Dashboard2AllCards />
               <Dashboard2Charts />
-              <Dashboard2BudgetBreakdown />
             </TabsContent>
             <TabsContent value="custom" className="space-y-6 mt-6">
               <Dashboard2AllCards />
               <Dashboard2Charts />
-              <Dashboard2BudgetBreakdown />
             </TabsContent>
           </Tabs>
         </div>
