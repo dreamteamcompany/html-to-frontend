@@ -26,13 +26,21 @@ import { API_ENDPOINTS } from '@/config/api';
 
 interface PlannedPayment {
   id: number;
+  category_id: number;
   category_name: string;
   category_icon: string;
   description: string;
   amount: number;
   planned_date: string;
+  legal_entity_id?: number;
   legal_entity_name?: string;
+  contractor_id?: number;
+  department_id?: number;
+  service_id?: number;
+  invoice_number?: string;
+  invoice_date?: string;
   recurrence_type?: string;
+  recurrence_end_date?: string;
 }
 
 const recurrenceLabel: Record<string, string> = {
@@ -48,6 +56,7 @@ const PlannedPaymentsModal = () => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<PlannedPayment | null>(null);
+  const [editTarget, setEditTarget] = useState<PlannedPayment | null>(null);
 
   const {
     payments,
@@ -103,6 +112,46 @@ const PlannedPaymentsModal = () => {
       toast({ title: 'Ошибка', description: err.error || 'Не удалось удалить', variant: 'destructive' });
     }
     setDeleteTarget(null);
+  };
+
+  const handleEditOpen = (p: PlannedPayment) => {
+    loadDicts();
+    setEditTarget(p);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget) return;
+
+    const body = {
+      category_id: editTarget.category_id,
+      amount: editTarget.amount,
+      description: editTarget.description,
+      planned_date: editTarget.planned_date,
+      legal_entity_id: editTarget.legal_entity_id || null,
+      contractor_id: editTarget.contractor_id || null,
+      department_id: editTarget.department_id || null,
+      service_id: editTarget.service_id || null,
+      invoice_number: editTarget.invoice_number || null,
+      invoice_date: editTarget.invoice_date || null,
+      recurrence_type: editTarget.recurrence_type || 'once',
+      recurrence_end_date: editTarget.recurrence_end_date || null,
+    };
+
+    const res = await fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments&id=${editTarget.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token! },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      toast({ title: 'Сохранено', description: 'Платёж обновлён' });
+      loadPayments();
+      setEditTarget(null);
+    } else {
+      const err = await res.json();
+      toast({ title: 'Ошибка', description: err.error || 'Не удалось сохранить', variant: 'destructive' });
+    }
   };
 
   const formatAmount = (amount: number) =>
@@ -187,11 +236,18 @@ const PlannedPaymentsModal = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="text-right mr-1">
+                  <div className="flex items-center gap-1 shrink-0">
+                    <div className="text-right mr-2">
                       <p className="text-sm font-semibold text-white">{formatAmount(p.amount)}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{formatDate(p.planned_date)}</p>
                     </div>
+                    <button
+                      onClick={() => handleEditOpen(p as PlannedPayment)}
+                      className="p-1.5 rounded hover:bg-blue-500/20 text-muted-foreground hover:text-blue-400 transition-colors"
+                      title="Редактировать"
+                    >
+                      <Icon name="Pencil" size={15} />
+                    </button>
                     <button
                       onClick={() => setDeleteTarget(p as PlannedPayment)}
                       className="p-1.5 rounded hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
@@ -206,6 +262,128 @@ const PlannedPaymentsModal = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {editTarget && (
+        <Dialog open={!!editTarget} onOpenChange={(v) => !v && setEditTarget(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Icon name="Pencil" size={20} />
+                Редактировать платёж
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Категория *</label>
+                  <select
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={editTarget.category_id}
+                    onChange={(e) => setEditTarget({ ...editTarget, category_id: Number(e.target.value) })}
+                    required
+                  >
+                    <option value="">Выберите категорию</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Сумма (₽) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={editTarget.amount}
+                    onChange={(e) => setEditTarget({ ...editTarget, amount: Number(e.target.value) })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Назначение *</label>
+                <input
+                  type="text"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={editTarget.description}
+                  onChange={(e) => setEditTarget({ ...editTarget, description: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Дата платежа *</label>
+                  <input
+                    type="date"
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={editTarget.planned_date?.slice(0, 10) || ''}
+                    onChange={(e) => setEditTarget({ ...editTarget, planned_date: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Юридическое лицо</label>
+                  <select
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={editTarget.legal_entity_id || ''}
+                    onChange={(e) => setEditTarget({ ...editTarget, legal_entity_id: e.target.value ? Number(e.target.value) : undefined })}
+                  >
+                    <option value="">Не выбрано</option>
+                    {legalEntities.map((le) => (
+                      <option key={le.id} value={le.id}>{le.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Icon name="Repeat" size={16} className="text-blue-400" />
+                  <span className="text-sm text-blue-200 font-medium">Настройки повторения</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Тип повторения</label>
+                    <select
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={editTarget.recurrence_type || 'once'}
+                      onChange={(e) => setEditTarget({ ...editTarget, recurrence_type: e.target.value })}
+                    >
+                      <option value="once">Однократно</option>
+                      <option value="daily">Ежедневно</option>
+                      <option value="weekly">Еженедельно</option>
+                      <option value="monthly">Ежемесячно</option>
+                      <option value="yearly">Ежегодно</option>
+                    </select>
+                  </div>
+                  {editTarget.recurrence_type && editTarget.recurrence_type !== 'once' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Дата окончания</label>
+                      <input
+                        type="date"
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={editTarget.recurrence_end_date?.slice(0, 10) || ''}
+                        onChange={(e) => setEditTarget({ ...editTarget, recurrence_end_date: e.target.value })}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end pt-2">
+                <Button type="button" variant="outline" onClick={() => setEditTarget(null)}>
+                  Отмена
+                </Button>
+                <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+                  Сохранить
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
         <AlertDialogContent>

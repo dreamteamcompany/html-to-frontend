@@ -3482,6 +3482,53 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             
             return response(201, dict(row))
         
+        elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'payments.update')
+            if error:
+                return error
+            
+            params = event.get('queryStringParameters') or {}
+            planned_payment_id = params.get('id')
+            
+            if not planned_payment_id:
+                return response(400, {'error': 'ID is required'})
+            
+            body = json.loads(event.get('body', '{}'))
+            
+            category_id = body.get('category_id')
+            amount = body.get('amount')
+            description = body.get('description', '')
+            planned_date = body.get('planned_date')
+            legal_entity_id = body.get('legal_entity_id')
+            contractor_id = body.get('contractor_id')
+            department_id = body.get('department_id')
+            service_id = body.get('service_id')
+            invoice_number = body.get('invoice_number')
+            invoice_date = body.get('invoice_date')
+            recurrence_type = body.get('recurrence_type', 'once')
+            recurrence_end_date = body.get('recurrence_end_date')
+            
+            if not category_id or not amount or not planned_date:
+                return response(400, {'error': 'category_id, amount и planned_date обязательны'})
+            
+            cur.execute(
+                f"""UPDATE {SCHEMA}.planned_payments SET
+                    category_id = %s, amount = %s, description = %s, planned_date = %s,
+                    legal_entity_id = %s, contractor_id = %s, department_id = %s, service_id = %s,
+                    invoice_number = %s, invoice_date = %s, recurrence_type = %s, recurrence_end_date = %s
+                WHERE id = %s RETURNING id, category_id, amount, description, planned_date""",
+                (category_id, amount, description, planned_date, legal_entity_id,
+                 contractor_id, department_id, service_id, invoice_number, invoice_date,
+                 recurrence_type, recurrence_end_date, planned_payment_id)
+            )
+            row = cur.fetchone()
+            
+            if not row:
+                return response(404, {'error': 'Planned payment not found'})
+            
+            conn.commit()
+            return response(200, dict(row))
+        
         elif method == 'DELETE':
             payload, error = verify_token_and_permission(event, conn, 'payments.delete')
             if error:
