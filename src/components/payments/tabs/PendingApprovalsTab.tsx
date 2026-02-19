@@ -55,7 +55,7 @@ const PendingApprovalsTab = () => {
   const getStatusBadge = (status?: string) => {
     switch (status) {
       case 'pending_ceo':
-        return <span className="px-3 py-1 rounded-full text-xs bg-yellow-500/20" style={{ color: '#000000' }}>Ожидает CEO</span>;
+        return <span className="px-3 py-1 rounded-full text-xs bg-blue-500 text-white font-medium">Ожидает CEO</span>;
       default:
         return null;
     }
