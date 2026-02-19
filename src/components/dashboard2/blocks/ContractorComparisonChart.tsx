@@ -90,13 +90,13 @@ const ContractorComparisonChart = () => {
           <div style={{ display: 'flex', gap: '8px', background: 'hsl(var(--muted))', padding: '4px', borderRadius: '10px' }}>
             <button
               onClick={() => setShowAll(false)}
-              style={{ background: !showAll ? '#7551e9' : 'transparent', border: 'none', color: !showAll ? 'white' : 'hsl(var(--muted-foreground))', padding: isMobile ? '6px 12px' : '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: isMobile ? '11px' : '13px', fontWeight: '600', boxShadow: !showAll ? '0 2px 8px rgba(117, 81, 233, 0.3)' : 'none' }}
+              style={{ background: !showAll ? '#7551e9' : 'transparent', border: 'none', color: !showAll ? 'white' : '#000000', padding: isMobile ? '6px 12px' : '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: isMobile ? '11px' : '13px', fontWeight: '600', boxShadow: !showAll ? '0 2px 8px rgba(117, 81, 233, 0.3)' : 'none' }}
             >
               Топ-5
             </button>
             <button
               onClick={() => setShowAll(true)}
-              style={{ background: showAll ? '#7551e9' : 'transparent', border: 'none', color: showAll ? 'white' : 'hsl(var(--muted-foreground))', padding: isMobile ? '6px 12px' : '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: isMobile ? '11px' : '13px', fontWeight: '600', boxShadow: showAll ? '0 2px 8px rgba(117, 81, 233, 0.3)' : 'none' }}
+              style={{ background: showAll ? '#7551e9' : 'transparent', border: 'none', color: showAll ? 'white' : '#000000', padding: isMobile ? '6px 12px' : '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: isMobile ? '11px' : '13px', fontWeight: '600', boxShadow: showAll ? '0 2px 8px rgba(117, 81, 233, 0.3)' : 'none' }}
             >
               Все
             </button>
@@ -108,7 +108,7 @@ const ContractorComparisonChart = () => {
           </div>
         ) : displayData.length === 0 ? (
           <div className="flex items-center justify-center" style={{ flex: 1 }}>
-            <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
+            <p style={{ color: '#000000' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
           <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative' }}>
@@ -142,7 +142,7 @@ const ContractorComparisonChart = () => {
                   x: {
                     beginAtZero: true,
                     ticks: {
-                      color: '#a3aed0',
+                      color: '#000000',
                       font: { size: isMobile ? 10 : 12 },
                       maxTicksLimit: isMobile ? 5 : 8,
                       callback: (value) => {
@@ -154,7 +154,7 @@ const ContractorComparisonChart = () => {
                     grid: { color: 'rgba(255, 255, 255, 0.05)' }
                   },
                   y: {
-                    ticks: { color: '#a3aed0', font: { size: isMobile ? 9 : 12 } },
+                    ticks: { color: '#000000', font: { size: isMobile ? 9 : 12 } },
                     grid: { display: false }
                   }
                 }

@@ -87,7 +87,7 @@ const TotalExpensesCard = () => {
               {loading ? 'Загрузка...' : `${count} платежей`}
             </div>
           </div>
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(117, 81, 233, 0.1)', color: '#7551e9', border: '1px solid rgba(117, 81, 233, 0.2)' }}>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(117, 81, 233, 0.1)', color: '#000000', border: '1px solid rgba(117, 81, 233, 0.2)' }}>
             <Icon name="Server" size={18} className="sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -96,7 +96,7 @@ const TotalExpensesCard = () => {
         </div>
         <div className={`${dashboardTypography.cardSecondary} mb-3`}>Общая сумма расходов</div>
         {!loading && (
-          <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5`} style={{ color: isIncrease ? '#e31a1a' : '#01b574' }}>
+          <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5`} style={{ color: '#000000' }}>
             <Icon name={isIncrease ? "ArrowUp" : "ArrowDown"} size={14} />
             {isIncrease ? '+' : '-'}{changePercent}% к предыдущему периоду
           </div>

@@ -70,21 +70,20 @@ const ActiveTeamCard = () => {
           display: 'inline-flex',
           marginBottom: '14px'
         }} className="sm:p-3 sm:mb-5">
-          <Icon name="Users" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
+          <Icon name="Users" size={18} style={{ color: '#000000' }} className="sm:w-6 sm:h-6" />
         </div>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'hsl(var(--foreground))', marginBottom: '12px' }} className="sm:text-lg sm:mb-4">
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#000000', marginBottom: '12px' }} className="sm:text-lg sm:mb-4">
           Активная Команда
         </h3>
         <div style={{ 
-          color: '#7551e9', 
+          color: '#000000', 
           fontSize: '32px', 
           fontWeight: '900',
-          textShadow: '0 0 30px rgba(117, 81, 233, 0.6)',
           marginBottom: '8px'
         }} className="sm:text-[42px] sm:mb-3">
           {activeUsers}
         </div>
-        <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '12px', marginBottom: '14px' }} className="sm:text-sm sm:mb-5">
+        <div style={{ color: '#000000', fontSize: '12px', marginBottom: '14px' }} className="sm:text-sm sm:mb-5">
           Сотрудников работают с системой
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} className="sm:gap-2.5">
@@ -102,11 +101,11 @@ const ActiveTeamCard = () => {
                 borderRadius: '6px',
                 border: '1px solid hsl(var(--border))'
               }}>
-                <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: '11px' }} className="sm:text-xs">
+                <span style={{ color: '#000000', fontSize: '11px' }} className="sm:text-xs">
                   {dept.department_name}
                 </span>
                 <span style={{ 
-                  color: getColor(index), 
+                  color: '#000000', 
                   fontSize: '12px', 
                   fontWeight: '700' 
                 }} className="sm:text-sm">

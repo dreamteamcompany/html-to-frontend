@@ -75,21 +75,20 @@ const AverageSpeedCard = () => {
           display: 'inline-flex',
           marginBottom: '14px'
         }} className="sm:p-3 sm:mb-5">
-          <Icon name="Zap" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
+          <Icon name="Zap" size={18} style={{ color: '#000000' }} className="sm:w-6 sm:h-6" />
         </div>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'hsl(var(--foreground))', marginBottom: '12px' }} className="sm:text-lg sm:mb-4">
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#000000', marginBottom: '12px' }} className="sm:text-lg sm:mb-4">
           Средняя Скорость
         </h3>
         <div style={{ 
-          color: '#a855f7', 
+          color: '#000000', 
           fontSize: '32px', 
           fontWeight: '900',
-          textShadow: '0 0 30px rgba(168, 85, 247, 0.6)',
           marginBottom: '8px'
         }} className="sm:text-[42px] sm:mb-3">
           {formatTime(avgHours)}
         </div>
-        <div style={{ color: '#a3aed0', fontSize: '12px', marginBottom: '14px' }} className="sm:text-sm sm:mb-5">
+        <div style={{ color: '#000000', fontSize: '12px', marginBottom: '14px' }} className="sm:text-sm sm:mb-5">
           Обработка платежного запроса
         </div>
         <div style={{ display: 'flex', gap: '6px' }} className="sm:gap-2">
@@ -103,13 +102,13 @@ const AverageSpeedCard = () => {
               textAlign: 'center'
             }}>
               <div style={{ 
-                color: changePercent < 0 ? '#01b574' : '#ff6b6b', 
+                color: '#000000', 
                 fontSize: '16px', 
                 fontWeight: '700' 
               }} className="sm:text-xl">
                 {changePercent > 0 ? '+' : ''}{changePercent.toFixed(0)}%
               </div>
-              <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">vs месяц назад</div>
+              <div style={{ color: '#000000', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">vs месяц назад</div>
             </div>
           )}
           <div style={{ 
@@ -120,10 +119,10 @@ const AverageSpeedCard = () => {
             border: '1px solid rgba(117, 81, 233, 0.3)',
             textAlign: 'center'
           }}>
-            <div style={{ color: '#7551e9', fontSize: '16px', fontWeight: '700' }} className="sm:text-xl">
+            <div style={{ color: '#000000', fontSize: '16px', fontWeight: '700' }} className="sm:text-xl">
               {avgHours ? 'Вкл' : '—'}
             </div>
-            <div style={{ color: '#a3aed0', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">Автоматизация</div>
+            <div style={{ color: '#000000', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">Автоматизация</div>
           </div>
         </div>
       </CardContent>

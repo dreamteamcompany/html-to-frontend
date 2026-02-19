@@ -101,11 +101,11 @@ const Dashboard2UpcomingPayments = () => {
               borderRadius: '12px',
               boxShadow: '0 2px 8px rgba(255, 181, 71, 0.3)'
             }} className="sm:p-3.5">
-              <Icon name="Clock" size={20} style={{ color: '#fff' }} className="sm:w-7 sm:h-7" />
+              <Icon name="Clock" size={20} style={{ color: '#000000' }} className="sm:w-7 sm:h-7" />
             </div>
             <div>
-              <h3 className={`${dashboardTypography.cardTitle}`} style={{ color: 'hsl(var(--foreground))' }}>Предстоящие Платежи</h3>
-              <p className={`${dashboardTypography.cardSmall} mt-1`} style={{ color: 'hsl(var(--muted-foreground))' }}>Ближайшие 7 дней • Следите за дедлайнами</p>
+              <h3 className={`${dashboardTypography.cardTitle}`} style={{ color: '#000000' }}>Предстоящие Платежи</h3>
+              <p className={`${dashboardTypography.cardSmall} mt-1`} style={{ color: '#000000' }}>Ближайшие 7 дней • Следите за дедлайнами</p>
             </div>
           </div>
           <div style={{ 
@@ -117,8 +117,8 @@ const Dashboard2UpcomingPayments = () => {
             alignItems: 'center',
             gap: '8px'
           }} className="sm:px-6 sm:py-3">
-            <Icon name="AlertCircle" size={16} style={{ color: '#ffb547' }} className="sm:w-[18px] sm:h-[18px]" />
-            <span className={`${dashboardTypography.cardBadge} text-[#ffb547]`}>{payments.length} платежей</span>
+            <Icon name="AlertCircle" size={16} style={{ color: '#000000' }} className="sm:w-[18px] sm:h-[18px]" />
+            <span className={`${dashboardTypography.cardBadge} text-[#000000]`}>{payments.length} платежей</span>
           </div>
         </div>
 

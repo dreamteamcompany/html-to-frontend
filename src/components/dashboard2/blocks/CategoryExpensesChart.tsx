@@ -129,7 +129,7 @@ const CategoryExpensesChart = () => {
     <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
       <CardContent className="p-6">
         <div style={{ marginBottom: '16px' }}>
-          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>IT Расходы по Категориям</h3>
+          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#000000' }}>IT Расходы по Категориям</h3>
         </div>
         {loading ? (
           <div className="flex items-center justify-center" style={{ height: '250px' }}>
@@ -150,7 +150,7 @@ const CategoryExpensesChart = () => {
                     labels: {
                       padding: isMobile ? 10 : 20,
                       usePointStyle: true,
-                      color: '#a3aed0',
+                      color: '#000000',
                       font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
                     }
                   },
@@ -166,7 +166,7 @@ const CategoryExpensesChart = () => {
                   y: {
                     beginAtZero: true,
                     ticks: {
-                      color: '#a3aed0',
+                      color: '#000000',
                       font: { size: isMobile ? 10 : 12 },
                       maxTicksLimit: isMobile ? 5 : 8,
                       callback: (value) => {
@@ -179,7 +179,7 @@ const CategoryExpensesChart = () => {
                   },
                   x: {
                     ticks: {
-                      color: '#a3aed0',
+                      color: '#000000',
                       font: { size: isMobile ? 9 : 12 },
                       maxRotation: isMobile ? 45 : 0,
                       minRotation: isMobile ? 45 : 0,

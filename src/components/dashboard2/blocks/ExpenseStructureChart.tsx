@@ -144,7 +144,7 @@ const ExpenseStructureChart = () => {
           </div>
         ) : categories.length === 0 ? (
           <div className="flex items-center justify-center h-[300px] sm:h-[450px]">
-            <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
+            <p style={{ color: '#000000' }}>Нет данных за выбранный период</p>
           </div>
         ) : activeTab === 'general' ? (
           <>
@@ -169,7 +169,7 @@ const ExpenseStructureChart = () => {
                       labels: {
                         padding: 20,
                         usePointStyle: true,
-                        color: '#4a5568',
+                        color: '#000000',
                         font: { family: 'Plus Jakarta Sans, sans-serif', size: 14 }
                       }
                     },
@@ -187,16 +187,16 @@ const ExpenseStructureChart = () => {
             </div>
 
             <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(255, 181, 71, 0.08)', borderRadius: '12px', border: '1px solid rgba(255, 181, 71, 0.2)' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: '800', color: 'hsl(var(--foreground))', marginBottom: '12px' }}>Топ-3 Категории по Расходам</h4>
+              <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#000000', marginBottom: '12px' }}>Топ-3 Категории по Расходам</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {categories.slice(0, 3).map((cat, index) => (
                   <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255, 181, 71, 0.15)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '18px', fontWeight: '700', color: '#ffb547', minWidth: '24px' }}>{index + 1}</span>
+                      <span style={{ fontSize: '18px', fontWeight: '700', color: '#000000', minWidth: '24px' }}>{index + 1}</span>
                       <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: cat.color, flexShrink: 0 }} />
-                      <span style={{ fontSize: '13px', color: 'hsl(var(--foreground))', fontWeight: '600' }}>{cat.name}</span>
+                      <span style={{ fontSize: '13px', color: '#000000', fontWeight: '600' }}>{cat.name}</span>
                     </div>
-                    <span style={{ fontSize: '16px', color: '#ffb547', fontWeight: '800', textShadow: '0 0 10px rgba(255, 181, 71, 0.5)' }}>
+                    <span style={{ fontSize: '16px', color: '#000000', fontWeight: '800' }}>
                       {new Intl.NumberFormat('ru-RU').format(cat.amount)} ₽
                     </span>
                   </div>
@@ -209,9 +209,9 @@ const ExpenseStructureChart = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                  <th style={{ textAlign: 'left', padding: '10px 12px', color: '#4a5568', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Категория</th>
-                  <th style={{ textAlign: 'right', padding: '10px 12px', color: '#4a5568', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Доля</th>
-                  <th style={{ textAlign: 'right', padding: '10px 12px', color: '#4a5568', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Сумма</th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', color: '#000000', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Категория</th>
+                  <th style={{ textAlign: 'right', padding: '10px 12px', color: '#000000', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Доля</th>
+                  <th style={{ textAlign: 'right', padding: '10px 12px', color: '#000000', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Сумма</th>
                 </tr>
               </thead>
               <tbody>
@@ -220,14 +220,14 @@ const ExpenseStructureChart = () => {
                     <td style={{ padding: '14px 12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: cat.color, flexShrink: 0 }} />
-                        <span style={{ color: 'hsl(var(--foreground))', fontSize: '14px', fontWeight: '500' }}>{cat.name}</span>
+                        <span style={{ color: '#000000', fontSize: '14px', fontWeight: '500' }}>{cat.name}</span>
                       </div>
                     </td>
                     <td style={{ textAlign: 'right', padding: '14px 12px' }}>
-                      <span style={{ color: 'hsl(var(--foreground))', fontSize: '14px', fontWeight: '600' }}>{cat.value}%</span>
+                      <span style={{ color: '#000000', fontSize: '14px', fontWeight: '600' }}>{cat.value}%</span>
                     </td>
                     <td style={{ textAlign: 'right', padding: '14px 12px' }}>
-                      <span style={{ color: '#4a5568', fontSize: '14px' }}>{new Intl.NumberFormat('ru-RU').format(cat.amount)} ₽</span>
+                      <span style={{ color: '#000000', fontSize: '14px' }}>{new Intl.NumberFormat('ru-RU').format(cat.amount)} ₽</span>
                     </td>
                   </tr>
                 ))}
@@ -235,8 +235,8 @@ const ExpenseStructureChart = () => {
             </table>
 
             <div style={{ marginTop: '16px', padding: '14px 12px', background: 'rgba(117, 81, 233, 0.1)', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#4a5568', fontSize: '14px', fontWeight: '500' }}>Итого</span>
-              <span style={{ color: 'hsl(var(--foreground))', fontSize: '16px', fontWeight: '700' }}>
+              <span style={{ color: '#000000', fontSize: '14px', fontWeight: '500' }}>Итого</span>
+              <span style={{ color: '#000000', fontSize: '16px', fontWeight: '700' }}>
                 {new Intl.NumberFormat('ru-RU').format(totalAmount)} ₽
               </span>
             </div>
