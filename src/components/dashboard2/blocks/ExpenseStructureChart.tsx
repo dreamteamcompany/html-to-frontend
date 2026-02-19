@@ -133,11 +133,11 @@ const ExpenseStructureChart = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center" style={{ height: '350px' }}>
+          <div className="flex items-center justify-center h-[200px] sm:h-[350px]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
           </div>
         ) : categories.length === 0 ? (
-          <div className="flex items-center justify-center" style={{ height: '350px' }}>
+          <div className="flex items-center justify-center h-[200px] sm:h-[350px]">
             <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
           </div>
         ) : activeTab === 'general' ? (

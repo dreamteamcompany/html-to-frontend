@@ -69,11 +69,11 @@ const Dashboard2TeamPerformance = () => {
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Отделам-Заказчикам</h3>
         </div>
         {loading ? (
-          <div className="flex items-center justify-center" style={{ height: '250px' }}>
+          <div className="flex items-center justify-center h-[200px] sm:h-[350px]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
           </div>
         ) : currentData.length === 0 ? (
-          <div className="flex items-center justify-center" style={{ height: '250px' }}>
+          <div className="flex items-center justify-center h-[200px] sm:h-[350px]">
             <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
