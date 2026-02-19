@@ -23,7 +23,7 @@ const getStatusBadge = (status?: string) => {
     return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20" style={{ color: '#000000' }}>Черновик</span>;
   }
   if (status === 'pending_ceo') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20" style={{ color: '#000000' }}>Ожидает CEO</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-blue-500 text-white font-medium">Ожидает CEO</span>;
   }
   if (status === 'approved') {
     return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20" style={{ color: '#000000' }}>Одобрен</span>;
