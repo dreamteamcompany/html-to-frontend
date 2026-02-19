@@ -343,25 +343,25 @@ const Monitoring = () => {
             />
 
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Card key={i} className="p-4 sm:p-6 bg-white/5 border-white/10 backdrop-blur-sm animate-pulse">
-                    <div className="h-20 sm:h-24 bg-white/5 rounded"></div>
+                  <Card key={i} className="p-4 sm:p-5 lg:p-6 bg-white/5 border-white/10 backdrop-blur-sm animate-pulse">
+                    <div className="h-20 sm:h-24 lg:h-28 bg-white/5 rounded"></div>
                   </Card>
                 ))}
               </div>
             ) : services.length === 0 ? (
-              <Card className="p-6 sm:p-12 text-center bg-white/5 border-white/10 backdrop-blur-sm">
-                <Icon name="Wallet" className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-white/30 mb-3 sm:mb-4" />
-                <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Нет подключенных сервисов</h3>
-                <p className="text-sm sm:text-base text-white/60 mb-4 sm:mb-6">Добавьте интеграции с сервисами для мониторинга балансов</p>
-                <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)} className="sm:size-default">
-                  <Icon name="Plus" className="mr-2 h-4 w-4" />
+              <Card className="p-6 sm:p-12 lg:p-16 text-center bg-white/5 border-white/10 backdrop-blur-sm">
+                <Icon name="Wallet" className="mx-auto h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 text-white/30 mb-3 sm:mb-4 lg:mb-6" />
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-white mb-2">Нет подключенных сервисов</h3>
+                <p className="text-sm sm:text-base lg:text-lg text-white/60 mb-4 sm:mb-6 lg:mb-8 max-w-md mx-auto">Добавьте интеграции с сервисами для мониторинга балансов</p>
+                <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)} className="sm:size-default lg:px-6 lg:py-3 lg:text-base">
+                  <Icon name="Plus" className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
                   Добавить интеграцию
                 </Button>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
                 {services.map((service) => (
                   <ServiceCard
                     key={service.id}
