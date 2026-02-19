@@ -174,7 +174,7 @@ const MonthlyDynamicsChart = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          color: '#000000',
+          color: 'hsl(var(--muted-foreground))',
           font: { size: isMobile ? 9 : 12 },
           maxTicksLimit: isMobile ? 4 : 8,
           callback: (value: unknown) => {
@@ -187,7 +187,7 @@ const MonthlyDynamicsChart = () => {
       },
       x: {
         ticks: {
-          color: '#000000',
+          color: 'hsl(var(--muted-foreground))',
           font: { size: isMobile ? 7 : 11 },
           maxRotation: isMobile ? 45 : 0,
           minRotation: isMobile ? 45 : 0,

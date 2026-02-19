@@ -117,8 +117,8 @@ const Dashboard2ServicesDynamics = () => {
       <CardContent className="p-3 sm:p-4 md:p-6" style={{ position: 'relative', zIndex: 1 }}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 sm:mb-6">
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="sm:gap-2">
-            <Icon name="Activity" size={16} style={{ color: '#000000' }} className="sm:w-[18px] sm:h-[18px]" />
-            <h3 className={`${dashboardTypography.cardTitle}`} style={{ color: '#000000' }}>Динамика расходов по сервисам</h3>
+            <Icon name="Activity" size={16} style={{ color: '#2CD9FF' }} className="sm:w-[18px] sm:h-[18px]" />
+            <h3 className={`${dashboardTypography.cardTitle}`} style={{ color: 'hsl(var(--foreground))' }}>Динамика расходов по сервисам</h3>
           </div>
         </div>
 
@@ -127,7 +127,7 @@ const Dashboard2ServicesDynamics = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
         ) : sortedData.length === 0 ? (
-          <div className="flex items-center justify-center" style={{ height: '200px', color: '#000000' }}>
+          <div className="flex items-center justify-center" style={{ height: '200px', color: '#a3aed0' }}>
             Нет данных о платежах
           </div>
         ) : (
@@ -159,7 +159,7 @@ const Dashboard2ServicesDynamics = () => {
               }}>
                 <div className="flex items-center justify-between mb-2">
                   <span style={{ 
-                    color: '#000000', 
+                    color: '#c8cfca', 
                     fontSize: '13px',
                     fontWeight: '500'
                   }} className="sm:text-sm">
@@ -167,7 +167,7 @@ const Dashboard2ServicesDynamics = () => {
                   </span>
                   <div className="flex items-center gap-2">
                     <span style={{ 
-                      color: '#000000', 
+                      color: '#fff', 
                       fontSize: '13px', 
                       fontWeight: '600'
                     }} className="sm:text-sm">
@@ -180,7 +180,7 @@ const Dashboard2ServicesDynamics = () => {
                         borderRadius: '4px',
                         fontSize: '10px',
                         fontWeight: 'bold',
-                        color: '#000000'
+                        color: '#fff'
                       }} className="sm:text-xs">
                         {service.trend > 0 ? '+' : ''}{service.trend}%
                       </div>
