@@ -7,7 +7,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
@@ -111,13 +110,7 @@ const PlannedPaymentForm = ({
     <>
       {hasPermission('payments', 'create') && (
         <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-500 hover:bg-blue-600 gap-2 w-full sm:w-auto">
-              <Icon name="CalendarPlus" size={18} />
-              <span>Запланировать платёж</span>
-            </Button>
-          </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon name="CalendarClock" size={24} />
