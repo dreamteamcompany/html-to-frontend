@@ -293,7 +293,8 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                 {(!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval && !showConfirmation && (
                   <button
                     onClick={() => setShowConfirmation(true)}
-                    className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium transition-colors"
+                    className="w-full px-4 py-3 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 font-medium transition-colors"
+                    style={{ color: '#000000' }}
                   >
                     {payment.status === 'rejected' ? 'Отправить на повторное согласование' : 'Отправить на согласование'}
                   </button>

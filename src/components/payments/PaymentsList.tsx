@@ -107,7 +107,8 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           {!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status === 'pending_approval') && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit && (
                             <button
                               onClick={() => onSubmitForApproval(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700"
+                              className="px-3 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700"
+                              style={{ color: '#000000' }}
                             >
                               Отправить на согласование
                             </button>

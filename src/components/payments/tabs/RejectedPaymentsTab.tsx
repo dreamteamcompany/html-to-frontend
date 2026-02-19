@@ -165,7 +165,8 @@ const RejectedPaymentsTab = () => {
                         e.stopPropagation();
                         handleResubmit(payment.id);
                       }}
-                      className="px-4 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium w-full lg:w-auto"
+                      className="px-4 py-2 text-sm rounded bg-blue-500/20 hover:bg-blue-500/30 font-medium w-full lg:w-auto"
+                      style={{ color: '#000000' }}
                     >
                       Отправить на повторное согласование
                     </button>
