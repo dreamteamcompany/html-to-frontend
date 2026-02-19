@@ -386,6 +386,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_savings(method, event, conn)
         elif endpoint == 'saving-reasons':
             return handle_saving_reasons(method, event, conn)
+        elif endpoint == 'planned-payments':
+            return handle_planned_payments(method, event, conn)
         # Endpoints requiring auth
         auth_endpoints = {
             'comments': lambda p, u: handle_comments(method, event, conn, u),
@@ -1337,6 +1339,110 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     finally:
         cur.close()
+
+def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Управление запланированными платежами: GET, PUT, DELETE"""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    try:
+        if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'payments.read')
+            if error:
+                return error
+
+            cur.execute(f"""
+                SELECT pp.id, pp.category_id, c.name as category_name, c.icon as category_icon,
+                       pp.description, pp.amount, pp.planned_date, pp.legal_entity_id,
+                       le.name as legal_entity_name, pp.contractor_id, co.name as contractor_name,
+                       pp.department_id, cd.name as department_name, pp.service_id, s.name as service_name,
+                       pp.invoice_number, pp.invoice_date, pp.recurrence_type, pp.recurrence_end_date,
+                       pp.is_active, pp.created_by, pp.created_at, pp.converted_to_payment_id, pp.converted_at
+                FROM {SCHEMA}.planned_payments pp
+                LEFT JOIN {SCHEMA}.categories c ON pp.category_id = c.id
+                LEFT JOIN {SCHEMA}.legal_entities le ON pp.legal_entity_id = le.id
+                LEFT JOIN {SCHEMA}.contractors co ON pp.contractor_id = co.id
+                LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
+                LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
+                WHERE pp.created_by = %s
+                ORDER BY pp.planned_date ASC
+            """, (payload['user_id'],))
+
+            rows = cur.fetchall()
+            result = []
+            for row in rows:
+                d = dict(row)
+                d['amount'] = float(d['amount'])
+                if d.get('planned_date'):
+                    d['planned_date'] = d['planned_date'].isoformat()
+                if d.get('invoice_date'):
+                    d['invoice_date'] = d['invoice_date'].isoformat()
+                if d.get('recurrence_end_date'):
+                    d['recurrence_end_date'] = d['recurrence_end_date'].isoformat()
+                if d.get('created_at'):
+                    d['created_at'] = d['created_at'].isoformat()
+                if d.get('converted_at'):
+                    d['converted_at'] = d['converted_at'].isoformat()
+                result.append(d)
+            return response(200, result)
+
+        elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'payments.update')
+            if error:
+                return error
+
+            body = json.loads(event.get('body', '{}'))
+            pp_id = body.get('id')
+            if not pp_id:
+                return response(400, {'error': 'ID is required'})
+
+            cur.execute(f"SELECT created_by FROM {SCHEMA}.planned_payments WHERE id = %s", (pp_id,))
+            row = cur.fetchone()
+            if not row:
+                return response(404, {'error': 'Запланированный платёж не найден'})
+            if row['created_by'] != payload['user_id']:
+                return response(403, {'error': 'Нет доступа'})
+
+            fields = ['category_id', 'amount', 'description', 'planned_date', 'legal_entity_id',
+                      'contractor_id', 'department_id', 'service_id', 'invoice_number',
+                      'invoice_date', 'recurrence_type', 'recurrence_end_date']
+            updates = {f: body[f] for f in fields if f in body}
+            if not updates:
+                return response(400, {'error': 'No fields to update'})
+
+            set_clause = ', '.join(f"{k} = %s" for k in updates)
+            cur.execute(
+                f"UPDATE {SCHEMA}.planned_payments SET {set_clause} WHERE id = %s RETURNING id",
+                list(updates.values()) + [pp_id]
+            )
+            conn.commit()
+            return response(200, {'success': True, 'id': pp_id})
+
+        elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'payments.delete')
+            if error:
+                return error
+
+            params = event.get('queryStringParameters') or {}
+            pp_id = params.get('id')
+            if not pp_id:
+                return response(400, {'error': 'ID is required'})
+
+            cur.execute(f"SELECT created_by FROM {SCHEMA}.planned_payments WHERE id = %s", (pp_id,))
+            row = cur.fetchone()
+            if not row:
+                return response(404, {'error': 'Запланированный платёж не найден'})
+            if row['created_by'] != payload['user_id']:
+                return response(403, {'error': 'Нет доступа'})
+
+            cur.execute(f"DELETE FROM {SCHEMA}.planned_payments WHERE id = %s", (pp_id,))
+            conn.commit()
+            return response(200, {'success': True})
+
+        return response(405, {'error': 'Method not allowed'})
+
+    finally:
+        cur.close()
+
 
 def handle_stats(method: str, conn) -> Dict[str, Any]:
     if method != 'GET':

@@ -7,10 +7,33 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlannedPaymentsData } from '@/hooks/usePlannedPaymentsData';
 import { usePlannedPaymentForm } from '@/hooks/usePlannedPaymentForm';
 import PlannedPaymentForm from '@/components/payments/PlannedPaymentForm';
+import { useToast } from '@/hooks/use-toast';
+import { API_ENDPOINTS } from '@/config/api';
+
+interface PlannedPayment {
+  id: number;
+  category_name: string;
+  category_icon: string;
+  description: string;
+  amount: number;
+  planned_date: string;
+  legal_entity_name?: string;
+  recurrence_type?: string;
+}
 
 const recurrenceLabel: Record<string, string> = {
   once: 'Однократно',
@@ -21,8 +44,10 @@ const recurrenceLabel: Record<string, string> = {
 };
 
 const PlannedPaymentsModal = () => {
-  const { hasPermission } = useAuth();
+  const { hasPermission, token } = useAuth();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PlannedPayment | null>(null);
 
   const {
     payments,
@@ -50,14 +75,34 @@ const PlannedPaymentsModal = () => {
     handleSubmit,
   } = usePlannedPaymentForm(customFields, loadPayments);
 
-  const handleOpen = () => {
+  const loadDicts = () => {
     loadCategories();
     loadLegalEntities();
     loadContractors();
     loadCustomerDepartments();
     loadCustomFields();
     loadServices();
+  };
+
+  const handleOpen = () => {
+    loadDicts();
     setOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    const res = await fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments&id=${deleteTarget.id}`, {
+      method: 'DELETE',
+      headers: { 'X-Auth-Token': token! },
+    });
+    if (res.ok) {
+      toast({ title: 'Удалено', description: 'Запланированный платёж удалён' });
+      loadPayments();
+    } else {
+      const err = await res.json();
+      toast({ title: 'Ошибка', description: err.error || 'Не удалось удалить', variant: 'destructive' });
+    }
+    setDeleteTarget(null);
   };
 
   const formatAmount = (amount: number) =>
@@ -74,8 +119,8 @@ const PlannedPaymentsModal = () => {
         onClick={handleOpen}
         className="bg-blue-500 hover:bg-blue-600 gap-2 w-full sm:w-auto"
       >
-        <Icon name="CalendarPlus" size={18} />
-        <span>Запланировать платёж</span>
+        <Icon name="CalendarClock" size={18} />
+        <span>Запланированные платежи</span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -89,7 +134,7 @@ const PlannedPaymentsModal = () => {
               <Button
                 size="sm"
                 className="bg-blue-500 hover:bg-blue-600 gap-1.5 shrink-0"
-                onClick={() => setCreateOpen(true)}
+                onClick={() => { loadDicts(); setCreateOpen(true); }}
               >
                 <Icon name="Plus" size={15} />
                 Создать
@@ -111,7 +156,7 @@ const PlannedPaymentsModal = () => {
                   variant="outline"
                   size="sm"
                   className="gap-1.5 mt-1"
-                  onClick={() => setCreateOpen(true)}
+                  onClick={() => { loadDicts(); setCreateOpen(true); }}
                 >
                   <Icon name="Plus" size={15} />
                   Создать первый
@@ -142,9 +187,18 @@ const PlannedPaymentsModal = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-semibold text-white">{formatAmount(p.amount)}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{formatDate(p.planned_date)}</p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-right mr-1">
+                      <p className="text-sm font-semibold text-white">{formatAmount(p.amount)}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{formatDate(p.planned_date)}</p>
+                    </div>
+                    <button
+                      onClick={() => setDeleteTarget(p as PlannedPayment)}
+                      className="p-1.5 rounded hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
+                      title="Удалить"
+                    >
+                      <Icon name="Trash2" size={15} />
+                    </button>
                   </div>
                 </div>
               ))
@@ -152,6 +206,23 @@ const PlannedPaymentsModal = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить платёж?</AlertDialogTitle>
+            <AlertDialogDescription>
+              «{deleteTarget?.description}» будет удалён безвозвратно.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-500 text-white">
+              Удалить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PlannedPaymentForm
         dialogOpen={createOpen}
@@ -165,14 +236,6 @@ const PlannedPaymentsModal = () => {
         customFields={customFields}
         services={services}
         handleSubmit={handleSubmit}
-        onDialogOpen={() => {
-          loadCategories();
-          loadLegalEntities();
-          loadContractors();
-          loadCustomerDepartments();
-          loadCustomFields();
-          loadServices();
-        }}
       />
     </>
   );
