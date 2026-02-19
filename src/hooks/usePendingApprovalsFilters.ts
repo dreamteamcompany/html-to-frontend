@@ -27,7 +27,6 @@ interface Payment {
 
 export const usePendingApprovalsFilters = (payments: Payment[]) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedService, setSelectedService] = useState<string>('all');
   const [amountFrom, setAmountFrom] = useState<string>('');
   const [amountTo, setAmountTo] = useState<string>('');
   const [dateFrom, setDateFrom] = useState<string>('');
@@ -48,10 +47,6 @@ export const usePendingApprovalsFilters = (payments: Payment[]) => {
         if (!matchesSearch) return false;
       }
 
-      if (selectedService !== 'all' && payment.service_id?.toString() !== selectedService) {
-        return false;
-      }
-
       if (amountFrom && payment.amount < parseFloat(amountFrom)) {
         return false;
       }
@@ -70,20 +65,18 @@ export const usePendingApprovalsFilters = (payments: Payment[]) => {
 
       return true;
     });
-  }, [payments, searchQuery, selectedService, amountFrom, amountTo, dateFrom, dateTo]);
+  }, [payments, searchQuery, amountFrom, amountTo, dateFrom, dateTo]);
 
   const activeFiltersCount = useMemo(() => {
     return [
-      selectedService !== 'all',
       amountFrom !== '',
       amountTo !== '',
       dateFrom !== '',
       dateTo !== '',
     ].filter(Boolean).length;
-  }, [selectedService, amountFrom, amountTo, dateFrom, dateTo]);
+  }, [amountFrom, amountTo, dateFrom, dateTo]);
 
   const clearFilters = () => {
-    setSelectedService('all');
     setAmountFrom('');
     setAmountTo('');
     setDateFrom('');
@@ -93,8 +86,6 @@ export const usePendingApprovalsFilters = (payments: Payment[]) => {
   return {
     searchQuery,
     setSearchQuery,
-    selectedService,
-    setSelectedService,
     amountFrom,
     setAmountFrom,
     amountTo,

@@ -3,17 +3,7 @@ import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-interface Service {
-  id: number;
-  name: string;
-  intermediate_approver_id: number;
-  final_approver_id: number;
-}
-
 interface PendingApprovalsFiltersProps {
-  services: Service[];
-  selectedService: string;
-  setSelectedService: (value: string) => void;
   amountFrom: string;
   setAmountFrom: (value: string) => void;
   amountTo: string;
@@ -29,9 +19,6 @@ interface PendingApprovalsFiltersProps {
 }
 
 const PendingApprovalsFilters = ({
-  services,
-  selectedService,
-  setSelectedService,
   amountFrom,
   setAmountFrom,
   amountTo,
@@ -66,21 +53,6 @@ const PendingApprovalsFilters = ({
           )}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">Сервис</label>
-            <select
-              value={selectedService}
-              onChange={(e) => setSelectedService(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="all">Все сервисы</option>
-              {services.map((service) => (
-                <option key={service.id} value={service.id.toString()}>
-                  {service.name}
-                </option>
-              ))}
-            </select>
-          </div>
           <div>
             <label className="text-sm font-medium mb-2 block">Сумма от</label>
             <Input

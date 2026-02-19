@@ -16,8 +16,6 @@ const PendingApprovalsTab = () => {
   const {
     searchQuery,
     setSearchQuery,
-    selectedService,
-    setSelectedService,
     amountFrom,
     setAmountFrom,
     amountTo,
@@ -92,9 +90,6 @@ const PendingApprovalsTab = () => {
 
       {showFilters && (
         <PendingApprovalsFilters
-          services={services}
-          selectedService={selectedService}
-          setSelectedService={setSelectedService}
           amountFrom={amountFrom}
           setAmountFrom={setAmountFrom}
           amountTo={amountTo}
@@ -105,6 +100,8 @@ const PendingApprovalsTab = () => {
           setDateTo={setDateTo}
           activeFiltersCount={activeFiltersCount}
           clearFilters={clearFilters}
+          filteredCount={filteredPayments.length}
+          totalCount={payments.length}
         />
       )}
 
