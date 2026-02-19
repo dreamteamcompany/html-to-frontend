@@ -57,19 +57,19 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
 
   const getStatusBadge = (status?: string) => {
     if (!status || status === 'draft') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-gray-500/20" style={{ color: '#1e3a8a' }}>Черновик</span>;
+      return <span className="px-3 py-1 rounded-full text-sm bg-gray-500/20" style={{ color: '#000000' }}>Черновик</span>;
     }
     if (status === 'pending_ceo') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-blue-500/20" style={{ color: '#1e3a8a' }}>Ожидает CEO</span>;
+      return <span className="px-3 py-1 rounded-full text-sm bg-blue-500/20" style={{ color: '#000000' }}>Ожидает CEO</span>;
     }
     if (status === 'approved') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-green-500/20" style={{ color: '#1e3a8a' }}>Одобрен</span>;
+      return <span className="px-3 py-1 rounded-full text-sm bg-green-500/20" style={{ color: '#000000' }}>Одобрен</span>;
     }
     if (status === 'rejected') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-red-500/20" style={{ color: '#1e3a8a' }}>Отклонен</span>;
+      return <span className="px-3 py-1 rounded-full text-sm bg-red-500/20" style={{ color: '#000000' }}>Отклонен</span>;
     }
     if (status === 'revoked') {
-      return <span className="px-3 py-1 rounded-full text-sm bg-orange-500/20" style={{ color: '#1e3a8a' }}>⚠ Отозван</span>;
+      return <span className="px-3 py-1 rounded-full text-sm bg-orange-500/20" style={{ color: '#000000' }}>⚠ Отозван</span>;
     }
     return null;
   };
