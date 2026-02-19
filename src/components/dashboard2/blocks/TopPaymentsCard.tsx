@@ -117,14 +117,14 @@ const TopPaymentsCard = () => {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start' }} className="sm:mb-2">
                     <div style={{ flex: 1 }}>
-                      <div style={{ color: '#fff', fontSize: '12px', fontWeight: '600', marginBottom: '2px' }} className="sm:text-sm">
+                      <div style={{ color: '#fff', fontSize: '18px', fontWeight: '600', marginBottom: '2px' }} className="sm:text-xl">
                         {payment.service_name || 'Без сервиса'}
                       </div>
-                      <div style={{ color: '#a3aed0', fontSize: '10px', fontWeight: '500' }} className="sm:text-xs">
+                      <div style={{ color: '#a3aed0', fontSize: '15px', fontWeight: '500' }} className="sm:text-base">
                         {payment.category_name || 'Без категории'}
                       </div>
                     </div>
-                    <span style={{ color: color, fontSize: '12px', fontWeight: '700', marginLeft: '8px', whiteSpace: 'nowrap' }} className="sm:text-sm">
+                    <span style={{ color: color, fontSize: '18px', fontWeight: '700', marginLeft: '8px', whiteSpace: 'nowrap' }} className="sm:text-xl">
                       {new Intl.NumberFormat('ru-RU').format(payment.amount)} ₽
                     </span>
                   </div>
