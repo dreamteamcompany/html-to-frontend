@@ -4449,7 +4449,6 @@ def handle_budget_breakdown(method: str, event: Dict[str, Any], conn, payload: D
             FROM {SCHEMA}.categories c
             LEFT JOIN {SCHEMA}.payments p ON c.id = p.category_id
             GROUP BY c.id, c.name, c.icon
-            HAVING COALESCE(SUM(p.amount), 0) > 0
             ORDER BY amount DESC
         """)
         
