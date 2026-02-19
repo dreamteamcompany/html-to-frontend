@@ -41,10 +41,13 @@ const CategoryExpensesChart = () => {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchCategoryData = async () => {
       setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
         const data = await response.json();
 
         const { from, to } = getDateRange();
@@ -69,7 +72,6 @@ const CategoryExpensesChart = () => {
             labels.push(cur.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }));
             cur.setDate(cur.getDate() + 1);
           }
-          const labelSet = labels;
           getKey = (p) => {
             const d = new Date(p.payment_date);
             return d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' });
@@ -104,13 +106,16 @@ const CategoryExpensesChart = () => {
         setXLabels(labels);
         setCategoryData(result);
       } catch (error) {
-        console.error('Failed to fetch category data:', error);
+        if (!controller.signal.aborted) {
+          console.error('Failed to fetch category data:', error);
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchCategoryData();
+    return () => controller.abort();
   }, [period, getDateRange]);
 
   const datasets = Object.keys(categoryData).map((category, index) => ({

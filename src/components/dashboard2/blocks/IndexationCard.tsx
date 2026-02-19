@@ -32,10 +32,13 @@ const IndexationCard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchIndexationData = async () => {
       setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
         const data = await response.json();
 
         const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) =>
@@ -112,13 +115,16 @@ const IndexationCard = () => {
         setIndexationPercent(parseFloat(percentChange.toFixed(1)));
         setServiceDetails(details);
       } catch (error) {
-        console.error('Failed to fetch indexation data:', error);
+        if (!controller.signal.aborted) {
+          console.error('Failed to fetch indexation data:', error);
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchIndexationData();
+    return () => controller.abort();
   }, [period, getDateRange]);
 
   return (

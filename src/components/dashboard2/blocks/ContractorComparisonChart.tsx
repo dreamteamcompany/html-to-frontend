@@ -39,10 +39,13 @@ const ContractorComparisonChart = () => {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchContractorData = async () => {
       setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
         const data = await response.json();
 
         const { from, to } = getDateRange();
@@ -65,13 +68,16 @@ const ContractorComparisonChart = () => {
 
         setContractorData(sorted);
       } catch (error) {
-        console.error('Failed to fetch contractor data:', error);
+        if (!controller.signal.aborted) {
+          console.error('Failed to fetch contractor data:', error);
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchContractorData();
+    return () => controller.abort();
   }, [period, getDateRange]);
 
   const displayData = showAll ? contractorData : contractorData.slice(0, 5);

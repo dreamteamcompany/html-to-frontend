@@ -31,13 +31,18 @@ def get_db_connection():
     return psycopg2.connect(dsn)
 
 def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    token = event.get('headers', {}).get('X-Authorization', '').replace('Bearer ', '')
+    headers = event.get('headers', {})
+    token = (headers.get('X-Auth-Token') or headers.get('x-auth-token') or
+             headers.get('X-Authorization') or headers.get('x-authorization', ''))
+    token = token.replace('Bearer ', '').strip()
     
     if not token:
         return None
     
     try:
-        secret = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
+        secret = os.environ.get('JWT_SECRET')
+        if not secret:
+            return None
         payload = jwt.decode(token, secret, algorithms=['HS256'])
         return payload
     except jwt.ExpiredSignatureError:

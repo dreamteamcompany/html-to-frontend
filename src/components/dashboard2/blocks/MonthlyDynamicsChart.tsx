@@ -103,10 +103,13 @@ const MonthlyDynamicsChart = () => {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchData = async () => {
       setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
         const data = await response.json();
 
         const { from, to } = getDateRange();
@@ -122,13 +125,16 @@ const MonthlyDynamicsChart = () => {
         setLabels(newLabels);
         setChartData(values);
       } catch (error) {
-        console.error('Failed to fetch dynamics data:', error);
+        if (!controller.signal.aborted) {
+          console.error('Failed to fetch dynamics data:', error);
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchData();
+    return () => controller.abort();
   }, [period, dateFrom, dateTo]);
 
   const chartLabels = isMobile && labels.length === MONTHS.length && labels[0] === MONTHS[0] ? MONTHS_SHORT : labels;

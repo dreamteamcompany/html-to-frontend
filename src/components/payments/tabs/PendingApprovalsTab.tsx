@@ -11,7 +11,7 @@ import { Payment } from '@/types/payment';
 
 const PendingApprovalsTab = () => {
   const { requestNotificationPermission } = usePendingApprovals();
-  const { payments, services, loading, handleApprove, handleReject } = usePendingApprovalsData();
+  const { payments, loading, handleApprove, handleReject } = usePendingApprovalsData();
   
   const {
     searchQuery,

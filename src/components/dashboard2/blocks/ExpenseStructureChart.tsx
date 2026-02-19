@@ -73,10 +73,13 @@ const ExpenseStructureChart = () => {
   const [totalAmount, setTotalAmount] = useState(0);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchExpenseStructure = async () => {
       setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
         const data = await response.json();
 
         const { from, to } = getDateRange();
@@ -108,13 +111,16 @@ const ExpenseStructureChart = () => {
         setCategories(categoriesData);
         setTotalAmount(total);
       } catch (error) {
-        console.error('Failed to fetch expense structure:', error);
+        if (!controller.signal.aborted) {
+          console.error('Failed to fetch expense structure:', error);
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchExpenseStructure();
+    return () => controller.abort();
   }, [period, getDateRange]);
 
   return (

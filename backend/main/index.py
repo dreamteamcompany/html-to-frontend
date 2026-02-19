@@ -310,7 +310,9 @@ def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     try:
         payload = jwt.decode(token, secret, algorithms=['HS256'])
         return payload
-    except:
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
         return None
 
 def get_user_role(conn, user_id: int) -> str:

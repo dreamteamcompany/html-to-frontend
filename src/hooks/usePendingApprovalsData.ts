@@ -2,20 +2,12 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/config/api';
-import { Payment, CustomField } from '@/types/payment';
-
-interface Service {
-  id: number;
-  name: string;
-  intermediate_approver_id: number;
-  final_approver_id: number;
-}
+import { Payment } from '@/types/payment';
 
 export const usePendingApprovalsData = () => {
   const { token, user } = useAuth();
   const { toast } = useToast();
   const [allPayments, setAllPayments] = useState<Payment[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -23,21 +15,11 @@ export const usePendingApprovalsData = () => {
 
     setLoading(true);
     try {
-      const [paymentsRes, servicesRes] = await Promise.all([
-        fetch(`${API_ENDPOINTS.paymentsApi}?scope=all`, {
-          headers: { 'X-Auth-Token': token },
-        }),
-        fetch(`${API_ENDPOINTS.main}?endpoint=services`, {
-          headers: { 'X-Auth-Token': token },
-        }),
-      ]);
+      const paymentsRes = await fetch(`${API_ENDPOINTS.paymentsApi}?scope=all`, {
+        headers: { 'X-Auth-Token': token },
+      });
 
       const paymentsData = await paymentsRes.json();
-      const servicesData = await servicesRes.json();
-
-      const servicesList = Array.isArray(servicesData) ? servicesData : (servicesData.services || []);
-      setServices(servicesList);
-      
       const allPaymentsData = Array.isArray(paymentsData) ? paymentsData : [];
       setAllPayments(allPaymentsData);
     } catch (err) {
@@ -48,7 +30,6 @@ export const usePendingApprovalsData = () => {
         variant: 'destructive',
       });
       setAllPayments([]);
-      setServices([]);
     } finally {
       setLoading(false);
     }
@@ -153,7 +134,6 @@ export const usePendingApprovalsData = () => {
 
   return {
     payments,
-    services,
     loading,
     handleApprove,
     handleReject,

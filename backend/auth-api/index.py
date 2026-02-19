@@ -32,7 +32,7 @@ def get_db_connection():
     return psycopg2.connect(dsn)
 
 def create_jwt_token(user_id: int, email: str) -> str:
-    secret = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
+    secret = os.environ.get('JWT_SECRET')
     payload = {
         'user_id': user_id,
         'email': email,
@@ -48,7 +48,9 @@ def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         return None
     
     try:
-        secret = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
+        secret = os.environ.get('JWT_SECRET')
+        if not secret:
+            return None
         payload = jwt.decode(token, secret, algorithms=['HS256'])
         return payload
     except jwt.ExpiredSignatureError:

@@ -40,7 +40,9 @@ def verify_token(event: Dict[str, Any], conn=None) -> tuple:
         return None, response(401, {'error': 'Unauthorized'})
     
     try:
-        secret = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
+        secret = os.environ.get('JWT_SECRET')
+        if not secret:
+            return None, response(500, {'error': 'Server configuration error'})
         payload = jwt.decode(token, secret, algorithms=['HS256'])
         return payload, None
     except jwt.ExpiredSignatureError:

@@ -38,10 +38,13 @@ const LegalEntityComparisonChart = () => {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchLegalEntityData = async () => {
       setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
         const data = await response.json();
 
         const { from, to } = getDateRange();
@@ -64,13 +67,16 @@ const LegalEntityComparisonChart = () => {
 
         setLegalEntityData(sorted);
       } catch (error) {
-        console.error('Failed to fetch legal entity data:', error);
+        if (!controller.signal.aborted) {
+          console.error('Failed to fetch legal entity data:', error);
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchLegalEntityData();
+    return () => controller.abort();
   }, [period, getDateRange]);
 
   return (
