@@ -334,7 +334,7 @@ const Monitoring = () => {
           >
             <Icon name="Menu" size={24} />
           </button>
-          <div className="max-w-7xl mx-auto space-y-6">
+          <div className="w-full space-y-6">
             <MonitoringHeader
               onAddClick={() => setShowAddDialog(true)}
               onRefreshAll={refreshAllBalances}
@@ -343,7 +343,7 @@ const Monitoring = () => {
             />
 
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <Card key={i} className="p-6 bg-white/5 border-white/10 backdrop-blur-sm animate-pulse">
                     <div className="h-24 bg-white/5 rounded"></div>
@@ -361,7 +361,7 @@ const Monitoring = () => {
                 </Button>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {services.map((service) => (
                   <ServiceCard
                     key={service.id}
