@@ -141,43 +141,63 @@ const ExpenseStructureChart = () => {
             <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
           </div>
         ) : activeTab === 'general' ? (
-          <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative' }}>
-            <Doughnut
-              data={{
-                labels: categories.map(c => c.name),
-                datasets: [{
-                  data: categories.map(c => c.value),
-                  backgroundColor: categories.map(c => c.color),
-                  borderWidth: 0,
-                  hoverOffset: 10
-                }]
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                  legend: {
-                    position: 'right',
-                    labels: {
-                      padding: 20,
-                      usePointStyle: true,
-                      color: '#a3aed0',
-                      font: { family: 'Plus Jakarta Sans, sans-serif', size: 13 }
-                    }
-                  },
-                  tooltip: {
-                    callbacks: {
-                      label: (context) => {
-                        const category = categories[context.dataIndex];
-                        return `${context.label}: ${context.parsed}% (${new Intl.NumberFormat('ru-RU').format(category.amount)} ₽)`;
+          <>
+            <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative' }}>
+              <Doughnut
+                data={{
+                  labels: categories.map(c => c.name),
+                  datasets: [{
+                    data: categories.map(c => c.value),
+                    backgroundColor: categories.map(c => c.color),
+                    borderWidth: 0,
+                    hoverOffset: 10
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  cutout: '70%',
+                  plugins: {
+                    legend: {
+                      position: 'right',
+                      labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        color: '#a3aed0',
+                        font: { family: 'Plus Jakarta Sans, sans-serif', size: 13 }
+                      }
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (context) => {
+                          const category = categories[context.dataIndex];
+                          return `${context.label}: ${context.parsed}% (${new Intl.NumberFormat('ru-RU').format(category.amount)} ₽)`;
+                        }
                       }
                     }
                   }
-                }
-              }}
-            />
-          </div>
+                }}
+              />
+            </div>
+
+            <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(255, 181, 71, 0.08)', borderRadius: '12px', border: '1px solid rgba(255, 181, 71, 0.2)' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#fff', marginBottom: '12px' }}>Топ-3 Категории по Расходам</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {categories.slice(0, 3).map((cat, index) => (
+                  <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255, 181, 71, 0.15)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '18px', fontWeight: '700', color: '#ffb547', minWidth: '24px' }}>{index + 1}</span>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: cat.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: '13px', color: '#fff', fontWeight: '600' }}>{cat.name}</span>
+                    </div>
+                    <span style={{ fontSize: '16px', color: '#ffb547', fontWeight: '800', textShadow: '0 0 10px rgba(255, 181, 71, 0.5)' }}>
+                      {new Intl.NumberFormat('ru-RU').format(cat.amount)} ₽
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
         ) : (
           <div className="h-[200px] sm:h-[350px]" style={{ overflowY: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
