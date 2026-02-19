@@ -80,10 +80,10 @@ const LegalEntityComparisonChart = () => {
   }, [period, getDateRange]);
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
+    <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
       <CardContent className="p-4 sm:p-6" style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ marginBottom: '16px', minHeight: '32px', display: 'flex', alignItems: 'center' }}>
-          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Юридическим Лицам</h3>
+          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>Сравнение по Юридическим Лицам</h3>
         </div>
         {loading ? (
           <div className="flex items-center justify-center" style={{ flex: 1 }}>

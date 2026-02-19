@@ -45,9 +45,9 @@ const AverageSpeedCard = () => {
   if (loading) {
     return (
       <Card style={{ 
-        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
-        border: '1px solid rgba(168, 85, 247, 0.3)',
-        boxShadow: '0 0 30px rgba(168, 85, 247, 0.15)'
+        background: 'hsl(var(--card))', 
+        border: '1px solid hsl(var(--border))',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
       }}>
         <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-center h-48">
@@ -60,33 +60,24 @@ const AverageSpeedCard = () => {
 
   return (
     <Card style={{ 
-      background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
-      border: '1px solid rgba(168, 85, 247, 0.3)',
-      boxShadow: '0 0 30px rgba(168, 85, 247, 0.15)',
+      background: 'hsl(var(--card))', 
+      border: '1px solid hsl(var(--border))',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       position: 'relative',
       overflow: 'hidden'
     }}>
-      <div style={{
-        position: 'absolute',
-        width: '200px',
-        height: '200px',
-        background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
-        bottom: '-100px',
-        right: '-100px',
-        animation: 'pulse 3s infinite'
-      }} />
       <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ 
           background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
           padding: '8px',
           borderRadius: '10px',
-          boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)',
+          boxShadow: '0 2px 8px rgba(168, 85, 247, 0.3)',
           display: 'inline-flex',
           marginBottom: '14px'
         }} className="sm:p-3 sm:mb-5">
           <Icon name="Zap" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
         </div>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginBottom: '12px' }} className="sm:text-lg sm:mb-4">
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'hsl(var(--foreground))', marginBottom: '12px' }} className="sm:text-lg sm:mb-4">
           Средняя Скорость
         </h3>
         <div style={{ 
@@ -105,10 +96,10 @@ const AverageSpeedCard = () => {
           {changePercent !== null && (
             <div style={{ 
               flex: 1,
-              background: changePercent < 0 ? 'rgba(1, 181, 116, 0.15)' : 'rgba(255, 107, 107, 0.15)',
+              background: 'hsl(var(--muted))',
               padding: '8px',
               borderRadius: '6px',
-              border: changePercent < 0 ? '1px solid rgba(1, 181, 116, 0.3)' : '1px solid rgba(255, 107, 107, 0.3)',
+              border: '1px solid hsl(var(--border))',
               textAlign: 'center'
             }}>
               <div style={{ 
@@ -118,7 +109,7 @@ const AverageSpeedCard = () => {
               }} className="sm:text-xl">
                 {changePercent > 0 ? '+' : ''}{changePercent.toFixed(0)}%
               </div>
-              <div style={{ color: '#a3aed0', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">vs месяц назад</div>
+              <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">vs месяц назад</div>
             </div>
           )}
           <div style={{ 

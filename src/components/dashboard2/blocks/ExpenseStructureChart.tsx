@@ -54,16 +54,16 @@ const activeStyle = {
   boxShadow: '0 2px 8px rgba(117, 81, 233, 0.3)',
 };
 
-const inactiveStyle = {
+const getInactiveStyle = () => ({
   background: 'transparent',
   border: 'none',
-  color: '#a3aed0',
+  color: 'hsl(var(--muted-foreground))',
   padding: '8px 16px',
   borderRadius: '8px',
   cursor: 'pointer',
   fontSize: '13px',
   fontWeight: '600' as const,
-};
+});
 
 const ExpenseStructureChart = () => {
   const { period, getDateRange } = usePeriod();
@@ -124,15 +124,15 @@ const ExpenseStructureChart = () => {
   }, [period, getDateRange]);
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(255, 181, 71, 0.4)', boxShadow: '0 0 30px rgba(255, 181, 71, 0.2), inset 0 0 15px rgba(255, 181, 71, 0.05)' }}>
+    <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
       <CardContent className="p-6">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Структура Расходов</h3>
-          <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '10px' }}>
-            <button style={activeTab === 'general' ? activeStyle : inactiveStyle} onClick={() => setActiveTab('general')}>
+          <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'hsl(var(--foreground))' }}>Структура Расходов</h3>
+          <div style={{ display: 'flex', gap: '8px', background: 'hsl(var(--muted))', padding: '4px', borderRadius: '10px' }}>
+            <button style={activeTab === 'general' ? activeStyle : getInactiveStyle()} onClick={() => setActiveTab('general')}>
               Общие
             </button>
-            <button style={activeTab === 'details' ? activeStyle : inactiveStyle} onClick={() => setActiveTab('details')}>
+            <button style={activeTab === 'details' ? activeStyle : getInactiveStyle()} onClick={() => setActiveTab('details')}>
               Детали
             </button>
           </div>

@@ -63,10 +63,10 @@ const Dashboard2TeamPerformance = () => {
   }, [period, getDateRange]);
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(1, 181, 116, 0.4)', boxShadow: '0 0 30px rgba(1, 181, 116, 0.2), inset 0 0 15px rgba(1, 181, 116, 0.05)' }}>
+    <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
       <CardContent className="p-6">
         <div style={{ marginBottom: '16px' }}>
-          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Отделам-Заказчикам</h3>
+          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>Сравнение по Отделам-Заказчикам</h3>
         </div>
         {loading ? (
           <div className="flex items-center justify-center h-[200px] sm:h-[350px]">

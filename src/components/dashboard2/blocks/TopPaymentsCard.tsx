@@ -44,9 +44,9 @@ const TopPaymentsCard = () => {
   if (loading) {
     return (
       <Card style={{ 
-        background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
-        border: '1px solid rgba(117, 81, 233, 0.3)',
-        boxShadow: '0 0 30px rgba(117, 81, 233, 0.15), inset 0 0 20px rgba(117, 81, 233, 0.05)'
+        background: 'hsl(var(--card))', 
+        border: '1px solid hsl(var(--border))',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
       }}>
         <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-center h-64">
@@ -59,32 +59,23 @@ const TopPaymentsCard = () => {
 
   return (
     <Card style={{ 
-      background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
-      border: '1px solid rgba(117, 81, 233, 0.3)',
-      boxShadow: '0 0 30px rgba(117, 81, 233, 0.15), inset 0 0 20px rgba(117, 81, 233, 0.05)',
+      background: 'hsl(var(--card))', 
+      border: '1px solid hsl(var(--border))',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       position: 'relative',
       overflow: 'hidden'
     }}>
-      <div style={{
-        position: 'absolute',
-        top: '-50%',
-        right: '-50%',
-        width: '200%',
-        height: '200%',
-        background: 'radial-gradient(circle, rgba(117, 81, 233, 0.1) 0%, transparent 70%)',
-        pointerEvents: 'none'
-      }} />
       <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }} className="sm:gap-3 sm:mb-6">
           <div style={{ 
             background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
             padding: '8px',
             borderRadius: '10px',
-            boxShadow: '0 0 20px rgba(117, 81, 233, 0.5)'
+            boxShadow: '0 2px 8px rgba(117, 81, 233, 0.3)'
           }} className="sm:p-3">
             <Icon name="TrendingUp" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
           </div>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }} className="sm:text-lg">Топ-5 Платежей</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'hsl(var(--foreground))' }} className="sm:text-lg">Топ-5 Платежей</h3>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="sm:gap-4">
           {payments.length === 0 ? (
@@ -98,29 +89,27 @@ const TopPaymentsCard = () => {
               
               return (
                 <div key={payment.id} style={{ 
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: 'hsl(var(--muted))',
                   padding: '10px',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  border: '1px solid hsl(var(--border))',
                   transition: 'all 0.3s ease',
                   cursor: 'pointer'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
                   e.currentTarget.style.borderColor = color;
-                  e.currentTarget.style.boxShadow = `0 0 20px ${color}40`;
+                  e.currentTarget.style.boxShadow = `0 2px 8px ${color}40`;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = 'hsl(var(--border))';
                   e.currentTarget.style.boxShadow = 'none';
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start' }} className="sm:mb-2">
                     <div style={{ flex: 1 }}>
-                      <div style={{ color: '#fff', fontSize: '18px', fontWeight: '600', marginBottom: '2px' }} className="sm:text-xl">
+                      <div style={{ color: 'hsl(var(--foreground))', fontSize: '18px', fontWeight: '600', marginBottom: '2px' }} className="sm:text-xl">
                         {payment.service_name || 'Без сервиса'}
                       </div>
-                      <div style={{ color: '#a3aed0', fontSize: '15px', fontWeight: '500' }} className="sm:text-base">
+                      <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '15px', fontWeight: '500' }} className="sm:text-base">
                         {payment.category_name || 'Без категории'}
                       </div>
                     </div>
@@ -131,7 +120,7 @@ const TopPaymentsCard = () => {
                   <div style={{ 
                     width: '100%', 
                     height: '5px', 
-                    background: 'rgba(255, 255, 255, 0.05)', 
+                    background: 'hsl(var(--muted))', 
                     borderRadius: '10px',
                     overflow: 'hidden'
                   }}>
@@ -140,7 +129,7 @@ const TopPaymentsCard = () => {
                       height: '100%', 
                       background: `linear-gradient(90deg, ${color} 0%, ${color}aa 100%)`,
                       borderRadius: '10px',
-                      boxShadow: `0 0 10px ${color}`,
+                      boxShadow: `0 2px 8px ${color}40`,
                       transition: 'width 0.5s ease'
                     }} />
                   </div>

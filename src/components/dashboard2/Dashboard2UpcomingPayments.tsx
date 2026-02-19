@@ -85,23 +85,13 @@ const Dashboard2UpcomingPayments = () => {
 
   return (
     <Card style={{ 
-      background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
-      border: '1px solid rgba(255, 181, 71, 0.3)',
-      boxShadow: '0 0 40px rgba(255, 181, 71, 0.2), inset 0 0 30px rgba(255, 181, 71, 0.08)',
+      background: 'hsl(var(--card))', 
+      border: '1px solid hsl(var(--border))',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       position: 'relative',
       overflow: 'hidden',
       marginBottom: '30px'
     }}>
-      <div style={{
-        position: 'absolute',
-        top: '-50%',
-        right: '-30%',
-        width: '200%',
-        height: '200%',
-        background: 'radial-gradient(circle, rgba(255, 181, 71, 0.12) 0%, transparent 60%)',
-        pointerEvents: 'none',
-        animation: 'breathe 6s infinite'
-      }} />
       <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px' }} className="sm:flex-row sm:justify-between sm:items-center sm:mb-8">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="sm:gap-3">
@@ -109,14 +99,13 @@ const Dashboard2UpcomingPayments = () => {
               background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)',
               padding: '10px',
               borderRadius: '12px',
-              boxShadow: '0 0 25px rgba(255, 181, 71, 0.6)',
-              animation: 'pulse 2s infinite'
+              boxShadow: '0 2px 8px rgba(255, 181, 71, 0.3)'
             }} className="sm:p-3.5">
               <Icon name="Clock" size={20} style={{ color: '#fff' }} className="sm:w-7 sm:h-7" />
             </div>
             <div>
-              <h3 className={`${dashboardTypography.cardTitle} text-white`}>Предстоящие Платежи</h3>
-              <p className={`${dashboardTypography.cardSmall} mt-1`}>Ближайшие 7 дней • Следите за дедлайнами</p>
+              <h3 className={`${dashboardTypography.cardTitle}`} style={{ color: 'hsl(var(--foreground))' }}>Предстоящие Платежи</h3>
+              <p className={`${dashboardTypography.cardSmall} mt-1`} style={{ color: 'hsl(var(--muted-foreground))' }}>Ближайшие 7 дней • Следите за дедлайнами</p>
             </div>
           </div>
           <div style={{ 

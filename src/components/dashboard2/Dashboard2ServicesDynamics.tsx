@@ -107,30 +107,18 @@ const Dashboard2ServicesDynamics = () => {
 
   return (
     <Card className="w-full max-w-full" style={{ 
-      background: '#111c44',
-      backdropFilter: 'blur(60px)',
-      border: 'none',
-      boxShadow: '0px 3.5px 5.5px rgba(0, 0, 0, 0.02)',
+      background: 'hsl(var(--card))',
+      border: '1px solid hsl(var(--border))',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       overflow: 'hidden',
       position: 'relative',
       marginBottom: '20px'
     }}>
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '180%',
-        height: '180%',
-        background: 'radial-gradient(circle, rgba(57, 101, 255, 0.08) 0%, transparent 65%)',
-        pointerEvents: 'none',
-        animation: 'rotate 30s linear infinite'
-      }} />
       <CardContent className="p-3 sm:p-4 md:p-6" style={{ position: 'relative', zIndex: 1 }}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 sm:mb-6">
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="sm:gap-2">
             <Icon name="Activity" size={16} style={{ color: '#2CD9FF' }} className="sm:w-[18px] sm:h-[18px]" />
-            <h3 className={`${dashboardTypography.cardTitle} text-white`}>Динамика расходов по сервисам</h3>
+            <h3 className={`${dashboardTypography.cardTitle}`} style={{ color: 'hsl(var(--foreground))' }}>Динамика расходов по сервисам</h3>
           </div>
         </div>
 

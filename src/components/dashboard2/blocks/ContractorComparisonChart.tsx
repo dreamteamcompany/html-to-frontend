@@ -83,20 +83,20 @@ const ContractorComparisonChart = () => {
   const displayData = showAll ? contractorData : contractorData.slice(0, 5);
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(57, 101, 255, 0.4)', boxShadow: '0 0 30px rgba(57, 101, 255, 0.2), inset 0 0 15px rgba(57, 101, 255, 0.05)' }}>
+    <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
       <CardContent className="p-4 sm:p-6" style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', minHeight: '32px' }}>
-          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Контрагентам</h3>
-          <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '10px' }}>
+          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>Сравнение по Контрагентам</h3>
+          <div style={{ display: 'flex', gap: '8px', background: 'hsl(var(--muted))', padding: '4px', borderRadius: '10px' }}>
             <button
               onClick={() => setShowAll(false)}
-              style={{ background: !showAll ? '#7551e9' : 'transparent', border: 'none', color: !showAll ? 'white' : '#a3aed0', padding: isMobile ? '6px 12px' : '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: isMobile ? '11px' : '13px', fontWeight: '600', boxShadow: !showAll ? '0 2px 8px rgba(117, 81, 233, 0.3)' : 'none' }}
+              style={{ background: !showAll ? '#7551e9' : 'transparent', border: 'none', color: !showAll ? 'white' : 'hsl(var(--muted-foreground))', padding: isMobile ? '6px 12px' : '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: isMobile ? '11px' : '13px', fontWeight: '600', boxShadow: !showAll ? '0 2px 8px rgba(117, 81, 233, 0.3)' : 'none' }}
             >
               Топ-5
             </button>
             <button
               onClick={() => setShowAll(true)}
-              style={{ background: showAll ? '#7551e9' : 'transparent', border: 'none', color: showAll ? 'white' : '#a3aed0', padding: isMobile ? '6px 12px' : '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: isMobile ? '11px' : '13px', fontWeight: '600', boxShadow: showAll ? '0 2px 8px rgba(117, 81, 233, 0.3)' : 'none' }}
+              style={{ background: showAll ? '#7551e9' : 'transparent', border: 'none', color: showAll ? 'white' : 'hsl(var(--muted-foreground))', padding: isMobile ? '6px 12px' : '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: isMobile ? '11px' : '13px', fontWeight: '600', boxShadow: showAll ? '0 2px 8px rgba(117, 81, 233, 0.3)' : 'none' }}
             >
               Все
             </button>
