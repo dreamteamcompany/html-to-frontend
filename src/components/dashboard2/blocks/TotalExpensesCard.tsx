@@ -78,11 +78,11 @@ const TotalExpensesCard = () => {
     amount.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' ₽';
 
   return (
-    <Card className="h-full" style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', borderTop: '4px solid #7551e9', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
+    <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(117, 81, 233, 0.4)', borderTop: '4px solid #7551e9' }}>
       <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
         <div className="flex justify-between items-start mb-4 sm:mb-5">
           <div>
-            <div className={`${dashboardTypography.cardTitle} text-white mb-2`}>Общие IT Расходы</div>
+            <div className={`${dashboardTypography.cardTitle} mb-2`}>Общие IT Расходы</div>
             <div className={dashboardTypography.cardSubtitle}>
               {loading ? 'Загрузка...' : `${count} платежей`}
             </div>
@@ -91,7 +91,7 @@ const TotalExpensesCard = () => {
             <Icon name="Server" size={18} className="sm:w-5 sm:h-5" />
           </div>
         </div>
-        <div className={`${dashboardTypography.cardValue} text-white mb-2`}>
+        <div className={`${dashboardTypography.cardValue} mb-2`}>
           {loading ? '...' : formatAmount(total)}
         </div>
         <div className={`${dashboardTypography.cardSecondary} mb-3`}>Общая сумма расходов</div>

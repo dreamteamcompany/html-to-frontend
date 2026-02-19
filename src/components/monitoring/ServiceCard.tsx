@@ -33,15 +33,15 @@ const ServiceCard = ({
   getStatusIcon 
 }: ServiceCardProps) => {
   return (
-    <Card className="p-4 sm:p-5 lg:p-5 bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all hover:shadow-lg">
+    <Card className="p-4 sm:p-5 lg:p-5 hover:shadow-lg transition-all">
       <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <div className={`p-1.5 sm:p-2 rounded-lg border-2 ${getStatusColor(service.status)} shrink-0`}>
             <Icon name={getStatusIcon(service.status)} className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-white text-sm sm:text-base truncate">{service.service_name}</h3>
-            <p className="text-xs sm:text-sm text-white/50 truncate">
+            <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">{service.service_name}</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               Обновлено: {new Date(service.last_updated).toLocaleString('ru-RU', {
                 day: '2-digit',
                 month: '2-digit',
@@ -57,7 +57,7 @@ const ServiceCard = ({
             variant="ghost" 
             size="icon"
             onClick={() => onRefresh(service.id)}
-            className="text-white/60 hover:text-white hover:bg-white/10 h-8 w-8 sm:h-9 sm:w-9"
+            className="h-8 w-8 sm:h-9 sm:w-9"
           >
             <Icon name="RefreshCw" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
@@ -65,7 +65,7 @@ const ServiceCard = ({
             variant="ghost" 
             size="icon"
             onClick={() => onEdit(service)}
-            className="text-white/60 hover:text-white hover:bg-white/10 h-8 w-8 sm:h-9 sm:w-9"
+            className="h-8 w-8 sm:h-9 sm:w-9"
           >
             <Icon name="Settings" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
@@ -73,7 +73,7 @@ const ServiceCard = ({
             variant="ghost" 
             size="icon"
             onClick={() => onDelete(service.id, service.service_name)}
-            className="text-white/60 hover:text-red-500 hover:bg-red-500/10 h-8 w-8 sm:h-9 sm:w-9"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 sm:h-9 sm:w-9"
           >
             <Icon name="Trash2" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
@@ -82,14 +82,14 @@ const ServiceCard = ({
 
       <div className="space-y-2">
         {service.description && (
-          <p className="text-xs sm:text-sm text-white/60 line-clamp-2">{service.description}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{service.description}</p>
         )}
         
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl sm:text-3xl font-bold text-white">
+          <span className="text-2xl sm:text-3xl font-bold text-foreground">
             {service.balance.toLocaleString('ru-RU')}
           </span>
-          <span className="text-sm sm:text-base text-white/60 font-medium">{service.currency}</span>
+          <span className="text-sm sm:text-base text-muted-foreground font-medium">{service.currency}</span>
         </div>
 
         {service.threshold_warning && service.threshold_critical && (

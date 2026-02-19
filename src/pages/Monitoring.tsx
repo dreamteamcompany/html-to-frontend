@@ -314,7 +314,7 @@ const Monitoring = () => {
   };
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #0f1535 0%, #1b254b 100%)' }}>
+    <div className="flex min-h-screen overflow-x-hidden bg-background">
       <PaymentsSidebar
         menuOpen={menuOpen}
         dictionariesOpen={dictionariesOpen}
@@ -336,7 +336,7 @@ const Monitoring = () => {
       <main className="lg:ml-[250px] p-4 md:p-6 lg:p-8 min-h-screen flex-1 overflow-x-hidden max-w-full">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="lg:hidden p-2 text-white hover:bg-white/5 rounded-lg transition-colors mb-4"
+          className="lg:hidden p-2 text-foreground hover:bg-muted rounded-lg transition-colors mb-4"
         >
           <Icon name="Menu" size={24} />
         </button>
@@ -351,16 +351,16 @@ const Monitoring = () => {
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Card key={i} className="p-4 sm:p-5 bg-white/5 border-white/10 backdrop-blur-sm animate-pulse">
-                    <div className="h-20 sm:h-24 bg-white/5 rounded"></div>
+                  <Card key={i} className="p-4 sm:p-5 animate-pulse">
+                    <div className="h-20 sm:h-24 bg-muted rounded"></div>
                   </Card>
                 ))}
               </div>
             ) : services.length === 0 ? (
-              <Card className="p-6 sm:p-12 text-center bg-white/5 border-white/10 backdrop-blur-sm">
-                <Icon name="Wallet" className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-white/30 mb-3 sm:mb-4" />
-                <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Нет подключенных сервисов</h3>
-                <p className="text-sm sm:text-base text-white/60 mb-4 sm:mb-6 max-w-md mx-auto">Добавьте интеграции с сервисами для мониторинга балансов</p>
+              <Card className="p-6 sm:p-12 text-center">
+                <Icon name="Wallet" className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mb-3 sm:mb-4" />
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Нет подключенных сервисов</h3>
+                <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto">Добавьте интеграции с сервисами для мониторинга балансов</p>
                 <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)} className="sm:size-default">
                   <Icon name="Plus" className="mr-2 h-4 w-4" />
                   Добавить интеграцию

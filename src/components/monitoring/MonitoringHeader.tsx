@@ -11,7 +11,7 @@ interface MonitoringHeaderProps {
 const MonitoringHeader = ({ onAddClick, onRefreshAll, loading, servicesCount }: MonitoringHeaderProps) => {
   return (
     <div className="flex justify-between items-center gap-3 sm:gap-4">
-      <h2 className="text-xl md:text-2xl font-bold text-white">Балансы сервисов</h2>
+      <h2 className="text-xl md:text-2xl font-bold text-foreground">Балансы сервисов</h2>
       <div className="flex gap-2 sm:gap-3 shrink-0">
         <Button 
           variant="default" 

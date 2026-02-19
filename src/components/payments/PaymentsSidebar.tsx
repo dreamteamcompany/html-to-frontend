@@ -57,16 +57,15 @@ const PaymentsSidebar = ({
   
   return (
     <aside 
-      style={{ backgroundColor: 'hsl(var(--sidebar-bg))' }}
-      className={`w-[250px] border-r border-white/10 dark:border-white/10 light:border-gray-200 fixed left-0 top-0 h-screen z-50 transition-all lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}
+      className={`w-[250px] bg-card border-r border-border fixed left-0 top-0 h-screen z-50 transition-all lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <a href="/" className="flex items-center gap-3 px-5 py-5 pb-[30px] border-b border-white/10 dark:border-white/10 light:border-gray-200 flex-shrink-0">
-        <Logo className="h-8 w-auto text-white dark:text-white light:text-gray-900" />
+      <a href="/" className="flex items-center gap-3 px-5 py-5 pb-[30px] border-b border-border flex-shrink-0">
+        <Logo className="h-8 w-auto text-foreground" />
       </a>
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/5 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/10">
+      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/20">
         <ul className="px-[15px] py-5 space-y-1 pb-4">
         {hasPermission('dashboard', 'read') && (
           <li>
@@ -248,7 +247,7 @@ const PaymentsSidebar = ({
       </ul>
       </div>
       
-      <div className="flex-shrink-0 border-t border-white/10 p-4 space-y-3">
+      <div className="flex-shrink-0 border-t border-border p-4 space-y-3">
         <button
           onClick={toggleTheme}
           className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
@@ -264,14 +263,14 @@ const PaymentsSidebar = ({
             {user?.full_name?.charAt(0) || 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-white truncate">{user?.full_name}</div>
+            <div className="text-sm font-medium text-foreground truncate">{user?.full_name}</div>
             <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
           </div>
         </div>
         <Button
           variant="outline"
           size="sm"
-          className="w-full justify-start gap-2 border-white/10 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20"
+          className="w-full justify-start gap-2 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20"
           onClick={handleLogout}
         >
           <Icon name="LogOut" size={16} />

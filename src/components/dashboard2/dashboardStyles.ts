@@ -2,32 +2,32 @@
 // Все тексты приведены к единому размеру text-sm
 export const dashboardTypography = {
   // Заголовки карточек
-  cardTitle: 'text-sm font-bold',
+  cardTitle: 'text-sm font-bold text-foreground',
   
   // Подзаголовки / описания
-  cardSubtitle: 'text-sm font-medium text-[#a3aed0]',
+  cardSubtitle: 'text-sm font-medium text-muted-foreground',
   
   // Основные цифры / метрики
-  cardValue: 'text-xl font-extrabold',
+  cardValue: 'text-xl font-extrabold text-foreground',
   
   // Вторичный текст
-  cardSecondary: 'text-sm font-medium text-[#a3aed0]',
+  cardSecondary: 'text-sm font-medium text-muted-foreground',
   
   // Статус / бейджи
   cardBadge: 'text-sm font-semibold',
   
   // Мелкий текст (labels, hints)
-  cardSmall: 'text-sm font-medium text-[#a3aed0]',
+  cardSmall: 'text-sm font-medium text-muted-foreground',
   
   // Очень мелкий текст
-  cardTiny: 'text-sm font-medium text-[#a3aed0]',
+  cardTiny: 'text-sm font-medium text-muted-foreground',
 } as const;
 
-// Цвета для единообразия
+// Цвета для единообразия (используют CSS переменные где возможно)
 export const dashboardColors = {
-  textPrimary: '#fff',
-  textSecondary: '#a3aed0',
-  textMuted: '#8f9bba',
+  textPrimary: 'hsl(var(--foreground))',
+  textSecondary: 'hsl(var(--muted-foreground))',
+  textMuted: 'hsl(var(--muted-foreground) / 0.7)',
   
   purple: '#7551e9',
   blue: '#3965ff',
@@ -36,3 +36,20 @@ export const dashboardColors = {
   red: '#ff6b6b',
   cyan: '#2CD9FF',
 } as const;
+
+// Стили карточек с поддержкой темной/светлой темы
+export const getCardStyle = (accentColor?: string) => {
+  const baseStyle = {
+    background: 'hsl(var(--card))',
+    borderColor: 'hsl(var(--border))',
+  };
+
+  if (accentColor) {
+    return {
+      ...baseStyle,
+      borderTop: `4px solid ${accentColor}`,
+    };
+  }
+
+  return baseStyle;
+};

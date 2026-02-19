@@ -28,6 +28,10 @@
     --ring: 262 67% 61%;
     --radius: 1rem;
     --sidebar-bg: 227 51% 20%;
+
+    --dashboard-card-bg: 227 60% 17%;
+    --dashboard-card-border: 0 0% 100% / 0.1;
+    --dashboard-card-shadow: 0 0 30px rgba(117, 81, 233, 0.2);
   }
 
   :root.light {
@@ -52,6 +56,10 @@
     --input: 240 5.9% 90%;
     --ring: 262 67% 61%;
     --sidebar-bg: 0 0% 100%;
+
+    --dashboard-card-bg: 0 0% 100%;
+    --dashboard-card-border: 240 5.9% 90%;
+    --dashboard-card-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
   }
 }
 
@@ -72,6 +80,12 @@
   h5,
   h6 {
     font-family: "Plus Jakarta Sans", sans-serif;
+    @apply text-foreground;
+  }
+
+  /* Dashboard cards адаптация */
+  .dashboard-card {
+    @apply bg-card text-card-foreground border-border;
   }
 }
 
