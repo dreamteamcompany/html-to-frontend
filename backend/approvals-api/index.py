@@ -221,6 +221,15 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     is_intermediate_approver = payment['intermediate_approver_id'] == user_id
     is_final_approver = payment['final_approver_id'] == user_id
     
+    # Проверяем, является ли пользователь администратором
+    cur.execute(f"""
+        SELECT COUNT(*) as cnt FROM {SCHEMA}.user_roles ur
+        JOIN {SCHEMA}.roles r ON ur.role_id = r.id
+        WHERE ur.user_id = %s AND r.name = 'Администратор'
+    """, (user_id,))
+    result = cur.fetchone()
+    is_admin = result['cnt'] > 0 if result else False
+    
     # Определяем новый статус
     if approval_action.action == 'submit':
         if payment['status'] not in ('draft', 'rejected', None):
@@ -228,7 +237,8 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
             return response(400, {'error': 'Только черновики и отклонённые платежи можно отправить на согласование'})
         new_status = 'pending_ceo'
     elif approval_action.action == 'approve':
-        if not is_intermediate_approver and not is_final_approver:
+        # Администратор может согласовывать любые платежи
+        if not is_admin and not is_intermediate_approver and not is_final_approver:
             cur.close()
             return response(403, {'error': 'Вы не являетесь утверждающим для этого платежа'})
         if payment['status'] == 'pending_ceo' and is_final_approver:
@@ -244,15 +254,6 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         
         # Проверяем, что отзывает создатель платежа или администратор
         is_creator = payment.get('created_by') == user_id
-        
-        # Проверяем, является ли пользователь администратором
-        cur.execute(f"""
-            SELECT COUNT(*) as cnt FROM {SCHEMA}.user_roles ur
-            JOIN {SCHEMA}.roles r ON ur.role_id = r.id
-            WHERE ur.user_id = %s AND r.name = 'Администратор'
-        """, (user_id,))
-        result = cur.fetchone()
-        is_admin = result['cnt'] > 0 if result else False
         
         if not is_creator and not is_admin:
             cur.close()
