@@ -187,7 +187,7 @@ const PaymentForm = ({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="md:col-span-2">
+            <div className="col-span-2">
               <InvoiceUpload
                 onFileSelect={handleFileSelect}
                 onExtractData={handleExtractData}
@@ -197,7 +197,7 @@ const PaymentForm = ({
                 fileType={fileType}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Сервис *</Label>
                 <SearchableSelect
@@ -313,22 +313,34 @@ const PaymentForm = ({
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Назначение</Label>
-              <Input
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Описание платежа"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="description">Назначение платежа *</Label>
+                <Input
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Описание платежа"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="comment">Комментарий</Label>
+                <Input
+                  id="comment"
+                  value={formData.comment || ''}
+                  onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
+                  placeholder="Дополнительная информация"
+                />
+              </div>
             </div>
             
             {customFields.length > 0 && (
               <div className="border-t border-white/10 pt-4 space-y-4">
                 <h4 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h4>
-                {customFields.map((field) => (
-                  <div key={field.id} className="space-y-2">
+                <div className="grid grid-cols-2 gap-4">
+                  {customFields.map((field) => (
+                    <div key={field.id} className="space-y-2">
                     <Label htmlFor={`custom_field_${field.id}`}>{field.name}</Label>
                     {field.field_type === 'text' && (
                       <Input
@@ -401,8 +413,9 @@ const PaymentForm = ({
                         )}
                       </div>
                     )}
-                  </div>
-                ))}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             
