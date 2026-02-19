@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import PendingApprovalsFilters from '@/components/approvals/PendingApprovalsFilters';
 import PendingApprovalsList from '@/components/approvals/PendingApprovalsList';
@@ -13,6 +23,7 @@ const PendingApprovalsTab = () => {
   const { requestNotificationPermission } = usePendingApprovals();
   const { payments, loading, handleApprove, handleApproveAll, handleReject } = usePendingApprovalsData();
   const [approvingAll, setApprovingAll] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   
   const {
     searchQuery,
@@ -116,7 +127,7 @@ const PendingApprovalsTab = () => {
       {filteredPayments.length > 1 && (
         <div className="flex justify-end">
           <button
-            onClick={handleApproveAllClick}
+            onClick={() => setShowConfirm(true)}
             disabled={approvingAll}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
           >
@@ -125,6 +136,26 @@ const PendingApprovalsTab = () => {
           </button>
         </div>
       )}
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Одобрить все платежи?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Будет одобрено {filteredPayments.length} платежей. Это действие нельзя отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleApproveAllClick}
+              className="bg-green-600 hover:bg-green-500 text-white"
+            >
+              Одобрить всё
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {notificationPermission !== 'granted' && (
         <div className="px-4 py-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
