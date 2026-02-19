@@ -141,7 +141,7 @@ const ExpenseStructureChart = () => {
             <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
           </div>
         ) : activeTab === 'general' ? (
-          <div style={{ height: '350px', position: 'relative' }}>
+          <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative' }}>
             <Doughnut
               data={{
                 labels: categories.map(c => c.name),
@@ -179,7 +179,7 @@ const ExpenseStructureChart = () => {
             />
           </div>
         ) : (
-          <div style={{ height: '350px', overflowY: 'auto' }}>
+          <div className="h-[200px] sm:h-[350px]" style={{ overflowY: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>

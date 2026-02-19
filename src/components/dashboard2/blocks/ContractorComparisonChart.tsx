@@ -77,8 +77,8 @@ const ContractorComparisonChart = () => {
   const displayData = showAll ? contractorData : contractorData.slice(0, 5);
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(57, 101, 255, 0.4)', boxShadow: '0 0 30px rgba(57, 101, 255, 0.2), inset 0 0 15px rgba(57, 101, 255, 0.05)' }} className="w-full lg:w-[760px] h-auto lg:h-[400px]">
-      <CardContent className="p-4 sm:p-6" style={{ display: 'flex', flexDirection: 'column', minHeight: '300px' }}>
+    <Card style={{ background: '#111c44', border: '1px solid rgba(57, 101, 255, 0.4)', boxShadow: '0 0 30px rgba(57, 101, 255, 0.2), inset 0 0 15px rgba(57, 101, 255, 0.05)' }}>
+      <CardContent className="p-4 sm:p-6" style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', minHeight: '32px' }}>
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Контрагентам</h3>
           <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '10px' }}>
@@ -105,7 +105,7 @@ const ContractorComparisonChart = () => {
             <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <div style={{ position: 'relative', flex: 1 }}>
+          <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative' }}>
             <Bar
               data={{
                 labels: displayData.map(d => d.name),

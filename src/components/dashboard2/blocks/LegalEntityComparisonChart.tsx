@@ -74,8 +74,8 @@ const LegalEntityComparisonChart = () => {
   }, [period, getDateRange]);
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }} className="w-full lg:w-[760px] h-auto lg:h-[400px]">
-      <CardContent className="p-4 sm:p-6" style={{ display: 'flex', flexDirection: 'column', minHeight: '300px' }}>
+    <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
+      <CardContent className="p-4 sm:p-6" style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ marginBottom: '16px', minHeight: '32px', display: 'flex', alignItems: 'center' }}>
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: '#fff' }}>Сравнение по Юридическим Лицам</h3>
         </div>
@@ -88,7 +88,7 @@ const LegalEntityComparisonChart = () => {
             <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <div style={{ position: 'relative', flex: 1 }}>
+          <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative' }}>
             <Bar
               data={{
                 labels: legalEntityData.map(d => d.name),

@@ -78,7 +78,7 @@ const Dashboard2TeamPerformance = () => {
           </div>
         ) : (
           <>
-            <div className="h-[240px] sm:h-[320px]" style={{ position: 'relative', padding: isMobile ? '10px' : '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative', padding: isMobile ? '10px' : '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <Radar
                 data={{
                   labels: currentData.map(d => d.name),

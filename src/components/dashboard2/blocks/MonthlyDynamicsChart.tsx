@@ -212,7 +212,7 @@ const MonthlyDynamicsChart = () => {
             <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-purple-500"></div>
           </div>
         ) : (
-          <div className="h-[200px] sm:h-[300px] lg:h-[350px]" style={{ position: 'relative' }}>
+          <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative' }}>
             {isBarChart ? (
               <Bar
                 data={{ labels: chartLabels, datasets: [{ ...commonDataset }] }}
