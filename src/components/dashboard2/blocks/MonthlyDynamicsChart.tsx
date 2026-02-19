@@ -168,7 +168,7 @@ const MonthlyDynamicsChart = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          color: '#a3aed0',
+          color: 'hsl(var(--muted-foreground))',
           font: { size: isMobile ? 9 : 12 },
           maxTicksLimit: isMobile ? 4 : 8,
           callback: (value: unknown) => {
@@ -177,11 +177,11 @@ const MonthlyDynamicsChart = () => {
             return new Intl.NumberFormat('ru-RU', { notation: 'compact' }).format(v);
           },
         },
-        grid: { color: 'rgba(255, 255, 255, 0.05)', lineWidth: isMobile ? 0.5 : 1 },
+        grid: { color: 'hsl(var(--border))', lineWidth: isMobile ? 0.5 : 1 },
       },
       x: {
         ticks: {
-          color: '#a3aed0',
+          color: 'hsl(var(--muted-foreground))',
           font: { size: isMobile ? 7 : 11 },
           maxRotation: isMobile ? 45 : 0,
           minRotation: isMobile ? 45 : 0,
@@ -202,10 +202,10 @@ const MonthlyDynamicsChart = () => {
   };
 
   return (
-    <Card style={{ background: '#111c44', border: '1px solid rgba(117, 81, 233, 0.4)', boxShadow: '0 0 30px rgba(117, 81, 233, 0.2), inset 0 0 15px rgba(117, 81, 233, 0.05)' }}>
+    <Card style={{ background: 'hsl(var(--card))', border: '1px solid rgba(117, 81, 233, 0.4)' }}>
       <CardContent className="p-3 sm:p-6">
         <div style={{ marginBottom: '12px' }} className="sm:mb-4">
-          <h3 className={`${dashboardTypography.cardTitle} text-white`}>{titleMap[period] || 'Динамика Расходов'}</h3>
+          <h3 className={dashboardTypography.cardTitle}>{titleMap[period] || 'Динамика Расходов'}</h3>
         </div>
         {loading ? (
           <div className="flex items-center justify-center sm:h-[250px]" style={{ height: '200px' }}>

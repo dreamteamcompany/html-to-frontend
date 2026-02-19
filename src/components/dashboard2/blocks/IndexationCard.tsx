@@ -122,11 +122,11 @@ const IndexationCard = () => {
   }, [period, getDateRange]);
 
   return (
-    <Card className="h-full" style={{ background: '#111c44', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547', boxShadow: '0 0 30px rgba(255, 181, 71, 0.2), inset 0 0 15px rgba(255, 181, 71, 0.05)' }}>
+    <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547' }}>
       <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
         <div className="flex justify-between items-start mb-4 sm:mb-5">
           <div>
-            <div className={`${dashboardTypography.cardTitle} text-white mb-2`}>Индексация</div>
+            <div className={`${dashboardTypography.cardTitle} mb-2`}>Индексация</div>
             <div className={dashboardTypography.cardSubtitle}>Корректировка цен</div>
           </div>
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255, 181, 71, 0.1)', color: '#ffb547', border: '1px solid rgba(255, 181, 71, 0.2)' }}>
@@ -140,7 +140,7 @@ const IndexationCard = () => {
           </div>
         ) : (
           <>
-            <div className={`${dashboardTypography.cardValue} text-white mb-1`}>
+            <div className={`${dashboardTypography.cardValue} mb-1`}>
               {new Intl.NumberFormat('ru-RU').format(indexationAmount)} ₽
             </div>
             <div className={`${dashboardTypography.cardSecondary} mb-2`}>за выбранный период</div>
@@ -150,8 +150,8 @@ const IndexationCard = () => {
             </div>
 
             {serviceDetails.length > 0 && (
-              <div className="border-t border-white/10 pt-3 space-y-2">
-                <div className="text-xs font-semibold text-[#a3aed0] uppercase tracking-wide mb-2">Расшифровка по сервисам</div>
+              <div className="border-t border-border pt-3 space-y-2">
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Расшифровка по сервисам</div>
                 {serviceDetails.slice(0, 5).map((item) => (
                   <div key={item.serviceKey} className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0">
@@ -159,7 +159,7 @@ const IndexationCard = () => {
                         className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                         style={{ background: item.diff >= 0 ? '#01b574' : '#ff6b6b' }}
                       />
-                      <span className="text-xs text-[#a3aed0] truncate">{item.serviceName}</span>
+                      <span className="text-xs text-muted-foreground truncate">{item.serviceName}</span>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-xs font-semibold" style={{ color: item.diff >= 0 ? '#01b574' : '#ff6b6b' }}>
@@ -172,7 +172,7 @@ const IndexationCard = () => {
                   </div>
                 ))}
                 {serviceDetails.length > 5 && (
-                  <div className="text-xs text-[#a3aed0] text-center pt-1">
+                  <div className="text-xs text-muted-foreground text-center pt-1">
                     +{serviceDetails.length - 5} сервисов
                   </div>
                 )}
@@ -180,8 +180,8 @@ const IndexationCard = () => {
             )}
 
             {serviceDetails.length === 0 && !loading && (
-              <div className="border-t border-white/10 pt-3">
-                <div className="text-xs text-[#a3aed0] text-center">Нет данных для сравнения с предыдущим периодом</div>
+              <div className="border-t border-border pt-3">
+                <div className="text-xs text-muted-foreground text-center">Нет данных для сравнения с предыдущим периодом</div>
               </div>
             )}
           </>
