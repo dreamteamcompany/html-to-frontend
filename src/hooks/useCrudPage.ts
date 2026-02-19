@@ -58,7 +58,10 @@ export const useCrudPage = <T extends { id: number }>({
       const rawBody = editingItem 
         ? { id: editingItem.id, ...formData }
         : formData;
-      const body = JSON.stringify(rawBody, (_key, value) => value === undefined ? null : value);
+      const body = JSON.stringify(rawBody, (_key, value) => {
+        if (value === undefined || value === '') return null;
+        return value;
+      });
 
       const response = await apiFetch(url, {
         method,
