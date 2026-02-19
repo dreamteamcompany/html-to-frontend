@@ -33,7 +33,7 @@ const Dashboard2ServicesDynamics = () => {
       const data = await response.json();
       
       const approvedPayments = (Array.isArray(data) ? data : []).filter((p: Payment) => 
-        p.status === 'approved' || p.status === 'paid'
+        p.status === 'approved'
       );
 
       const now = new Date();

@@ -42,7 +42,7 @@ const IndexationCard = () => {
         const data = await response.json();
 
         const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) =>
-          p.status === 'approved' || p.status === 'paid'
+          p.status === 'approved'
         );
 
         const { from, to } = getDateRange();

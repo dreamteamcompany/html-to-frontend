@@ -35,7 +35,7 @@ const TotalExpensesCard = () => {
         );
         const data = await response.json();
         const payments: PaymentRecord[] = (Array.isArray(data) ? data : []).filter(
-          (p: PaymentRecord) => p.status === 'approved' || p.status === 'paid'
+          (p: PaymentRecord) => p.status === 'approved'
         );
 
         const { from, to } = getDateRange();

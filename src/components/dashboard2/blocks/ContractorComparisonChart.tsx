@@ -51,7 +51,7 @@ const ContractorComparisonChart = () => {
         const { from, to } = getDateRange();
 
         const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
-          if (p.status !== 'approved' && p.status !== 'paid') return false;
+          if (p.status !== 'approved') return false;
           const d = new Date(p.payment_date);
           return d >= from && d <= to;
         });
