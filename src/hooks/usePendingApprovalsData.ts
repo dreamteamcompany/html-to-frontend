@@ -63,22 +63,13 @@ export const usePendingApprovalsData = () => {
     if (!user) return [];
 
     return allPayments.filter((payment: Payment) => {
-      if (!payment.status || !payment.service_id) {
+      if (!payment.status) {
         return false;
       }
       
-      const service = services.find((s: Service) => s.id === payment.service_id);
-      if (!service) {
-        return false;
-      }
-      
-      if (payment.status === 'pending_ceo' && service.final_approver_id === user.id) {
-        return true;
-      }
-      
-      return false;
+      return ['pending_ib', 'pending_ceo', 'pending_cfo'].includes(payment.status);
     });
-  }, [allPayments, services, user]);
+  }, [allPayments, user]);
 
   const handleApprove = useCallback(async (paymentId: number, approveComment?: string) => {
     console.log('[handleApprove] Called with paymentId:', paymentId, 'comment:', approveComment);
