@@ -33,68 +33,74 @@ const ServiceCard = ({
   getStatusIcon 
 }: ServiceCardProps) => {
   return (
-    <Card className="p-6 bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg border ${getStatusColor(service.status)}`}>
-            <Icon name={getStatusIcon(service.status)} className="h-5 w-5" />
+    <Card className="p-4 sm:p-6 bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+      <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <div className={`p-1.5 sm:p-2 rounded-lg border ${getStatusColor(service.status)} shrink-0`}>
+            <Icon name={getStatusIcon(service.status)} className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
-          <div>
-            <h3 className="font-semibold text-white">{service.service_name}</h3>
-            <p className="text-sm text-white/50">
-              Обновлено: {new Date(service.last_updated).toLocaleString('ru-RU')}
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-white text-sm sm:text-base truncate">{service.service_name}</h3>
+            <p className="text-xs sm:text-sm text-white/50 truncate">
+              Обновлено: {new Date(service.last_updated).toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
             </p>
           </div>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-0.5 sm:gap-1 shrink-0">
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => onRefresh(service.id)}
-            className="text-white/60 hover:text-white"
+            className="text-white/60 hover:text-white h-8 w-8 sm:h-10 sm:w-10"
           >
-            <Icon name="RefreshCw" className="h-4 w-4" />
+            <Icon name="RefreshCw" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => onEdit(service)}
-            className="text-white/60 hover:text-white"
+            className="text-white/60 hover:text-white h-8 w-8 sm:h-10 sm:w-10"
           >
-            <Icon name="Settings" className="h-4 w-4" />
+            <Icon name="Settings" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => onDelete(service.id, service.service_name)}
-            className="text-white/60 hover:text-red-500"
+            className="text-white/60 hover:text-red-500 h-8 w-8 sm:h-10 sm:w-10"
           >
-            <Icon name="Trash2" className="h-4 w-4" />
+            <Icon name="Trash2" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
         </div>
       </div>
 
       <div className="space-y-2">
         {service.description && (
-          <p className="text-sm text-white/60">{service.description}</p>
+          <p className="text-xs sm:text-sm text-white/60 line-clamp-2">{service.description}</p>
         )}
         
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-white">
+          <span className="text-2xl sm:text-3xl font-bold text-white">
             {service.balance.toLocaleString('ru-RU')}
           </span>
-          <span className="text-white/60">{service.currency}</span>
+          <span className="text-sm sm:text-base text-white/60">{service.currency}</span>
         </div>
 
         {service.threshold_warning && service.threshold_critical && (
-          <div className="flex gap-2 text-xs">
+          <div className="flex gap-2 sm:gap-3 text-xs flex-wrap">
             <div className="flex items-center gap-1 text-yellow-500">
               <Icon name="AlertTriangle" className="h-3 w-3" />
-              <span>&lt; {service.threshold_warning}</span>
+              <span>&lt; {service.threshold_warning.toLocaleString('ru-RU')}</span>
             </div>
             <div className="flex items-center gap-1 text-red-500">
               <Icon name="XCircle" className="h-3 w-3" />
-              <span>&lt; {service.threshold_critical}</span>
+              <span>&lt; {service.threshold_critical.toLocaleString('ru-RU')}</span>
             </div>
           </div>
         )}
