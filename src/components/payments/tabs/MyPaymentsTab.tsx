@@ -3,9 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePaymentsData } from '@/hooks/usePaymentsData';
 import { usePaymentForm } from '@/hooks/usePaymentForm';
-import { usePlannedPaymentForm } from '@/hooks/usePlannedPaymentForm';
 import PaymentForm from '@/components/payments/PaymentForm';
-import PlannedPaymentForm from '@/components/payments/PlannedPaymentForm';
+import PlannedPaymentsModal from '@/components/payments/PlannedPaymentsModal';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 import { API_ENDPOINTS } from '@/config/api';
@@ -43,14 +42,6 @@ const MyPaymentsTab = () => {
     fileName,
     fileType,
   } = usePaymentForm(customFields, loadPayments, loadContractors, loadLegalEntities);
-
-  const {
-    dialogOpen: plannedDialogOpen,
-    setDialogOpen: setPlannedDialogOpen,
-    formData: plannedFormData,
-    setFormData: setPlannedFormData,
-    handleSubmit: handlePlannedSubmit,
-  } = usePlannedPaymentForm(customFields, loadPayments);
 
   const handleApprove = async (paymentId: number) => {
     try {
@@ -194,19 +185,7 @@ const MyPaymentsTab = () => {
           fileType={fileType}
         />
 
-        <PlannedPaymentForm
-          dialogOpen={plannedDialogOpen}
-          setDialogOpen={setPlannedDialogOpen}
-          formData={plannedFormData}
-          setFormData={setPlannedFormData}
-          categories={categories}
-          legalEntities={legalEntities}
-          contractors={contractors}
-          customerDepartments={customerDepartments}
-          customFields={customFields}
-          services={services}
-          handleSubmit={handlePlannedSubmit}
-        />
+        <PlannedPaymentsModal />
       </div>
 
       <PaymentsList 
