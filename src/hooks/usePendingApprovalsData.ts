@@ -92,6 +92,29 @@ export const usePendingApprovalsData = () => {
     }
   }, [token, toast]);
 
+  const handleApproveAll = useCallback(async (paymentIds: number[]) => {
+    if (paymentIds.length === 0) return;
+    const results = await Promise.allSettled(
+      paymentIds.map(id =>
+        fetch(`${API_ENDPOINTS.approvalsApi}`, {
+          method: 'PUT',
+          headers: { 'X-Auth-Token': token!, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payment_id: id, action: 'approve', comment: '' }),
+        })
+      )
+    );
+    const succeeded = results.filter(r => r.status === 'fulfilled' && (r.value as Response).ok).length;
+    const failed = paymentIds.length - succeeded;
+    setAllPayments(prev => prev.filter(p => !paymentIds.includes(p.id!)));
+    toast({
+      title: succeeded > 0 ? 'Успешно' : 'Ошибка',
+      description: failed > 0
+        ? `Одобрено: ${succeeded}, не удалось: ${failed}`
+        : `Одобрено ${succeeded} платежей`,
+      variant: failed > 0 ? 'destructive' : 'default',
+    });
+  }, [token, toast]);
+
   const handleReject = useCallback(async (paymentId: number, rejectComment?: string) => {
     console.log('[handleReject] Called with paymentId:', paymentId, 'comment:', rejectComment);
     try {
@@ -136,6 +159,7 @@ export const usePendingApprovalsData = () => {
     payments,
     loading,
     handleApprove,
+    handleApproveAll,
     handleReject,
   };
 };

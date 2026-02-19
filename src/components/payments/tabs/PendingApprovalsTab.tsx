@@ -11,7 +11,8 @@ import { Payment } from '@/types/payment';
 
 const PendingApprovalsTab = () => {
   const { requestNotificationPermission } = usePendingApprovals();
-  const { payments, loading, handleApprove, handleReject } = usePendingApprovalsData();
+  const { payments, loading, handleApprove, handleApproveAll, handleReject } = usePendingApprovalsData();
+  const [approvingAll, setApprovingAll] = useState(false);
   
   const {
     searchQuery,
@@ -63,6 +64,13 @@ const PendingApprovalsTab = () => {
     }
   };
 
+  const handleApproveAllClick = async () => {
+    const ids = filteredPayments.map(p => p.id).filter(Boolean) as number[];
+    setApprovingAll(true);
+    await handleApproveAll(ids);
+    setApprovingAll(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -103,6 +111,19 @@ const PendingApprovalsTab = () => {
           filteredCount={filteredPayments.length}
           totalCount={payments.length}
         />
+      )}
+
+      {filteredPayments.length > 1 && (
+        <div className="flex justify-end">
+          <button
+            onClick={handleApproveAllClick}
+            disabled={approvingAll}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+          >
+            <Icon name={approvingAll ? 'Loader2' : 'CheckCheck'} size={16} className={approvingAll ? 'animate-spin' : ''} />
+            {approvingAll ? 'Одобряем...' : `Одобрить все (${filteredPayments.length})`}
+          </button>
+        </div>
       )}
 
       {notificationPermission !== 'granted' && (
