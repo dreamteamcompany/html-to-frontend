@@ -197,7 +197,7 @@ const PaymentForm = ({
                 fileType={fileType}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Сервис *</Label>
                 <SearchableSelect
@@ -313,7 +313,7 @@ const PaymentForm = ({
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="description">Назначение платежа *</Label>
                 <Input
@@ -338,7 +338,7 @@ const PaymentForm = ({
             {customFields.length > 0 && (
               <div className="border-t border-white/10 pt-4 space-y-4">
                 <h4 className="text-sm font-semibold text-muted-foreground">Дополнительные поля</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {customFields.map((field) => (
                     <div key={field.id} className="space-y-2">
                     <Label htmlFor={`custom_field_${field.id}`}>{field.name}</Label>
