@@ -9,6 +9,7 @@ export const usePendingApprovalsData = () => {
   const { toast } = useToast();
   const [allPayments, setAllPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [approveProgress, setApproveProgress] = useState<{ current: number; total: number } | null>(null);
 
   const loadData = useCallback(async () => {
     if (!token || !user) return;
@@ -100,6 +101,8 @@ export const usePendingApprovalsData = () => {
     let succeeded = 0;
     let failed = 0;
 
+    setApproveProgress({ current: 0, total: paymentIds.length });
+
     for (let i = 0; i < paymentIds.length; i += BATCH_SIZE) {
       const batch = paymentIds.slice(i, i + BATCH_SIZE);
       const results = await Promise.allSettled(
@@ -113,12 +116,14 @@ export const usePendingApprovalsData = () => {
       );
       succeeded += results.filter(r => r.status === 'fulfilled' && (r.value as Response).ok).length;
       failed += results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !(r.value as Response).ok)).length;
+      setApproveProgress({ current: Math.min(i + BATCH_SIZE, paymentIds.length), total: paymentIds.length });
 
       if (i + BATCH_SIZE < paymentIds.length) {
         await new Promise(resolve => setTimeout(resolve, DELAY_MS));
       }
     }
 
+    setApproveProgress(null);
     setAllPayments(prev => prev.filter(p => !paymentIds.includes(p.id!)));
     toast({
       title: succeeded > 0 ? 'Успешно' : 'Ошибка',
@@ -172,6 +177,7 @@ export const usePendingApprovalsData = () => {
   return {
     payments,
     loading,
+    approveProgress,
     handleApprove,
     handleApproveAll,
     handleReject,

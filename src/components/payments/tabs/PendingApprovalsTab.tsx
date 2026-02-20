@@ -21,7 +21,7 @@ import { Payment } from '@/types/payment';
 
 const PendingApprovalsTab = () => {
   const { requestNotificationPermission } = usePendingApprovals();
-  const { payments, loading, handleApprove, handleApproveAll, handleReject } = usePendingApprovalsData();
+  const { payments, loading, approveProgress, handleApprove, handleApproveAll, handleReject } = usePendingApprovalsData();
   const [approvingAll, setApprovingAll] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   
@@ -125,15 +125,31 @@ const PendingApprovalsTab = () => {
       )}
 
       {filteredPayments.length > 1 && (
-        <div className="flex justify-end">
-          <button
-            onClick={() => setShowConfirm(true)}
-            disabled={approvingAll}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
-          >
-            <Icon name={approvingAll ? 'Loader2' : 'CheckCheck'} size={16} className={approvingAll ? 'animate-spin' : ''} />
-            {approvingAll ? 'Одобряем...' : `Одобрить все (${filteredPayments.length})`}
-          </button>
+        <div className="flex flex-col gap-3">
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowConfirm(true)}
+              disabled={approvingAll}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+            >
+              <Icon name={approvingAll ? 'Loader2' : 'CheckCheck'} size={16} className={approvingAll ? 'animate-spin' : ''} />
+              {approvingAll ? 'Одобряем...' : `Одобрить все (${filteredPayments.length})`}
+            </button>
+          </div>
+          {approveProgress && (
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Обрабатываем платежи...</span>
+                <span>{approveProgress.current} / {approveProgress.total}</span>
+              </div>
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-green-500 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.round((approveProgress.current / approveProgress.total) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
