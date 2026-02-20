@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { API_ENDPOINTS } from '@/config/api';
+import { apiFetch } from '@/utils/api';
 
 interface CustomField {
   id: number;
@@ -50,9 +52,26 @@ interface PaymentDetailsModalProps {
   isPlannedPayment?: boolean;
 }
 
+interface PaymentView {
+  user_id: number;
+  full_name: string;
+  viewed_at: string;
+}
+
 const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove, onReject, onEdit, isPlannedPayment }: PaymentDetailsModalProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
-  
+  const [views, setViews] = useState<PaymentView[]>([]);
+
+  useEffect(() => {
+    if (!payment) return;
+    const viewsUrl = `${API_ENDPOINTS.main}?endpoint=payment-views&payment_id=${payment.id}`;
+    apiFetch(viewsUrl, { method: 'POST' })
+      .then(() => apiFetch(viewsUrl))
+      .then(r => r.json())
+      .then(data => setViews(data.views ?? []))
+      .catch(() => {});
+  }, [payment?.id]);
+
   if (!payment) return null;
 
   const getStatusBadge = (status?: string) => {
@@ -101,6 +120,30 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                 <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
               </div>
             </div>
+
+            {views.length > 0 && (
+              <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                <div className="flex items-center gap-1.5 w-full mb-1">
+                  <Icon name="Eye" size={14} className="text-primary" />
+                  <span className="text-xs font-medium text-primary">Просмотрено</span>
+                </div>
+                {views.map((v) => (
+                  <div
+                    key={v.user_id}
+                    className="flex items-center gap-1.5 bg-primary/15 rounded-full px-2.5 py-1"
+                    title={new Date(v.viewed_at).toLocaleString('ru-RU')}
+                  >
+                    <div className="w-5 h-5 rounded-full bg-primary/30 flex items-center justify-center text-[10px] font-bold text-primary">
+                      {v.full_name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-xs text-foreground">{v.full_name}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(v.viewed_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {payment.rejection_comment && payment.status === 'rejected' && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">

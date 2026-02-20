@@ -388,6 +388,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_saving_reasons(method, event, conn)
         elif endpoint == 'planned-payments':
             return handle_planned_payments(method, event, conn)
+        elif endpoint == 'payment-views':
+            return handle_payment_views(method, event, conn)
         # Endpoints requiring auth
         auth_endpoints = {
             'comments': lambda p, u: handle_comments(method, event, conn, u),
@@ -3668,6 +3670,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_savings_dashboard(method, event, conn, payload)
         elif endpoint == 'planned-payments':
             result = handle_planned_payments(method, event, conn)
+        elif endpoint == 'payment-views':
+            result = handle_payment_views(method, event, conn)
         else:
             result = response(404, {'error': f'Endpoint not found: {endpoint}'})
         
@@ -3681,6 +3685,57 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         print(f"Traceback: {error_details}")
         conn.close()
         return response(500, {'error': str(e), 'details': error_details})
+
+def handle_payment_views(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Запись и чтение фактов просмотра платежа согласующим"""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        payload, error = verify_token(event), None
+        if not payload:
+            return response(401, {'error': 'Unauthorized'})
+
+        user_id = payload['user_id']
+        params = event.get('queryStringParameters') or {}
+        payment_id = params.get('payment_id')
+
+        if method == 'GET':
+            if not payment_id:
+                return response(400, {'error': 'payment_id is required'})
+            cur.execute(
+                f"""SELECT pv.user_id, u.full_name, pv.viewed_at
+                    FROM {SCHEMA}.payment_views pv
+                    JOIN {SCHEMA}.users u ON u.id = pv.user_id
+                    WHERE pv.payment_id = %s
+                    ORDER BY pv.viewed_at ASC""",
+                (payment_id,)
+            )
+            views = [dict(row) for row in cur.fetchall()]
+            return response(200, {'views': views})
+
+        elif method == 'POST':
+            if not payment_id:
+                return response(400, {'error': 'payment_id is required'})
+            cur.execute(
+                f"""INSERT INTO {SCHEMA}.payment_views (payment_id, user_id, viewed_at)
+                    VALUES (%s, %s, NOW())
+                    ON CONFLICT (payment_id, user_id) DO UPDATE SET viewed_at = NOW()
+                    RETURNING user_id, viewed_at""",
+                (payment_id, user_id)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            cur.execute(f"SELECT full_name FROM {SCHEMA}.users WHERE id = %s", (user_id,))
+            user_row = cur.fetchone()
+            return response(200, {
+                'user_id': row['user_id'],
+                'full_name': user_row['full_name'] if user_row else '',
+                'viewed_at': row['viewed_at'].isoformat() if row['viewed_at'] else None
+            })
+
+        return response(405, {'error': 'Method not allowed'})
+    finally:
+        cur.close()
+
 
 # Tickets handlers
 def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
