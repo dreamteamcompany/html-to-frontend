@@ -145,8 +145,8 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
         return;
       }
       const result = await response.json();
-      console.log(`[Dict] ${key}:`, Array.isArray(result) ? result.length : result);
-      setData(prev => ({ ...prev, [key]: Array.isArray(result) ? result : [] }));
+      const list = Array.isArray(result) ? result : (result[key] ?? result[Object.keys(result)[0]] ?? []);
+      setData(prev => ({ ...prev, [key]: Array.isArray(list) ? list : [] }));
     } catch (error) {
       console.error(`Failed to load ${key}:`, error);
     } finally {

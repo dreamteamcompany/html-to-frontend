@@ -71,16 +71,8 @@ const Savings = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('[Savings] Loaded services:', data);
-        console.log('[Savings] Is array?', Array.isArray(data));
-        console.log('[Savings] Type:', typeof data);
-        
-        const servicesList = data.services || data;
-        console.log('[Savings] Services list:', servicesList);
-        
-        setServices(Array.isArray(servicesList) ? servicesList : []);
-      } else {
-        console.error('[Savings] Failed to load services, status:', response.status);
+        const servicesList = Array.isArray(data) ? data : (data.services ?? []);
+        setServices(servicesList);
       }
     } catch (err) {
       console.error('[Savings] Failed to load services:', err);
@@ -132,7 +124,7 @@ const Savings = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setDepartments(Array.isArray(data) ? data : []);
+        setDepartments(Array.isArray(data) ? data : (data.departments ?? []));
       }
     } catch (err) {
       console.error('Failed to load departments:', err);
