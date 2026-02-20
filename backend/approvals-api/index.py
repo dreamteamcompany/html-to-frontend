@@ -242,12 +242,10 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         if not is_admin and not is_ceo and not is_intermediate_approver and not is_final_approver:
             cur.close()
             return response(403, {'error': 'Вы не являетесь утверждающим для этого платежа'})
-        # Администратор, CEO или финальный согласующий может одобрить платеж со статусом pending_ceo
-        if payment['status'] == 'pending_ceo' and (is_final_approver or is_admin or is_ceo):
-            new_status = 'approved'
-        else:
+        if not str(payment['status']).startswith('pending_'):
             cur.close()
             return response(400, {'error': 'Неверный статус платежа для утверждения'})
+        new_status = 'approved'
     elif approval_action.action == 'revoke':
         # Проверяем, что платёж можно отозвать (на согласовании или одобрен)
         if payment['status'] not in ('pending_ceo', 'pending_tech_director', 'approved'):
@@ -281,7 +279,7 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     now_moscow = datetime.now(moscow_tz).replace(tzinfo=None)
     
     # Обновляем статус платежа
-    if new_status == 'approved' and (is_final_approver or is_admin or is_ceo):
+    if new_status == 'approved' and (is_final_approver or is_admin or is_ceo or str(payment['status']).startswith('pending_')):
         cur.execute(f"""
             UPDATE {SCHEMA}.payments
             SET status = %s, 
