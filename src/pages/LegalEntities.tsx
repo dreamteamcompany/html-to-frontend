@@ -210,7 +210,7 @@ const LegalEntities = () => {
                 {entities.map((entity) => (
                   <div
                     key={entity.id}
-                    className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors"
+                    className="border border-primary/25 rounded-lg p-4 hover:border-primary/50 hover:bg-primary/[0.03] transition-all"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
