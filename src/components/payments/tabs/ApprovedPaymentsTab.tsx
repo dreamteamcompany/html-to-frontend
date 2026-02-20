@@ -43,9 +43,10 @@ const ApprovedPaymentsTab = () => {
 
   const handleRevoke = async (paymentId: number) => {
     try {
-      await apiFetch(`${API_ENDPOINTS.paymentsApi}/${paymentId}`, {
+      await apiFetch(API_ENDPOINTS.approvalsApi, {
         method: 'PUT',
-        body: JSON.stringify({ status: 'draft' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_id: paymentId, action: 'revoke', comment: 'Отозвано' })
       });
       fetchApprovedPayments();
     } catch (error) {
