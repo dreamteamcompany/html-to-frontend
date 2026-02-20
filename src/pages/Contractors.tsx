@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import { useCrudPage } from '@/hooks/useCrudPage';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
-import ContractorsHeader from '@/components/contractors/ContractorsHeader';
 import ContractorForm from '@/components/contractors/ContractorForm';
 import ContractorsList from '@/components/contractors/ContractorsList';
 
@@ -144,8 +143,6 @@ const Contractors = () => {
       )}
 
       <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <ContractorsHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-
         <ContractorForm
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}
