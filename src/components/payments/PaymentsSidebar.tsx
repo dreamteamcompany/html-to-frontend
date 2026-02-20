@@ -83,7 +83,7 @@ const PaymentsSidebar = ({
             </Link>
           </li>
         )}
-        {hasPermission('payments', 'read') && !user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор') && (
+        {hasPermission('payments', 'read') && (
           <li>
             <Link to="/payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
               <Icon name="CreditCard" size={20} />
