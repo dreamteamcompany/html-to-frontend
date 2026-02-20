@@ -22,13 +22,13 @@ const Payments = () => {
   useEffect(() => {
     const fetchCounters = async () => {
       try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        const response = await apiFetch(`${API_ENDPOINTS.paymentsApi}?scope=all`);
         const data = await response.json();
         const payments = Array.isArray(data) ? data : [];
         
         setCounters({
           my: payments.filter(p => !p.status || p.status === 'draft').length,
-          pending: payments.filter(p => p.status === 'pending_ceo' || p.status === 'pending_tech_director').length,
+          pending: payments.filter(p => p.status && p.status.startsWith('pending_')).length,
           approved: payments.filter(p => p.status === 'approved').length,
           rejected: payments.filter(p => p.status === 'rejected').length,
         });
