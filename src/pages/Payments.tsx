@@ -9,11 +9,14 @@ import ApprovedPaymentsTab from '@/components/payments/tabs/ApprovedPaymentsTab'
 import RejectedPaymentsTab from '@/components/payments/tabs/RejectedPaymentsTab';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Payments = () => {
+  const { user } = useAuth();
+  const isCEO = user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор');
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState('my');
+  const [activeTab, setActiveTab] = useState(isCEO ? 'pending' : 'my');
   const [counters, setCounters] = useState({ my: 0, pending: 0, approved: 0, rejected: 0 });
 
   useEffect(() => {
@@ -86,6 +89,7 @@ const Payments = () => {
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full justify-start border-b border-white/10 rounded-none bg-transparent p-0 h-auto mb-6">
+              {!isCEO && (
               <TabsTrigger 
                 value="my" 
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
@@ -98,6 +102,7 @@ const Payments = () => {
                   </span>
                 )}
               </TabsTrigger>
+              )}
               <TabsTrigger 
                 value="pending" 
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 relative"
@@ -136,9 +141,11 @@ const Payments = () => {
               </TabsTrigger>
             </TabsList>
 
+            {!isCEO && (
             <TabsContent value="my" className="mt-0">
               <MyPaymentsTab />
             </TabsContent>
+            )}
 
             <TabsContent value="pending" className="mt-0">
               <PendingApprovalsTab />
