@@ -221,14 +221,15 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     is_intermediate_approver = payment['intermediate_approver_id'] == user_id
     is_final_approver = payment['final_approver_id'] == user_id
     
-    # Проверяем, является ли пользователь администратором
+    # Проверяем, является ли пользователь администратором или CEO
     cur.execute(f"""
-        SELECT COUNT(*) as cnt FROM {SCHEMA}.user_roles ur
+        SELECT r.name FROM {SCHEMA}.user_roles ur
         JOIN {SCHEMA}.roles r ON ur.role_id = r.id
-        WHERE ur.user_id = %s AND r.name = 'Администратор'
+        WHERE ur.user_id = %s
     """, (user_id,))
-    result = cur.fetchone()
-    is_admin = result['cnt'] > 0 if result else False
+    user_roles = [row['name'] for row in cur.fetchall()]
+    is_admin = 'Администратор' in user_roles or 'Admin' in user_roles
+    is_ceo = 'CEO' in user_roles or 'Генеральный директор' in user_roles
     
     # Определяем новый статус
     if approval_action.action == 'submit':
@@ -253,12 +254,12 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
             cur.close()
             return response(400, {'error': 'Можно отозвать только платежи на согласовании или одобренные'})
         
-        # Проверяем, что отзывает создатель платежа или администратор
+        # Проверяем, что отзывает создатель платежа, администратор или CEO
         is_creator = payment.get('created_by') == user_id
         
-        if not is_creator and not is_admin:
+        if not is_creator and not is_admin and not is_ceo:
             cur.close()
-            return response(403, {'error': 'Только создатель платежа или администратор может его отозвать'})
+            return response(403, {'error': 'Только создатель платежа, администратор или CEO может его отозвать'})
         
         # Проверяем наличие причины отзыва
         if not approval_action.comment or not approval_action.comment.strip():

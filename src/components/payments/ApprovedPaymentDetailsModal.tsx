@@ -60,8 +60,9 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
   if (!payment) return null;
 
   const isCreator = user?.id === payment.created_by;
-  const isAdmin = user?.roles?.some(role => role.name === 'Администратор');
-  const canRevoke = isCreator || isAdmin;
+  const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin');
+  const isCEO = user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор');
+  const canRevoke = isCreator || isAdmin || isCEO;
 
   const handleRevokeClick = () => {
     setShowRevokeDialog(true);
