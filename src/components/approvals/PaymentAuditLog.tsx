@@ -15,18 +15,11 @@ interface AuditLog {
   full_name?: string;
 }
 
-interface PaymentView {
-  user_id: number;
-  full_name: string;
-  viewed_at: string;
-}
-
 interface PaymentAuditLogProps {
   paymentId: number;
-  views?: PaymentView[];
 }
 
-const PaymentAuditLog = ({ paymentId, views = [] }: PaymentAuditLogProps) => {
+const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
   const { token } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,33 +119,6 @@ const PaymentAuditLog = ({ paymentId, views = [] }: PaymentAuditLogProps) => {
 
   return (
     <div className="space-y-3">
-      <div className={`sticky top-0 z-10 rounded-lg border px-3 py-2.5 flex items-center gap-2.5 ${
-        views.length > 0
-          ? 'bg-green-500/10 border-green-500/30'
-          : 'bg-white/5 border-white/10'
-      }`}>
-        <Icon
-          name={views.length > 0 ? 'Eye' : 'EyeOff'}
-          size={16}
-          className={views.length > 0 ? 'text-green-400 flex-shrink-0' : 'text-muted-foreground flex-shrink-0'}
-        />
-        <div className="flex-1 min-w-0">
-          {views.length > 0 ? (
-            <div>
-              <p className="text-xs font-medium text-green-400">Просмотрено согласующим</p>
-              <p className="text-[11px] text-muted-foreground truncate">
-                {views.map(v => v.full_name).join(', ')} &mdash; последний просмотр{' '}
-                {new Date(views[views.length - 1].viewed_at).toLocaleString('ru-RU', {
-                  day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-                })}
-              </p>
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">Ещё не просмотрено согласующим</p>
-          )}
-        </div>
-      </div>
-
       {logs.map((log) => (
         <div
           key={log.id}

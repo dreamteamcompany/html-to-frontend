@@ -303,7 +303,7 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                 </TabsList>
                 
                 <TabsContent value="history" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
-                  <PaymentAuditLog paymentId={payment.id} views={views} />
+                  <PaymentAuditLog paymentId={payment.id} />
                 </TabsContent>
               </Tabs>
             )}
