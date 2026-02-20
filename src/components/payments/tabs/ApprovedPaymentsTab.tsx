@@ -6,6 +6,10 @@ import Icon from '@/components/ui/icon';
 import ApprovedPaymentDetailsModal from '@/components/payments/ApprovedPaymentDetailsModal';
 import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface ExtendedPayment extends Payment {
   ceo_approved_at?: string;
@@ -17,6 +21,10 @@ const ApprovedPaymentsTab = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<ExtendedPayment | null>(null);
+  const [revokePaymentId, setRevokePaymentId] = useState<number | null>(null);
+  const [revokeComment, setRevokeComment] = useState('');
+  const [isRevoking, setIsRevoking] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchApprovedPayments();
@@ -41,16 +49,38 @@ const ApprovedPaymentsTab = () => {
     }
   };
 
-  const handleRevoke = async (paymentId: number) => {
+  const handleRevokeClick = (e: React.MouseEvent, paymentId: number) => {
+    e.stopPropagation();
+    setRevokePaymentId(paymentId);
+    setRevokeComment('');
+  };
+
+  const handleRevokeConfirm = async () => {
+    if (!revokeComment.trim()) {
+      toast({ title: 'Ошибка', description: 'Укажите причину отзыва', variant: 'destructive' });
+      return;
+    }
+    if (!revokePaymentId) return;
+    setIsRevoking(true);
     try {
-      await apiFetch(API_ENDPOINTS.approvalsApi, {
+      const response = await apiFetch(API_ENDPOINTS.approvalsApi, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payment_id: paymentId, action: 'revoke', comment: 'Отозвано' })
+        body: JSON.stringify({ payment_id: revokePaymentId, action: 'revoke', comment: revokeComment.trim() })
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Не удалось отозвать платёж');
+      }
+      toast({ title: 'Успешно', description: 'Платёж отозван и возвращён в черновики' });
+      setRevokePaymentId(null);
+      setRevokeComment('');
       fetchApprovedPayments();
     } catch (error) {
       console.error('Failed to revoke payment:', error);
+      toast({ title: 'Ошибка', description: error instanceof Error ? error.message : 'Не удалось отозвать платёж', variant: 'destructive' });
+    } finally {
+      setIsRevoking(false);
     }
   };
 
@@ -166,10 +196,7 @@ const ApprovedPaymentsTab = () => {
                       <div className="text-2xl font-bold">{formatAmount(payment.amount)}</div>
                     </div>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRevoke(payment.id);
-                      }}
+                      onClick={(e) => handleRevokeClick(e, payment.id)}
                       className="px-4 py-2 text-sm rounded bg-orange-600 text-white hover:bg-orange-700 font-medium w-full lg:w-auto"
                     >
                       Отозвать согласование
@@ -185,7 +212,35 @@ const ApprovedPaymentsTab = () => {
       <ApprovedPaymentDetailsModal
         payment={selectedPayment}
         onClose={() => setSelectedPayment(null)}
+        onRevoked={fetchApprovedPayments}
       />
+
+      <Dialog open={revokePaymentId !== null} onOpenChange={(open) => !open && setRevokePaymentId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Отозвать согласование</DialogTitle>
+            <DialogDescription>Платёж будет возвращён в черновики. Укажите причину.</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Причина отзыва..."
+            value={revokeComment}
+            onChange={(e) => setRevokeComment(e.target.value)}
+            className="min-h-[100px]"
+          />
+          <div className="flex gap-3 justify-end mt-2">
+            <Button variant="outline" onClick={() => setRevokePaymentId(null)} disabled={isRevoking}>
+              Отмена
+            </Button>
+            <Button
+              onClick={handleRevokeConfirm}
+              disabled={isRevoking || !revokeComment.trim()}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {isRevoking ? 'Отзываем...' : 'Отозвать'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
