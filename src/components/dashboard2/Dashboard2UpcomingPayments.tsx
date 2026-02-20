@@ -22,26 +22,45 @@ const Dashboard2UpcomingPayments = () => {
     const fetchPayments = async () => {
       setLoading(true);
       try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        const data = await response.json();
-        
+        const [paymentsRes, plannedRes] = await Promise.all([
+          apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`),
+          apiFetch(`${API_ENDPOINTS.main}?endpoint=planned-payments`),
+        ]);
+        const paymentsData = await paymentsRes.json();
+        const plannedData = await plannedRes.json();
+
         const now = new Date();
         const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        
-        const upcoming = (Array.isArray(data) ? data : [])
+
+        const isUpcoming = (date: string | undefined) => {
+          if (!date) return false;
+          const d = new Date(date);
+          return d >= now && d <= sevenDaysFromNow;
+        };
+
+        const fromPayments = (Array.isArray(paymentsData) ? paymentsData : [])
           .filter((p: Payment) => {
-            if (!p.planned_date) return false;
             if (p.status === 'paid' || p.status === 'cancelled') return false;
-            const plannedDate = new Date(p.planned_date);
-            return plannedDate >= now && plannedDate <= sevenDaysFromNow;
+            return isUpcoming(p.payment_date) || isUpcoming(p.planned_date);
           })
-          .sort((a: Payment, b: Payment) => {
-            const dateA = new Date(a.planned_date!);
-            const dateB = new Date(b.planned_date!);
-            return dateA.getTime() - dateB.getTime();
+          .map((p: Payment) => ({
+            ...p,
+            planned_date: p.planned_date || p.payment_date,
+          }));
+
+        const fromPlanned = (Array.isArray(plannedData) ? plannedData : [])
+          .filter((p: Payment) => {
+            if (p.is_active === false) return false;
+            return isUpcoming(p.planned_date);
           });
-        
-        setPayments(upcoming);
+
+        const combined = [...fromPayments, ...fromPlanned].sort((a: Payment, b: Payment) => {
+          const dateA = new Date(a.planned_date!);
+          const dateB = new Date(b.planned_date!);
+          return dateA.getTime() - dateB.getTime();
+        });
+
+        setPayments(combined);
       } catch (error) {
         console.error('Failed to fetch upcoming payments:', error);
       } finally {
