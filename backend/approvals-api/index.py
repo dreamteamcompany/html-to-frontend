@@ -238,12 +238,12 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
             return response(400, {'error': 'Только черновики и отклонённые платежи можно отправить на согласование'})
         new_status = 'pending_ceo'
     elif approval_action.action == 'approve':
-        # Администратор может согласовывать любые платежи
-        if not is_admin and not is_intermediate_approver and not is_final_approver:
+        # Администратор и CEO могут согласовывать любые платежи
+        if not is_admin and not is_ceo and not is_intermediate_approver and not is_final_approver:
             cur.close()
             return response(403, {'error': 'Вы не являетесь утверждающим для этого платежа'})
-        # Администратор или финальный согласующий может одобрить платеж со статусом pending_ceo
-        if payment['status'] == 'pending_ceo' and (is_final_approver or is_admin):
+        # Администратор, CEO или финальный согласующий может одобрить платеж со статусом pending_ceo
+        if payment['status'] == 'pending_ceo' and (is_final_approver or is_admin or is_ceo):
             new_status = 'approved'
         else:
             cur.close()
@@ -268,8 +268,8 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         
         new_status = 'draft'  # Возвращаем в черновики
     elif approval_action.action == 'reject':
-        # Администратор может отклонять любые платежи
-        if not is_admin and not is_intermediate_approver and not is_final_approver:
+        # Администратор и CEO могут отклонять любые платежи
+        if not is_admin and not is_ceo and not is_intermediate_approver and not is_final_approver:
             cur.close()
             return response(403, {'error': 'Вы не являетесь утверждающим для этого платежа'})
         new_status = 'rejected'
@@ -281,7 +281,7 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     now_moscow = datetime.now(moscow_tz).replace(tzinfo=None)
     
     # Обновляем статус платежа
-    if new_status == 'approved' and (is_final_approver or is_admin):
+    if new_status == 'approved' and (is_final_approver or is_admin or is_ceo):
         cur.execute(f"""
             UPDATE {SCHEMA}.payments
             SET status = %s, 
