@@ -126,7 +126,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 where_clause = ""
                 params = tuple()
             else:
-                where_clause = "WHERE p.created_by = %s AND (p.status IS NULL OR p.status = 'draft')"
+                where_clause = "WHERE p.created_by = %s"
                 params = (payload['user_id'],)
             
             cur.execute(f"""

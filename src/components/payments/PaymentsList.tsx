@@ -20,19 +20,25 @@ interface PaymentsListProps {
 
 const getStatusBadge = (status?: string) => {
   if (!status || status === 'draft') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20" style={{ color: '#000000' }}>Черновик</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-muted-foreground">Черновик</span>;
+  }
+  if (status === 'pending_ib') {
+    return <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300 font-medium">На согласовании (ИБ)</span>;
+  }
+  if (status === 'pending_cfo') {
+    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-300 font-medium">На согласовании (CFO)</span>;
   }
   if (status === 'pending_ceo') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-blue-500 text-white font-medium">Ожидает CEO</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300 font-medium">На согласовании (CEO)</span>;
   }
   if (status === 'approved') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20" style={{ color: '#000000' }}>Одобрен</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300">Одобрен</span>;
   }
   if (status === 'rejected') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20" style={{ color: '#000000' }}>Отклонен</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-300">Отклонён</span>;
   }
   if (status === 'revoked') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20" style={{ color: '#000000' }}>⚠ Отозван</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-300">Отозван</span>;
   }
   return null;
 };
