@@ -80,7 +80,7 @@ export const usePlannedPaymentForm = (
     try {
       const cleanAmount = formData.amount.replace(/\s+/g, '');
       
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=payments`, {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,14 +90,15 @@ export const usePlannedPaymentForm = (
           category_id: parseInt(formData.category_id),
           amount: parseFloat(cleanAmount),
           description: formData.description,
-          payment_date: formData.planned_date,
+          planned_date: formData.planned_date,
           legal_entity_id: formData.legal_entity_id ? parseInt(formData.legal_entity_id) : null,
           contractor_id: formData.contractor_id ? parseInt(formData.contractor_id) : null,
           department_id: formData.department_id ? parseInt(formData.department_id) : null,
           service_id: formData.service_id ? parseInt(formData.service_id) : null,
           invoice_number: formData.invoice_number,
           invoice_date: formData.invoice_date || null,
-          is_planned: true,
+          recurrence_type: formData.recurrence_type || 'once',
+          recurrence_end_date: formData.recurrence_end_date || null,
         }),
       });
 
