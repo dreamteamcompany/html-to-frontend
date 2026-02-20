@@ -3690,7 +3690,7 @@ def handle_payment_views(method: str, event: Dict[str, Any], conn) -> Dict[str, 
     """Запись и чтение фактов просмотра платежа согласующим"""
     cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        payload, error = verify_token(event), None
+        payload = verify_token(event)
         if not payload:
             return response(401, {'error': 'Unauthorized'})
 
