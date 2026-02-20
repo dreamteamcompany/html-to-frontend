@@ -94,17 +94,31 @@ export const usePendingApprovalsData = () => {
 
   const handleApproveAll = useCallback(async (paymentIds: number[]) => {
     if (paymentIds.length === 0) return;
-    const results = await Promise.allSettled(
-      paymentIds.map(id =>
-        fetch(`${API_ENDPOINTS.approvalsApi}`, {
-          method: 'PUT',
-          headers: { 'X-Auth-Token': token!, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payment_id: id, action: 'approve', comment: '' }),
-        })
-      )
-    );
-    const succeeded = results.filter(r => r.status === 'fulfilled' && (r.value as Response).ok).length;
-    const failed = paymentIds.length - succeeded;
+
+    const BATCH_SIZE = 5;
+    const DELAY_MS = 300;
+    let succeeded = 0;
+    let failed = 0;
+
+    for (let i = 0; i < paymentIds.length; i += BATCH_SIZE) {
+      const batch = paymentIds.slice(i, i + BATCH_SIZE);
+      const results = await Promise.allSettled(
+        batch.map(id =>
+          fetch(`${API_ENDPOINTS.approvalsApi}`, {
+            method: 'PUT',
+            headers: { 'X-Auth-Token': token!, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payment_id: id, action: 'approve', comment: '' }),
+          })
+        )
+      );
+      succeeded += results.filter(r => r.status === 'fulfilled' && (r.value as Response).ok).length;
+      failed += results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !(r.value as Response).ok)).length;
+
+      if (i + BATCH_SIZE < paymentIds.length) {
+        await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+      }
+    }
+
     setAllPayments(prev => prev.filter(p => !paymentIds.includes(p.id!)));
     toast({
       title: succeeded > 0 ? 'Успешно' : 'Ошибка',
