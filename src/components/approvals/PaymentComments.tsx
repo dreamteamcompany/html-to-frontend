@@ -60,7 +60,7 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
 
     try {
       const response = await fetch(
-        '${API_ENDPOINTS.main}?endpoint=comments',
+        `${API_ENDPOINTS.main}?endpoint=comments`,
         {
           method: 'POST',
           headers: {
@@ -96,7 +96,7 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
 
     try {
       const response = await fetch(
-        '${API_ENDPOINTS.main}?endpoint=comments',
+        `${API_ENDPOINTS.main}?endpoint=comments`,
         {
           method: 'POST',
           headers: {
@@ -132,7 +132,7 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
   const handleLike = async (commentId: number, isLiked: boolean) => {
     try {
       const response = await fetch(
-        '${API_ENDPOINTS.main}?endpoint=comment-likes',
+        `${API_ENDPOINTS.main}?endpoint=comment-likes`,
         {
           method: isLiked ? 'DELETE' : 'POST',
           headers: {
