@@ -20,6 +20,7 @@ interface DayGroup {
 const Dashboard2UpcomingPayments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -83,8 +84,11 @@ const Dashboard2UpcomingPayments = () => {
     return 'DollarSign';
   };
 
-  const formatAmount = (amount: number) =>
-    new Intl.NumberFormat('ru-RU').format(amount) + ' ₽';
+  const formatAmount = (amount: number | string) => {
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(num)) return '— ₽';
+    return new Intl.NumberFormat('ru-RU').format(num) + ' ₽';
+  };
 
   const groupByDay = (payments: Payment[]): DayGroup[] => {
     const map = new Map<string, Payment[]>();
@@ -121,7 +125,7 @@ const Dashboard2UpcomingPayments = () => {
         sublabel = weekdays[date.getDay()];
       }
 
-      const total = items.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const total = items.reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
       const diffDays = (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
 
       groups.push({
@@ -139,8 +143,120 @@ const Dashboard2UpcomingPayments = () => {
     return groups.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
   };
 
-  const weekTotal = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const weekTotal = payments.reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
   const groups = groupByDay(payments);
+
+  const PaymentCard = ({ payment, accentColor }: { payment: Payment; accentColor: string }) => {
+    const icon = getCategoryIcon(payment.category_name);
+    return (
+      <div style={{
+        background: 'hsl(var(--card))',
+        border: '1px solid hsl(var(--border))',
+        borderRadius: '10px',
+        padding: '10px',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '10px',
+        transition: 'border-color 0.2s',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = accentColor; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'hsl(var(--border))'; }}>
+        <div style={{
+          width: '30px',
+          height: '30px',
+          borderRadius: '8px',
+          background: `${accentColor}20`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <Icon name={icon} size={14} style={{ color: accentColor }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: '12px',
+            fontWeight: 700,
+            color: 'hsl(var(--foreground))',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {payment.description || payment.contractor_name || payment.service_name || 'Платёж'}
+          </div>
+          {payment.category_name && (
+            <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>
+              {payment.category_name}
+            </div>
+          )}
+          <div style={{ fontSize: '13px', fontWeight: 800, color: 'hsl(var(--foreground))', marginTop: '4px' }}>
+            {formatAmount(payment.amount)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const DayColumn = ({ group }: { group: DayGroup }) => {
+    const accentColor = group.isUrgent ? dashboardColors.red : group.isTomorrow ? dashboardColors.orange : dashboardColors.green;
+    return (
+      <div style={{
+        background: `${accentColor}08`,
+        border: `1.5px solid ${accentColor}30`,
+        borderRadius: '14px',
+        overflow: 'hidden',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {/* Шапка дня */}
+        <div style={{
+          background: `${accentColor}15`,
+          borderBottom: `1px solid ${accentColor}25`,
+          padding: '12px 14px',
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: accentColor }}>
+                {group.label}
+              </div>
+              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '1px' }}>
+                {group.sublabel}
+              </div>
+            </div>
+            <div style={{
+              background: accentColor,
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '3px 8px',
+              fontSize: '11px',
+              fontWeight: 700,
+            }}>
+              {group.payments.length}
+            </div>
+          </div>
+          <div style={{ fontSize: '15px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>
+            {formatAmount(group.total)}
+          </div>
+        </div>
+
+        {/* Платежи */}
+        <div style={{
+          padding: '10px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          overflowY: 'auto',
+          flex: 1,
+        }}>
+          {group.payments.map((payment) => (
+            <PaymentCard key={payment.id} payment={payment} accentColor={accentColor} />
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Card style={{
@@ -151,7 +267,7 @@ const Dashboard2UpcomingPayments = () => {
     }}>
       <CardContent className="p-4 sm:p-6">
         {/* Заголовок */}
-        <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div style={{
               background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)',
@@ -173,26 +289,13 @@ const Dashboard2UpcomingPayments = () => {
           </div>
 
           {!loading && payments.length > 0 && (
-            <div style={{
-              background: 'rgba(255,181,71,0.12)',
-              border: '1px solid rgba(255,181,71,0.3)',
-              borderRadius: '10px',
-              padding: '10px 18px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-end',
-              gap: '2px',
-              minWidth: '160px',
-            }}>
-              <span style={{ fontSize: '11px', color: dashboardColors.orange, fontWeight: 600 }}>
-                Итого за 7 дней
-              </span>
-              <span style={{ fontSize: '18px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>
                 {formatAmount(weekTotal)}
-              </span>
-              <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}>
+              </div>
+              <div style={{ fontSize: '11px', color: dashboardColors.orange, fontWeight: 600 }}>
                 {payments.length} {payments.length === 1 ? 'платёж' : payments.length < 5 ? 'платежа' : 'платежей'}
-              </span>
+              </div>
             </div>
           )}
         </div>
@@ -210,130 +313,106 @@ const Dashboard2UpcomingPayments = () => {
             </p>
           </div>
         ) : (
-          /* Горизонтальный таймлайн */
-          <div style={{
-            overflowX: 'auto',
-            paddingBottom: '8px',
-          }}>
-            <div style={{
-              display: 'flex',
-              gap: '12px',
-              minWidth: 'max-content',
-              alignItems: 'flex-start',
-            }}>
-              {groups.map((group) => {
-                const accentColor = group.isUrgent ? dashboardColors.red : group.isTomorrow ? dashboardColors.orange : dashboardColors.green;
-
-                return (
-                  <div key={group.dateKey} style={{
-                    width: '220px',
-                    flexShrink: 0,
-                    background: `${accentColor}08`,
-                    border: `1.5px solid ${accentColor}30`,
-                    borderRadius: '14px',
-                    overflow: 'hidden',
-                  }}>
-                    {/* Шапка дня */}
-                    <div style={{
-                      background: `${accentColor}15`,
-                      borderBottom: `1px solid ${accentColor}25`,
-                      padding: '12px 14px',
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <div>
-                          <div style={{ fontSize: '14px', fontWeight: 800, color: accentColor }}>
-                            {group.label}
-                          </div>
-                          <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '1px' }}>
-                            {group.sublabel}
-                          </div>
-                        </div>
-                        <div style={{
-                          background: accentColor,
-                          color: '#fff',
-                          borderRadius: '8px',
-                          padding: '3px 8px',
-                          fontSize: '11px',
-                          fontWeight: 700,
-                        }}>
-                          {group.payments.length}
-                        </div>
-                      </div>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>
-                        {formatAmount(group.total)}
-                      </div>
-                    </div>
-
-                    {/* Платежи */}
-                    <div style={{
-                      padding: '10px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px',
-                      maxHeight: '280px',
-                      overflowY: 'auto',
-                    }}>
-                      {group.payments.map((payment) => {
-                        const icon = getCategoryIcon(payment.category_name);
-                        return (
-                          <div key={payment.id} style={{
-                            background: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '10px',
-                            padding: '10px',
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '10px',
-                            transition: 'border-color 0.2s',
-                            cursor: 'default',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = accentColor;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = 'hsl(var(--border))';
-                          }}>
-                            <div style={{
-                              width: '30px',
-                              height: '30px',
-                              borderRadius: '8px',
-                              background: `${accentColor}20`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                            }}>
-                              <Icon name={icon} size={14} style={{ color: accentColor }} />
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                color: 'hsl(var(--foreground))',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}>
-                                {payment.description || payment.contractor_name || payment.service_name || 'Платёж'}
-                              </div>
-                              {payment.category_name && (
-                                <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>
-                                  {payment.category_name}
-                                </div>
-                              )}
-                              <div style={{ fontSize: '13px', fontWeight: 800, color: 'hsl(var(--foreground))', marginTop: '4px' }}>
-                                {formatAmount(payment.amount)}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+          <>
+            {/* Десктоп: горизонтальный таймлайн */}
+            <div className="hidden sm:block" style={{ overflowX: 'auto', paddingBottom: '8px' }}>
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                minWidth: 'max-content',
+                alignItems: 'stretch',
+              }}>
+                {groups.map((group) => (
+                  <div key={group.dateKey} style={{ width: '220px', flexShrink: 0 }}>
+                    <DayColumn group={group} />
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
+
+            {/* Мобилка: карусель */}
+            <div className="sm:hidden">
+              {/* Точки-навигация */}
+              {groups.length > 1 && (
+                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginBottom: '12px' }}>
+                  {groups.map((group, i) => {
+                    const accentColor = group.isUrgent ? dashboardColors.red : group.isTomorrow ? dashboardColors.orange : dashboardColors.green;
+                    return (
+                      <button
+                        key={group.dateKey}
+                        onClick={() => setActiveIndex(i)}
+                        style={{
+                          width: i === activeIndex ? '24px' : '8px',
+                          height: '8px',
+                          borderRadius: '4px',
+                          background: i === activeIndex ? accentColor : 'hsl(var(--border))',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          padding: 0,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Активная карточка дня */}
+              <DayColumn group={groups[activeIndex]} />
+
+              {/* Кнопки листания */}
+              {groups.length > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', gap: '8px' }}>
+                  <button
+                    onClick={() => setActiveIndex(i => Math.max(0, i - 1))}
+                    disabled={activeIndex === 0}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '10px',
+                      border: '1px solid hsl(var(--border))',
+                      background: 'hsl(var(--background))',
+                      color: activeIndex === 0 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+                      cursor: activeIndex === 0 ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      opacity: activeIndex === 0 ? 0.4 : 1,
+                    }}
+                  >
+                    <Icon name="ChevronLeft" size={16} />
+                    Назад
+                  </button>
+                  <button
+                    onClick={() => setActiveIndex(i => Math.min(groups.length - 1, i + 1))}
+                    disabled={activeIndex === groups.length - 1}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '10px',
+                      border: '1px solid hsl(var(--border))',
+                      background: 'hsl(var(--background))',
+                      color: activeIndex === groups.length - 1 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+                      cursor: activeIndex === groups.length - 1 ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      opacity: activeIndex === groups.length - 1 ? 0.4 : 1,
+                    }}
+                  >
+                    Вперёд
+                    <Icon name="ChevronRight" size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
