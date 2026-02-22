@@ -183,7 +183,7 @@ const MonthlyDynamicsChart = () => {
             return new Intl.NumberFormat('ru-RU', { notation: 'compact' }).format(v);
           },
         },
-        grid: { color: 'hsl(var(--border))', lineWidth: isMobile ? 0.5 : 1 },
+        grid: { color: 'rgba(117, 81, 233, 0.08)', lineWidth: isMobile ? 0.5 : 1 },
       },
       x: {
         ticks: {
