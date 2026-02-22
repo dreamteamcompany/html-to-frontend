@@ -55,34 +55,21 @@ const PetalChart = ({ data, isMobile }: PetalChartProps) => {
   const segmentD = (startDeg: number, endDeg: number, r: number) => {
     const sR = toRad(startDeg);
     const eR = toRad(endDeg);
-
-    const cr = Math.min(isMobile ? 10 : 14, (r - innerR) * 0.3);
-    const anglePad      = cr > 0 ? Math.asin(Math.min(cr / r, 1)) : 0;
-    const innerAnglePad = cr > 0 ? Math.asin(Math.min(cr / innerR, 1)) : 0;
-
-    const oSx = cx + r * Math.cos(sR + anglePad);
-    const oSy = cy + r * Math.sin(sR + anglePad);
-    const oEx = cx + r * Math.cos(eR - anglePad);
-    const oEy = cy + r * Math.sin(eR - anglePad);
-
-    const iSx = cx + innerR * Math.cos(sR + innerAnglePad);
-    const iSy = cy + innerR * Math.sin(sR + innerAnglePad);
-    const iEx = cx + innerR * Math.cos(eR - innerAnglePad);
-    const iEy = cy + innerR * Math.sin(eR - innerAnglePad);
-
-    const rSx = cx + r * Math.cos(sR);
-    const rSy = cy + r * Math.sin(sR);
-    const rEx = cx + r * Math.cos(eR);
-    const rEy = cy + r * Math.sin(eR);
-
     const largeArc = (endDeg - startDeg) > 180 ? 1 : 0;
+
+    const oSx = cx + r * Math.cos(sR);
+    const oSy = cy + r * Math.sin(sR);
+    const oEx = cx + r * Math.cos(eR);
+    const oEy = cy + r * Math.sin(eR);
+    const iSx = cx + innerR * Math.cos(sR);
+    const iSy = cy + innerR * Math.sin(sR);
+    const iEx = cx + innerR * Math.cos(eR);
+    const iEy = cy + innerR * Math.sin(eR);
 
     return [
       `M ${iSx} ${iSy}`,
       `L ${oSx} ${oSy}`,
-      `Q ${rSx} ${rSy} ${oSx} ${oSy}`,
       `A ${r} ${r} 0 ${largeArc} 1 ${oEx} ${oEy}`,
-      `Q ${rEx} ${rEy} ${iEx} ${iEy}`,
       `L ${iEx} ${iEy}`,
       `A ${innerR} ${innerR} 0 ${largeArc} 0 ${iSx} ${iSy}`,
       'Z',
