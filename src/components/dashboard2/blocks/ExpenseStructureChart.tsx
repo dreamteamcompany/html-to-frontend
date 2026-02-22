@@ -62,13 +62,19 @@ interface RingChartProps {
 const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
 
-  const size = isMobile ? 280 : 380;
-  const cx = size / 2;
-  const cy = size / 2;
-  const ringGap = isMobile ? 10 : 13;
+  const maxRings  = Math.min(categories.length, 8);
   const ringThick = isMobile ? 12 : 16;
-  const innerR = isMobile ? 68 : 90;
-  const maxRings = Math.min(categories.length, 8);
+  const ringGap   = isMobile ? 10 : 13;
+  const innerR    = isMobile ? 60 : 80;
+  const outerR    = innerR + maxRings * (ringThick + ringGap);
+
+  // SVG viewBox: диаграмма слева, подписи справа
+  const chartW  = outerR * 2 + (isMobile ? 16 : 20);
+  const labelAreaW = isMobile ? 140 : 200;
+  const totalW  = chartW + labelAreaW;
+  const totalH  = Math.max(outerR * 2 + 20, maxRings * (isMobile ? 32 : 40) + 20);
+  const cx = outerR + (isMobile ? 8 : 10);
+  const cy = totalH / 2;
 
   const toRad = (deg: number) => (deg * Math.PI) / 180;
 
@@ -83,14 +89,6 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
     return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
   };
 
-  const connectorEnd = (r: number, deg: number) => {
-    const rad = toRad(deg - 90);
-    return {
-      x: cx + r * Math.cos(rad),
-      y: cy + r * Math.sin(rad),
-    };
-  };
-
   const fmt = (v: number) => {
     if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн ₽';
     if (v >= 1_000) return Math.round(v / 1_000) + ' тыс ₽';
@@ -98,22 +96,30 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
   };
 
   const rings = categories.slice(0, maxRings).map((cat, i) => {
-    const r = innerR + i * (ringThick + ringGap) + ringThick / 2;
-    const ratio = cat.amount / (categories[0]?.amount || 1);
-    const arcDeg = Math.max(15, ratio * 300);
+    const r       = innerR + i * (ringThick + ringGap) + ringThick / 2;
+    const ratio   = cat.amount / (categories[0]?.amount || 1);
+    const arcDeg  = Math.max(15, ratio * 300);
     const startDeg = -10;
-    const endDeg = startDeg + arcDeg;
-    const midDeg = (startDeg + endDeg) / 2;
+    const endDeg  = startDeg + arcDeg;
+    const midDeg  = (startDeg + endDeg) / 2;
     const palette = ARC_PALETTE[i % ARC_PALETTE.length];
-    return { cat, i, r, startDeg, endDeg, midDeg, palette, arcDeg };
+    return { cat, i, r, startDeg, endDeg, midDeg, palette };
   });
 
-  const outerR = innerR + maxRings * (ringThick + ringGap);
-  const labelR = outerR + (isMobile ? 22 : 28);
+  // Равномерно распределяем Y-позиции подписей
+  const rowH      = isMobile ? 32 : 40;
+  const labelsTop = cy - (maxRings * rowH) / 2 + rowH / 2;
+  const markerR   = isMobile ? 10 : 12;
+  const labelX    = cx + outerR + (isMobile ? 14 : 18);
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto' }}>
+      <svg
+        width={totalW}
+        height={totalH}
+        viewBox={`0 0 ${totalW} ${totalH}`}
+        style={{ overflow: 'visible', maxWidth: '100%' }}
+      >
         <defs>
           {rings.map(({ i, palette }) => (
             <linearGradient key={i} id={`arc-g-${i}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -130,13 +136,8 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
 
         {/* Фоновые кольца */}
         {rings.map(({ i, r }) => (
-          <circle
-            key={`bg-${i}`}
-            cx={cx} cy={cy} r={r}
-            fill="none"
-            stroke="rgba(255,255,255,0.04)"
-            strokeWidth={ringThick}
-          />
+          <circle key={`bg-${i}`} cx={cx} cy={cy} r={r}
+            fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={ringThick} />
         ))}
 
         {/* Цветные дуги */}
@@ -151,82 +152,76 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
               strokeWidth={isHov ? ringThick + 4 : ringThick}
               strokeLinecap="round"
               filter={isHov ? 'url(#arc-glow)' : undefined}
-              style={{ transition: 'stroke-width 0.2s', cursor: 'pointer', opacity: hovered !== null && !isHov ? 0.3 : 1 }}
+              style={{ transition: 'stroke-width 0.2s', cursor: 'pointer', opacity: hovered !== null && !isHov ? 0.25 : 1 }}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
             />
           );
         })}
 
-        {/* Коннекторы и маркеры */}
+        {/* Коннекторы + равномерные подписи */}
         {rings.map(({ i, r, midDeg, cat, palette }) => {
-          const isHov = hovered === i;
-          const arcEnd = connectorEnd(r + ringThick / 2 + 4, midDeg);
-          const labelPt = connectorEnd(labelR, midDeg);
-          const midPt = connectorEnd(r + ringThick / 2 + (isMobile ? 14 : 18), midDeg);
-          const markerR = isMobile ? 10 : 13;
-          const num = String(i + 1).padStart(2, '0');
+          const isHov   = hovered === i;
+          const labelY  = labelsTop + i * rowH;
+
+          // Точка на конце дуги (середина дуги по углу)
+          const arcRad  = toRad(midDeg - 90);
+          const arcPtX  = cx + (r + ringThick / 2 + 2) * Math.cos(arcRad);
+          const arcPtY  = cy + (r + ringThick / 2 + 2) * Math.sin(arcRad);
+
+          // Горизонтальная "полка" — от правой стороны диаграммы до начала подписи
+          const shelfX  = cx + outerR + (isMobile ? 6 : 8);
+          const num     = String(i + 1).padStart(2, '0');
 
           return (
-            <g key={`conn-${i}`} style={{ cursor: 'pointer' }}
+            <g key={`label-${i}`} style={{ cursor: 'pointer' }}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
-              opacity={hovered !== null && !isHov ? 0.3 : 1}
+              opacity={hovered !== null && !isHov ? 0.25 : 1}
             >
-              <line
-                x1={arcEnd.x} y1={arcEnd.y}
-                x2={midPt.x} y2={midPt.y}
+              {/* Линия от дуги к полке */}
+              <polyline
+                points={`${arcPtX},${arcPtY} ${shelfX},${labelY}`}
+                fill="none"
                 stroke={palette[1]}
                 strokeWidth={1}
-                strokeOpacity={0.5}
+                strokeOpacity={0.45}
+                strokeDasharray={isHov ? 'none' : '3 2'}
               />
+              {/* Горизонтальная полка */}
               <line
-                x1={midPt.x} y1={midPt.y}
-                x2={labelPt.x} y2={labelPt.y}
+                x1={shelfX} y1={labelY}
+                x2={labelX} y2={labelY}
                 stroke={palette[1]}
                 strokeWidth={1}
-                strokeOpacity={0.5}
+                strokeOpacity={0.45}
               />
-              <circle
-                cx={labelPt.x} cy={labelPt.y} r={markerR}
-                fill={palette[0]}
-                fillOpacity={isHov ? 0.9 : 0.7}
-                stroke={palette[1]}
-                strokeWidth={1.5}
+              {/* Маркер с номером */}
+              <circle cx={labelX + markerR} cy={labelY} r={markerR}
+                fill={palette[0]} fillOpacity={isHov ? 0.9 : 0.7}
+                stroke={palette[1]} strokeWidth={1.5}
               />
-              <text
-                x={labelPt.x} y={labelPt.y}
+              <text x={labelX + markerR} y={labelY}
                 textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 800, fill: '#fff', pointerEvents: 'none', userSelect: 'none' }}
-              >
+                style={{ fontSize: `${isMobile ? 8 : 9}px`, fontWeight: 800, fill: '#fff', pointerEvents: 'none', userSelect: 'none' }}>
                 {num}
               </text>
-
-              {/* Подпись категории */}
-              {(() => {
-                const rad = toRad(midDeg - 90);
-                const tx = labelPt.x + (Math.cos(rad) > 0 ? markerR + 6 : -(markerR + 6));
-                const anchor = Math.cos(rad) > 0 ? 'start' : 'end';
-                const nameShort = cat.name.length > 18 ? cat.name.slice(0, 17) + '…' : cat.name;
-                return (
-                  <g style={{ pointerEvents: 'none', userSelect: 'none' }}>
-                    <text
-                      x={tx} y={labelPt.y - (isMobile ? 5 : 6)}
-                      textAnchor={anchor} dominantBaseline="middle"
-                      style={{ fontSize: `${isMobile ? 9 : 11}px`, fontWeight: 700, fill: '#ffffff' }}
-                    >
-                      {nameShort}
-                    </text>
-                    <text
-                      x={tx} y={labelPt.y + (isMobile ? 5 : 7)}
-                      textAnchor={anchor} dominantBaseline="middle"
-                      style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 500, fill: palette[1] }}
-                    >
-                      {cat.value}% · {fmt(cat.amount)}
-                    </text>
-                  </g>
-                );
-              })()}
+              {/* Название */}
+              <text
+                x={labelX + markerR * 2 + (isMobile ? 5 : 7)}
+                y={labelY - (isMobile ? 4 : 5)}
+                textAnchor="start" dominantBaseline="middle"
+                style={{ fontSize: `${isMobile ? 9 : 11}px`, fontWeight: 700, fill: '#ffffff', pointerEvents: 'none', userSelect: 'none' }}>
+                {cat.name}
+              </text>
+              {/* Значение */}
+              <text
+                x={labelX + markerR * 2 + (isMobile ? 5 : 7)}
+                y={labelY + (isMobile ? 6 : 8)}
+                textAnchor="start" dominantBaseline="middle"
+                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 500, fill: palette[1], pointerEvents: 'none', userSelect: 'none' }}>
+                {cat.value}% · {fmt(cat.amount)}
+              </text>
             </g>
           );
         })}
@@ -239,9 +234,9 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
           style={{ fontSize: `${isMobile ? 9 : 11}px`, fontWeight: 600, fill: 'rgba(255,255,255,0.5)' }}>
           Итого
         </text>
-        <text x={cx} y={cy + (isMobile ? 2 : 2)}
+        <text x={cx} y={cy + 2}
           textAnchor="middle" dominantBaseline="middle"
-          style={{ fontSize: `${isMobile ? 13 : 16}px`, fontWeight: 900, fill: '#ffffff' }}>
+          style={{ fontSize: `${isMobile ? 12 : 15}px`, fontWeight: 900, fill: '#ffffff' }}>
           {fmt(totalAmount)}
         </text>
         <text x={cx} y={cy + (isMobile ? 16 : 20)}
