@@ -150,7 +150,7 @@ const CategoryExpensesChart = () => {
                     labels: {
                       padding: isMobile ? 10 : 20,
                       usePointStyle: true,
-                      color: 'hsl(var(--foreground))',
+                      color: '#ffffff',
                       font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
                     }
                   },
