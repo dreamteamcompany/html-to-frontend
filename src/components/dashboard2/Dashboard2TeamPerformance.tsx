@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { usePeriod } from '@/contexts/PeriodContext';
@@ -13,15 +13,17 @@ interface PaymentRecord {
 }
 
 const PALETTE = [
-  { fill: 'rgba(1, 181, 116, 0.55)',   stroke: 'rgba(1, 181, 116, 0.9)',   glow: 'rgba(1, 181, 116, 0.25)' },
-  { fill: 'rgba(117, 81, 233, 0.5)',   stroke: 'rgba(117, 81, 233, 0.9)',  glow: 'rgba(117, 81, 233, 0.25)' },
-  { fill: 'rgba(255, 181, 71, 0.5)',   stroke: 'rgba(255, 181, 71, 0.9)',  glow: 'rgba(255, 181, 71, 0.25)' },
-  { fill: 'rgba(56, 189, 248, 0.5)',   stroke: 'rgba(56, 189, 248, 0.9)',  glow: 'rgba(56, 189, 248, 0.25)' },
-  { fill: 'rgba(251, 113, 133, 0.5)',  stroke: 'rgba(251, 113, 133, 0.9)', glow: 'rgba(251, 113, 133, 0.25)' },
-  { fill: 'rgba(250, 204, 21, 0.5)',   stroke: 'rgba(250, 204, 21, 0.9)',  glow: 'rgba(250, 204, 21, 0.25)' },
-  { fill: 'rgba(192, 132, 252, 0.5)',  stroke: 'rgba(192, 132, 252, 0.9)', glow: 'rgba(192, 132, 252, 0.25)' },
-  { fill: 'rgba(52, 211, 153, 0.5)',   stroke: 'rgba(52, 211, 153, 0.9)',  glow: 'rgba(52, 211, 153, 0.25)' },
+  { solid: '#01b574', light: 'rgba(1,181,116,0.18)',   mid: 'rgba(1,181,116,0.55)'   },
+  { solid: '#7551e9', light: 'rgba(117,81,233,0.18)',  mid: 'rgba(117,81,233,0.55)'  },
+  { solid: '#ffb547', light: 'rgba(255,181,71,0.18)',  mid: 'rgba(255,181,71,0.55)'  },
+  { solid: '#38bdf8', light: 'rgba(56,189,248,0.18)',  mid: 'rgba(56,189,248,0.55)'  },
+  { solid: '#fb7185', light: 'rgba(251,113,133,0.18)', mid: 'rgba(251,113,133,0.55)' },
+  { solid: '#facc15', light: 'rgba(250,204,21,0.18)',  mid: 'rgba(250,204,21,0.55)'  },
+  { solid: '#c084fc', light: 'rgba(192,132,252,0.18)', mid: 'rgba(192,132,252,0.55)' },
+  { solid: '#34d399', light: 'rgba(52,211,153,0.18)',  mid: 'rgba(52,211,153,0.55)'  },
 ];
+
+const SLOTS = 8;
 
 interface PetalChartProps {
   data: { name: string; amount: number }[];
@@ -30,192 +32,199 @@ interface PetalChartProps {
 
 const PetalChart = ({ data, isMobile }: PetalChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; visible: boolean }>({ x: 0, y: 0, visible: false });
-  const svgRef = useRef<SVGSVGElement>(null);
 
-  const size = isMobile ? 260 : 360;
+  const size = isMobile ? 300 : 420;
   const cx = size / 2;
   const cy = size / 2;
-  const maxR = isMobile ? 100 : 140;
-  const minR = 18;
-  const n = data.length;
+  const innerR = isMobile ? 32 : 44;
+  const outerR = isMobile ? 118 : 162;
+  const angleStep = (2 * Math.PI) / SLOTS;
+  const halfSpread = angleStep * 0.38;
+  const cornerR = isMobile ? 14 : 20;
+
   const maxVal = Math.max(...data.map(d => d.amount), 1);
 
-  const formatAmount = (v: number) => {
-    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн ₽';
-    if (v >= 1_000) return (v / 1_000).toFixed(0) + ' тыс ₽';
-    return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
+  const fmt = (v: number) => {
+    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + '\nмлн ₽';
+    if (v >= 1_000) return Math.round(v / 1_000) + '\nтыс ₽';
+    return String(Math.round(v)) + '\n₽';
   };
 
-  const petalPath = (index: number, r: number) => {
-    const angleStep = (2 * Math.PI) / n;
-    const angle = angleStep * index - Math.PI / 2;
-    const spread = angleStep * 0.72;
+  const shortName = (s: string) => s.length > 10 ? s.slice(0, 9) + '…' : s;
 
-    const tipX = cx + r * Math.cos(angle);
-    const tipY = cy + r * Math.sin(angle);
+  const petalD = (idx: number, r: number) => {
+    const midAngle = angleStep * idx - Math.PI / 2;
+    const leftAngle = midAngle - halfSpread;
+    const rightAngle = midAngle + halfSpread;
 
-    const leftAngle = angle - spread / 2;
-    const rightAngle = angle + spread / 2;
+    const tip = { x: cx + r * Math.cos(midAngle), y: cy + r * Math.sin(midAngle) };
+    const bl  = { x: cx + innerR * Math.cos(leftAngle),  y: cy + innerR * Math.sin(leftAngle) };
+    const br  = { x: cx + innerR * Math.cos(rightAngle), y: cy + innerR * Math.sin(rightAngle) };
 
-    const cp1X = cx + (r * 0.55) * Math.cos(leftAngle);
-    const cp1Y = cy + (r * 0.55) * Math.sin(leftAngle);
-    const cp2X = cx + (r * 0.55) * Math.cos(rightAngle);
-    const cp2Y = cy + (r * 0.55) * Math.sin(rightAngle);
-
-    const baseLeft = {
-      x: cx + minR * Math.cos(leftAngle),
-      y: cy + minR * Math.sin(leftAngle),
-    };
-    const baseRight = {
-      x: cx + minR * Math.cos(rightAngle),
-      y: cy + minR * Math.sin(rightAngle),
-    };
+    const leftEdge  = { x: cx + r * Math.cos(leftAngle),  y: cy + r * Math.sin(leftAngle) };
+    const rightEdge = { x: cx + r * Math.cos(rightAngle), y: cy + r * Math.sin(rightAngle) };
 
     return [
-      `M ${baseLeft.x} ${baseLeft.y}`,
-      `C ${cp1X} ${cp1Y}, ${tipX - (tipX - cp1X) * 0.1} ${tipY - (tipY - cp1Y) * 0.1}, ${tipX} ${tipY}`,
-      `C ${tipX - (tipX - cp2X) * 0.1} ${tipY - (tipY - cp2Y) * 0.1}, ${cp2X} ${cp2Y}, ${baseRight.x} ${baseRight.y}`,
-      `A ${minR} ${minR} 0 0 0 ${baseLeft.x} ${baseLeft.y}`,
+      `M ${bl.x} ${bl.y}`,
+      `L ${leftEdge.x} ${leftEdge.y}`,
+      `Q ${tip.x} ${tip.y} ${rightEdge.x} ${rightEdge.y}`,
+      `L ${br.x} ${br.y}`,
+      `A ${innerR} ${innerR} 0 0 0 ${bl.x} ${bl.y}`,
       'Z',
     ].join(' ');
   };
 
-  const labelPos = (index: number, r: number) => {
-    const angleStep = (2 * Math.PI) / n;
-    const angle = angleStep * index - Math.PI / 2;
+  const labelCenter = (idx: number, r: number) => {
+    const midAngle = angleStep * idx - Math.PI / 2;
+    const dist = innerR + (r - innerR) * 0.58;
     return {
-      x: cx + r * Math.cos(angle),
-      y: cy + r * Math.sin(angle),
+      x: cx + dist * Math.cos(midAngle),
+      y: cy + dist * Math.sin(midAngle),
     };
   };
 
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!svgRef.current) return;
-    const rect = svgRef.current.getBoundingClientRect();
-    setTooltip(prev => ({ ...prev, x: e.clientX - rect.left, y: e.clientY - rect.top }));
-  };
+  const slots = Array.from({ length: SLOTS }, (_, i) => ({
+    idx: i,
+    item: data[i] ?? null,
+    color: PALETTE[i % PALETTE.length],
+  }));
 
   return (
-    <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <svg
-        ref={svgRef}
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => { setHovered(null); setTooltip(t => ({ ...t, visible: false })); }}
         style={{ overflow: 'visible' }}
       >
         <defs>
-          {data.map((_, i) => {
-            const color = PALETTE[i % PALETTE.length];
-            return (
-              <radialGradient key={i} id={`grad-${i}`} cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={color.stroke} stopOpacity="0.15" />
-                <stop offset="100%" stopColor={color.fill} stopOpacity="1" />
-              </radialGradient>
-            );
-          })}
-          <filter id="glow-petal" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          {slots.map(({ idx, color }) => (
+            <radialGradient key={idx} id={`pg-${idx}`} cx="50%" cy="50%" r="50%"
+              gradientUnits="userSpaceOnUse"
+              fx={cx} fy={cy} cx2={cx} cy2={cy} r2={outerR}
+            >
+              <stop offset="0%"   stopColor={color.solid} stopOpacity="0.08" />
+              <stop offset="100%" stopColor={color.solid} stopOpacity="0.72" />
+            </radialGradient>
+          ))}
+          <filter id="pshadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.25" />
+          </filter>
+          <filter id="pglow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="8" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
-        {/* Центральный круг */}
-        <circle cx={cx} cy={cy} r={minR + 2} fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
-        <circle cx={cx} cy={cy} r={4} fill="rgba(255,255,255,0.3)" />
+        {/* Фоновые пустые слоты */}
+        {slots.map(({ idx, color }) => (
+          <path
+            key={`bg-${idx}`}
+            d={petalD(idx, outerR)}
+            fill={color.light}
+            stroke={`${color.solid}22`}
+            strokeWidth={1}
+          />
+        ))}
 
-        {/* Лепестки */}
-        {data.map((item, i) => {
+        {/* Заполненные лепестки */}
+        {slots.map(({ idx, item, color }) => {
+          if (!item) return null;
           const ratio = item.amount / maxVal;
-          const r = minR + (maxR - minR) * Math.pow(ratio, 0.55);
-          const color = PALETTE[i % PALETTE.length];
-          const isHov = hovered === i;
+          const r = innerR + (outerR - innerR) * Math.pow(ratio, 0.5);
+          const isHov = hovered === idx;
 
           return (
-            <g key={i}
-              onMouseEnter={() => { setHovered(i); setTooltip(t => ({ ...t, visible: true })); }}
-              style={{ cursor: 'pointer' }}
-            >
-              {/* Glow под лепестком */}
+            <g key={`petal-${idx}`}>
               {isHov && (
                 <path
-                  d={petalPath(i, r + 8)}
-                  fill={color.glow}
-                  filter="url(#glow-petal)"
-                  opacity={0.8}
+                  d={petalD(idx, r + 6)}
+                  fill={color.mid}
+                  filter="url(#pglow)"
+                  opacity={0.6}
                 />
               )}
               <path
-                d={petalPath(i, isHov ? r + 5 : r)}
-                fill={`url(#grad-${i})`}
-                stroke={color.stroke}
+                d={petalD(idx, isHov ? r + 4 : r)}
+                fill={`url(#pg-${idx})`}
+                stroke={color.solid}
                 strokeWidth={isHov ? 2 : 1.2}
-                style={{ transition: 'all 0.25s ease' }}
-                opacity={hovered !== null && !isHov ? 0.35 : 1}
+                filter="url(#pshadow)"
+                style={{ transition: 'all 0.22s ease', cursor: 'pointer' }}
+                opacity={hovered !== null && !isHov ? 0.28 : 1}
+                onMouseEnter={() => setHovered(idx)}
+                onMouseLeave={() => setHovered(null)}
               />
             </g>
           );
         })}
 
-        {/* Подписи */}
-        {data.map((item, i) => {
+        {/* Текст внутри лепестков */}
+        {slots.map(({ idx, item, color }) => {
+          if (!item) return null;
           const ratio = item.amount / maxVal;
-          const r = minR + (maxR - minR) * Math.pow(ratio, 0.55);
-          const labelR = r + (isMobile ? 22 : 26);
-          const pos = labelPos(i, labelR);
-          const color = PALETTE[i % PALETTE.length];
-          const isHov = hovered === i;
-
-          const short = item.name.length > 12 ? item.name.slice(0, 11) + '…' : item.name;
+          const r = innerR + (outerR - innerR) * Math.pow(ratio, 0.5);
+          const pos = labelCenter(idx, r);
+          const isHov = hovered === idx;
+          const lines = fmt(item.amount).split('\n');
+          const nameStr = shortName(item.name);
 
           return (
-            <text
-              key={i}
-              x={pos.x}
-              y={pos.y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              style={{
-                fontSize: isMobile ? '10px' : '12px',
-                fontWeight: isHov ? '800' : '600',
-                fill: isHov ? color.stroke : 'rgba(255,255,255,0.7)',
-                transition: 'all 0.2s',
-                pointerEvents: 'none',
-                userSelect: 'none',
-              }}
+            <g
+              key={`lbl-${idx}`}
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+              opacity={hovered !== null && !isHov ? 0.25 : 1}
             >
-              {short}
-            </text>
+              <text
+                x={pos.x}
+                y={pos.y - (isMobile ? 11 : 14)}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{
+                  fontSize: isMobile ? '9px' : '11px',
+                  fontWeight: 700,
+                  fill: isHov ? '#fff' : 'rgba(255,255,255,0.75)',
+                  transition: 'fill 0.2s',
+                }}
+              >
+                {nameStr}
+              </text>
+              <text
+                x={pos.x}
+                y={pos.y + (isMobile ? 1 : 2)}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{
+                  fontSize: isMobile ? '10px' : '13px',
+                  fontWeight: 800,
+                  fill: isHov ? '#fff' : color.solid,
+                  transition: 'fill 0.2s',
+                }}
+              >
+                {lines[0]}
+              </text>
+              <text
+                x={pos.x}
+                y={pos.y + (isMobile ? 12 : 16)}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{
+                  fontSize: isMobile ? '9px' : '11px',
+                  fontWeight: 600,
+                  fill: isHov ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
+                  transition: 'fill 0.2s',
+                }}
+              >
+                {lines[1]}
+              </text>
+            </g>
           );
         })}
-      </svg>
 
-      {/* Tooltip */}
-      {tooltip.visible && hovered !== null && (
-        <div style={{
-          position: 'absolute',
-          left: tooltip.x + 14,
-          top: tooltip.y - 36,
-          background: 'rgba(10, 14, 40, 0.97)',
-          border: `1px solid ${PALETTE[hovered % PALETTE.length].stroke}`,
-          borderRadius: '10px',
-          padding: '8px 14px',
-          pointerEvents: 'none',
-          zIndex: 10,
-          whiteSpace: 'nowrap',
-          boxShadow: `0 4px 20px ${PALETTE[hovered % PALETTE.length].glow}`,
-        }}>
-          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '2px' }}>
-            {data[hovered].name}
-          </div>
-          <div style={{ fontSize: '15px', fontWeight: 800, color: PALETTE[hovered % PALETTE.length].stroke }}>
-            {formatAmount(data[hovered].amount)}
-          </div>
-        </div>
-      )}
+        {/* Центральный круг */}
+        <circle cx={cx} cy={cy} r={innerR - 1} fill="hsl(var(--card))" stroke="rgba(255,255,255,0.07)" strokeWidth={1.5} />
+        <circle cx={cx} cy={cy} r={5} fill="rgba(255,255,255,0.2)" />
+      </svg>
     </div>
   );
 };
@@ -255,7 +264,8 @@ const Dashboard2TeamPerformance = () => {
 
         const sorted = Object.entries(deptMap)
           .map(([name, amount]) => ({ name, amount }))
-          .sort((a, b) => b.amount - a.amount);
+          .sort((a, b) => b.amount - a.amount)
+          .slice(0, SLOTS);
 
         setCurrentData(sorted);
       } catch (error) {
@@ -273,7 +283,7 @@ const Dashboard2TeamPerformance = () => {
   return (
     <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
       <CardContent className="p-4 sm:p-6">
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: '20px' }}>
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>
             Сравнение по Отделам-Заказчикам
           </h3>
@@ -292,7 +302,7 @@ const Dashboard2TeamPerformance = () => {
             <PetalChart data={currentData} isMobile={isMobile} />
 
             {/* Топ-3 */}
-            <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(1, 181, 116, 0.07)', borderRadius: '12px', border: '1px solid rgba(1, 181, 116, 0.18)' }}>
+            <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(1,181,116,0.07)', borderRadius: '12px', border: '1px solid rgba(1,181,116,0.18)' }}>
               <h4 style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '800', color: 'hsl(var(--foreground))', marginBottom: '12px' }}>
                 Топ-3 Отделов по Затратам
               </h4>
@@ -307,20 +317,17 @@ const Dashboard2TeamPerformance = () => {
                       padding: '8px 12px',
                       background: 'rgba(255,255,255,0.03)',
                       borderRadius: '8px',
-                      border: `1px solid ${color.glow}`,
+                      border: `1px solid ${color.light}`,
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{
-                          fontSize: isMobile ? '16px' : '18px',
-                          fontWeight: '700',
-                          color: color.stroke,
-                          minWidth: '24px',
-                        }}>{index + 1}</span>
+                        <span style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', color: color.solid, minWidth: '24px' }}>
+                          {index + 1}
+                        </span>
                         <span style={{ fontSize: isMobile ? '12px' : '13px', color: 'hsl(var(--foreground))', fontWeight: '600' }}>
                           {dept.name}
                         </span>
                       </div>
-                      <span style={{ fontSize: isMobile ? '14px' : '16px', color: color.stroke, fontWeight: '800' }}>
+                      <span style={{ fontSize: isMobile ? '14px' : '16px', color: color.solid, fontWeight: '800' }}>
                         {formatAmount(dept.amount)}
                       </span>
                     </div>
