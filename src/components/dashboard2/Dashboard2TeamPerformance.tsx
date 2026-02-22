@@ -24,6 +24,7 @@ const PALETTE = [
 ];
 
 const SLOTS = 8;
+const GAP_DEG = 4;
 
 interface PetalChartProps {
   data: { name: string; amount: number }[];
@@ -33,54 +34,74 @@ interface PetalChartProps {
 const PetalChart = ({ data, isMobile }: PetalChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
 
-  const size = isMobile ? 300 : 420;
-  const cx = size / 2;
-  const cy = size / 2;
-  const innerR = isMobile ? 32 : 44;
-  const outerR = isMobile ? 118 : 162;
-  const angleStep = (2 * Math.PI) / SLOTS;
-  const halfSpread = angleStep * 0.38;
-  const cornerR = isMobile ? 14 : 20;
+  const size   = isMobile ? 300 : 420;
+  const cx     = size / 2;
+  const cy     = size / 2;
+  const innerR = isMobile ? 36 : 50;
+  const outerR = isMobile ? 122 : 168;
 
   const maxVal = Math.max(...data.map(d => d.amount), 1);
 
   const fmt = (v: number) => {
-    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + '\nмлн ₽';
-    if (v >= 1_000) return Math.round(v / 1_000) + '\nтыс ₽';
-    return String(Math.round(v)) + '\n₽';
+    if (v >= 1_000_000) return [(v / 1_000_000).toFixed(1), 'млн ₽'];
+    if (v >= 1_000)     return [String(Math.round(v / 1_000)), 'тыс ₽'];
+    return [String(Math.round(v)), '₽'];
   };
 
-  const shortName = (s: string) => s.length > 10 ? s.slice(0, 9) + '…' : s;
+  const shortName = (s: string) => s.length > 11 ? s.slice(0, 10) + '…' : s;
 
-  const petalD = (idx: number, r: number) => {
-    const midAngle = angleStep * idx - Math.PI / 2;
-    const leftAngle = midAngle - halfSpread;
-    const rightAngle = midAngle + halfSpread;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
 
-    const tip = { x: cx + r * Math.cos(midAngle), y: cy + r * Math.sin(midAngle) };
-    const bl  = { x: cx + innerR * Math.cos(leftAngle),  y: cy + innerR * Math.sin(leftAngle) };
-    const br  = { x: cx + innerR * Math.cos(rightAngle), y: cy + innerR * Math.sin(rightAngle) };
+  /* Один сегмент: дуга от innerR до r, с скруглёнными внешними углами */
+  const segmentD = (idx: number, r: number, gap = GAP_DEG) => {
+    const total    = 360 / SLOTS;
+    const startDeg = total * idx - 90 + gap / 2;
+    const endDeg   = total * (idx + 1) - 90 - gap / 2;
+    const sR = toRad(startDeg);
+    const eR = toRad(endDeg);
 
-    const leftEdge  = { x: cx + r * Math.cos(leftAngle),  y: cy + r * Math.sin(leftAngle) };
-    const rightEdge = { x: cx + r * Math.cos(rightAngle), y: cy + r * Math.sin(rightAngle) };
+    const cr = Math.min(isMobile ? 10 : 14, (r - innerR) * 0.35);
+
+    // Точки на внешней дуге с небольшим отступом для скругления
+    const anglePad = Math.asin(cr / r);
+    const oSx = cx + r * Math.cos(sR + anglePad);
+    const oSy = cy + r * Math.sin(sR + anglePad);
+    const oEx = cx + r * Math.cos(eR - anglePad);
+    const oEy = cy + r * Math.sin(eR - anglePad);
+
+    // Точки на внутренней дуге с отступом
+    const innerAnglePad = Math.asin(Math.min(cr / innerR, 1));
+    const iSx = cx + innerR * Math.cos(sR + innerAnglePad);
+    const iSy = cy + innerR * Math.sin(sR + innerAnglePad);
+    const iEx = cx + innerR * Math.cos(eR - innerAnglePad);
+    const iEy = cy + innerR * Math.sin(eR - innerAnglePad);
+
+    // Углы — касательные точки на боковых прямых
+    const lS = { x: cx + innerR * Math.cos(sR), y: cy + innerR * Math.sin(sR) };
+    const lE = { x: cx + innerR * Math.cos(eR), y: cy + innerR * Math.sin(eR) };
+    const rS = { x: cx + r * Math.cos(sR),      y: cy + r * Math.sin(sR) };
+    const rE = { x: cx + r * Math.cos(eR),       y: cy + r * Math.sin(eR) };
+
+    const largeArc = (endDeg - startDeg) > 180 ? 1 : 0;
 
     return [
-      `M ${bl.x} ${bl.y}`,
-      `L ${leftEdge.x} ${leftEdge.y}`,
-      `Q ${tip.x} ${tip.y} ${rightEdge.x} ${rightEdge.y}`,
-      `L ${br.x} ${br.y}`,
-      `A ${innerR} ${innerR} 0 0 0 ${bl.x} ${bl.y}`,
+      `M ${iSx} ${iSy}`,
+      `L ${oSx} ${oSy}`,
+      `Q ${rS.x} ${rS.y} ${oSx} ${oSy}`,   // скругление левый внешний
+      `A ${r} ${r} 0 ${largeArc} 1 ${oEx} ${oEy}`,
+      `Q ${rE.x} ${rE.y} ${iEx} ${iEy}`,   // скругление правый внешний
+      `L ${iEx} ${iEy}`,
+      `A ${innerR} ${innerR} 0 ${largeArc} 0 ${iSx} ${iSy}`,
       'Z',
     ].join(' ');
   };
 
-  const labelCenter = (idx: number, r: number) => {
-    const midAngle = angleStep * idx - Math.PI / 2;
-    const dist = innerR + (r - innerR) * 0.58;
-    return {
-      x: cx + dist * Math.cos(midAngle),
-      y: cy + dist * Math.sin(midAngle),
-    };
+  const labelPos = (idx: number, r: number) => {
+    const total    = 360 / SLOTS;
+    const midDeg   = total * idx - 90 + total / 2;
+    const midRad   = toRad(midDeg);
+    const dist     = innerR + (r - innerR) * 0.55;
+    return { x: cx + dist * Math.cos(midRad), y: cy + dist * Math.sin(midRad) };
   };
 
   const slots = Array.from({ length: SLOTS }, (_, i) => ({
@@ -99,59 +120,63 @@ const PetalChart = ({ data, isMobile }: PetalChartProps) => {
       >
         <defs>
           {slots.map(({ idx, color }) => (
-            <radialGradient key={idx} id={`pg-${idx}`} cx="50%" cy="50%" r="50%"
+            <radialGradient
+              key={idx}
+              id={`rg-${idx}`}
               gradientUnits="userSpaceOnUse"
-              fx={cx} fy={cy} cx2={cx} cy2={cy} r2={outerR}
+              cx={cx} cy={cy} r={outerR}
             >
-              <stop offset="0%"   stopColor={color.solid} stopOpacity="0.08" />
-              <stop offset="100%" stopColor={color.solid} stopOpacity="0.72" />
+              <stop offset="0%"   stopColor={color.solid} stopOpacity="0.1" />
+              <stop offset="100%" stopColor={color.solid} stopOpacity="0.75" />
             </radialGradient>
           ))}
-          <filter id="pshadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.25" />
+          <filter id="seg-shadow" x="-15%" y="-15%" width="130%" height="130%">
+            <feDropShadow dx="0" dy="3" stdDeviation="5" floodColor="rgba(0,0,0,0.4)" />
           </filter>
-          <filter id="pglow" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="8" result="b" />
+          <filter id="seg-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="7" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
-        {/* Фоновые пустые слоты */}
+        {/* Фоновые слоты */}
         {slots.map(({ idx, color }) => (
           <path
             key={`bg-${idx}`}
-            d={petalD(idx, outerR)}
+            d={segmentD(idx, outerR)}
             fill={color.light}
-            stroke={`${color.solid}22`}
+            stroke={`${color.solid}18`}
             strokeWidth={1}
           />
         ))}
 
-        {/* Заполненные лепестки */}
+        {/* Заполненные сегменты */}
         {slots.map(({ idx, item, color }) => {
           if (!item) return null;
           const ratio = item.amount / maxVal;
-          const r = innerR + (outerR - innerR) * Math.pow(ratio, 0.5);
+          const r     = innerR + (outerR - innerR) * Math.pow(ratio, 0.55);
           const isHov = hovered === idx;
 
           return (
-            <g key={`petal-${idx}`}>
+            <g key={`seg-${idx}`}>
               {isHov && (
                 <path
-                  d={petalD(idx, r + 6)}
+                  d={segmentD(idx, r + 8)}
                   fill={color.mid}
-                  filter="url(#pglow)"
-                  opacity={0.6}
+                  filter="url(#seg-glow)"
+                  opacity={0.55}
+                  style={{ pointerEvents: 'none' }}
                 />
               )}
               <path
-                d={petalD(idx, isHov ? r + 4 : r)}
-                fill={`url(#pg-${idx})`}
+                d={segmentD(idx, isHov ? r + 5 : r)}
+                fill={`url(#rg-${idx})`}
                 stroke={color.solid}
-                strokeWidth={isHov ? 2 : 1.2}
-                filter="url(#pshadow)"
+                strokeWidth={isHov ? 2 : 1}
+                strokeLinejoin="round"
+                filter="url(#seg-shadow)"
                 style={{ transition: 'all 0.22s ease', cursor: 'pointer' }}
-                opacity={hovered !== null && !isHov ? 0.28 : 1}
+                opacity={hovered !== null && !isHov ? 0.22 : 1}
                 onMouseEnter={() => setHovered(idx)}
                 onMouseLeave={() => setHovered(null)}
               />
@@ -159,71 +184,49 @@ const PetalChart = ({ data, isMobile }: PetalChartProps) => {
           );
         })}
 
-        {/* Текст внутри лепестков */}
+        {/* Текст внутри сегментов */}
         {slots.map(({ idx, item, color }) => {
           if (!item) return null;
-          const ratio = item.amount / maxVal;
-          const r = innerR + (outerR - innerR) * Math.pow(ratio, 0.5);
-          const pos = labelCenter(idx, r);
-          const isHov = hovered === idx;
-          const lines = fmt(item.amount).split('\n');
-          const nameStr = shortName(item.name);
+          const ratio  = item.amount / maxVal;
+          const r      = innerR + (outerR - innerR) * Math.pow(ratio, 0.55);
+          const pos    = labelPos(idx, r);
+          const isHov  = hovered === idx;
+          const [val, unit] = fmt(item.amount);
+          const name   = shortName(item.name);
+          const fs     = isMobile ? 9 : 11;
 
           return (
             <g
               key={`lbl-${idx}`}
               style={{ pointerEvents: 'none', userSelect: 'none' }}
-              opacity={hovered !== null && !isHov ? 0.25 : 1}
+              opacity={hovered !== null && !isHov ? 0.18 : 1}
             >
-              <text
-                x={pos.x}
-                y={pos.y - (isMobile ? 11 : 14)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{
-                  fontSize: isMobile ? '9px' : '11px',
-                  fontWeight: 700,
-                  fill: isHov ? '#fff' : 'rgba(255,255,255,0.75)',
-                  transition: 'fill 0.2s',
-                }}
-              >
-                {nameStr}
+              <text x={pos.x} y={pos.y - (isMobile ? 10 : 13)}
+                textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: `${fs}px`, fontWeight: 600, fill: isHov ? '#fff' : 'rgba(255,255,255,0.7)' }}>
+                {name}
               </text>
-              <text
-                x={pos.x}
-                y={pos.y + (isMobile ? 1 : 2)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{
-                  fontSize: isMobile ? '10px' : '13px',
-                  fontWeight: 800,
-                  fill: isHov ? '#fff' : color.solid,
-                  transition: 'fill 0.2s',
-                }}
-              >
-                {lines[0]}
+              <text x={pos.x} y={pos.y + (isMobile ? 1 : 2)}
+                textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: `${fs + 2}px`, fontWeight: 800, fill: isHov ? '#fff' : color.solid }}>
+                {val}
               </text>
-              <text
-                x={pos.x}
-                y={pos.y + (isMobile ? 12 : 16)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{
-                  fontSize: isMobile ? '9px' : '11px',
-                  fontWeight: 600,
-                  fill: isHov ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.5)',
-                  transition: 'fill 0.2s',
-                }}
-              >
-                {lines[1]}
+              <text x={pos.x} y={pos.y + (isMobile ? 11 : 15)}
+                textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: `${fs - 1}px`, fontWeight: 500, fill: isHov ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.45)' }}>
+                {unit}
               </text>
             </g>
           );
         })}
 
         {/* Центральный круг */}
-        <circle cx={cx} cy={cy} r={innerR - 1} fill="hsl(var(--card))" stroke="rgba(255,255,255,0.07)" strokeWidth={1.5} />
-        <circle cx={cx} cy={cy} r={5} fill="rgba(255,255,255,0.2)" />
+        <circle cx={cx} cy={cy} r={innerR - 2}
+          fill="hsl(var(--card))"
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth={2}
+        />
+        <circle cx={cx} cy={cy} r={6} fill="rgba(255,255,255,0.15)" />
       </svg>
     </div>
   );
