@@ -23,9 +23,6 @@ const PALETTE = [
   { solid: '#34d399', light: 'rgba(52,211,153,0.18)',  mid: 'rgba(52,211,153,0.55)'  },
 ];
 
-const SLOTS = 8;
-const GAP_DEG = 4;
-
 interface PetalChartProps {
   data: { name: string; amount: number }[];
   isMobile: boolean;
@@ -34,6 +31,7 @@ interface PetalChartProps {
 const PetalChart = ({ data, isMobile }: PetalChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
 
+  const n      = data.length;
   const size   = isMobile ? 300 : 420;
   const cx     = size / 2;
   const cy     = size / 2;
@@ -48,67 +46,69 @@ const PetalChart = ({ data, isMobile }: PetalChartProps) => {
     return [String(Math.round(v)), '₽'];
   };
 
-  const shortName = (s: string) => s.length > 11 ? s.slice(0, 10) + '…' : s;
-
   const toRad = (deg: number) => (deg * Math.PI) / 180;
 
-  /* Один сегмент: дуга от innerR до r, с скруглёнными внешними углами */
-  const segmentD = (idx: number, r: number, gap = GAP_DEG) => {
-    const total    = 360 / SLOTS;
-    const startDeg = total * idx - 90 + gap / 2;
-    const endDeg   = total * (idx + 1) - 90 - gap / 2;
+  // Ширина дуги сегмента в пикселях на среднем радиусе — для адаптивного шрифта
+  const arcWidth = (segDeg: number, r: number) => toRad(segDeg) * ((r + innerR) / 2);
+
+  // Путь сегмента — без зазоров, только скруглённые внешние углы
+  const segmentD = (startDeg: number, endDeg: number, r: number) => {
     const sR = toRad(startDeg);
     const eR = toRad(endDeg);
 
-    const cr = Math.min(isMobile ? 10 : 14, (r - innerR) * 0.35);
+    const cr = Math.min(isMobile ? 10 : 14, (r - innerR) * 0.3);
+    const anglePad      = cr > 0 ? Math.asin(Math.min(cr / r, 1)) : 0;
+    const innerAnglePad = cr > 0 ? Math.asin(Math.min(cr / innerR, 1)) : 0;
 
-    // Точки на внешней дуге с небольшим отступом для скругления
-    const anglePad = Math.asin(cr / r);
     const oSx = cx + r * Math.cos(sR + anglePad);
     const oSy = cy + r * Math.sin(sR + anglePad);
     const oEx = cx + r * Math.cos(eR - anglePad);
     const oEy = cy + r * Math.sin(eR - anglePad);
 
-    // Точки на внутренней дуге с отступом
-    const innerAnglePad = Math.asin(Math.min(cr / innerR, 1));
     const iSx = cx + innerR * Math.cos(sR + innerAnglePad);
     const iSy = cy + innerR * Math.sin(sR + innerAnglePad);
     const iEx = cx + innerR * Math.cos(eR - innerAnglePad);
     const iEy = cy + innerR * Math.sin(eR - innerAnglePad);
 
-    // Углы — касательные точки на боковых прямых
-    const lS = { x: cx + innerR * Math.cos(sR), y: cy + innerR * Math.sin(sR) };
-    const lE = { x: cx + innerR * Math.cos(eR), y: cy + innerR * Math.sin(eR) };
-    const rS = { x: cx + r * Math.cos(sR),      y: cy + r * Math.sin(sR) };
-    const rE = { x: cx + r * Math.cos(eR),       y: cy + r * Math.sin(eR) };
+    const rSx = cx + r * Math.cos(sR);
+    const rSy = cy + r * Math.sin(sR);
+    const rEx = cx + r * Math.cos(eR);
+    const rEy = cy + r * Math.sin(eR);
 
     const largeArc = (endDeg - startDeg) > 180 ? 1 : 0;
 
     return [
       `M ${iSx} ${iSy}`,
       `L ${oSx} ${oSy}`,
-      `Q ${rS.x} ${rS.y} ${oSx} ${oSy}`,   // скругление левый внешний
+      `Q ${rSx} ${rSy} ${oSx} ${oSy}`,
       `A ${r} ${r} 0 ${largeArc} 1 ${oEx} ${oEy}`,
-      `Q ${rE.x} ${rE.y} ${iEx} ${iEy}`,   // скругление правый внешний
+      `Q ${rEx} ${rEy} ${iEx} ${iEy}`,
       `L ${iEx} ${iEy}`,
       `A ${innerR} ${innerR} 0 ${largeArc} 0 ${iSx} ${iSy}`,
       'Z',
     ].join(' ');
   };
 
-  const labelPos = (idx: number, r: number) => {
-    const total    = 360 / SLOTS;
-    const midDeg   = total * idx - 90 + total / 2;
-    const midRad   = toRad(midDeg);
-    const dist     = innerR + (r - innerR) * 0.55;
+  // Позиция центра текста внутри сегмента
+  const labelPos = (startDeg: number, endDeg: number, r: number) => {
+    const midRad = toRad((startDeg + endDeg) / 2);
+    const dist   = innerR + (r - innerR) * 0.55;
     return { x: cx + dist * Math.cos(midRad), y: cy + dist * Math.sin(midRad) };
   };
 
-  const slots = Array.from({ length: SLOTS }, (_, i) => ({
-    idx: i,
-    item: data[i] ?? null,
-    color: PALETTE[i % PALETTE.length],
-  }));
+  // Накапливаем угловые позиции
+  const segDeg = 360 / n;
+  const segments = data.map((item, i) => {
+    const startDeg = segDeg * i - 90;
+    const endDeg   = segDeg * (i + 1) - 90;
+    const ratio    = item.amount / maxVal;
+    const r        = innerR + (outerR - innerR) * Math.pow(ratio, 0.55);
+    const color    = PALETTE[i % PALETTE.length];
+    const aw       = arcWidth(segDeg, r);
+    // Адаптивный шрифт: от 8 до 14px в зависимости от ширины дуги
+    const fs       = Math.max(isMobile ? 7 : 8, Math.min(isMobile ? 11 : 14, Math.floor(aw / 8)));
+    return { item, i, startDeg, endDeg, r, color, fs };
+  });
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -119,10 +119,10 @@ const PetalChart = ({ data, isMobile }: PetalChartProps) => {
         style={{ overflow: 'visible' }}
       >
         <defs>
-          {slots.map(({ idx, color }) => (
+          {segments.map(({ i, color }) => (
             <radialGradient
-              key={idx}
-              id={`rg-${idx}`}
+              key={i}
+              id={`rg-${i}`}
               gradientUnits="userSpaceOnUse"
               cx={cx} cy={cy} r={outerR}
             >
@@ -139,45 +139,32 @@ const PetalChart = ({ data, isMobile }: PetalChartProps) => {
           </filter>
         </defs>
 
-        {/* Фоновые слоты */}
-        {slots.map(({ idx, color }) => (
-          <path
-            key={`bg-${idx}`}
-            d={segmentD(idx, outerR)}
-            fill={color.light}
-            stroke={`${color.solid}18`}
-            strokeWidth={1}
-          />
-        ))}
-
         {/* Заполненные сегменты */}
-        {slots.map(({ idx, item, color }) => {
-          if (!item) return null;
-          const ratio = item.amount / maxVal;
-          const r     = innerR + (outerR - innerR) * Math.pow(ratio, 0.55);
-          const isHov = hovered === idx;
+        {segments.map(({ i, startDeg, endDeg, r, color }) => {
+          const isHov = hovered === i;
+          const rr    = isHov ? r + 5 : r;
 
           return (
-            <g key={`seg-${idx}`}>
+            <g key={`seg-${i}`}>
               {isHov && (
                 <path
-                  d={segmentD(idx, r + 8)}
+                  d={segmentD(startDeg, endDeg, r + 10)}
                   fill={color.mid}
                   filter="url(#seg-glow)"
-                  opacity={0.55}
+                  opacity={0.45}
                   style={{ pointerEvents: 'none' }}
                 />
               )}
               <path
-                d={segmentD(idx, isHov ? r + 5 : r)}
-                fill={`url(#rg-${idx})`}
+                d={segmentD(startDeg, endDeg, rr)}
+                fill={`url(#rg-${i})`}
                 stroke={color.solid}
                 strokeWidth={isHov ? 2 : 1}
                 strokeLinejoin="round"
                 filter="url(#seg-shadow)"
                 style={{ transition: 'all 0.22s ease', cursor: 'pointer' }}
                 opacity={hovered !== null && !isHov ? 0.22 : 1}
-                onMouseEnter={() => setHovered(idx)}
+                onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
               />
             </g>
@@ -185,33 +172,29 @@ const PetalChart = ({ data, isMobile }: PetalChartProps) => {
         })}
 
         {/* Текст внутри сегментов */}
-        {slots.map(({ idx, item, color }) => {
-          if (!item) return null;
-          const ratio  = item.amount / maxVal;
-          const r      = innerR + (outerR - innerR) * Math.pow(ratio, 0.55);
-          const pos    = labelPos(idx, r);
-          const isHov  = hovered === idx;
+        {segments.map(({ i, startDeg, endDeg, r, color, fs, item }) => {
+          const isHov = hovered === i;
+          const pos   = labelPos(startDeg, endDeg, r);
           const [val, unit] = fmt(item.amount);
-          const name   = shortName(item.name);
-          const fs     = isMobile ? 9 : 11;
+          const lineH = fs + 3;
 
           return (
             <g
-              key={`lbl-${idx}`}
+              key={`lbl-${i}`}
               style={{ pointerEvents: 'none', userSelect: 'none' }}
               opacity={hovered !== null && !isHov ? 0.18 : 1}
             >
-              <text x={pos.x} y={pos.y - (isMobile ? 10 : 13)}
+              <text x={pos.x} y={pos.y - lineH}
                 textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${fs}px`, fontWeight: 600, fill: isHov ? '#fff' : 'rgba(255,255,255,0.7)' }}>
-                {name}
+                style={{ fontSize: `${fs}px`, fontWeight: 600, fill: isHov ? '#fff' : 'rgba(255,255,255,0.75)' }}>
+                {item.name}
               </text>
-              <text x={pos.x} y={pos.y + (isMobile ? 1 : 2)}
+              <text x={pos.x} y={pos.y}
                 textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${fs + 2}px`, fontWeight: 800, fill: isHov ? '#fff' : color.solid }}>
+                style={{ fontSize: `${fs + 1}px`, fontWeight: 800, fill: isHov ? '#fff' : color.solid }}>
                 {val}
               </text>
-              <text x={pos.x} y={pos.y + (isMobile ? 11 : 15)}
+              <text x={pos.x} y={pos.y + lineH}
                 textAnchor="middle" dominantBaseline="middle"
                 style={{ fontSize: `${fs - 1}px`, fontWeight: 500, fill: isHov ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.45)' }}>
                 {unit}
@@ -268,7 +251,7 @@ const Dashboard2TeamPerformance = () => {
         const sorted = Object.entries(deptMap)
           .map(([name, amount]) => ({ name, amount }))
           .sort((a, b) => b.amount - a.amount)
-          .slice(0, SLOTS);
+          .slice(0, 8);
 
         setCurrentData(sorted);
       } catch (error) {
