@@ -315,15 +315,14 @@ const Dashboard2UpcomingPayments = () => {
         ) : (
           <>
             {/* Десктоп: горизонтальный таймлайн */}
-            <div className="hidden sm:block" style={{ overflowX: 'auto', paddingBottom: '8px' }}>
+            <div className="hidden sm:block">
               <div style={{
                 display: 'flex',
                 gap: '12px',
-                minWidth: 'max-content',
                 alignItems: 'stretch',
               }}>
                 {groups.map((group) => (
-                  <div key={group.dateKey} style={{ width: '220px', flexShrink: 0 }}>
+                  <div key={group.dateKey} style={{ flex: 1, minWidth: 0 }}>
                     <DayColumn group={group} />
                   </div>
                 ))}
