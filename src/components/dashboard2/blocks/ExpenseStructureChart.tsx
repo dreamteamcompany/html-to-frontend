@@ -169,7 +169,7 @@ const ExpenseStructureChart = () => {
                       labels: {
                         padding: 20,
                         usePointStyle: true,
-                        color: '#4a5568',
+                        color: 'hsl(var(--foreground))',
                         font: { family: 'Plus Jakarta Sans, sans-serif', size: 14 }
                       }
                     },
