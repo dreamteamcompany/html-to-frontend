@@ -19,20 +19,22 @@ const TopPaymentsCard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const loadTopPayments = async () => {
+      try {
+        const response = await apiFetch(API_ENDPOINTS.statsApi);
+        if (controller.signal.aborted) return;
+        const data = await response.json();
+        setPayments(data.top_payments || []);
+      } catch {
+        // silent
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
     loadTopPayments();
+    return () => controller.abort();
   }, []);
-
-  const loadTopPayments = async () => {
-    try {
-      const response = await apiFetch(API_ENDPOINTS.statsApi);
-      const data = await response.json();
-      setPayments(data.top_payments || []);
-    } catch (error) {
-      console.error('Failed to load top payments:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getColor = (index: number) => {
     const colors = ['#7551e9', '#3965ff', '#01b574', '#ffb547', '#ff6b6b'];

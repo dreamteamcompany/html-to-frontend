@@ -19,25 +19,25 @@ const Dashboard2PaymentCalendar = () => {
   const [currentDate] = useState(new Date());
 
   useEffect(() => {
+    const controller = new AbortController();
+    const loadPayments = async () => {
+      try {
+        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
+        const data = await response.json();
+        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: Payment) =>
+          p.status === 'approved'
+        );
+        setPayments(approvedPayments);
+      } catch {
+        // silent
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
     loadPayments();
+    return () => controller.abort();
   }, []);
-
-  const loadPayments = async () => {
-    try {
-      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-      const data = await response.json();
-      
-      const approvedPayments = (Array.isArray(data) ? data : []).filter((p: Payment) => 
-        p.status === 'approved'
-      );
-      
-      setPayments(approvedPayments);
-    } catch (error) {
-      console.error('Failed to load payments:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getPaymentsByDay = () => {
     const paymentsByDay: { [key: number]: { amount: number; payments: string[] } } = {};
@@ -124,7 +124,7 @@ const Dashboard2PaymentCalendar = () => {
             </div>
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }} className="sm:text-xl md:text-2xl">Календарь Платежей</h3>
-              <p style={{ fontSize: '11px', color: '#a3aed0', marginTop: '2px' }} className="sm:text-sm sm:mt-1">
+              <p style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }} className="sm:text-sm sm:mt-1">
                 {currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })} • Распределение по дням
               </p>
             </div>
@@ -133,15 +133,15 @@ const Dashboard2PaymentCalendar = () => {
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }} className="sm:gap-3">
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'linear-gradient(135deg, #01b574 0%, #018c5a 100%)', boxShadow: '0 0 10px #01b574' }} />
-                <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">Малые</span>
+                <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: '11px' }} className="sm:text-xs">Малые</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)', boxShadow: '0 0 10px #ffb547' }} />
-                <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">Средние</span>
+                <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: '11px' }} className="sm:text-xs">Средние</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)', boxShadow: '0 0 10px #ff6b6b' }} />
-                <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">Крупные</span>
+                <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: '11px' }} className="sm:text-xs">Крупные</span>
               </div>
             </div>
             <div style={{ 
