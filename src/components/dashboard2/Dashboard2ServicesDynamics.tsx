@@ -256,13 +256,13 @@ const Dashboard2ServicesDynamics = () => {
               <Icon name={stat.icon} size={10} style={{ color: stat.color, marginBottom: '3px' }} />
               <div style={{ 
                 color: stat.color, 
-                fontSize: '12px', 
+                fontSize: '20px', 
                 fontWeight: '900',
                 marginBottom: '2px'
               }}>
                 {stat.value}
               </div>
-              <div style={{ color: '#a3aed0', fontSize: '7px', fontWeight: '600' }}>
+              <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '15px', fontWeight: '600' }}>
                 {stat.label}
               </div>
             </div>
