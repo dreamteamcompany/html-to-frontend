@@ -108,7 +108,7 @@ const ContractorComparisonChart = () => {
           </div>
         ) : displayData.length === 0 ? (
           <div className="flex items-center justify-center" style={{ flex: 1 }}>
-            <p style={{ color: '#a3aed0' }}>Нет данных за выбранный период</p>
+            <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
           <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative' }}>
@@ -142,7 +142,7 @@ const ContractorComparisonChart = () => {
                   x: {
                     beginAtZero: true,
                     ticks: {
-                      color: '#a3aed0',
+                      color: 'rgba(117, 81, 233, 0.45)',
                       font: { size: isMobile ? 10 : 12 },
                       maxTicksLimit: isMobile ? 5 : 8,
                       callback: (value) => {
@@ -154,7 +154,7 @@ const ContractorComparisonChart = () => {
                     grid: { color: 'rgba(255, 255, 255, 0.05)' }
                   },
                   y: {
-                    ticks: { color: '#a3aed0', font: { size: isMobile ? 9 : 12 } },
+                    ticks: { color: 'rgba(117, 81, 233, 0.45)', font: { size: isMobile ? 9 : 12 } },
                     grid: { display: false }
                   }
                 }

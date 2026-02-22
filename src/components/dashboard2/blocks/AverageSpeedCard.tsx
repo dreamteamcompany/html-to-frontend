@@ -89,7 +89,7 @@ const AverageSpeedCard = () => {
         }} className="sm:text-[42px] sm:mb-3">
           {formatTime(avgHours)}
         </div>
-        <div style={{ color: '#a3aed0', fontSize: '12px', marginBottom: '14px' }} className="sm:text-sm sm:mb-5">
+        <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '12px', marginBottom: '14px' }} className="sm:text-sm sm:mb-5">
           Обработка платежного запроса
         </div>
         <div style={{ display: 'flex', gap: '6px' }} className="sm:gap-2">
@@ -123,7 +123,7 @@ const AverageSpeedCard = () => {
             <div style={{ color: '#7551e9', fontSize: '16px', fontWeight: '700' }} className="sm:text-xl">
               {avgHours ? 'Вкл' : '—'}
             </div>
-            <div style={{ color: '#a3aed0', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">Автоматизация</div>
+            <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '9px', marginTop: '3px' }} className="sm:text-[11px] sm:mt-1">Автоматизация</div>
           </div>
         </div>
       </CardContent>

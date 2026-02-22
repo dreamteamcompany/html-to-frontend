@@ -150,7 +150,7 @@ const CategoryExpensesChart = () => {
                     labels: {
                       padding: isMobile ? 10 : 20,
                       usePointStyle: true,
-                      color: '#a3aed0',
+                      color: 'hsl(var(--foreground))',
                       font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
                     }
                   },
@@ -166,7 +166,7 @@ const CategoryExpensesChart = () => {
                   y: {
                     beginAtZero: true,
                     ticks: {
-                      color: '#a3aed0',
+                      color: 'rgba(117, 81, 233, 0.45)',
                       font: { size: isMobile ? 10 : 12 },
                       maxTicksLimit: isMobile ? 5 : 8,
                       callback: (value) => {
@@ -179,7 +179,7 @@ const CategoryExpensesChart = () => {
                   },
                   x: {
                     ticks: {
-                      color: '#a3aed0',
+                      color: 'rgba(117, 81, 233, 0.45)',
                       font: { size: isMobile ? 9 : 12 },
                       maxRotation: isMobile ? 45 : 0,
                       minRotation: isMobile ? 45 : 0,

@@ -50,7 +50,7 @@ const LiveMetricsCard = () => {
             }} className="sm:text-4xl">
               127
             </div>
-            <div style={{ color: '#a3aed0', fontSize: '11px', marginTop: '4px' }} className="sm:text-xs">
+            <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '11px', marginTop: '4px' }} className="sm:text-xs">
               +18 за последний час
             </div>
           </div>
@@ -64,7 +64,7 @@ const LiveMetricsCard = () => {
             }}>
               <Icon name="Clock" size={16} style={{ color: '#ffb547', marginBottom: '6px' }} className="sm:w-5 sm:h-5" />
               <div style={{ color: '#ffb547', fontSize: '18px', fontWeight: '700' }} className="sm:text-2xl">2.4ч</div>
-              <div style={{ color: '#a3aed0', fontSize: '10px', marginTop: '2px' }} className="sm:text-xs sm:mt-1">Ср. время</div>
+              <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', marginTop: '2px' }} className="sm:text-xs sm:mt-1">Ср. время</div>
             </div>
             <div style={{ 
               background: 'rgba(117, 81, 233, 0.1)',
@@ -75,7 +75,7 @@ const LiveMetricsCard = () => {
             }}>
               <Icon name="CheckCircle2" size={16} style={{ color: '#7551e9', marginBottom: '6px' }} className="sm:w-5 sm:h-5" />
               <div style={{ color: '#7551e9', fontSize: '18px', fontWeight: '700' }} className="sm:text-2xl">94%</div>
-              <div style={{ color: '#a3aed0', fontSize: '10px', marginTop: '2px' }} className="sm:text-xs sm:mt-1">Согласовано</div>
+              <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', marginTop: '2px' }} className="sm:text-xs sm:mt-1">Согласовано</div>
             </div>
           </div>
           <div style={{ 
@@ -85,7 +85,7 @@ const LiveMetricsCard = () => {
             border: '1px solid rgba(255, 255, 255, 0.05)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }} className="sm:mb-2">
-              <span style={{ color: '#a3aed0', fontSize: '11px' }} className="sm:text-xs">На согласовании</span>
+              <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: '11px' }} className="sm:text-xs">На согласовании</span>
               <span style={{ color: '#fff', fontSize: '12px', fontWeight: '600' }} className="sm:text-sm">23</span>
             </div>
             <div style={{ 
