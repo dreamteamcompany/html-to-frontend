@@ -32,11 +32,11 @@ const PetalChart = ({ data, isMobile }: PetalChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
 
   const n      = data.length;
-  const size   = isMobile ? 300 : 420;
+  const size   = isMobile ? 340 : 520;
   const cx     = size / 2;
   const cy     = size / 2;
-  const innerR = isMobile ? 36 : 50;
-  const outerR = isMobile ? 122 : 168;
+  const innerR = isMobile ? 44 : 64;
+  const outerR = isMobile ? 148 : 216;
 
   const maxVal = Math.max(...data.map(d => d.amount), 1);
 
