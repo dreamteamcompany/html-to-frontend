@@ -23,181 +23,123 @@ const PALETTE = [
   { solid: '#34d399', light: 'rgba(52,211,153,0.18)',  mid: 'rgba(52,211,153,0.55)'  },
 ];
 
-interface PetalChartProps {
+const formatAmount = (amount: number): string => {
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} млн ₽`;
+  if (amount >= 1_000) return `${Math.round(amount / 1_000)} тыс ₽`;
+  return `${Math.round(amount)} ₽`;
+};
+
+interface BarChartProps {
   data: { name: string; amount: number }[];
   isMobile: boolean;
 }
 
-const PetalChart = ({ data, isMobile }: PetalChartProps) => {
+const BarChart = ({ data, isMobile }: BarChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  const n      = data.length;
-  const size   = isMobile ? 340 : 520;
-  const cx     = size / 2;
-  const cy     = size / 2;
-  const innerR = isMobile ? 44 : 64;
-  const outerR = isMobile ? 148 : 216;
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(t);
+  }, []);
 
+  const total = data.reduce((s, d) => s + d.amount, 0) || 1;
   const maxVal = Math.max(...data.map(d => d.amount), 1);
 
-  const fmt = (v: number) => {
-    if (v >= 1_000_000) return [(v / 1_000_000).toFixed(1), 'млн ₽'];
-    if (v >= 1_000)     return [String(Math.round(v / 1_000)), 'тыс ₽'];
-    return [String(Math.round(v)), '₽'];
-  };
-
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-
-  // Ширина дуги сегмента в пикселях на среднем радиусе — для адаптивного шрифта
-  const arcWidth = (segDeg: number, r: number) => toRad(segDeg) * ((r + innerR) / 2);
-
-  // Путь сегмента — без зазоров, только скруглённые внешние углы
-  const segmentD = (startDeg: number, endDeg: number, r: number) => {
-    const sR = toRad(startDeg);
-    const eR = toRad(endDeg);
-    const largeArc = (endDeg - startDeg) > 180 ? 1 : 0;
-
-    const oSx = cx + r * Math.cos(sR);
-    const oSy = cy + r * Math.sin(sR);
-    const oEx = cx + r * Math.cos(eR);
-    const oEy = cy + r * Math.sin(eR);
-    const iSx = cx + innerR * Math.cos(sR);
-    const iSy = cy + innerR * Math.sin(sR);
-    const iEx = cx + innerR * Math.cos(eR);
-    const iEy = cy + innerR * Math.sin(eR);
-
-    return [
-      `M ${iSx} ${iSy}`,
-      `L ${oSx} ${oSy}`,
-      `A ${r} ${r} 0 ${largeArc} 1 ${oEx} ${oEy}`,
-      `L ${iEx} ${iEy}`,
-      `A ${innerR} ${innerR} 0 ${largeArc} 0 ${iSx} ${iSy}`,
-      'Z',
-    ].join(' ');
-  };
-
-  // Позиция центра текста внутри сегмента
-  const labelPos = (startDeg: number, endDeg: number, r: number) => {
-    const midRad = toRad((startDeg + endDeg) / 2);
-    const dist   = innerR + (r - innerR) * 0.55;
-    return { x: cx + dist * Math.cos(midRad), y: cy + dist * Math.sin(midRad) };
-  };
-
-  // Накапливаем угловые позиции
-  const segDeg = 360 / n;
-  const segments = data.map((item, i) => {
-    const startDeg = segDeg * i - 90;
-    const endDeg   = segDeg * (i + 1) - 90;
-    const ratio    = item.amount / maxVal;
-    const r        = innerR + (outerR - innerR) * Math.pow(ratio, 0.55);
-    const color    = PALETTE[i % PALETTE.length];
-    const aw       = arcWidth(segDeg, r);
-    // Адаптивный шрифт: от 8 до 14px в зависимости от ширины дуги
-    const fs       = Math.max(isMobile ? 7 : 8, Math.min(isMobile ? 11 : 14, Math.floor(aw / 8)));
-    return { item, i, startDeg, endDeg, r, color, fs };
-  });
-
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        style={{ overflow: 'visible' }}
-      >
-        <defs>
-          {segments.map(({ i, color }) => (
-            <radialGradient
-              key={i}
-              id={`rg-${i}`}
-              gradientUnits="userSpaceOnUse"
-              cx={cx} cy={cy} r={outerR}
-            >
-              <stop offset="0%"   stopColor={color.solid} stopOpacity="0.1" />
-              <stop offset="100%" stopColor={color.solid} stopOpacity="0.75" />
-            </radialGradient>
-          ))}
-          <filter id="seg-shadow" x="-15%" y="-15%" width="130%" height="130%">
-            <feDropShadow dx="0" dy="3" stdDeviation="5" floodColor="rgba(0,0,0,0.4)" />
-          </filter>
-          <filter id="seg-glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="7" result="b" />
-            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-        </defs>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '10px' : '13px' }}>
+      {data.map((item, i) => {
+        const color = PALETTE[i % PALETTE.length];
+        const pctMax = item.amount / maxVal;
+        const pctTotal = (item.amount / total) * 100;
+        const isHov = hovered === i;
 
-        {/* Заполненные сегменты */}
-        {segments.map(({ i, startDeg, endDeg, r, color }) => {
-          const isHov = hovered === i;
-          const rr    = isHov ? r + 5 : r;
+        const medals: Record<number, string> = { 0: '🥇', 1: '🥈', 2: '🥉' };
 
-          return (
-            <g key={`seg-${i}`}>
-              {isHov && (
-                <path
-                  d={segmentD(startDeg, endDeg, r + 10)}
-                  fill={color.mid}
-                  filter="url(#seg-glow)"
-                  opacity={0.45}
-                  style={{ pointerEvents: 'none' }}
-                />
-              )}
-              <path
-                d={segmentD(startDeg, endDeg, rr)}
-                fill={`url(#rg-${i})`}
-                stroke={color.solid}
-                strokeWidth={isHov ? 2 : 1}
-                strokeLinejoin="round"
-                filter="url(#seg-shadow)"
-                style={{ transition: 'all 0.22s ease', cursor: 'pointer' }}
-                opacity={hovered !== null && !isHov ? 0.22 : 1}
-                onMouseEnter={() => setHovered(i)}
-                onMouseLeave={() => setHovered(null)}
-              />
-            </g>
-          );
-        })}
+        return (
+          <div
+            key={i}
+            onMouseEnter={() => setHovered(i)}
+            onMouseLeave={() => setHovered(null)}
+            style={{
+              padding: isMobile ? '10px 12px' : '13px 16px',
+              borderRadius: '12px',
+              background: isHov ? color.light : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${isHov ? color.solid : 'rgba(255,255,255,0.07)'}`,
+              transition: 'all 0.2s ease',
+              cursor: 'default',
+            }}
+          >
+            {/* Заголовок строки */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                {medals[i] && (
+                  <span style={{ fontSize: isMobile ? '14px' : '16px', lineHeight: 1 }}>{medals[i]}</span>
+                )}
+                {!medals[i] && (
+                  <span style={{
+                    width: isMobile ? '18px' : '20px', height: isMobile ? '18px' : '20px',
+                    borderRadius: '50%', background: color.light, border: `1px solid ${color.solid}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: isMobile ? '9px' : '10px', fontWeight: 700, color: color.solid,
+                    flexShrink: 0,
+                  }}>
+                    {i + 1}
+                  </span>
+                )}
+                <span style={{
+                  fontSize: isMobile ? '12px' : '13px',
+                  fontWeight: 600,
+                  color: isHov ? '#fff' : 'hsl(var(--foreground))',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  maxWidth: isMobile ? '140px' : '240px',
+                  transition: 'color 0.2s',
+                }}>
+                  {item.name}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                <span style={{
+                  fontSize: isMobile ? '10px' : '11px',
+                  fontWeight: 600,
+                  color: color.solid,
+                  background: color.light,
+                  borderRadius: '20px',
+                  padding: '2px 8px',
+                }}>
+                  {pctTotal.toFixed(1)}%
+                </span>
+                <span style={{
+                  fontSize: isMobile ? '13px' : '15px',
+                  fontWeight: 800,
+                  color: isHov ? '#fff' : color.solid,
+                  transition: 'color 0.2s',
+                }}>
+                  {formatAmount(item.amount)}
+                </span>
+              </div>
+            </div>
 
-        {/* Текст внутри сегментов */}
-        {segments.map(({ i, startDeg, endDeg, r, color, fs, item }) => {
-          const isHov = hovered === i;
-          const pos   = labelPos(startDeg, endDeg, r);
-          const [val, unit] = fmt(item.amount);
-          const lineH = fs + 3;
-
-          return (
-            <g
-              key={`lbl-${i}`}
-              style={{ pointerEvents: 'none', userSelect: 'none' }}
-              opacity={hovered !== null && !isHov ? 0.18 : 1}
-            >
-              <text x={pos.x} y={pos.y - lineH}
-                textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${fs}px`, fontWeight: 600, fill: isHov ? '#fff' : 'rgba(255,255,255,0.75)' }}>
-                {item.name}
-              </text>
-              <text x={pos.x} y={pos.y}
-                textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${fs + 1}px`, fontWeight: 800, fill: isHov ? '#fff' : color.solid }}>
-                {val}
-              </text>
-              <text x={pos.x} y={pos.y + lineH}
-                textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${fs - 1}px`, fontWeight: 500, fill: isHov ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.45)' }}>
-                {unit}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Центральный круг */}
-        <circle cx={cx} cy={cy} r={innerR - 2}
-          fill="hsl(var(--card))"
-          stroke="rgba(255,255,255,0.06)"
-          strokeWidth={2}
-        />
-        <circle cx={cx} cy={cy} r={6} fill="rgba(255,255,255,0.15)" />
-      </svg>
+            {/* Бар */}
+            <div style={{
+              height: isMobile ? '6px' : '8px',
+              borderRadius: '99px',
+              background: 'rgba(255,255,255,0.07)',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                width: mounted ? `${pctMax * 100}%` : '0%',
+                borderRadius: '99px',
+                background: `linear-gradient(90deg, ${color.mid}, ${color.solid})`,
+                boxShadow: isHov ? `0 0 8px ${color.solid}88` : 'none',
+                transition: 'width 0.7s cubic-bezier(.4,0,.2,1), box-shadow 0.2s ease',
+                transitionDelay: mounted ? `${i * 60}ms` : '0ms',
+              }} />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -221,94 +163,78 @@ const Dashboard2TeamPerformance = () => {
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
         const data = await response.json();
-        const { from, to } = getDateRange();
 
-        const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
+        const { startDate, endDate } = getDateRange();
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        const payments: PaymentRecord[] = Array.isArray(data) ? data : (data.payments || []);
+        const filtered = payments.filter(p => {
           if (p.status !== 'approved') return false;
           const d = new Date(p.payment_date);
-          return d >= from && d <= to;
+          return d >= start && d <= end;
         });
 
-        const deptMap: { [key: string]: number } = {};
-        filtered.forEach((payment: PaymentRecord) => {
-          const dept = payment.department_name || 'Без отдела';
-          deptMap[dept] = (deptMap[dept] || 0) + payment.amount;
+        const map: Record<string, number> = {};
+        filtered.forEach(p => {
+          const dept = p.department_name || 'Не указан';
+          map[dept] = (map[dept] || 0) + Number(p.amount);
         });
 
-        const sorted = Object.entries(deptMap)
+        const sorted = Object.entries(map)
           .map(([name, amount]) => ({ name, amount }))
-          .sort((a, b) => b.amount - a.amount)
-          .slice(0, 8);
+          .sort((a, b) => b.amount - a.amount);
 
         setCurrentData(sorted);
-      } catch (error) {
-        console.error('Failed to fetch department data:', error);
+      } catch {
+        setCurrentData([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchDepartmentData();
   }, [period, getDateRange]);
 
-  const formatAmount = (v: number) => new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
+  const total = currentData.reduce((s, d) => s + d.amount, 0);
 
   return (
-    <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-      <CardContent className="p-4 sm:p-6">
-        <div style={{ marginBottom: '20px' }}>
-          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>
-            Сравнение по Отделам-Заказчикам
-          </h3>
+    <Card style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <CardContent style={{ padding: isMobile ? '16px' : '24px' }}>
+        {/* Заголовок */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? '16px' : '22px' }}>
+          <div>
+            <h3 style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: 800, color: 'hsl(var(--foreground))', margin: 0 }}>
+              Сравнение по Отделам-Заказчикам
+            </h3>
+            <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'hsl(var(--muted-foreground))', marginTop: '3px', margin: 0 }}>
+              Доля расходов по подразделениям
+            </p>
+          </div>
+          {total > 0 && (
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: isMobile ? '16px' : '20px', fontWeight: 800, color: '#01b574' }}>
+                {formatAmount(total)}
+              </div>
+              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}>итого</div>
+            </div>
+          )}
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-[200px] sm:h-[350px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '13px' }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{ padding: '13px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div style={{ height: '13px', borderRadius: '6px', background: 'rgba(255,255,255,0.08)', marginBottom: '10px', width: `${60 + i * 10}%` }} />
+                <div style={{ height: '8px', borderRadius: '99px', background: 'rgba(255,255,255,0.06)', width: `${80 - i * 15}%` }} />
+              </div>
+            ))}
           </div>
         ) : currentData.length === 0 ? (
-          <div className="flex items-center justify-center h-[200px] sm:h-[350px]">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '160px' }}>
             <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <>
-            <PetalChart data={currentData} isMobile={isMobile} />
-
-            {/* Топ-3 */}
-            <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(1,181,116,0.07)', borderRadius: '12px', border: '1px solid rgba(1,181,116,0.18)' }}>
-              <h4 style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: '800', color: 'hsl(var(--foreground))', marginBottom: '12px' }}>
-                Топ-3 Отделов по Затратам
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {currentData.slice(0, 3).map((dept, index) => {
-                  const color = PALETTE[index % PALETTE.length];
-                  return (
-                    <div key={index} style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '8px 12px',
-                      background: 'rgba(255,255,255,0.03)',
-                      borderRadius: '8px',
-                      border: `1px solid ${color.light}`,
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', color: color.solid, minWidth: '24px' }}>
-                          {index + 1}
-                        </span>
-                        <span style={{ fontSize: isMobile ? '12px' : '13px', color: 'hsl(var(--foreground))', fontWeight: '600' }}>
-                          {dept.name}
-                        </span>
-                      </div>
-                      <span style={{ fontSize: isMobile ? '14px' : '16px', color: color.solid, fontWeight: '800' }}>
-                        {formatAmount(dept.amount)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </>
+          <BarChart data={currentData} isMobile={isMobile} />
         )}
       </CardContent>
     </Card>
