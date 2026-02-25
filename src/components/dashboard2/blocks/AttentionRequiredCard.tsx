@@ -1,10 +1,66 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import { useState, useEffect } from 'react';
+import { apiFetch } from '@/utils/api';
+import { API_ENDPOINTS } from '@/config/api';
+
+interface PaymentRecord {
+  id: number;
+  status: string;
+  payment_date: string;
+  amount: number;
+  [key: string]: unknown;
+}
 
 const AttentionRequiredCard = () => {
+  const [overdue, setOverdue] = useState(0);
+  const [rejected, setRejected] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const load = async () => {
+      try {
+        const res = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
+        const data = await res.json();
+        const all: PaymentRecord[] = Array.isArray(data) ? data : [];
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        setOverdue(all.filter(p => p.status === 'pending' && new Date(p.payment_date) < today).length);
+        setRejected(all.filter(p => p.status === 'rejected').length);
+      } catch {
+        // silent
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+    load();
+    return () => controller.abort();
+  }, []);
+
+  const items = [
+    {
+      icon: 'Clock3',
+      text: loading ? '...' : overdue > 0
+        ? `Просрочено ${overdue} ${overdue === 1 ? 'платёж' : overdue < 5 ? 'платежа' : 'платежей'}`
+        : 'Просроченных платежей нет',
+      color: overdue > 0 ? '#ff6b6b' : '#01b574',
+    },
+    {
+      icon: 'XCircle',
+      text: loading ? '...' : rejected > 0
+        ? `${rejected} ${rejected === 1 ? 'отклонённый запрос' : rejected < 5 ? 'отклонённых запроса' : 'отклонённых запросов'}`
+        : 'Отклонённых запросов нет',
+      color: rejected > 0 ? '#ffb547' : '#01b574',
+    },
+  ];
+
   return (
-    <Card style={{ 
-      background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)', 
+    <Card style={{
+      background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)',
       border: '1px solid rgba(255, 107, 107, 0.3)',
       boxShadow: '0 0 30px rgba(255, 107, 107, 0.15)',
       position: 'relative',
@@ -21,22 +77,16 @@ const AttentionRequiredCard = () => {
             <Icon name="AlertTriangle" size={18} className="sm:w-5 sm:h-5" />
           </div>
         </div>
+
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }} className="sm:gap-3">
-          {[
-            { icon: 'Clock3', text: 'Просрочено 4 платежа', color: '#ff6b6b' },
-            { icon: 'XCircle', text: '2 отклоненных запроса', color: '#ffb547' }
-          ].map((alert, idx) => (
-            <div key={idx} style={{ 
-              background: 'rgba(255, 107, 107, 0.05)',
-              padding: '10px',
-              borderRadius: '8px',
+          {items.map((item, idx) => (
+            <div key={idx} style={{
+              background: 'rgba(255, 107, 107, 0.05)', padding: '10px', borderRadius: '8px',
               border: '1px solid rgba(255, 107, 107, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
+              display: 'flex', alignItems: 'center', gap: '10px'
             }} className="sm:p-3 sm:gap-3">
-              <Icon name={alert.icon} size={14} style={{ color: alert.color, flexShrink: 0 }} className="sm:w-4 sm:h-4" />
-              <span style={{ color: '#fff', fontSize: '12px', fontWeight: '500' }} className="sm:text-sm">{alert.text}</span>
+              <Icon name={item.icon} size={14} style={{ color: item.color, flexShrink: 0 }} className="sm:w-4 sm:h-4" />
+              <span style={{ color: '#fff', fontSize: '12px', fontWeight: '500' }} className="sm:text-sm">{item.text}</span>
             </div>
           ))}
         </div>
