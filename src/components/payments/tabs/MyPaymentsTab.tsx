@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePaymentsData } from '@/hooks/usePaymentsData';
 import { usePaymentForm } from '@/hooks/usePaymentForm';
 import PaymentForm from '@/components/payments/PaymentForm';
+import CashPaymentForm from '@/components/payments/CashPaymentForm';
 import PlannedPaymentsModal from '@/components/payments/PlannedPaymentsModal';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
@@ -183,6 +184,12 @@ const MyPaymentsTab = () => {
           handleExtractData={handleExtractData}
           fileName={fileName}
           fileType={fileType}
+        />
+
+        <CashPaymentForm
+          categories={categories}
+          customerDepartments={customerDepartments}
+          onSuccess={loadPayments}
         />
 
         <PlannedPaymentsModal />
