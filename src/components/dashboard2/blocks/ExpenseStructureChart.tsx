@@ -59,209 +59,213 @@ interface RingChartProps {
   isMobile: boolean;
 }
 
+const fmt = (v: number) => {
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн ₽';
+  if (v >= 1_000) return Math.round(v / 1_000) + ' тыс ₽';
+  return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
+};
+
 const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  const maxRings   = Math.min(categories.length, 8);
-  const ringThick  = isMobile ? 10 : 14;
-  const ringGap    = isMobile ? 7 : 9;
-  // innerR — радиус тёмного центрального круга
-  const innerR     = isMobile ? 58 : 82;
-  // Все дуги начинаются от левой точки центра (как на картинке — "веер вправо")
-  // startDeg = 180 (левая точка), дуга идёт по часовой вправо
-  const START_DEG  = 180;
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 80);
+    return () => clearTimeout(t);
+  }, []);
 
-  const outerR = innerR + maxRings * (ringThick + ringGap);
+  const size   = isMobile ? 200 : 260;
+  const cx     = size / 2;
+  const cy     = size / 2;
+  const outerR = isMobile ? 84 : 108;
+  const innerR = isMobile ? 58 : 74;
+  const GAP    = 1.5;
 
-  // SVG: центр диаграммы посередине слева, подписи справа
-  const pad       = isMobile ? 10 : 16;
-  const labelW    = isMobile ? 150 : 210;
-  const totalW    = outerR * 2 + pad * 2 + labelW;
-  const rowH      = isMobile ? 34 : 44;
-  const totalH    = Math.max(outerR * 2 + pad * 2, maxRings * rowH + pad * 2);
-  const cx        = outerR + pad;
-  const cy        = totalH / 2;
+  const total = categories.reduce((s, c) => s + c.amount, 0) || 1;
 
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-
-  // Дуга по часовой: startDeg → endDeg (в градусах, 0 = правый, 90 = низ)
-  const arcPath = (r: number, startDeg: number, endDeg: number) => {
-    const s = toRad(startDeg);
-    const e = toRad(endDeg);
-    const x1 = cx + r * Math.cos(s);
-    const y1 = cy + r * Math.sin(s);
-    const x2 = cx + r * Math.cos(e);
-    const y2 = cy + r * Math.sin(e);
-    const large = (endDeg - startDeg) > 180 ? 1 : 0;
-    return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
-  };
-
-  const fmt = (v: number) => {
-    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн ₽';
-    if (v >= 1_000) return Math.round(v / 1_000) + ' тыс ₽';
-    return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
-  };
-
-  const rings = categories.slice(0, maxRings).map((cat, i) => {
-    const r       = innerR + i * (ringThick + ringGap) + ringThick / 2;
-    const ratio   = cat.amount / (categories[0]?.amount || 1);
-    // Максимальная дуга = 180° (полукруг вправо), минимум 20°
-    const arcDeg  = Math.max(20, ratio * 180);
-    const endDeg  = START_DEG + arcDeg; // по часовой от 180°
-    const palette = ARC_PALETTE[i % ARC_PALETTE.length];
-    return { cat, i, r, startDeg: START_DEG, endDeg, arcDeg, palette };
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const pt = (r: number, a: number) => ({
+    x: cx + r * Math.cos(toRad(a)),
+    y: cy + r * Math.sin(toRad(a)),
   });
 
-  // Равномерные Y-позиции подписей справа
-  const labelsTop = cy - (maxRings * rowH) / 2 + rowH / 2;
-  const markerR   = isMobile ? 11 : 14;
-  const connX     = cx + outerR + pad;     // начало горизонтальной полки
-  const markerCX  = connX + markerR + 2;   // центр маркера
+  const segPath = (startA: number, endA: number, rOut: number, rIn: number) => {
+    const s1 = pt(rOut, startA), e1 = pt(rOut, endA);
+    const s2 = pt(rIn, endA),   e2 = pt(rIn, startA);
+    const large = (endA - startA) > 180 ? 1 : 0;
+    return [
+      `M ${s1.x} ${s1.y}`,
+      `A ${rOut} ${rOut} 0 ${large} 1 ${e1.x} ${e1.y}`,
+      `L ${s2.x} ${s2.y}`,
+      `A ${rIn} ${rIn} 0 ${large} 0 ${e2.x} ${e2.y}`,
+      'Z',
+    ].join(' ');
+  };
+
+  const segments = (() => {
+    let angle = -90;
+    return categories.slice(0, 8).map((cat, i) => {
+      const pct    = cat.amount / total;
+      const startA = angle + GAP;
+      const endA   = angle + pct * 360 - GAP;
+      angle += pct * 360;
+      const palette = ARC_PALETTE[i % ARC_PALETTE.length];
+      return { cat, i, startA, endA, palette, pct };
+    });
+  })();
+
+  const hovCat = hovered !== null ? categories[hovered] : null;
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto' }}>
-      <svg
-        width={totalW}
-        height={totalH}
-        viewBox={`0 0 ${totalW} ${totalH}`}
-        style={{ overflow: 'visible', maxWidth: '100%' }}
-      >
-        <defs>
-          {rings.map(({ i, palette }) => (
-            <radialGradient key={i} id={`arc-rg-${i}`}
-              gradientUnits="userSpaceOnUse"
-              cx={cx} cy={cy} r={rings[i]?.r ?? innerR}
-            >
-              <stop offset="0%"  stopColor={palette[0]} stopOpacity="0.6" />
-              <stop offset="100%" stopColor={palette[1]} stopOpacity="1" />
-            </radialGradient>
-          ))}
-          <filter id="arc-glow2" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="b" />
-            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-        </defs>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: isMobile ? '20px' : '28px' }}>
+      {/* Пончик */}
+      <div style={{ flexShrink: 0 }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          <defs>
+            {segments.map(({ i, palette }) => (
+              <linearGradient key={i} id={`es-lg-${i}`} gradientUnits="userSpaceOnUse"
+                x1={cx - outerR} y1={cy} x2={cx + outerR} y2={cy}>
+                <stop offset="0%" stopColor={palette[0]} />
+                <stop offset="100%" stopColor={palette[1]} />
+              </linearGradient>
+            ))}
+            <filter id="es-shadow">
+              <feDropShadow dx="0" dy="2" stdDeviation="5" floodOpacity="0.4" />
+            </filter>
+          </defs>
 
-        {/* Тёмный центральный круг — поверх всего в конце */}
-
-        {/* Фоновые полукольца (серые) */}
-        {rings.map(({ i, r }) => (
-          <path
-            key={`bg-${i}`}
-            d={arcPath(r, START_DEG, START_DEG + 180)}
-            fill="none"
-            stroke="rgba(255,255,255,0.05)"
-            strokeWidth={ringThick}
-            strokeLinecap="round"
+          {/* Фоновое кольцо */}
+          <circle cx={cx} cy={cy} r={(outerR + innerR) / 2}
+            fill="none" stroke="rgba(255,255,255,0.04)"
+            strokeWidth={outerR - innerR}
           />
-        ))}
 
-        {/* Цветные дуги */}
-        {rings.map(({ i, r, startDeg, endDeg, palette }) => {
+          {/* Сегменты */}
+          {segments.map(({ i, startA, endA, palette }) => {
+            const isHov = hovered === i;
+            const rOut  = isHov ? outerR + 6 : outerR;
+            const rIn   = isHov ? innerR - 2 : innerR;
+            return (
+              <path
+                key={i}
+                d={mounted ? segPath(startA, endA, rOut, rIn) : segPath(startA, startA + 0.01, outerR, innerR)}
+                fill={`url(#es-lg-${i})`}
+                filter={isHov ? 'url(#es-shadow)' : undefined}
+                opacity={hovered !== null && !isHov ? 0.22 : 1}
+                style={{ transition: 'all 0.22s cubic-bezier(.4,0,.2,1)', cursor: 'pointer' }}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+              />
+            );
+          })}
+
+          {/* Центральный круг */}
+          <circle cx={cx} cy={cy} r={innerR - 3}
+            fill="hsl(var(--card))"
+            stroke="rgba(255,255,255,0.07)"
+            strokeWidth={1.5}
+          />
+
+          {/* Текст центра */}
+          {hovCat ? (
+            <>
+              <text x={cx} y={cy - (isMobile ? 10 : 14)} textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 600, fill: ARC_PALETTE[hovered! % ARC_PALETTE.length][1] }}>
+                {hovCat.name.length > 14 ? hovCat.name.slice(0, 13) + '…' : hovCat.name}
+              </text>
+              <text x={cx} y={cy + (isMobile ? 3 : 4)} textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: `${isMobile ? 13 : 16}px`, fontWeight: 800, fill: '#fff' }}>
+                {hovCat.value}%
+              </text>
+              <text x={cx} y={cy + (isMobile ? 17 : 21)} textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 500, fill: 'rgba(255,255,255,0.4)' }}>
+                {fmt(hovCat.amount)}
+              </text>
+            </>
+          ) : (
+            <>
+              <text x={cx} y={cy - (isMobile ? 12 : 16)} textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 600, fill: 'rgba(255,255,255,0.35)', letterSpacing: '0.8px' }}>
+                ИТОГО
+              </text>
+              <text x={cx} y={cy + (isMobile ? 2 : 2)} textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: `${isMobile ? 12 : 15}px`, fontWeight: 900, fill: '#fff' }}>
+                {fmt(totalAmount)}
+              </text>
+              <text x={cx} y={cy + (isMobile ? 17 : 21)} textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: `${isMobile ? 8 : 9}px`, fontWeight: 500, fill: 'rgba(255,255,255,0.28)' }}>
+                {categories.length} {categories.length === 1 ? 'категория' : categories.length < 5 ? 'категории' : 'категорий'}
+              </text>
+            </>
+          )}
+        </svg>
+      </div>
+
+      {/* Легенда */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px', width: isMobile ? '100%' : undefined }}>
+        {segments.map(({ cat, i, pct, palette }) => {
           const isHov = hovered === i;
           return (
-            <path
-              key={`arc-${i}`}
-              d={arcPath(r, startDeg, endDeg)}
-              fill="none"
-              stroke={`url(#arc-rg-${i})`}
-              strokeWidth={isHov ? ringThick + 5 : ringThick}
-              strokeLinecap="round"
-              filter={isHov ? 'url(#arc-glow2)' : undefined}
-              style={{ transition: 'stroke-width 0.2s', cursor: 'pointer', opacity: hovered !== null && !isHov ? 0.2 : 1 }}
+            <div
+              key={i}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
-            />
-          );
-        })}
-
-        {/* Центральный тёмный круг */}
-        <circle cx={cx} cy={cy} r={innerR - 2}
-          fill="hsl(var(--card))"
-          stroke="rgba(255,255,255,0.06)"
-          strokeWidth={1.5}
-        />
-        {/* Текст в центре */}
-        <text x={cx} y={cy - (isMobile ? 12 : 16)}
-          textAnchor="middle" dominantBaseline="middle"
-          style={{ fontSize: `${isMobile ? 9 : 11}px`, fontWeight: 600, fill: 'rgba(255,255,255,0.45)', letterSpacing: '0.5px' }}>
-          СТРУКТУРА
-        </text>
-        <text x={cx} y={cy + (isMobile ? 2 : 2)}
-          textAnchor="middle" dominantBaseline="middle"
-          style={{ fontSize: `${isMobile ? 13 : 17}px`, fontWeight: 900, fill: '#ffffff' }}>
-          {fmt(totalAmount)}
-        </text>
-        <text x={cx} y={cy + (isMobile ? 17 : 22)}
-          textAnchor="middle" dominantBaseline="middle"
-          style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 500, fill: 'rgba(255,255,255,0.35)' }}>
-          {categories.length} {categories.length < 5 ? 'категории' : 'категорий'}
-        </text>
-
-        {/* Коннекторы и подписи справа — равномерно */}
-        {rings.map(({ i, r, endDeg, cat, palette }) => {
-          const isHov  = hovered === i;
-          const labelY = labelsTop + i * rowH;
-          const num    = String(i + 1).padStart(2, '0');
-
-          // Точка конца дуги
-          const eRad  = toRad(endDeg);
-          const tipX  = cx + (r + ringThick / 2 + 3) * Math.cos(eRad);
-          const tipY  = cy + (r + ringThick / 2 + 3) * Math.sin(eRad);
-
-          return (
-            <g key={`lbl-${i}`} style={{ cursor: 'pointer' }}
-              onMouseEnter={() => setHovered(i)}
-              onMouseLeave={() => setHovered(null)}
-              opacity={hovered !== null && !isHov ? 0.2 : 1}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: isMobile ? '7px 10px' : '9px 12px',
+                borderRadius: '10px',
+                background: isHov ? `${palette[1]}18` : 'rgba(255,255,255,0.025)',
+                border: `1px solid ${isHov ? `${palette[1]}45` : 'rgba(255,255,255,0.06)'}`,
+                cursor: 'default',
+                transition: 'all 0.18s ease',
+                opacity: hovered !== null && !isHov ? 0.35 : 1,
+              }}
             >
-              {/* Диагональная линия от конца дуги */}
-              <line
-                x1={tipX} y1={tipY}
-                x2={connX} y2={labelY}
-                stroke={palette[1]}
-                strokeWidth={isHov ? 1.5 : 1}
-                strokeOpacity={0.55}
-              />
-              {/* Горизонтальный усик */}
-              <line
-                x1={connX} y1={labelY}
-                x2={markerCX - markerR - 2} y2={labelY}
-                stroke={palette[1]}
-                strokeWidth={isHov ? 1.5 : 1}
-                strokeOpacity={0.55}
-              />
-              {/* Маркер */}
-              <circle cx={markerCX} cy={labelY} r={markerR}
-                fill={isHov ? palette[1] : palette[0]}
-                fillOpacity={isHov ? 1 : 0.85}
-                stroke={palette[1]}
-                strokeWidth={1.5}
-              />
-              <text x={markerCX} y={labelY}
-                textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 900, fill: '#fff', pointerEvents: 'none', userSelect: 'none' }}>
-                {num}
-              </text>
-              {/* Подпись */}
-              <text
-                x={markerCX + markerR + (isMobile ? 5 : 7)}
-                y={labelY - (isMobile ? 5 : 6)}
-                textAnchor="start" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 9 : 12}px`, fontWeight: 700, fill: '#ffffff', pointerEvents: 'none', userSelect: 'none' }}>
-                {cat.name}
-              </text>
-              <text
-                x={markerCX + markerR + (isMobile ? 5 : 7)}
-                y={labelY + (isMobile ? 7 : 9)}
-                textAnchor="start" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 500, fill: palette[1], pointerEvents: 'none', userSelect: 'none' }}>
-                {cat.value}% · {fmt(cat.amount)}
-              </text>
-            </g>
+              {/* Цветная вертикальная линия */}
+              <div style={{
+                width: isMobile ? '3px' : '4px',
+                height: isMobile ? '28px' : '34px',
+                borderRadius: '99px',
+                background: `linear-gradient(180deg, ${palette[0]}, ${palette[1]})`,
+                flexShrink: 0,
+              }} />
+
+              {/* Название + мини-бар */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: isMobile ? '11px' : '12px',
+                  fontWeight: 600,
+                  color: isHov ? '#fff' : 'hsl(var(--foreground))',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  transition: 'color 0.18s',
+                  marginBottom: '4px',
+                }}>
+                  {cat.name}
+                </div>
+                <div style={{ height: '3px', borderRadius: '99px', background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', borderRadius: '99px',
+                    background: `linear-gradient(90deg, ${palette[0]}, ${palette[1]})`,
+                    width: mounted ? `${pct * 100}%` : '0%',
+                    transition: 'width 0.7s cubic-bezier(.4,0,.2,1)',
+                    transitionDelay: `${i * 50}ms`,
+                  }} />
+                </div>
+              </div>
+
+              {/* % и сумма */}
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: isMobile ? '12px' : '13px', fontWeight: 800, color: palette[1] }}>
+                  {cat.value}%
+                </div>
+                <div style={{ fontSize: isMobile ? '9px' : '10px', color: 'rgba(255,255,255,0.35)', marginTop: '1px' }}>
+                  {fmt(cat.amount)}
+                </div>
+              </div>
+            </div>
           );
         })}
-      </svg>
+      </div>
     </div>
   );
 };
