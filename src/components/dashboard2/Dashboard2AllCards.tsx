@@ -115,19 +115,19 @@ const Dashboard2AllCards = () => {
         ))}
       </div>
 
-      {/* Department — full width */}
-      {departmentCard && (
-        <div className="min-w-0 max-w-full overflow-hidden mb-4 sm:mb-6">
-          {renderCard(departmentCard)}
-        </div>
-      )}
-
-      {/* Expense Structure — full width */}
-      {expenseStructureCard && (
-        <div className="min-w-0 max-w-full overflow-hidden mb-4 sm:mb-6">
-          {renderCard(expenseStructureCard)}
-        </div>
-      )}
+      {/* Department & Expense Structure Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        {departmentCard && (
+          <div className="min-w-0 max-w-full overflow-hidden">
+            {renderCard(departmentCard)}
+          </div>
+        )}
+        {expenseStructureCard && (
+          <div className="min-w-0 max-w-full overflow-hidden">
+            {renderCard(expenseStructureCard)}
+          </div>
+        )}
+      </div>
 
       {/* Contractor & Legal Entity Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">

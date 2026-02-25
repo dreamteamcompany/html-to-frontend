@@ -32,11 +32,11 @@ const PetalChart = ({ data, isMobile }: PetalChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
 
   const n      = data.length;
-  const size   = isMobile ? 380 : 720;
+  const size   = isMobile ? 340 : 520;
   const cx     = size / 2;
   const cy     = size / 2;
-  const innerR = isMobile ? 48 : 88;
-  const outerR = isMobile ? 168 : 300;
+  const innerR = isMobile ? 44 : 64;
+  const outerR = isMobile ? 148 : 216;
 
   const maxVal = Math.max(...data.map(d => d.amount), 1);
 
@@ -255,8 +255,8 @@ const Dashboard2TeamPerformance = () => {
 
   return (
     <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-      <CardContent className="p-3 sm:p-4">
-        <div style={{ marginBottom: '12px' }}>
+      <CardContent className="p-4 sm:p-6">
+        <div style={{ marginBottom: '20px' }}>
           <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>
             Сравнение по Отделам-Заказчикам
           </h3>
