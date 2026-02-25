@@ -23,21 +23,36 @@ const Dashboard2AllCards = () => {
     { id: 'total-expenses', title: 'Общие IT Расходы', type: 'stat' },
     { id: 'total-payments', title: 'Индексация', type: 'stat' },
     { id: 'annual-savings', title: 'Экономия', type: 'stat' },
+    { id: 'payment-type-chart', title: 'Тип расчётов', type: 'stat' },
     { id: 'monthly-dynamics', title: 'Динамика Расходов по Месяцам', type: 'chart' },
     { id: 'category-expenses', title: 'IT Расходы по Категориям', type: 'chart' },
     { id: 'contractor-comparison', title: 'Сравнение по Контрагентам', type: 'chart' },
     { id: 'expense-structure', title: 'Структура Расходов', type: 'chart' },
     { id: 'department-comparison', title: 'Сравнение по Отделам-Заказчикам', type: 'chart' },
     { id: 'legal-entity-comparison', title: 'Сравнение по Юридическим Лицам', type: 'chart' },
-    { id: 'payment-type-chart', title: 'Тип расчётов', type: 'chart' },
   ];
 
   useEffect(() => {
     const savedLayout = localStorage.getItem('dashboard2-layout');
     if (savedLayout) {
       try {
-        const parsed = JSON.parse(savedLayout);
-        setCardOrder(parsed);
+        const parsed: DashboardCard[] = JSON.parse(savedLayout);
+        const knownIds = defaultCards.map(c => c.id);
+        const savedIds = parsed.map(c => c.id);
+        const missingCards = defaultCards.filter(c => !savedIds.includes(c.id));
+        if (missingCards.length > 0 || parsed.some(c => !knownIds.includes(c.id))) {
+          const merged = [
+            ...parsed
+              .filter(c => knownIds.includes(c.id))
+              .map(c => ({ ...c, type: defaultCards.find(d => d.id === c.id)?.type ?? c.type })),
+            ...missingCards,
+          ];
+          setCardOrder(merged);
+        } else {
+          setCardOrder(
+            parsed.map(c => ({ ...c, type: defaultCards.find(d => d.id === c.id)?.type ?? c.type }))
+          );
+        }
       } catch (e) {
         console.error('Failed to parse saved layout:', e);
         setCardOrder(defaultCards);
@@ -83,20 +98,18 @@ const Dashboard2AllCards = () => {
   const expenseStructureCard = chartCards.find(c => c.id === 'expense-structure');
   const legalEntityCard = chartCards.find(c => c.id === 'legal-entity-comparison');
   const departmentCard = chartCards.find(c => c.id === 'department-comparison');
-  const paymentTypeCard = chartCards.find(c => c.id === 'payment-type-chart');
   
   const otherCharts = chartCards.filter(c => 
     c.id !== 'contractor-comparison' && 
     c.id !== 'expense-structure' && 
     c.id !== 'legal-entity-comparison' && 
-    c.id !== 'department-comparison' &&
-    c.id !== 'payment-type-chart'
+    c.id !== 'department-comparison'
   );
 
   return (
     <div className="mb-6 sm:mb-8 overflow-x-hidden max-w-full">
       {/* Stat Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-4 sm:mb-6">
         {statCards.map((card) => {
           return (
             <div 
@@ -135,28 +148,14 @@ const Dashboard2AllCards = () => {
         )}
       </div>
 
-      {/* Payment Type Row */}
-      {paymentTypeCard && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-          <div className="min-w-0 max-w-full overflow-hidden">
-            {renderCard(paymentTypeCard)}
-          </div>
-          {legalEntityCard && (
-            <div className="min-w-0 max-w-full overflow-hidden">
-              {renderCard(legalEntityCard)}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Contractor Row */}
+      {/* Contractor & Legal Entity Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {contractorCard && (
           <div className="min-w-0 max-w-full overflow-hidden">
             {renderCard(contractorCard)}
           </div>
         )}
-        {!paymentTypeCard && legalEntityCard && (
+        {legalEntityCard && (
           <div className="min-w-0 max-w-full overflow-hidden">
             {renderCard(legalEntityCard)}
           </div>
