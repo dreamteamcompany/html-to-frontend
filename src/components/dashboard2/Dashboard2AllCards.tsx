@@ -8,6 +8,7 @@ import ContractorComparisonChart from './blocks/ContractorComparisonChart';
 import ExpenseStructureChart from './blocks/ExpenseStructureChart';
 import LegalEntityComparisonChart from './blocks/LegalEntityComparisonChart';
 import Dashboard2TeamPerformance from './Dashboard2TeamPerformance';
+import PaymentTypeChart from './blocks/PaymentTypeChart';
 
 interface DashboardCard {
   id: string;
@@ -28,6 +29,7 @@ const Dashboard2AllCards = () => {
     { id: 'expense-structure', title: 'Структура Расходов', type: 'chart' },
     { id: 'department-comparison', title: 'Сравнение по Отделам-Заказчикам', type: 'chart' },
     { id: 'legal-entity-comparison', title: 'Сравнение по Юридическим Лицам', type: 'chart' },
+    { id: 'payment-type-chart', title: 'Тип расчётов', type: 'chart' },
   ];
 
   useEffect(() => {
@@ -65,6 +67,8 @@ const Dashboard2AllCards = () => {
         return <Dashboard2TeamPerformance />;
       case 'legal-entity-comparison':
         return <LegalEntityComparisonChart />;
+      case 'payment-type-chart':
+        return <PaymentTypeChart />;
       default:
         return null;
     }
@@ -79,12 +83,14 @@ const Dashboard2AllCards = () => {
   const expenseStructureCard = chartCards.find(c => c.id === 'expense-structure');
   const legalEntityCard = chartCards.find(c => c.id === 'legal-entity-comparison');
   const departmentCard = chartCards.find(c => c.id === 'department-comparison');
+  const paymentTypeCard = chartCards.find(c => c.id === 'payment-type-chart');
   
   const otherCharts = chartCards.filter(c => 
     c.id !== 'contractor-comparison' && 
     c.id !== 'expense-structure' && 
     c.id !== 'legal-entity-comparison' && 
-    c.id !== 'department-comparison'
+    c.id !== 'department-comparison' &&
+    c.id !== 'payment-type-chart'
   );
 
   return (
@@ -129,14 +135,28 @@ const Dashboard2AllCards = () => {
         )}
       </div>
 
-      {/* Contractor & Legal Entity Row */}
+      {/* Payment Type Row */}
+      {paymentTypeCard && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+          <div className="min-w-0 max-w-full overflow-hidden">
+            {renderCard(paymentTypeCard)}
+          </div>
+          {legalEntityCard && (
+            <div className="min-w-0 max-w-full overflow-hidden">
+              {renderCard(legalEntityCard)}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Contractor Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {contractorCard && (
           <div className="min-w-0 max-w-full overflow-hidden">
             {renderCard(contractorCard)}
           </div>
         )}
-        {legalEntityCard && (
+        {!paymentTypeCard && legalEntityCard && (
           <div className="min-w-0 max-w-full overflow-hidden">
             {renderCard(legalEntityCard)}
           </div>
