@@ -64,7 +64,11 @@ class ContractorRequest(BaseModel):
 
 class CustomerDepartmentRequest(BaseModel):
     name: str = Field(..., min_length=1)
-    description: str = Field(default='')
+    description: Optional[str] = Field(default='')
+
+    def model_post_init(self, __context):
+        if self.description is None:
+            self.description = ''
 
 class RoleRequest(BaseModel):
     name: str = Field(..., min_length=1)
