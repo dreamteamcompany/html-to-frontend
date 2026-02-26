@@ -71,7 +71,7 @@ const AttentionRequiredCard = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }} className="sm:mb-5">
           <div>
             <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '6px', color: '#fff' }} className="sm:text-lg sm:mb-2">Требуют внимания</div>
-            <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '12px', fontWeight: '500' }} className="sm:text-sm">Критические задачи</div>
+            <div style={{ color: 'rgba(200, 210, 230, 0.85)', fontSize: '12px', fontWeight: '500' }} className="sm:text-sm">Критические задачи</div>
           </div>
           <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255, 107, 107, 0.1)', color: '#ff6b6b', border: '1px solid rgba(255, 107, 107, 0.2)' }} className="sm:w-12 sm:h-12">
             <Icon name="AlertTriangle" size={18} className="sm:w-5 sm:h-5" />

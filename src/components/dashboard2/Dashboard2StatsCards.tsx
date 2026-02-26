@@ -84,7 +84,7 @@ const Dashboard2StatsCards = () => {
 
   const ChangeTag = ({ value, label }: { value: number | null; label?: string }) => {
     if (value === null) return (
-      <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: '#a3aed0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: 'rgba(200, 210, 230, 0.75)' }}>
         <Icon name="Minus" size={14} /> Нет данных
       </div>
     );

@@ -174,7 +174,7 @@ const MonthlyDynamicsChart = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          color: 'rgba(117, 81, 233, 0.45)',
+          color: 'rgba(180, 190, 220, 0.8)',
           font: { size: isMobile ? 9 : 12 },
           maxTicksLimit: isMobile ? 4 : 8,
           callback: (value: unknown) => {
@@ -183,11 +183,11 @@ const MonthlyDynamicsChart = () => {
             return new Intl.NumberFormat('ru-RU', { notation: 'compact' }).format(v);
           },
         },
-        grid: { color: 'rgba(117, 81, 233, 0.08)', lineWidth: isMobile ? 0.5 : 1 },
+        grid: { color: 'rgba(255, 255, 255, 0.06)', lineWidth: isMobile ? 0.5 : 1 },
       },
       x: {
         ticks: {
-          color: 'rgba(117, 81, 233, 0.45)',
+          color: 'rgba(180, 190, 220, 0.8)',
           font: { size: isMobile ? 7 : 11 },
           maxRotation: isMobile ? 45 : 0,
           minRotation: isMobile ? 45 : 0,

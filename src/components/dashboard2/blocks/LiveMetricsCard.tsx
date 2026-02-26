@@ -111,7 +111,7 @@ const LiveMetricsCard = () => {
             }} className="sm:text-4xl">
               {loading ? '—' : todayCount}
             </div>
-            <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '11px', marginTop: '4px' }} className="sm:text-xs">
+            <div style={{ color: 'rgba(200, 215, 235, 0.8)', fontSize: '11px', marginTop: '4px' }} className="sm:text-xs">
               {loading ? '...' : `${pendingCount} на согласовании`}
             </div>
           </div>
@@ -126,7 +126,7 @@ const LiveMetricsCard = () => {
               <div style={{ color: '#ffb547', fontSize: '15px', fontWeight: '700' }} className="sm:text-xl">
                 {loading ? '—' : fmtAmount(avgAmount)}
               </div>
-              <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', marginTop: '2px' }} className="sm:text-xs sm:mt-1">Ср. платёж</div>
+              <div style={{ color: 'rgba(200, 215, 235, 0.8)', fontSize: '10px', marginTop: '2px' }} className="sm:text-xs sm:mt-1">Ср. платёж</div>
             </div>
             <div style={{
               background: 'rgba(117, 81, 233, 0.1)', padding: '12px', borderRadius: '10px',
@@ -136,7 +136,7 @@ const LiveMetricsCard = () => {
               <div style={{ color: '#7551e9', fontSize: '18px', fontWeight: '700' }} className="sm:text-2xl">
                 {loading ? '—' : `${approvedRate}%`}
               </div>
-              <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', marginTop: '2px' }} className="sm:text-xs sm:mt-1">Согласовано</div>
+              <div style={{ color: 'rgba(200, 215, 235, 0.8)', fontSize: '10px', marginTop: '2px' }} className="sm:text-xs sm:mt-1">Согласовано</div>
             </div>
           </div>
 
@@ -146,7 +146,7 @@ const LiveMetricsCard = () => {
             borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.05)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }} className="sm:mb-2">
-              <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: '11px' }} className="sm:text-xs">На согласовании</span>
+              <span style={{ color: 'rgba(200, 215, 235, 0.8)', fontSize: '11px' }} className="sm:text-xs">На согласовании</span>
               <span style={{ color: '#fff', fontSize: '12px', fontWeight: '600' }} className="sm:text-sm">{loading ? '—' : pendingCount}</span>
             </div>
             <div style={{

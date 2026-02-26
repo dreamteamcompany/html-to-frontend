@@ -5,22 +5,22 @@ export const dashboardTypography = {
   cardTitle: 'text-sm font-bold text-foreground',
   
   // Подзаголовки / описания
-  cardSubtitle: 'text-sm font-medium text-muted-foreground',
+  cardSubtitle: 'text-sm font-medium text-foreground/70',
   
   // Основные цифры / метрики
   cardValue: 'text-xl font-extrabold text-foreground',
   
   // Вторичный текст
-  cardSecondary: 'text-sm font-medium text-muted-foreground',
+  cardSecondary: 'text-sm font-medium text-foreground/70',
   
   // Статус / бейджи
   cardBadge: 'text-sm font-semibold',
   
   // Мелкий текст (labels, hints)
-  cardSmall: 'text-sm font-medium text-muted-foreground',
+  cardSmall: 'text-sm font-medium text-foreground/60',
   
   // Очень мелкий текст
-  cardTiny: 'text-sm font-medium text-muted-foreground',
+  cardTiny: 'text-xs font-medium text-foreground/60',
 } as const;
 
 // Цвета для единообразия (используют CSS переменные где возможно)

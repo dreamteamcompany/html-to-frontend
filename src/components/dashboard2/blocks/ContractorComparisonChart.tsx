@@ -142,7 +142,7 @@ const ContractorComparisonChart = () => {
                   x: {
                     beginAtZero: true,
                     ticks: {
-                      color: 'rgba(117, 81, 233, 0.45)',
+                      color: 'rgba(180, 190, 220, 0.8)',
                       font: { size: isMobile ? 10 : 12 },
                       maxTicksLimit: isMobile ? 5 : 8,
                       callback: (value) => {
@@ -151,10 +151,10 @@ const ContractorComparisonChart = () => {
                         return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
                       }
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    grid: { color: 'rgba(255, 255, 255, 0.06)' }
                   },
                   y: {
-                    ticks: { color: 'rgba(117, 81, 233, 0.45)', font: { size: isMobile ? 9 : 12 } },
+                    ticks: { color: 'rgba(180, 190, 220, 0.8)', font: { size: isMobile ? 9 : 12 } },
                     grid: { display: false }
                   }
                 }

@@ -193,7 +193,7 @@ const Dashboard2PaymentCalendar = () => {
               let bgColor = 'rgba(255, 255, 255, 0.02)';
               let borderColor = 'rgba(255, 255, 255, 0.05)';
               let glowColor = 'transparent';
-              let textColor = '#a3aed0';
+              let textColor = 'rgba(180, 195, 225, 0.85)';
               
               if (isToday) {
                 bgColor = 'rgba(117, 81, 233, 0.2)';
@@ -288,7 +288,7 @@ const Dashboard2PaymentCalendar = () => {
                       </div>
                       <div style={{ 
                         fontSize: '8px',
-                        color: 'rgba(255, 255, 255, 0.5)',
+                        color: 'rgba(200, 215, 240, 0.7)',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap'
