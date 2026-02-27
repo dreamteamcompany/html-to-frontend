@@ -164,9 +164,7 @@ const Dashboard2TeamPerformance = () => {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
         const data = await response.json();
 
-        const { startDate, endDate } = getDateRange();
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        const { from: start, to: end } = getDateRange();
 
         const payments: PaymentRecord[] = Array.isArray(data) ? data : (data.payments || []);
         const filtered = payments.filter(p => {
