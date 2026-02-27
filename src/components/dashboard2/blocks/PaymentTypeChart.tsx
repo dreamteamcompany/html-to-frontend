@@ -27,6 +27,8 @@ const PaymentTypeChart = () => {
   const [cashCount, setCashCount] = useState(0);
   const [legalAmount, setLegalAmount] = useState(0);
   const [legalCount, setLegalCount] = useState(0);
+  const [topLegal, setTopLegal] = useState<{ name: string; amount: number }[]>([]);
+  const [topCash, setTopCash] = useState<{ name: string; amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [hovered, setHovered] = useState<'cash' | 'legal' | null>(null);
 
@@ -48,14 +50,19 @@ const PaymentTypeChart = () => {
         });
 
         let cash = 0, cashCnt = 0, legal = 0, legalCnt = 0;
+        const legalByEntity: Record<string, number> = {};
+        const cashByEntity: Record<string, number> = {};
 
         filtered.forEach((p: PaymentRecord) => {
+          const entityName = p.legal_entity_name || 'Не указано';
           if (p.payment_type === 'cash') {
             cash += p.amount;
             cashCnt++;
+            cashByEntity[entityName] = (cashByEntity[entityName] || 0) + p.amount;
           } else {
             legal += p.amount;
             legalCnt++;
+            legalByEntity[entityName] = (legalByEntity[entityName] || 0) + p.amount;
           }
         });
 
@@ -63,6 +70,15 @@ const PaymentTypeChart = () => {
         setCashCount(cashCnt);
         setLegalAmount(legal);
         setLegalCount(legalCnt);
+
+        const sortEntries = (obj: Record<string, number>) =>
+          Object.entries(obj)
+            .map(([name, amount]) => ({ name, amount }))
+            .sort((a, b) => b.amount - a.amount)
+            .slice(0, 3);
+
+        setTopLegal(sortEntries(legalByEntity));
+        setTopCash(sortEntries(cashByEntity));
       } catch (err) {
         if (!controller.signal.aborted) console.error('PaymentTypeChart error:', err);
       } finally {
@@ -251,6 +267,62 @@ const PaymentTypeChart = () => {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Детализация по юрлицам */}
+        {!loading && total > 0 && (topLegal.length > 0 || topCash.length > 0) && (
+          <div className="border-t border-border pt-3 mt-4">
+            <div className={`${dashboardTypography.cardBadge} mb-2 text-muted-foreground`}>
+              Топ юрлиц-плательщиков:
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {[
+                ...topLegal.map(e => ({ ...e, type: 'legal' as const })),
+                ...topCash.map(e => ({ ...e, type: 'cash' as const })),
+              ]
+                .sort((a, b) => b.amount - a.amount)
+                .slice(0, 3)
+                .map((item, index) => (
+                  <div
+                    key={index}
+                    className={`flex justify-between items-center ${dashboardTypography.cardSmall}`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                      <span
+                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center ${dashboardTypography.cardTiny} font-bold flex-shrink-0`}
+                        style={{
+                          background: index === 0
+                            ? (item.type === 'legal' ? 'rgba(57, 101, 255, 0.2)' : 'rgba(1, 181, 116, 0.2)')
+                            : 'hsl(var(--muted))',
+                          color: index === 0
+                            ? (item.type === 'legal' ? '#3965ff' : '#01b574')
+                            : 'hsl(var(--muted-foreground))',
+                        }}
+                      >
+                        {index + 1}
+                      </span>
+                      <span className="font-medium truncate text-foreground">{item.name}</span>
+                      <span
+                        className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
+                        style={{
+                          background: item.type === 'legal' ? 'rgba(57,101,255,0.1)' : 'rgba(1,181,116,0.1)',
+                          color: item.type === 'legal' ? '#3965ff' : '#01b574',
+                          fontSize: '10px',
+                        }}
+                      >
+                        {item.type === 'legal' ? 'безнал' : 'нал'}
+                      </span>
+                    </div>
+                    <span
+                      className="font-semibold ml-2 flex-shrink-0"
+                      style={{ color: item.type === 'legal' ? '#3965ff' : '#01b574' }}
+                    >
+                      {fmt(item.amount)}
+                    </span>
+                  </div>
+                ))}
             </div>
           </div>
         )}
