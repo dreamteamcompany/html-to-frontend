@@ -94,16 +94,6 @@ const PaymentTypeChart = () => {
   const legalPct = total > 0 ? (legalAmount / total) * 100 : 0;
   const cashPct = total > 0 ? (cashAmount / total) * 100 : 0;
 
-  // SVG donut parameters
-  const cx = 80, cy = 80, r = 62, stroke = 18;
-  const circ = 2 * Math.PI * r;
-
-  const legalDash = total > 0 ? (legalAmount / total) * circ : 0;
-  const cashDash = total > 0 ? (cashAmount / total) * circ : 0;
-  const legalOffset = 0;
-  const cashOffset = -(legalDash);
-  const gap = 4;
-
   return (
     <Card
       className="h-full"
@@ -128,84 +118,9 @@ const PaymentTypeChart = () => {
             <p className={dashboardTypography.cardSubtitle}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row items-center gap-6 flex-1">
-            {/* Donut chart */}
-            <div className="relative flex-shrink-0">
-              <svg width={160} height={160} viewBox="0 0 160 160">
-                <defs>
-                  <linearGradient id="pt-legal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#3965ff" />
-                    <stop offset="100%" stopColor="#7551e9" />
-                  </linearGradient>
-                  <linearGradient id="pt-cash-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#01b574" />
-                    <stop offset="100%" stopColor="#38d399" />
-                  </linearGradient>
-                  <filter id="pt-glow">
-                    <feGaussianBlur stdDeviation="3" result="b" />
-                    <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-                  </filter>
-                </defs>
-
-                {/* Background track */}
-                <circle
-                  cx={cx} cy={cy} r={r}
-                  fill="none"
-                  stroke="rgba(255,255,255,0.06)"
-                  strokeWidth={stroke}
-                />
-
-                {/* Legal arc */}
-                {legalAmount > 0 && (
-                  <circle
-                    cx={cx} cy={cy} r={r}
-                    fill="none"
-                    stroke="url(#pt-legal-grad)"
-                    strokeWidth={hovered === 'legal' ? stroke + 4 : stroke}
-                    strokeDasharray={`${Math.max(0, legalDash - gap)} ${circ}`}
-                    strokeDashoffset={-(legalOffset * circ / (2 * Math.PI)) + circ * 0.25}
-                    strokeLinecap="round"
-                    filter={hovered === 'legal' ? 'url(#pt-glow)' : undefined}
-                    style={{ transition: 'stroke-width 0.2s, opacity 0.2s', cursor: 'pointer', opacity: hovered === 'cash' ? 0.25 : 1 }}
-                    transform={`rotate(-90 ${cx} ${cy})`}
-                    onMouseEnter={() => setHovered('legal')}
-                    onMouseLeave={() => setHovered(null)}
-                  />
-                )}
-
-                {/* Cash arc */}
-                {cashAmount > 0 && (
-                  <circle
-                    cx={cx} cy={cy} r={r}
-                    fill="none"
-                    stroke="url(#pt-cash-grad)"
-                    strokeWidth={hovered === 'cash' ? stroke + 4 : stroke}
-                    strokeDasharray={`${Math.max(0, cashDash - gap)} ${circ}`}
-                    strokeDashoffset={-((legalDash) / (circ) * circ) + circ * 0.25}
-                    strokeLinecap="round"
-                    filter={hovered === 'cash' ? 'url(#pt-glow)' : undefined}
-                    style={{ transition: 'stroke-width 0.2s, opacity 0.2s', cursor: 'pointer', opacity: hovered === 'legal' ? 0.25 : 1 }}
-                    transform={`rotate(-90 ${cx} ${cy})`}
-                    onMouseEnter={() => setHovered('cash')}
-                    onMouseLeave={() => setHovered(null)}
-                  />
-                )}
-
-                {/* Center */}
-                <circle cx={cx} cy={cy} r={r - stroke / 2 - 2} fill="hsl(var(--card))" />
-                <text x={cx} y={cy - 10} textAnchor="middle" dominantBaseline="middle"
-                  style={{ fontSize: '9px', fontWeight: 600, fill: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>
-                  ИТОГО
-                </text>
-                <text x={cx} y={cy + 7} textAnchor="middle" dominantBaseline="middle"
-                  style={{ fontSize: '14px', fontWeight: 900, fill: '#ffffff' }}>
-                  {fmt(total)}
-                </text>
-              </svg>
-            </div>
-
-            {/* Legend & stats */}
-            <div className="flex flex-col gap-3 flex-1 w-full">
+          <div className="flex flex-col justify-center gap-3 flex-1">
+            {/* Cards */}
+            <div className="flex flex-col gap-3 w-full">
               {/* Legal */}
               <div
                 className="rounded-xl p-3 cursor-pointer transition-all"
