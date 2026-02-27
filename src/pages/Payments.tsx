@@ -115,7 +115,7 @@ const Payments = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full justify-start border-b border-white/10 rounded-none bg-transparent p-0 h-auto mb-6">
+            <TabsList className="w-full justify-start border-b border-white/10 rounded-none bg-transparent p-0 h-auto mb-6 overflow-scroll">
               {!isCEO && (
               <TabsTrigger 
                 value="my" 
