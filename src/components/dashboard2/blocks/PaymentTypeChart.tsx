@@ -128,9 +128,9 @@ const PaymentTypeChart = () => {
             <p className={dashboardTypography.cardSubtitle}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row items-center gap-6 flex-1">
+          <div className="flex flex-col gap-4 flex-1">
             {/* Donut chart */}
-            <div className="relative flex-shrink-0">
+            <div className="relative flex-shrink-0 hidden sm:flex justify-center">
               <svg width={160} height={160} viewBox="0 0 160 160">
                 <defs>
                   <linearGradient id="pt-legal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -204,8 +204,14 @@ const PaymentTypeChart = () => {
               </svg>
             </div>
 
+            {/* Mobile total */}
+            <div className="sm:hidden text-center">
+              <div className="text-xs font-semibold text-muted-foreground mb-0.5">ИТОГО</div>
+              <div className="text-xl font-black">{fmt(total)}</div>
+            </div>
+
             {/* Legend & stats */}
-            <div className="flex flex-col gap-3 flex-1 w-full">
+            <div className="flex flex-col gap-3 w-full">
               {/* Legal */}
               <div
                 className="rounded-xl p-3 cursor-pointer transition-all"
@@ -229,9 +235,9 @@ const PaymentTypeChart = () => {
                   {fmt(legalAmount)}
                 </div>
                 <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{legalCount} платежей</div>
-                <div className="mt-2 h-1 rounded-full" style={{ background: 'rgba(57,101,255,0.15)' }}>
+                <div className="mt-2 h-1.5 rounded-full" style={{ background: 'rgba(57,101,255,0.15)' }}>
                   <div
-                    className="h-1 rounded-full"
+                    className="h-1.5 rounded-full"
                     style={{ width: `${legalPct}%`, background: 'linear-gradient(90deg, #3965ff, #7551e9)', transition: 'width 0.5s' }}
                   />
                 </div>
@@ -260,9 +266,9 @@ const PaymentTypeChart = () => {
                   {fmt(cashAmount)}
                 </div>
                 <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{cashCount} платежей</div>
-                <div className="mt-2 h-1 rounded-full" style={{ background: 'rgba(1,181,116,0.15)' }}>
+                <div className="mt-2 h-1.5 rounded-full" style={{ background: 'rgba(1,181,116,0.15)' }}>
                   <div
-                    className="h-1 rounded-full"
+                    className="h-1.5 rounded-full"
                     style={{ width: `${cashPct}%`, background: 'linear-gradient(90deg, #01b574, #38d399)', transition: 'width 0.5s' }}
                   />
                 </div>
