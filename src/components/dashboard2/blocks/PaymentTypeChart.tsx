@@ -128,9 +128,9 @@ const PaymentTypeChart = () => {
             <p className={dashboardTypography.cardSubtitle}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4 flex-1">
+          <div className="flex flex-col sm:flex-row items-center gap-6 flex-1">
             {/* Donut chart */}
-            <div className="relative flex-shrink-0 hidden sm:flex justify-center">
+            <div className="relative flex-shrink-0">
               <svg width={160} height={160} viewBox="0 0 160 160">
                 <defs>
                   <linearGradient id="pt-legal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -204,14 +204,8 @@ const PaymentTypeChart = () => {
               </svg>
             </div>
 
-            {/* Mobile total */}
-            <div className="sm:hidden text-center">
-              <div className="text-xs font-semibold text-muted-foreground mb-0.5">ИТОГО</div>
-              <div className="text-xl font-black">{fmt(total)}</div>
-            </div>
-
             {/* Legend & stats */}
-            <div className="flex flex-col gap-3 w-full">
+            <div className="flex flex-col gap-3 flex-1 w-full">
               {/* Legal */}
               <div
                 className="rounded-xl p-3 cursor-pointer transition-all"
@@ -277,61 +271,7 @@ const PaymentTypeChart = () => {
           </div>
         )}
 
-        {/* Детализация по юрлицам */}
-        {!loading && total > 0 && (topLegal.length > 0 || topCash.length > 0) && (
-          <div className="border-t border-border pt-3 mt-4">
-            <div className={`${dashboardTypography.cardBadge} mb-2 text-muted-foreground`}>
-              Топ юрлиц-плательщиков:
-            </div>
-            <div className="flex flex-col gap-1.5">
-              {[
-                ...topLegal.map(e => ({ ...e, type: 'legal' as const })),
-                ...topCash.map(e => ({ ...e, type: 'cash' as const })),
-              ]
-                .sort((a, b) => b.amount - a.amount)
-                .slice(0, 3)
-                .map((item, index) => (
-                  <div
-                    key={index}
-                    className={`flex justify-between items-center ${dashboardTypography.cardSmall}`}
-                  >
-                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                      <span
-                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center ${dashboardTypography.cardTiny} font-bold flex-shrink-0`}
-                        style={{
-                          background: index === 0
-                            ? (item.type === 'legal' ? 'rgba(57, 101, 255, 0.2)' : 'rgba(1, 181, 116, 0.2)')
-                            : 'hsl(var(--muted))',
-                          color: index === 0
-                            ? (item.type === 'legal' ? '#3965ff' : '#01b574')
-                            : 'hsl(var(--muted-foreground))',
-                        }}
-                      >
-                        {index + 1}
-                      </span>
-                      <span className="font-medium truncate text-foreground">{item.name}</span>
-                      <span
-                        className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
-                        style={{
-                          background: item.type === 'legal' ? 'rgba(57,101,255,0.1)' : 'rgba(1,181,116,0.1)',
-                          color: item.type === 'legal' ? '#3965ff' : '#01b574',
-                          fontSize: '10px',
-                        }}
-                      >
-                        {item.type === 'legal' ? 'безнал' : 'нал'}
-                      </span>
-                    </div>
-                    <span
-                      className="font-semibold ml-2 flex-shrink-0"
-                      style={{ color: item.type === 'legal' ? '#3965ff' : '#01b574' }}
-                    >
-                      {fmt(item.amount)}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
+
       </CardContent>
     </Card>
   );
