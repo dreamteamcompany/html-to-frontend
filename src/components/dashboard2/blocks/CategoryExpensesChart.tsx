@@ -124,7 +124,7 @@ const CategoryExpensesChart = () => {
     backgroundColor: colors[index % colors.length],
     borderRadius: isMobile ? 5 : 10,
     borderSkipped: false as const,
-    maxBarThickness: isMobile ? 18 : 28,
+    maxBarThickness: isMobile ? 25 : 39,
   }));
 
   return (
