@@ -33,14 +33,17 @@ const LiveMetricsCard = () => {
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
 
         const todayPayments = all.filter(p => {
+          if (p.status === 'cancelled') return false;
           const d = new Date(p.payment_date || p.created_at || '');
-          return d >= today;
+          return d >= today && d < tomorrow;
         });
         setTodayCount(todayPayments.length);
 
-        const pending = all.filter(p => p.status === 'pending');
+        const pending = all.filter(p => p.status === 'pending_approval');
         setPendingCount(pending.length);
 
         const { from, to } = getDateRange();

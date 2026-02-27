@@ -38,13 +38,14 @@ const Dashboard2ServicesDynamics = () => {
 
       const now = new Date();
       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
       const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
 
       // Платежи текущего месяца
       const currentMonthPayments = approvedPayments.filter((p: Payment) => {
         const paymentDate = new Date(p.payment_date);
-        return paymentDate >= currentMonthStart;
+        return paymentDate >= currentMonthStart && paymentDate <= currentMonthEnd;
       });
 
       // Платежи предыдущего месяца
