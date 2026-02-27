@@ -107,7 +107,7 @@ const Dashboard2AllCards = () => {
   );
 
   return (
-    <div className="mb-6 sm:mb-8 overflow-x-hidden max-w-full">
+    <div className="mb-6 sm:mb-8 max-w-full">
       {/* Stat Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-4 sm:mb-6">
         {statCards.map((card) => {
@@ -127,7 +127,7 @@ const Dashboard2AllCards = () => {
         {otherCharts.map((card) => (
           <div 
             key={card.id} 
-            className="min-w-0 max-w-full overflow-hidden"
+            className="min-w-0 max-w-full"
           >
             {renderCard(card)}
           </div>
@@ -137,12 +137,12 @@ const Dashboard2AllCards = () => {
       {/* Department & Expense Structure Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {departmentCard && (
-          <div className="min-w-0 max-w-full overflow-hidden">
+          <div className="min-w-0 max-w-full">
             {renderCard(departmentCard)}
           </div>
         )}
         {expenseStructureCard && (
-          <div className="min-w-0 max-w-full overflow-hidden">
+          <div className="min-w-0 max-w-full">
             {renderCard(expenseStructureCard)}
           </div>
         )}
@@ -151,12 +151,12 @@ const Dashboard2AllCards = () => {
       {/* Contractor & Legal Entity Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {contractorCard && (
-          <div className="min-w-0 max-w-full overflow-hidden">
+          <div className="min-w-0 max-w-full">
             {renderCard(contractorCard)}
           </div>
         )}
         {legalEntityCard && (
-          <div className="min-w-0 max-w-full overflow-hidden">
+          <div className="min-w-0 max-w-full">
             {renderCard(legalEntityCard)}
           </div>
         )}
