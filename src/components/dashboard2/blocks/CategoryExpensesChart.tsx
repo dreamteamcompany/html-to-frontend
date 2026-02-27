@@ -158,10 +158,32 @@ const CategoryExpensesChart = () => {
                   },
                   tooltip: {
                     enabled: !isMobile,
+                    backgroundColor: 'rgba(18, 18, 32, 0.92)',
+                    borderColor: 'rgba(117, 81, 233, 0.4)',
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 10,
+                    titleColor: 'rgba(255,255,255,0.55)',
+                    titleFont: { size: 12, weight: 'normal' as const },
+                    bodyColor: '#ffffff',
+                    bodyFont: { size: 13, weight: 'bold' as const, family: 'Plus Jakarta Sans, sans-serif' },
                     callbacks: {
-                      label: (context) =>
-                        `${context.dataset.label}: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`
-                    }
+                      title: (items) => items[0]?.label ?? '',
+                      label: (context) => {
+                        const val = context.raw as number;
+                        if (val === 0) return '';
+                        return `  ${context.dataset.label}: ${new Intl.NumberFormat('ru-RU').format(val)} ₽`;
+                      },
+                      footer: (items) => {
+                        const total = items.reduce((s, i) => s + (i.raw as number), 0);
+                        if (items.length <= 1 || total === 0) return '';
+                        return `Итого: ${new Intl.NumberFormat('ru-RU').format(total)} ₽`;
+                      }
+                    },
+                    footerColor: 'rgba(117, 81, 233, 0.9)',
+                    footerFont: { size: 12, weight: 'bold' as const },
+                    footerMarginTop: 8,
+                    filter: (item) => (item.raw as number) > 0,
                   }
                 },
                 scales: {
