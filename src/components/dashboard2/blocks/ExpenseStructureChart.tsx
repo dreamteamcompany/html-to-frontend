@@ -297,7 +297,8 @@ const ExpenseStructureChart = () => {
 
         const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
           if (p.status !== 'approved') return false;
-          const d = new Date(p.payment_date);
+          const raw = String(p.payment_date);
+          const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
           return d >= from && d <= to;
         });
 

@@ -122,7 +122,9 @@ const CategoryExpensesChart = () => {
     label: category,
     data: categoryData[category],
     backgroundColor: colors[index % colors.length],
-    borderRadius: isMobile ? 4 : 8
+    borderRadius: isMobile ? 5 : 10,
+    borderSkipped: false as const,
+    maxBarThickness: isMobile ? 18 : 28,
   }));
 
   return (
@@ -166,25 +168,29 @@ const CategoryExpensesChart = () => {
                   y: {
                     beginAtZero: true,
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.8)',
-                      font: { size: isMobile ? 10 : 12 },
-                      maxTicksLimit: isMobile ? 5 : 8,
+                      color: 'rgba(180, 190, 220, 0.7)',
+                      font: { size: isMobile ? 10 : 11 },
+                      maxTicksLimit: isMobile ? 4 : 6,
+                      padding: 6,
                       callback: (value) => {
                         const v = value as number;
-                        if (isMobile && v >= 1000) return (v / 1000).toFixed(0) + 'k ₽';
-                        return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
+                        if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн';
+                        if (v >= 1000) return (v / 1000).toFixed(0) + 'k';
+                        return String(v);
                       }
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.06)' }
+                    grid: { color: 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
+                    border: { dash: [4, 4], display: false }
                   },
                   x: {
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.8)',
-                      font: { size: isMobile ? 9 : 12 },
+                      color: 'rgba(180, 190, 220, 0.75)',
+                      font: { size: isMobile ? 9 : 11 },
                       maxRotation: isMobile ? 45 : 0,
                       minRotation: isMobile ? 45 : 0,
                       autoSkip: true,
-                      maxTicksLimit: isMobile ? 6 : 15,
+                      maxTicksLimit: isMobile ? 6 : 14,
+                      padding: 4,
                     },
                     grid: { display: false }
                   }
