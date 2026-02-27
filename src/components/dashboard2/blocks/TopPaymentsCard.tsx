@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
+import { usePeriod } from '@/contexts/PeriodContext';
 
 interface TopPayment {
   id: number;
@@ -17,12 +18,17 @@ interface TopPayment {
 const TopPaymentsCard = () => {
   const [payments, setPayments] = useState<TopPayment[]>([]);
   const [loading, setLoading] = useState(true);
+  const { period, getDateRange } = usePeriod();
 
   useEffect(() => {
     const controller = new AbortController();
     const loadTopPayments = async () => {
       try {
-        const response = await apiFetch(API_ENDPOINTS.statsApi);
+        const { from, to } = getDateRange();
+        const dateFrom = from.toISOString().split('T')[0];
+        const dateTo = to.toISOString().split('T')[0];
+        const url = `${API_ENDPOINTS.statsApi}?date_from=${dateFrom}&date_to=${dateTo}`;
+        const response = await apiFetch(url);
         if (controller.signal.aborted) return;
         const data = await response.json();
         setPayments(data.top_payments || []);
@@ -34,7 +40,7 @@ const TopPaymentsCard = () => {
     };
     loadTopPayments();
     return () => controller.abort();
-  }, []);
+  }, [period, getDateRange]);
 
   const getColor = (index: number) => {
     const colors = ['#7551e9', '#3965ff', '#01b574', '#ffb547', '#ff6b6b'];

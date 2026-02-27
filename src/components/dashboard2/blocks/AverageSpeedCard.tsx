@@ -3,19 +3,25 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
+import { usePeriod } from '@/contexts/PeriodContext';
 
 const AverageSpeedCard = () => {
   const [avgHours, setAvgHours] = useState<number | null>(null);
   const [changePercent, setChangePercent] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const { period, getDateRange } = usePeriod();
 
   useEffect(() => {
     loadStats();
-  }, []);
+  }, [period, getDateRange]);
 
   const loadStats = async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.statsApi);
+      const { from, to } = getDateRange();
+      const dateFrom = from.toISOString().split('T')[0];
+      const dateTo = to.toISOString().split('T')[0];
+      const url = `${API_ENDPOINTS.statsApi}?date_from=${dateFrom}&date_to=${dateTo}`;
+      const response = await apiFetch(url);
       const data = await response.json();
       
       const currentAvg = data.approval_speed?.avg_hours;
