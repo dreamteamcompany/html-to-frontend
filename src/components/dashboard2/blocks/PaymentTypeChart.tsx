@@ -128,10 +128,10 @@ const PaymentTypeChart = () => {
             <p className={dashboardTypography.cardSubtitle}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row items-center gap-6 flex-1">
+          <div className="flex flex-row sm:flex-row items-center gap-3 sm:gap-6 flex-1">
             {/* Donut chart */}
             <div className="relative flex-shrink-0">
-              <svg width={160} height={160} viewBox="0 0 160 160">
+              <svg className="w-[120px] h-[120px] sm:w-[160px] sm:h-[160px]" width={160} height={160} viewBox="0 0 160 160">
                 <defs>
                   <linearGradient id="pt-legal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#3965ff" />
@@ -205,10 +205,10 @@ const PaymentTypeChart = () => {
             </div>
 
             {/* Legend & stats */}
-            <div className="flex flex-col gap-3 flex-1 w-full">
+            <div className="flex flex-col gap-2 sm:gap-3 flex-1 min-w-0">
               {/* Legal */}
               <div
-                className="rounded-xl p-3 cursor-pointer transition-all"
+                className="rounded-xl p-2 sm:p-3 cursor-pointer transition-all"
                 style={{
                   background: hovered === 'legal' ? 'rgba(57, 101, 255, 0.12)' : 'rgba(57, 101, 255, 0.06)',
                   border: `1px solid ${hovered === 'legal' ? 'rgba(57, 101, 255, 0.4)' : 'rgba(57, 101, 255, 0.15)'}`,
@@ -225,7 +225,7 @@ const PaymentTypeChart = () => {
                   </div>
                   <span className="text-xs font-bold" style={{ color: '#3965ff' }}>{legalPct.toFixed(1)}%</span>
                 </div>
-                <div className="text-base font-extrabold mb-1" style={{ color: 'hsl(var(--foreground))' }}>
+                <div className="text-sm sm:text-base font-extrabold mb-1 truncate" style={{ color: 'hsl(var(--foreground))' }}>
                   {fmt(legalAmount)}
                 </div>
                 <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{legalCount} платежей</div>
@@ -239,7 +239,7 @@ const PaymentTypeChart = () => {
 
               {/* Cash */}
               <div
-                className="rounded-xl p-3 cursor-pointer transition-all"
+                className="rounded-xl p-2 sm:p-3 cursor-pointer transition-all"
                 style={{
                   background: hovered === 'cash' ? 'rgba(1, 181, 116, 0.12)' : 'rgba(1, 181, 116, 0.06)',
                   border: `1px solid ${hovered === 'cash' ? 'rgba(1, 181, 116, 0.4)' : 'rgba(1, 181, 116, 0.15)'}`,
@@ -256,7 +256,7 @@ const PaymentTypeChart = () => {
                   </div>
                   <span className="text-xs font-bold" style={{ color: '#01b574' }}>{cashPct.toFixed(1)}%</span>
                 </div>
-                <div className="text-base font-extrabold mb-1" style={{ color: 'hsl(var(--foreground))' }}>
+                <div className="text-sm sm:text-base font-extrabold mb-1 truncate" style={{ color: 'hsl(var(--foreground))' }}>
                   {fmt(cashAmount)}
                 </div>
                 <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{cashCount} платежей</div>
