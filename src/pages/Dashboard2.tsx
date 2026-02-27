@@ -59,7 +59,7 @@ const Dashboard2 = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden bg-background">
+    <div className="flex min-h-screen bg-background">
       <PaymentsSidebar
         menuOpen={menuOpen}
         dictionariesOpen={dictionariesOpen}
@@ -78,7 +78,7 @@ const Dashboard2 = () => {
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
+      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-auto lg:overflow-x-hidden max-w-full">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           className="lg:hidden p-2 text-foreground hover:bg-muted rounded-lg transition-colors mb-4"
