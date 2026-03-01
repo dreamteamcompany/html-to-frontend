@@ -27,7 +27,7 @@ const colors = [
 ];
 
 const CategoryExpensesChart = () => {
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [categoryData, setCategoryData] = useState<{ [category: string]: number[] }>({});
   const [xLabels, setXLabels] = useState<string[]>(MONTHS);
   const [loading, setLoading] = useState(true);
@@ -43,6 +43,9 @@ const CategoryExpensesChart = () => {
   useEffect(() => {
     const controller = new AbortController();
 
+    const { from, to } = getDateRange();
+    const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+
     const fetchCategoryData = async () => {
       setLoading(true);
       try {
@@ -50,15 +53,11 @@ const CategoryExpensesChart = () => {
         if (controller.signal.aborted) return;
         const data = await response.json();
 
-        const { from, to } = getDateRange();
-
         const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
           if (p.status !== 'approved') return false;
           const d = new Date(p.payment_date);
           return d >= from && d <= to;
         });
-
-        const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
         let labels: string[];
         let getKey: (p: PaymentRecord) => string;
 
@@ -116,7 +115,7 @@ const CategoryExpensesChart = () => {
 
     fetchCategoryData();
     return () => controller.abort();
-  }, [period, getDateRange]);
+  }, [period, dateFrom, dateTo]);
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,
