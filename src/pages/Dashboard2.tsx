@@ -89,11 +89,11 @@ const Dashboard2 = () => {
         <div style={{ padding: '20px 0' }}>
           <Tabs value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as PeriodType)} className="mb-6">
             <TabsList className="grid w-full grid-cols-5 max-w-2xl text-xs sm:text-sm">
-              <TabsTrigger value="today" className="px-2 sm:px-4">Сегодня</TabsTrigger>
-              <TabsTrigger value="week" className="px-2 sm:px-4">Неделя</TabsTrigger>
-              <TabsTrigger value="month" className="px-2 sm:px-4">Месяц</TabsTrigger>
-              <TabsTrigger value="year" className="px-2 sm:px-4">Год</TabsTrigger>
-              <TabsTrigger value="custom" className="px-2 sm:px-4">Период</TabsTrigger>
+              <TabsTrigger value="today" className="px-2 sm:px-4 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-1 data-[state=active]:ring-offset-background">Сегодня</TabsTrigger>
+              <TabsTrigger value="week" className="px-2 sm:px-4 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-1 data-[state=active]:ring-offset-background">Неделя</TabsTrigger>
+              <TabsTrigger value="month" className="px-2 sm:px-4 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-1 data-[state=active]:ring-offset-background">Месяц</TabsTrigger>
+              <TabsTrigger value="year" className="px-2 sm:px-4 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-1 data-[state=active]:ring-offset-background">Год</TabsTrigger>
+              <TabsTrigger value="custom" className="px-2 sm:px-4 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-1 data-[state=active]:ring-offset-background">Период</TabsTrigger>
             </TabsList>
 
             {selectedPeriod === 'custom' && (
