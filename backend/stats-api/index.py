@@ -112,7 +112,7 @@ def handler(event: dict, context) -> dict:
         # Топ-5 платежей с фильтром по периоду
         period_filter_top = ""
         if date_from and date_to:
-            period_filter_top = f"AND p.payment_date >= '{date_from}' AND p.payment_date <= '{date_to}'"
+            period_filter_top = f"AND p.payment_date >= '{date_from} 00:00:00' AND p.payment_date <= '{date_to} 23:59:59'"
         
         cur.execute(f"""
             SELECT 
@@ -126,7 +126,7 @@ def handler(event: dict, context) -> dict:
             FROM {SCHEMA}.payments p
             LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
             LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
-            WHERE p.status IN ('approved', 'paid')
+            WHERE p.status = 'approved'
             {period_filter_top}
             ORDER BY p.amount DESC
             LIMIT 5
@@ -137,7 +137,7 @@ def handler(event: dict, context) -> dict:
         # Средняя скорость согласования (в часах) с фильтром по периоду
         period_filter_speed = ""
         if date_from and date_to:
-            period_filter_speed = f"AND ceo_approved_at::date >= '{date_from}' AND ceo_approved_at::date <= '{date_to}'"
+            period_filter_speed = f"AND ceo_approved_at >= '{date_from} 00:00:00' AND ceo_approved_at <= '{date_to} 23:59:59'"
         
         cur.execute(f"""
             SELECT 
