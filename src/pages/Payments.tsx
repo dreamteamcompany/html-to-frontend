@@ -8,7 +8,7 @@ import PendingApprovalsTab from '@/components/payments/tabs/PendingApprovalsTab'
 import ApprovedPaymentsTab from '@/components/payments/tabs/ApprovedPaymentsTab';
 import RejectedPaymentsTab from '@/components/payments/tabs/RejectedPaymentsTab';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
+import { AllPaymentsCacheProvider, useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 
 const PaymentsInner = () => {
   const { user } = useAuth();
@@ -175,6 +175,10 @@ const PaymentsInner = () => {
   );
 };
 
-const Payments = () => <PaymentsInner />;
+const Payments = () => (
+  <AllPaymentsCacheProvider>
+    <PaymentsInner />
+  </AllPaymentsCacheProvider>
+);
 
 export default Payments;
