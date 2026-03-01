@@ -61,7 +61,7 @@ const SearchableSelect = ({
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
-          <CommandList>
+          <CommandList className="max-h-60 overflow-y-auto">
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
               {value && (
