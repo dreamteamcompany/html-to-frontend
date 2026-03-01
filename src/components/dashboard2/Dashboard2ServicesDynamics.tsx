@@ -44,11 +44,9 @@ const Dashboard2ServicesDynamics = () => {
 
   useEffect(() => {
     const controller = new AbortController();
+    let animTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // Вычисляем диапазон ДО await
     const { from, to } = getDateRange();
-
-    // Предыдущий период той же длины — для тренда
     const diffMs = to.getTime() - from.getTime();
     const prevTo = new Date(from.getTime() - 1);
     const prevFrom = new Date(prevTo.getTime() - diffMs);
@@ -65,13 +63,11 @@ const Dashboard2ServicesDynamics = () => {
           (p: Payment) => p.status === 'approved'
         );
 
-        // Текущий период
         const current = approved.filter((p: Payment) => {
           const d = new Date(p.payment_date);
           return d >= from && d <= to;
         });
 
-        // Предыдущий период (для тренда)
         const previous = approved.filter((p: Payment) => {
           const d = new Date(p.payment_date);
           return d >= prevFrom && d <= prevTo;
@@ -101,19 +97,24 @@ const Dashboard2ServicesDynamics = () => {
           return { name, amount: cur, trend };
         });
 
-        setServicesData(services);
-      } catch (error) {
-        if (!controller.signal.aborted) console.error('Failed to load services data:', error);
-      } finally {
         if (!controller.signal.aborted) {
+          setServicesData(services);
           setLoading(false);
-          setTimeout(() => setMounted(true), 80);
+          animTimer = setTimeout(() => setMounted(true), 60);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error('Failed to load services data:', error);
+          setLoading(false);
         }
       }
     };
 
     load();
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      if (animTimer) clearTimeout(animTimer);
+    };
   }, [period, dateFrom, dateTo]);
 
   const sortedData = [...servicesData].sort((a, b) => b.amount - a.amount);
@@ -241,14 +242,14 @@ const Dashboard2ServicesDynamics = () => {
                           fontSize: '10px', fontWeight: 500,
                           color: isLight ? 'rgba(30,30,50,0.45)' : 'rgba(180,190,220,0.5)',
                         }}>
-                          {share}%
+                          {share < 1 && share > 0 ? '<1' : share}%
                         </span>
                         {service.trend !== 0 && (
                           <div style={{
                             padding: '2px 7px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
                             color: '#fff',
                             background: service.trend > 0 ? '#01B574' : '#E31A1A',
-                            boxShadow: service.trend > 0 ? '0 1px 6px rgba(1,181,116,0.35)' : '0 1px 6px rgba(227,26,26,0.35)',
+                            boxShadow: service.trend > 0 ? '0 1px 6px rgba(1,181,116,0.4)' : '0 1px 6px rgba(227,26,26,0.4)',
                           }}>
                             {service.trend > 0 ? '+' : ''}{service.trend}%
                           </div>
@@ -275,15 +276,15 @@ const Dashboard2ServicesDynamics = () => {
             {/* Итоговые плашки */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
               {[
-                { icon: 'Layers' as const,      label: 'Всего',      value: sortedData.length, color: '#3965ff', bg: 'rgba(57,101,255,0.1)' },
-                { icon: 'TrendingUp' as const,   label: 'Растущих',   value: growing,           color: '#01B574', bg: 'rgba(1,181,116,0.1)' },
-                { icon: 'TrendingDown' as const, label: 'Снижается',  value: falling,           color: '#ff6b6b', bg: 'rgba(255,107,107,0.1)' },
+                { icon: 'Layers' as const,      label: 'Всего',      value: sortedData.length, color: '#3965ff', bgD: 'rgba(57,101,255,0.1)',   bgL: 'rgba(57,101,255,0.07)'  },
+                { icon: 'TrendingUp' as const,   label: 'Растущих',   value: growing,           color: '#01B574', bgD: 'rgba(1,181,116,0.1)',    bgL: 'rgba(1,181,116,0.07)'   },
+                { icon: 'TrendingDown' as const, label: 'Снижается',  value: falling,           color: '#ff6b6b', bgD: 'rgba(255,107,107,0.1)',  bgL: 'rgba(255,107,107,0.07)' },
               ].map((stat) => (
                 <div key={stat.label} style={{
                   padding: '10px',
                   borderRadius: '10px',
-                  background: isLight ? stat.bg.replace('0.1)', '0.07)') : stat.bg,
-                  border: `1px solid ${stat.color}30`,
+                  background: isLight ? stat.bgL : stat.bgD,
+                  border: `1px solid ${stat.color}40`,
                   textAlign: 'center',
                 }}>
                   <Icon name={stat.icon} size={14} style={{ color: stat.color, marginBottom: '4px' }} />
