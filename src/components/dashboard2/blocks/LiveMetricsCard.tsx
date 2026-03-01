@@ -17,6 +17,7 @@ const LiveMetricsCard = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [todayCount, setTodayCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
+  const [periodTotal, setPeriodTotal] = useState(0);
   const [approvedRate, setApprovedRate] = useState(0);
   const [avgAmount, setAvgAmount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -44,8 +45,6 @@ const LiveMetricsCard = () => {
         });
         setTodayCount(todayPayments.length);
 
-        const pending = all.filter(p => p.status === 'pending_approval');
-        setPendingCount(pending.length);
         const periodPayments = all.filter(p => {
           const d = new Date(p.payment_date);
           return d >= from && d <= to;
@@ -56,6 +55,10 @@ const LiveMetricsCard = () => {
 
         const totalAmount = approved.reduce((s, p) => s + Number(p.amount), 0);
         setAvgAmount(approved.length > 0 ? Math.round(totalAmount / approved.length) : 0);
+
+        const pendingInPeriod = periodPayments.filter(p => p.status === 'pending_approval');
+        setPendingCount(pendingInPeriod.length);
+        setPeriodTotal(periodPayments.length);
       } catch {
         // silent
       } finally {
@@ -74,9 +77,10 @@ const LiveMetricsCard = () => {
 
   return (
     <Card style={{
-      background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)',
+      background: 'hsl(var(--card))',
       border: '1px solid rgba(1, 181, 116, 0.3)',
-      boxShadow: '0 0 30px rgba(1, 181, 116, 0.15), inset 0 0 20px rgba(1, 181, 116, 0.05)',
+      borderTop: '4px solid rgba(1, 181, 116, 1)',
+      boxShadow: '0 4px 28px rgba(1, 181, 116, 0.1)',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -156,7 +160,7 @@ const LiveMetricsCard = () => {
               borderRadius: '10px', overflow: 'hidden'
             }}>
               <div style={{
-                width: loading ? '0%' : `${Math.min(approvedRate, 100)}%`,
+                width: loading ? '0%' : `${Math.min(periodTotal > 0 ? Math.round((pendingCount / periodTotal) * 100) : 0, 100)}%`,
                 height: '100%',
                 background: 'linear-gradient(90deg, #01b574 0%, #01b574aa 100%)',
                 borderRadius: '10px',

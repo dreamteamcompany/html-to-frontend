@@ -65,7 +65,7 @@ const TotalExpensesCard = () => {
         setTotal(currentTotal);
         setCount(current.length);
         setChangePercent(Math.abs(diff));
-        setIsIncrease(diff > 0);
+        setIsIncrease(diff >= 0);
       } catch (error) {
         if (!controller.signal.aborted) console.error('Failed to fetch dashboard stats:', error);
       } finally {

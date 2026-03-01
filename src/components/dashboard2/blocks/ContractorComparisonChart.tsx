@@ -224,29 +224,31 @@ const ContractorComparisonChart = () => {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '3px', background: isLight ? 'rgba(0,0,0,0.05)' : 'hsl(var(--muted))', padding: '3px', borderRadius: '10px' }}>
-            {[{ label: 'Топ-5', val: false }, { label: 'Все', val: true }].map(({ label, val }) => (
-              <button
-                key={label}
-                onClick={() => setShowAll(val)}
-                style={{
-                  background: showAll === val ? '#7551e9' : 'transparent',
-                  border: 'none',
-                  color: showAll === val ? 'white' : 'hsl(var(--muted-foreground))',
-                  padding: isMobile ? '5px 10px' : '6px 14px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: isMobile ? '11px' : '12px',
-                  fontWeight: '600',
-                  transition: 'all 0.18s',
-                  boxShadow: showAll === val ? '0 2px 10px rgba(117,81,233,0.4)' : 'none',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          {contractorData.length > 5 && (
+            <div style={{ display: 'flex', gap: '3px', background: isLight ? 'rgba(0,0,0,0.05)' : 'hsl(var(--muted))', padding: '3px', borderRadius: '10px' }}>
+              {[{ label: 'Топ-5', val: false }, { label: 'Все', val: true }].map(({ label, val }) => (
+                <button
+                  key={label}
+                  onClick={() => setShowAll(val)}
+                  style={{
+                    background: showAll === val ? '#7551e9' : 'transparent',
+                    border: 'none',
+                    color: showAll === val ? 'white' : 'hsl(var(--muted-foreground))',
+                    padding: isMobile ? '5px 10px' : '6px 14px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: isMobile ? '11px' : '12px',
+                    fontWeight: '600',
+                    transition: 'all 0.18s',
+                    boxShadow: showAll === val ? '0 2px 10px rgba(117,81,233,0.4)' : 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {loading ? (

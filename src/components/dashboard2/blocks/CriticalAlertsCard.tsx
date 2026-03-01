@@ -37,14 +37,14 @@ const CriticalAlertsCard = () => {
         today.setHours(0, 0, 0, 0);
 
         const overdue = all.filter(p => {
-          if (p.status !== 'pending') return false;
+          if (p.status !== 'pending_approval') return false;
           const d = new Date(p.payment_date);
           return d < today;
         });
 
         const rejected = all.filter(p => p.status === 'rejected');
 
-        const pending = all.filter(p => p.status === 'pending');
+        const pending = all.filter(p => p.status === 'pending_approval');
 
         const built: Alert[] = [];
 
@@ -97,9 +97,10 @@ const CriticalAlertsCard = () => {
 
   return (
     <Card style={{
-      background: 'linear-gradient(135deg, #1a1f37 0%, #111c44 100%)',
+      background: 'hsl(var(--card))',
       border: '1px solid rgba(255, 107, 107, 0.3)',
-      boxShadow: '0 0 30px rgba(255, 107, 107, 0.15), inset 0 0 20px rgba(255, 107, 107, 0.05)',
+      borderTop: '4px solid rgba(255, 107, 107, 1)',
+      boxShadow: '0 4px 28px rgba(255, 107, 107, 0.1)',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -120,7 +121,7 @@ const CriticalAlertsCard = () => {
           }} className="sm:p-3">
             <Icon name="AlertTriangle" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
           </div>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }} className="sm:text-lg">Требуют внимания</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'hsl(var(--foreground))' }} className="sm:text-lg">Требуют внимания</h3>
         </div>
 
         {loading ? (
@@ -154,7 +155,7 @@ const CriticalAlertsCard = () => {
                   <Icon name={alert.icon} size={16} style={{ color: alert.color }} className="sm:w-[18px] sm:h-[18px]" />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <span style={{ color: '#fff', fontSize: '12px', fontWeight: '600' }} className="sm:text-sm">{alert.text}</span>
+                  <span style={{ color: 'hsl(var(--foreground))', fontSize: '12px', fontWeight: '600' }} className="sm:text-sm">{alert.text}</span>
                 </div>
                 {alert.urgent && (
                   <div style={{
