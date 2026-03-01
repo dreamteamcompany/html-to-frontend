@@ -27,12 +27,11 @@ const colors = [
 ];
 
 const CategoryExpensesChart = () => {
-  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const { period, getDateRange } = usePeriod();
   const [categoryData, setCategoryData] = useState<{ [category: string]: number[] }>({});
   const [xLabels, setXLabels] = useState<string[]>(MONTHS);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -42,18 +41,7 @@ const CategoryExpensesChart = () => {
   }, []);
 
   useEffect(() => {
-    const check = () => setIsLight(document.documentElement.classList.contains('light'));
-    check();
-    const observer = new MutationObserver(check);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
     const controller = new AbortController();
-
-    const { from, to } = getDateRange();
-    const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
 
     const fetchCategoryData = async () => {
       setLoading(true);
@@ -62,11 +50,15 @@ const CategoryExpensesChart = () => {
         if (controller.signal.aborted) return;
         const data = await response.json();
 
+        const { from, to } = getDateRange();
+
         const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
           if (p.status !== 'approved') return false;
           const d = new Date(p.payment_date);
           return d >= from && d <= to;
         });
+
+        const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
         let labels: string[];
         let getKey: (p: PaymentRecord) => string;
 
@@ -124,7 +116,7 @@ const CategoryExpensesChart = () => {
 
     fetchCategoryData();
     return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+  }, [period, getDateRange]);
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,
@@ -132,7 +124,7 @@ const CategoryExpensesChart = () => {
     backgroundColor: colors[index % colors.length],
     borderRadius: isMobile ? 5 : 10,
     borderSkipped: false as const,
-    maxBarThickness: isMobile ? 28 : 42,
+    maxBarThickness: isMobile ? 18 : 28,
   }));
 
   return (
@@ -160,7 +152,7 @@ const CategoryExpensesChart = () => {
                     labels: {
                       padding: isMobile ? 10 : 20,
                       usePointStyle: true,
-                      color: isLight ? 'rgba(30, 30, 50, 0.85)' : 'rgba(200, 210, 235, 0.9)',
+                      color: '#ffffff',
                       font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
                     }
                   },
@@ -176,7 +168,7 @@ const CategoryExpensesChart = () => {
                   y: {
                     beginAtZero: true,
                     ticks: {
-                      color: isLight ? 'rgba(30, 30, 50, 0.75)' : 'rgba(180, 190, 220, 0.7)',
+                      color: 'rgba(180, 190, 220, 0.7)',
                       font: { size: isMobile ? 10 : 11 },
                       maxTicksLimit: isMobile ? 4 : 6,
                       padding: 6,
@@ -187,12 +179,12 @@ const CategoryExpensesChart = () => {
                         return String(v);
                       }
                     },
-                    grid: { color: isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
                     border: { dash: [4, 4], display: false }
                   },
                   x: {
                     ticks: {
-                      color: isLight ? 'rgba(30, 30, 50, 0.75)' : 'rgba(180, 190, 220, 0.75)',
+                      color: 'rgba(180, 190, 220, 0.75)',
                       font: { size: isMobile ? 9 : 11 },
                       maxRotation: isMobile ? 45 : 0,
                       minRotation: isMobile ? 45 : 0,
