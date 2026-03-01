@@ -56,6 +56,7 @@ interface RingChartProps {
   categories: CategoryData[];
   totalAmount: number;
   isMobile: boolean;
+  isLight: boolean;
 }
 
 const fmt = (v: number) => {
@@ -64,7 +65,7 @@ const fmt = (v: number) => {
   return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
 };
 
-const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
+const RingChart = ({ categories, totalAmount, isMobile, isLight }: RingChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -135,7 +136,7 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
 
           {/* Фоновое кольцо */}
           <circle cx={cx} cy={cy} r={(outerR + innerR) / 2}
-            fill="none" stroke="rgba(255,255,255,0.04)"
+            fill="none" stroke={isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)'}
             strokeWidth={outerR - innerR}
           />
 
@@ -161,7 +162,7 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
           {/* Центральный круг */}
           <circle cx={cx} cy={cy} r={innerR - 3}
             fill="hsl(var(--card))"
-            stroke="rgba(255,255,255,0.07)"
+            stroke={isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)'}
             strokeWidth={1.5}
           />
 
@@ -173,26 +174,26 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
                 {hovCat.name.length > 14 ? hovCat.name.slice(0, 13) + '…' : hovCat.name}
               </text>
               <text x={cx} y={cy + (isMobile ? 3 : 4)} textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 13 : 16}px`, fontWeight: 800, fill: '#fff' }}>
+                style={{ fontSize: `${isMobile ? 13 : 16}px`, fontWeight: 800, fill: isLight ? 'rgba(20,20,40,0.9)' : '#fff' }}>
                 {hovCat.value}%
               </text>
               <text x={cx} y={cy + (isMobile ? 17 : 21)} textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 500, fill: 'rgba(255,255,255,0.4)' }}>
+                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 500, fill: isLight ? 'rgba(20,20,40,0.5)' : 'rgba(255,255,255,0.4)' }}>
                 {fmt(hovCat.amount)}
               </text>
             </>
           ) : (
             <>
               <text x={cx} y={cy - (isMobile ? 12 : 16)} textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 600, fill: 'rgba(255,255,255,0.35)', letterSpacing: '0.8px' }}>
+                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 600, fill: isLight ? 'rgba(20,20,40,0.45)' : 'rgba(255,255,255,0.35)', letterSpacing: '0.8px' }}>
                 ИТОГО
               </text>
               <text x={cx} y={cy + (isMobile ? 2 : 2)} textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 12 : 15}px`, fontWeight: 900, fill: '#fff' }}>
+                style={{ fontSize: `${isMobile ? 12 : 15}px`, fontWeight: 900, fill: isLight ? 'rgba(20,20,40,0.9)' : '#fff' }}>
                 {fmt(totalAmount)}
               </text>
               <text x={cx} y={cy + (isMobile ? 17 : 21)} textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 8 : 9}px`, fontWeight: 500, fill: 'rgba(255,255,255,0.28)' }}>
+                style={{ fontSize: `${isMobile ? 8 : 9}px`, fontWeight: 500, fill: isLight ? 'rgba(20,20,40,0.35)' : 'rgba(255,255,255,0.28)' }}>
                 {categories.length} {categories.length === 1 ? 'категория' : categories.length < 5 ? 'категории' : 'категорий'}
               </text>
             </>
@@ -213,8 +214,8 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: isMobile ? '7px 10px' : '9px 12px',
                 borderRadius: '10px',
-                background: isHov ? `${palette[1]}18` : 'rgba(255,255,255,0.025)',
-                border: `1px solid ${isHov ? `${palette[1]}45` : 'rgba(255,255,255,0.06)'}`,
+                background: isHov ? `${palette[1]}18` : isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.025)',
+                border: `1px solid ${isHov ? `${palette[1]}45` : isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}`,
                 cursor: 'default',
                 transition: 'all 0.18s ease',
                 opacity: hovered !== null && !isHov ? 0.35 : 1,
@@ -234,14 +235,14 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
                 <div style={{
                   fontSize: isMobile ? '11px' : '12px',
                   fontWeight: 600,
-                  color: isHov ? '#fff' : 'hsl(var(--foreground))',
+                  color: 'hsl(var(--foreground))',
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   transition: 'color 0.18s',
                   marginBottom: '4px',
                 }}>
                   {cat.name}
                 </div>
-                <div style={{ height: '3px', borderRadius: '99px', background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+                <div style={{ height: '3px', borderRadius: '99px', background: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', borderRadius: '99px',
                     background: `linear-gradient(90deg, ${palette[0]}, ${palette[1]})`,
@@ -257,7 +258,7 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
                 <div style={{ fontSize: isMobile ? '12px' : '13px', fontWeight: 800, color: palette[1] }}>
                   {cat.value}%
                 </div>
-                <div style={{ fontSize: isMobile ? '9px' : '10px', color: 'rgba(255,255,255,0.35)', marginTop: '1px' }}>
+                <div style={{ fontSize: isMobile ? '9px' : '10px', color: isLight ? 'rgba(20,20,40,0.45)' : 'rgba(255,255,255,0.35)', marginTop: '1px' }}>
                   {fmt(cat.amount)}
                 </div>
               </div>
@@ -274,12 +275,21 @@ const ExpenseStructureChart = () => {
   const { payments: allPayments, loading } = usePaymentsCache();
   const [activeTab, setActiveTab] = useState<'general' | 'details'>('general');
   const [isMobile, setIsMobile] = useState(false);
+  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
+  }, []);
+
+  useEffect(() => {
+    const checkTheme = () => setIsLight(document.documentElement.classList.contains('light'));
+    checkTheme();
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
   const { categories, totalAmount } = useMemo(() => {
@@ -316,7 +326,7 @@ const ExpenseStructureChart = () => {
     <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
       <CardContent className="p-6">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#ffffff' }}>Структура Расходов</h3>
+          <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'hsl(var(--foreground))' }}>Структура Расходов</h3>
           <div style={{ display: 'flex', gap: '8px', background: 'hsl(var(--muted))', padding: '4px', borderRadius: '10px' }}>
             <button style={activeTab === 'general' ? activeStyle : getInactiveStyle()} onClick={() => setActiveTab('general')}>
               Общие
@@ -336,12 +346,12 @@ const ExpenseStructureChart = () => {
             <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
           </div>
         ) : activeTab === 'general' ? (
-          <RingChart categories={categories} totalAmount={totalAmount} isMobile={isMobile} />
+          <RingChart categories={categories} totalAmount={totalAmount} isMobile={isMobile} isLight={isLight} />
         ) : (
           <div className="h-[300px] sm:h-[450px]" style={{ overflowY: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <tr style={{ borderBottom: '1px solid hsl(var(--border))' }}>
                   <th style={{ textAlign: 'left', padding: '10px 12px', color: 'hsl(var(--muted-foreground))', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Категория</th>
                   <th style={{ textAlign: 'right', padding: '10px 12px', color: 'hsl(var(--muted-foreground))', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Доля</th>
                   <th style={{ textAlign: 'right', padding: '10px 12px', color: 'hsl(var(--muted-foreground))', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Сумма</th>
@@ -349,18 +359,18 @@ const ExpenseStructureChart = () => {
               </thead>
               <tbody>
                 {categories.map((cat) => (
-                  <tr key={cat.name} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <tr key={cat.name} style={{ borderBottom: '1px solid hsl(var(--border))' }}>
                     <td style={{ padding: '14px 12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: cat.color, flexShrink: 0 }} />
-                        <span style={{ color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>{cat.name}</span>
+                        <span style={{ color: 'hsl(var(--foreground))', fontSize: '14px', fontWeight: '500' }}>{cat.name}</span>
                       </div>
                     </td>
                     <td style={{ textAlign: 'right', padding: '14px 12px' }}>
-                      <span style={{ color: '#ffffff', fontSize: '14px', fontWeight: '600' }}>{cat.value}%</span>
+                      <span style={{ color: 'hsl(var(--foreground))', fontSize: '14px', fontWeight: '600' }}>{cat.value}%</span>
                     </td>
                     <td style={{ textAlign: 'right', padding: '14px 12px' }}>
-                      <span style={{ color: '#ffffff', fontSize: '14px' }}>{new Intl.NumberFormat('ru-RU').format(cat.amount)} ₽</span>
+                      <span style={{ color: 'hsl(var(--foreground))', fontSize: '14px' }}>{new Intl.NumberFormat('ru-RU').format(cat.amount)} ₽</span>
                     </td>
                   </tr>
                 ))}

@@ -32,9 +32,10 @@ const formatAmount = (amount: number): string => {
 interface BarChartProps {
   data: { name: string; amount: number }[];
   isMobile: boolean;
+  isLight: boolean;
 }
 
-const BarChart = ({ data, isMobile }: BarChartProps) => {
+const BarChart = ({ data, isMobile, isLight }: BarChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -64,8 +65,8 @@ const BarChart = ({ data, isMobile }: BarChartProps) => {
             style={{
               padding: isMobile ? '10px 12px' : '13px 16px',
               borderRadius: '12px',
-              background: isHov ? color.light : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${isHov ? color.solid : 'rgba(255,255,255,0.07)'}`,
+              background: isHov ? color.light : isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${isHov ? color.solid : isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)'}`,
               transition: 'all 0.2s ease',
               cursor: 'default',
             }}
@@ -90,7 +91,7 @@ const BarChart = ({ data, isMobile }: BarChartProps) => {
                 <span style={{
                   fontSize: isMobile ? '12px' : '13px',
                   fontWeight: 600,
-                  color: isHov ? '#fff' : 'hsl(var(--foreground))',
+                  color: 'hsl(var(--foreground))',
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   maxWidth: isMobile ? '140px' : '240px',
                   transition: 'color 0.2s',
@@ -112,7 +113,7 @@ const BarChart = ({ data, isMobile }: BarChartProps) => {
                 <span style={{
                   fontSize: isMobile ? '13px' : '15px',
                   fontWeight: 800,
-                  color: isHov ? '#fff' : color.solid,
+                  color: color.solid,
                   transition: 'color 0.2s',
                 }}>
                   {formatAmount(item.amount)}
@@ -124,7 +125,7 @@ const BarChart = ({ data, isMobile }: BarChartProps) => {
             <div style={{
               height: isMobile ? '6px' : '8px',
               borderRadius: '99px',
-              background: 'rgba(255,255,255,0.07)',
+              background: isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.07)',
               overflow: 'hidden',
             }}>
               <div style={{
@@ -149,12 +150,21 @@ const Dashboard2TeamPerformance = () => {
   const [currentData, setCurrentData] = useState<{ name: string; amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const checkTheme = () => setIsLight(document.documentElement.classList.contains('light'));
+    checkTheme();
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -235,7 +245,7 @@ const Dashboard2TeamPerformance = () => {
             <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <BarChart data={currentData} isMobile={isMobile} />
+          <BarChart data={currentData} isMobile={isMobile} isLight={isLight} />
         )}
       </CardContent>
     </Card>

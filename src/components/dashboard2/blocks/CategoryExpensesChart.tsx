@@ -29,12 +29,21 @@ const CategoryExpensesChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
   const [isMobile, setIsMobile] = useState(false);
+  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const checkTheme = () => setIsLight(document.documentElement.classList.contains('light'));
+    checkTheme();
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
   const { categoryData, xLabels } = useMemo(() => {
@@ -128,7 +137,7 @@ const CategoryExpensesChart = () => {
                     labels: {
                       padding: isMobile ? 10 : 20,
                       usePointStyle: true,
-                      color: '#ffffff',
+                      color: isLight ? 'rgba(30,30,50,0.75)' : 'rgba(200,210,230,0.85)',
                       font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
                     }
                   },
@@ -144,7 +153,7 @@ const CategoryExpensesChart = () => {
                   y: {
                     beginAtZero: true,
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.7)',
+                      color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.7)',
                       font: { size: isMobile ? 10 : 11 },
                       maxTicksLimit: isMobile ? 4 : 6,
                       padding: 6,
@@ -155,12 +164,12 @@ const CategoryExpensesChart = () => {
                         return String(v);
                       }
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
+                    grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
                     border: { dash: [4, 4], display: false }
                   },
                   x: {
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.75)',
+                      color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.75)',
                       font: { size: isMobile ? 9 : 11 },
                       maxRotation: isMobile ? 45 : 0,
                       minRotation: isMobile ? 45 : 0,

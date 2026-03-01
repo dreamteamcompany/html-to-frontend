@@ -135,7 +135,7 @@ const MonthlyDynamicsChart = () => {
     fill: true,
     tension: 0.4,
     pointBackgroundColor: 'rgb(117, 81, 233)',
-    pointBorderColor: '#fff',
+    pointBorderColor: isLight ? '#f8f9fa' : '#fff',
     pointBorderWidth: isMobile ? 1 : 2,
     pointRadius: isMobile ? 2 : 4,
     pointHoverRadius: isMobile ? 4 : 7,
