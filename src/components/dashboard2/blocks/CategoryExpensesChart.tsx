@@ -27,7 +27,7 @@ const colors = [
 ];
 
 const CategoryExpensesChart = () => {
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [categoryData, setCategoryData] = useState<{ [category: string]: number[] }>({});
   const [xLabels, setXLabels] = useState<string[]>(MONTHS);
   const [loading, setLoading] = useState(true);
@@ -116,7 +116,7 @@ const CategoryExpensesChart = () => {
 
     fetchCategoryData();
     return () => controller.abort();
-  }, [period, getDateRange]);
+  }, [period, dateFrom, dateTo]);
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,
@@ -152,7 +152,7 @@ const CategoryExpensesChart = () => {
                     labels: {
                       padding: isMobile ? 10 : 20,
                       usePointStyle: true,
-                      color: '#ffffff',
+                      color: 'hsl(var(--foreground))',
                       font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
                     }
                   },
@@ -190,7 +190,7 @@ const CategoryExpensesChart = () => {
                   y: {
                     beginAtZero: true,
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.7)',
+                      color: 'hsl(var(--muted-foreground))',
                       font: { size: isMobile ? 10 : 11 },
                       maxTicksLimit: isMobile ? 4 : 6,
                       padding: 6,
@@ -201,12 +201,12 @@ const CategoryExpensesChart = () => {
                         return String(v);
                       }
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
+                    grid: { color: 'hsl(var(--border))', lineWidth: 1 },
                     border: { dash: [4, 4], display: false }
                   },
                   x: {
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.75)',
+                      color: 'hsl(var(--muted-foreground))',
                       font: { size: isMobile ? 9 : 11 },
                       maxRotation: isMobile ? 45 : 0,
                       minRotation: isMobile ? 45 : 0,

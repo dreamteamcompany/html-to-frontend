@@ -18,7 +18,7 @@ interface TopPayment {
 const TopPaymentsCard = () => {
   const [payments, setPayments] = useState<TopPayment[]>([]);
   const [loading, setLoading] = useState(true);
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -40,7 +40,7 @@ const TopPaymentsCard = () => {
     };
     loadTopPayments();
     return () => controller.abort();
-  }, [period, getDateRange]);
+  }, [period, dateFrom, dateTo]);
 
   const getColor = (index: number) => {
     const colors = ['#7551e9', '#3965ff', '#01b574', '#ffb547', '#ff6b6b'];
