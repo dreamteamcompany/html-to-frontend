@@ -41,8 +41,14 @@ interface Service {
   category_id?: number;
   intermediate_approver_id?: number;
   final_approver_id?: number;
+  customer_department_id?: number;
+  legal_entity_id?: number;
+  contractor_id?: number;
   category_name?: string;
   category_icon?: string;
+  legal_entity_name?: string;
+  contractor_name?: string;
+  department_name?: string;
 }
 
 interface CustomField {
