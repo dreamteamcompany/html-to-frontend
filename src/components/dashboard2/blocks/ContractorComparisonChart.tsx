@@ -30,12 +30,21 @@ const ContractorComparisonChart = () => {
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const check = () => setIsLight(document.documentElement.classList.contains('light'));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -120,7 +129,9 @@ const ContractorComparisonChart = () => {
                   data: displayData.map(d => d.amount),
                   backgroundColor: displayData.map((_, i) => colors[i % colors.length]),
                   borderRadius: isMobile ? 4 : 8,
-                  barThickness: isMobile ? 20 : 30
+                  barPercentage: 0.85,
+                  categoryPercentage: 0.8,
+                  maxBarThickness: isMobile ? 32 : 48,
                 }]
               }}
               options={{
@@ -142,7 +153,7 @@ const ContractorComparisonChart = () => {
                   x: {
                     beginAtZero: true,
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.8)',
+                      color: isLight ? 'rgba(30, 30, 50, 0.75)' : 'rgba(180, 190, 220, 0.8)',
                       font: { size: isMobile ? 10 : 12 },
                       maxTicksLimit: isMobile ? 5 : 8,
                       callback: (value) => {
@@ -151,10 +162,10 @@ const ContractorComparisonChart = () => {
                         return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
                       }
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.06)' }
+                    grid: { color: isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.06)' }
                   },
                   y: {
-                    ticks: { color: 'rgba(180, 190, 220, 0.8)', font: { size: isMobile ? 9 : 12 } },
+                    ticks: { color: isLight ? 'rgba(30, 30, 50, 0.75)' : 'rgba(180, 190, 220, 0.8)', font: { size: isMobile ? 9 : 12 } },
                     grid: { display: false }
                   }
                 }
