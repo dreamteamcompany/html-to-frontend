@@ -1,54 +1,20 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
+import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 
 export const usePendingApprovalsData = () => {
   const { token, user } = useAuth();
   const { toast } = useToast();
-  const [allPayments, setAllPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading, removePayment } = useAllPaymentsCache();
   const [approveProgress, setApproveProgress] = useState<{ current: number; total: number } | null>(null);
 
-  const loadData = useCallback(async () => {
-    if (!token || !user) return;
-
-    setLoading(true);
-    try {
-      const paymentsRes = await fetch(`${API_ENDPOINTS.paymentsApi}?scope=all`, {
-        headers: { 'X-Auth-Token': token },
-      });
-
-      const paymentsData = await paymentsRes.json();
-      const allPaymentsData = Array.isArray(paymentsData) ? paymentsData : [];
-      setAllPayments(allPaymentsData);
-    } catch (err) {
-      console.error('Failed to load data:', err);
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить платежи',
-        variant: 'destructive',
-      });
-      setAllPayments([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [token, user, toast]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  // Memoize filtered payments to avoid recalculation on every render
   const payments = useMemo(() => {
     if (!user) return [];
-
     return allPayments.filter((payment: Payment) => {
-      if (!payment.status) {
-        return false;
-      }
-      
+      if (!payment.status) return false;
       return ['pending_ib', 'pending_ceo', 'pending_cfo'].includes(payment.status);
     });
   }, [allPayments, user]);
@@ -74,7 +40,7 @@ export const usePendingApprovalsData = () => {
           title: 'Успешно',
           description: 'Платёж согласован',
         });
-        setAllPayments(prevPayments => prevPayments.filter(p => p.id !== paymentId));
+        removePayment(paymentId);
       } else {
         const errorData = await response.json();
         toast({
@@ -124,7 +90,7 @@ export const usePendingApprovalsData = () => {
     }
 
     setApproveProgress(null);
-    setAllPayments(prev => prev.filter(p => !paymentIds.includes(p.id!)));
+    paymentIds.forEach(id => removePayment(id));
     toast({
       title: succeeded > 0 ? 'Успешно' : 'Ошибка',
       description: failed > 0
@@ -155,7 +121,7 @@ export const usePendingApprovalsData = () => {
           title: 'Успешно',
           description: 'Платёж отклонён',
         });
-        setAllPayments(prevPayments => prevPayments.filter(p => p.id !== paymentId));
+        removePayment(paymentId);
       } else {
         const errorData = await response.json();
         toast({

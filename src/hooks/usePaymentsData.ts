@@ -4,6 +4,11 @@ import { API_ENDPOINTS } from '@/config/api';
 import { Payment, CustomField } from '@/types/payment';
 import { useDictionaryContext } from '@/contexts/DictionaryContext';
 
+// Module-level cache for personal payments (draft/my)
+const myPaymentsCache: Payment[] | null = null;
+const myPaymentsCacheTime = 0;
+const MY_CACHE_TTL = 30_000;
+
 interface Category {
   id: number;
   name: string;
@@ -56,15 +61,24 @@ interface Service {
 
 export const usePaymentsData = () => {
   const dictionary = useDictionaryContext();
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [payments, setPayments] = useState<Payment[]>(myPaymentsCache ?? []);
+  const [loading, setLoading] = useState(!myPaymentsCache);
 
-  const loadPayments = useCallback(() => {
+  const loadPayments = useCallback((force = false) => {
+    const now = Date.now();
+    if (!force && myPaymentsCache && now - myPaymentsCacheTime < MY_CACHE_TTL) {
+      setPayments(myPaymentsCache);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     apiFetch(API_ENDPOINTS.paymentsApi)
       .then(res => res.json())
       .then(data => {
-        setPayments(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        myPaymentsCache = list;
+        myPaymentsCacheTime = Date.now();
+        setPayments(list);
         setLoading(false);
       })
       .catch(err => {
@@ -88,6 +102,11 @@ export const usePaymentsData = () => {
     loadPayments();
   }, [loadPayments]);
 
+  const forceLoadPayments = useCallback(() => {
+    myPaymentsCache = null;
+    loadPayments(true);
+  }, [loadPayments]);
+
   return {
     payments,
     categories: dictionary.categories,
@@ -97,7 +116,7 @@ export const usePaymentsData = () => {
     customFields: dictionary.customFields,
     services: dictionary.services,
     loading: loading || dictionary.loading.categories || dictionary.loading.services,
-    loadPayments,
+    loadPayments: forceLoadPayments,
     loadContractors,
     loadLegalEntities,
   };

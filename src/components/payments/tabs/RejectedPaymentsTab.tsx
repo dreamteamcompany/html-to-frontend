@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { apiFetch } from '@/utils/api';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 import EditPaymentModal from '@/components/payments/EditPaymentModal';
 import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
+import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 
 interface ExtendedPayment extends Payment {
   rejected_at?: string;
@@ -14,34 +15,17 @@ interface ExtendedPayment extends Payment {
 }
 
 const RejectedPaymentsTab = () => {
-  const [payments, setPayments] = useState<ExtendedPayment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading, refresh } = useAllPaymentsCache();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<ExtendedPayment | null>(null);
   const [editingPayment, setEditingPayment] = useState<ExtendedPayment | null>(null);
 
-  useEffect(() => {
-    fetchRejectedPayments();
-  }, []);
+  const payments = useMemo(() =>
+    (allPayments as ExtendedPayment[]).filter(p => p.status === 'rejected'),
+    [allPayments]
+  );
 
-  const fetchRejectedPayments = async () => {
-    setLoading(true);
-    try {
-      const response = await apiFetch(`${API_ENDPOINTS.paymentsApi}?scope=all`);
-      const data = await response.json();
-      
-      const rejectedPayments = (Array.isArray(data) ? data : []).filter((p: ExtendedPayment) => 
-        p.status === 'rejected'
-      );
-      
-      setPayments(rejectedPayments);
-    } catch (error) {
-      console.error('Failed to fetch rejected payments:', error);
-      setPayments([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchRejectedPayments = () => refresh();
 
   const handleResubmit = async (paymentId: number) => {
     try {

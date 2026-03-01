@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,23 +7,29 @@ import MyPaymentsTab from '@/components/payments/tabs/MyPaymentsTab';
 import PendingApprovalsTab from '@/components/payments/tabs/PendingApprovalsTab';
 import ApprovedPaymentsTab from '@/components/payments/tabs/ApprovedPaymentsTab';
 import RejectedPaymentsTab from '@/components/payments/tabs/RejectedPaymentsTab';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { AllPaymentsCacheProvider, useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 
-const Payments = () => {
+const PaymentsInner = () => {
   const { user } = useAuth();
+  const { payments: allPayments } = useAllPaymentsCache();
   const isCEO = user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор');
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState(isCEO ? 'pending' : 'my');
-  const [counters, setCounters] = useState({ my: 0, pending: 0, approved: 0, rejected: 0 });
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
 
   const tabs = isCEO
     ? ['pending', 'approved', 'rejected']
     : ['my', 'pending', 'approved', 'rejected'];
+
+  const counters = useMemo(() => ({
+    my: allPayments.filter(p => !p.status || p.status === 'draft').length,
+    pending: allPayments.filter(p => p.status && p.status.startsWith('pending_')).length,
+    approved: allPayments.filter(p => p.status === 'approved').length,
+    rejected: allPayments.filter(p => p.status === 'rejected').length,
+  }), [allPayments]);
 
   const handleContentTouchStart = (e: React.TouchEvent) => {
     swipeStartX.current = e.touches[0].clientX;
@@ -41,29 +47,6 @@ const Payments = () => {
     if (dx < 0 && idx < tabs.length - 1) setActiveTab(tabs[idx + 1]);
     if (dx > 0 && idx > 0) setActiveTab(tabs[idx - 1]);
   };
-
-  useEffect(() => {
-    const fetchCounters = async () => {
-      try {
-        const response = await apiFetch(`${API_ENDPOINTS.paymentsApi}?scope=all`);
-        const data = await response.json();
-        const payments = Array.isArray(data) ? data : [];
-        
-        setCounters({
-          my: payments.filter(p => !p.status || p.status === 'draft').length,
-          pending: payments.filter(p => p.status && p.status.startsWith('pending_')).length,
-          approved: payments.filter(p => p.status === 'approved').length,
-          rejected: payments.filter(p => p.status === 'rejected').length,
-        });
-      } catch (error) {
-        console.error('Failed to fetch counters:', error);
-      }
-    };
-
-    fetchCounters();
-    const interval = setInterval(fetchCounters, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   const {
     menuOpen,
@@ -191,5 +174,11 @@ const Payments = () => {
     </div>
   );
 };
+
+const Payments = () => (
+  <AllPaymentsCacheProvider>
+    <PaymentsInner />
+  </AllPaymentsCacheProvider>
+);
 
 export default Payments;

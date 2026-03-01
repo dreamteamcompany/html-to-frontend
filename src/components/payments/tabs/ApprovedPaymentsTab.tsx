@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { apiFetch } from '@/utils/api';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 
 interface ExtendedPayment extends Payment {
   ceo_approved_at?: string;
@@ -17,8 +18,7 @@ interface ExtendedPayment extends Payment {
 }
 
 const ApprovedPaymentsTab = () => {
-  const [payments, setPayments] = useState<ExtendedPayment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading, refresh } = useAllPaymentsCache();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<ExtendedPayment | null>(null);
   const [revokePaymentId, setRevokePaymentId] = useState<number | null>(null);
@@ -26,28 +26,12 @@ const ApprovedPaymentsTab = () => {
   const [isRevoking, setIsRevoking] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchApprovedPayments();
-  }, []);
+  const payments = useMemo(() =>
+    (allPayments as ExtendedPayment[]).filter(p => p.status === 'approved' && p.ceo_approved_at !== null),
+    [allPayments]
+  );
 
-  const fetchApprovedPayments = async () => {
-    setLoading(true);
-    try {
-      const response = await apiFetch(`${API_ENDPOINTS.paymentsApi}?scope=all`);
-      const data = await response.json();
-      
-      const approvedPayments = (Array.isArray(data) ? data : []).filter((p: ExtendedPayment) => 
-        p.status === 'approved' && p.ceo_approved_at !== null
-      );
-      
-      setPayments(approvedPayments);
-    } catch (error) {
-      console.error('Failed to fetch approved payments:', error);
-      setPayments([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchApprovedPayments = () => refresh();
 
   const handleRevokeClick = (e: React.MouseEvent, paymentId: number) => {
     e.stopPropagation();
