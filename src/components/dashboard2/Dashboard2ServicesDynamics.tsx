@@ -1,10 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useState, useEffect, useMemo } from 'react';
 import { dashboardTypography } from './dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface Service {
   name: string;
@@ -29,8 +28,7 @@ const fmt = (v: number) => {
 
 const Dashboard2ServicesDynamics = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
-  const [servicesData, setServicesData] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
   const [mounted, setMounted] = useState(false);
   const [isLight, setIsLight] = useState(false);
 
@@ -43,79 +41,57 @@ const Dashboard2ServicesDynamics = () => {
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-    let animTimer: ReturnType<typeof setTimeout> | null = null;
+    setMounted(false);
+    const timer = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(timer);
+  }, [allPayments, period, dateFrom, dateTo]);
 
+  const servicesData = useMemo(() => {
     const { from, to } = getDateRange();
     const diffMs = to.getTime() - from.getTime();
     const prevTo = new Date(from.getTime() - 1);
     const prevFrom = new Date(prevTo.getTime() - diffMs);
 
-    const load = async () => {
-      setLoading(true);
-      setMounted(false);
-      try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await response.json();
+    const approved = (Array.isArray(allPayments) ? allPayments : []).filter(
+      (p: Payment) => p.status === 'approved'
+    );
 
-        const approved = (Array.isArray(data) ? data : []).filter(
-          (p: Payment) => p.status === 'approved'
-        );
+    const current = approved.filter((p: Payment) => {
+      const d = new Date(p.payment_date);
+      return d >= from && d <= to;
+    });
 
-        const current = approved.filter((p: Payment) => {
-          const d = new Date(p.payment_date);
-          return d >= from && d <= to;
-        });
+    const previous = approved.filter((p: Payment) => {
+      const d = new Date(p.payment_date);
+      return d >= prevFrom && d <= prevTo;
+    });
 
-        const previous = approved.filter((p: Payment) => {
-          const d = new Date(p.payment_date);
-          return d >= prevFrom && d <= prevTo;
-        });
+    const byService = (payments: Payment[]) => {
+      const map: { [key: string]: number } = {};
+      payments.forEach((p) => {
+        const name = p.service_name || 'Без сервиса';
+        map[name] = (map[name] || 0) + p.amount;
+      });
+      return map;
+    };
 
-        const byService = (payments: Payment[]) => {
-          const map: { [key: string]: number } = {};
-          payments.forEach((p) => {
-            const name = p.service_name || 'Без сервиса';
-            map[name] = (map[name] || 0) + p.amount;
-          });
-          return map;
-        };
+    const currentMap = byService(current);
+    const previousMap = byService(previous);
 
-        const currentMap = byService(current);
-        const previousMap = byService(previous);
-
-        const services: Service[] = Object.keys(currentMap).map((name) => {
-          const cur = currentMap[name];
-          const prev = previousMap[name] || 0;
-          let trend = 0;
-          if (prev > 0) {
-            trend = Math.round(((cur - prev) / prev) * 100);
-          } else if (cur > 0) {
-            trend = 100;
-          }
-          return { name, amount: cur, trend };
-        });
-
-        if (!controller.signal.aborted) {
-          setServicesData(services);
-          setLoading(false);
-          animTimer = setTimeout(() => setMounted(true), 60);
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error('Failed to load services data:', error);
-          setLoading(false);
-        }
+    const services: Service[] = Object.keys(currentMap).map((name) => {
+      const cur = currentMap[name];
+      const prev = previousMap[name] || 0;
+      let trend = 0;
+      if (prev > 0) {
+        trend = Math.round(((cur - prev) / prev) * 100);
+      } else if (cur > 0) {
+        trend = 100;
       }
-    };
+      return { name, amount: cur, trend };
+    });
 
-    load();
-    return () => {
-      controller.abort();
-      if (animTimer) clearTimeout(animTimer);
-    };
-  }, [period, dateFrom, dateTo]);
+    return services;
+  }, [allPayments, period, dateFrom, dateTo]);
 
   const sortedData = [...servicesData].sort((a, b) => b.amount - a.amount);
   const maxAmount = sortedData[0]?.amount || 1;

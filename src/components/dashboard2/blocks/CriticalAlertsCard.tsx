@@ -1,8 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useMemo } from 'react';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentRecord {
   id: number;
@@ -21,79 +20,64 @@ interface Alert {
 }
 
 const CriticalAlertsCard = () => {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const load = async () => {
-      try {
-        const res = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await res.json();
-        const all: PaymentRecord[] = Array.isArray(data) ? data : [];
+  const alerts = useMemo((): Alert[] => {
+    const all: PaymentRecord[] = Array.isArray(allPayments) ? allPayments : [];
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        const overdue = all.filter(p => {
-          if (p.status !== 'pending_approval') return false;
-          const d = new Date(p.payment_date);
-          return d < today;
-        });
+    const overdue = all.filter(p => {
+      if (p.status !== 'pending_approval') return false;
+      const d = new Date(p.payment_date);
+      return d < today;
+    });
 
-        const rejected = all.filter(p => p.status === 'rejected');
+    const rejected = all.filter(p => p.status === 'rejected');
 
-        const pending = all.filter(p => p.status === 'pending_approval');
+    const pending = all.filter(p => p.status === 'pending_approval');
 
-        const built: Alert[] = [];
+    const built: Alert[] = [];
 
-        if (overdue.length > 0) {
-          built.push({
-            icon: 'Clock3',
-            text: `Просрочено ${overdue.length} ${overdue.length === 1 ? 'платёж' : overdue.length < 5 ? 'платежа' : 'платежей'}`,
-            color: '#ff6b6b',
-            urgent: true,
-          });
-        }
+    if (overdue.length > 0) {
+      built.push({
+        icon: 'Clock3',
+        text: `Просрочено ${overdue.length} ${overdue.length === 1 ? 'платёж' : overdue.length < 5 ? 'платежа' : 'платежей'}`,
+        color: '#ff6b6b',
+        urgent: true,
+      });
+    }
 
-        if (rejected.length > 0) {
-          built.push({
-            icon: 'XCircle',
-            text: `${rejected.length} ${rejected.length === 1 ? 'отклонённый запрос' : rejected.length < 5 ? 'отклонённых запроса' : 'отклонённых запросов'}`,
-            color: '#ffb547',
-            urgent: false,
-          });
-        }
+    if (rejected.length > 0) {
+      built.push({
+        icon: 'XCircle',
+        text: `${rejected.length} ${rejected.length === 1 ? 'отклонённый запрос' : rejected.length < 5 ? 'отклонённых запроса' : 'отклонённых запросов'}`,
+        color: '#ffb547',
+        urgent: false,
+      });
+    }
 
-        if (pending.length > 0) {
-          built.push({
-            icon: 'AlertCircle',
-            text: `${pending.length} ${pending.length === 1 ? 'платёж' : 'платежей'} ожидает согласования`,
-            color: pending.length > 10 ? '#ff6b6b' : '#ffb547',
-            urgent: pending.length > 10,
-          });
-        }
+    if (pending.length > 0) {
+      built.push({
+        icon: 'AlertCircle',
+        text: `${pending.length} ${pending.length === 1 ? 'платёж' : 'платежей'} ожидает согласования`,
+        color: pending.length > 10 ? '#ff6b6b' : '#ffb547',
+        urgent: pending.length > 10,
+      });
+    }
 
-        if (built.length === 0) {
-          built.push({
-            icon: 'CheckCircle2',
-            text: 'Всё в порядке — нет критических задач',
-            color: '#01b574',
-            urgent: false,
-          });
-        }
+    if (built.length === 0) {
+      built.push({
+        icon: 'CheckCircle2',
+        text: 'Всё в порядке — нет критических задач',
+        color: '#01b574',
+        urgent: false,
+      });
+    }
 
-        setAlerts(built);
-      } catch {
-        // silent
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    };
-    load();
-    return () => controller.abort();
-  }, []);
+    return built;
+  }, [allPayments]);
 
   return (
     <Card style={{

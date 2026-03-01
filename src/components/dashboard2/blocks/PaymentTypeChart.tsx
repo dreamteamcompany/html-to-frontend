@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { dashboardTypography } from '../dashboardStyles';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentRecord {
   status: string;
@@ -23,74 +22,32 @@ const fmt = (v: number) => {
 
 const PaymentTypeChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
-  const [cashAmount, setCashAmount] = useState(0);
-  const [cashCount, setCashCount] = useState(0);
-  const [legalAmount, setLegalAmount] = useState(0);
-  const [legalCount, setLegalCount] = useState(0);
-  const [topLegal, setTopLegal] = useState<{ name: string; amount: number }[]>([]);
-  const [topCash, setTopCash] = useState<{ name: string; amount: number }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
   const [hovered, setHovered] = useState<'cash' | 'legal' | null>(null);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    // Вычисляем диапазон ДО await чтобы исключить race condition при смене периода
+  const { cashAmount, cashCount, legalAmount, legalCount } = useMemo(() => {
     const { from, to } = getDateRange();
 
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await response.json();
+    const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
+      if (p.status !== 'approved') return false;
+      const d = new Date(p.payment_date);
+      return d >= from && d <= to;
+    });
 
-        const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
-          if (p.status !== 'approved') return false;
-          const d = new Date(p.payment_date);
-          return d >= from && d <= to;
-        });
+    let cash = 0, cashCnt = 0, legal = 0, legalCnt = 0;
 
-        let cash = 0, cashCnt = 0, legal = 0, legalCnt = 0;
-        const legalByEntity: Record<string, number> = {};
-        const cashByEntity: Record<string, number> = {};
-
-        filtered.forEach((p: PaymentRecord) => {
-          const entityName = p.legal_entity_name || 'Не указано';
-          if (p.payment_type === 'cash') {
-            cash += p.amount;
-            cashCnt++;
-            cashByEntity[entityName] = (cashByEntity[entityName] || 0) + p.amount;
-          } else {
-            legal += p.amount;
-            legalCnt++;
-            legalByEntity[entityName] = (legalByEntity[entityName] || 0) + p.amount;
-          }
-        });
-
-        setCashAmount(cash);
-        setCashCount(cashCnt);
-        setLegalAmount(legal);
-        setLegalCount(legalCnt);
-
-        const sortEntries = (obj: Record<string, number>) =>
-          Object.entries(obj)
-            .map(([name, amount]) => ({ name, amount }))
-            .sort((a, b) => b.amount - a.amount)
-            .slice(0, 3);
-
-        setTopLegal(sortEntries(legalByEntity));
-        setTopCash(sortEntries(cashByEntity));
-      } catch (err) {
-        if (!controller.signal.aborted) console.error('PaymentTypeChart error:', err);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
+    filtered.forEach((p: PaymentRecord) => {
+      if (p.payment_type === 'cash') {
+        cash += p.amount;
+        cashCnt++;
+      } else {
+        legal += p.amount;
+        legalCnt++;
       }
-    };
+    });
 
-    fetchData();
-    return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+    return { cashAmount: cash, cashCount: cashCnt, legalAmount: legal, legalCount: legalCnt };
+  }, [allPayments, period, dateFrom, dateTo]);
 
   const total = cashAmount + legalAmount;
   const legalPct = total > 0 ? (legalAmount / total) * 100 : 0;

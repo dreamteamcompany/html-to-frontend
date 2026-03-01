@@ -11,6 +11,7 @@ import Icon from '@/components/ui/icon';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { PeriodProvider, PeriodType } from '@/contexts/PeriodContext';
+import { PaymentsCacheProvider } from '@/contexts/PaymentsCacheContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -125,12 +126,14 @@ const Dashboard2 = () => {
             )}
           </Tabs>
 
-          <PeriodProvider period={selectedPeriod} dateFrom={dateFrom} dateTo={dateTo}>
-            <div className="space-y-6 mt-6">
-              <Dashboard2AllCards />
-              <Dashboard2Charts />
-            </div>
-          </PeriodProvider>
+          <PaymentsCacheProvider>
+            <PeriodProvider period={selectedPeriod} dateFrom={dateFrom} dateTo={dateTo}>
+              <div className="space-y-6 mt-6">
+                <Dashboard2AllCards />
+                <Dashboard2Charts />
+              </div>
+            </PeriodProvider>
+          </PaymentsCacheProvider>
         </div>
       </main>
     </div>

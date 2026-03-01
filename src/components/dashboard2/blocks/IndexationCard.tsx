@@ -1,10 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useMemo } from 'react';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentRecord {
   status: string;
@@ -26,106 +25,87 @@ interface ServiceIndexation {
 
 const IndexationCard = () => {
   const { getDateRange, period, dateFrom, dateTo } = usePeriod();
-  const [indexationAmount, setIndexationAmount] = useState(0);
-  const [indexationPercent, setIndexationPercent] = useState(0);
-  const [serviceDetails, setServiceDetails] = useState<ServiceIndexation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
 
-  useEffect(() => {
-    const controller = new AbortController();
-
+  const indexationData = useMemo(() => {
     const { from, to } = getDateRange();
 
-    const fetchIndexationData = async () => {
-      setLoading(true);
-      try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await response.json();
+    const approvedPayments = (Array.isArray(allPayments) ? allPayments : []).filter(
+      (p: PaymentRecord) => p.status === 'approved'
+    );
+    const periodMs = to.getTime() - from.getTime();
 
-        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) =>
-          p.status === 'approved'
-        );
-        const periodMs = to.getTime() - from.getTime();
+    const prevTo = new Date(from.getTime() - 1);
+    const prevFrom = new Date(prevTo.getTime() - periodMs);
 
-        const prevTo = new Date(from.getTime() - 1);
-        const prevFrom = new Date(prevTo.getTime() - periodMs);
+    const currentPayments = approvedPayments.filter((p: PaymentRecord) => {
+      const d = new Date(p.payment_date);
+      return d >= from && d <= to;
+    });
 
-        const currentPayments = approvedPayments.filter((p: PaymentRecord) => {
-          const d = new Date(p.payment_date);
-          return d >= from && d <= to;
-        });
+    const previousPayments = approvedPayments.filter((p: PaymentRecord) => {
+      const d = new Date(p.payment_date);
+      return d >= prevFrom && d <= prevTo;
+    });
 
-        const previousPayments = approvedPayments.filter((p: PaymentRecord) => {
-          const d = new Date(p.payment_date);
-          return d >= prevFrom && d <= prevTo;
-        });
-
-        const currentByService: { [key: string]: { amount: number; name: string } } = {};
-        currentPayments.forEach((p: PaymentRecord) => {
-          const serviceKey = p.service_id ? `service_${p.service_id}` : 'no_service';
-          const serviceName = p.service_name || (p.service_id ? `Сервис ${p.service_id}` : 'Без сервиса');
-          if (!currentByService[serviceKey]) {
-            currentByService[serviceKey] = { amount: 0, name: serviceName };
-          }
-          currentByService[serviceKey].amount += p.amount;
-        });
-
-        const previousByService: { [key: string]: { amount: number; name: string } } = {};
-        previousPayments.forEach((p: PaymentRecord) => {
-          const serviceKey = p.service_id ? `service_${p.service_id}` : 'no_service';
-          const serviceName = p.service_name || (p.service_id ? `Сервис ${p.service_id}` : 'Без сервиса');
-          if (!previousByService[serviceKey]) {
-            previousByService[serviceKey] = { amount: 0, name: serviceName };
-          }
-          previousByService[serviceKey].amount += p.amount;
-        });
-
-        let totalIndexation = 0;
-        const details: ServiceIndexation[] = [];
-
-        const allServiceKeys = new Set([
-          ...Object.keys(currentByService),
-          ...Object.keys(previousByService),
-        ]);
-
-        allServiceKeys.forEach((serviceKey) => {
-          const current = currentByService[serviceKey]?.amount || 0;
-          const previous = previousByService[serviceKey]?.amount || 0;
-          const name = currentByService[serviceKey]?.name || previousByService[serviceKey]?.name || serviceKey;
-
-          if (previous > 0 && current > 0) {
-            const diff = current - previous;
-            const percent = parseFloat(((diff / previous) * 100).toFixed(1));
-            totalIndexation += diff;
-            details.push({ serviceKey, serviceName: name, current, previous, diff, percent });
-          }
-        });
-
-        details.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
-
-        const currentTotal = Object.values(currentByService).reduce((sum, v) => sum + v.amount, 0);
-        const previousTotal = Object.values(previousByService).reduce((sum, v) => sum + v.amount, 0);
-
-        const percentChange = previousTotal > 0
-          ? ((currentTotal - previousTotal) / previousTotal) * 100
-          : 0;
-
-        setIndexationAmount(Math.abs(totalIndexation));
-        setIndexationPercent(parseFloat(percentChange.toFixed(1)));
-        setServiceDetails(details);
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error('Failed to fetch indexation data:', error);
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
+    const currentByService: { [key: string]: { amount: number; name: string } } = {};
+    currentPayments.forEach((p: PaymentRecord) => {
+      const serviceKey = p.service_id ? `service_${p.service_id}` : 'no_service';
+      const serviceName = p.service_name || (p.service_id ? `Сервис ${p.service_id}` : 'Без сервиса');
+      if (!currentByService[serviceKey]) {
+        currentByService[serviceKey] = { amount: 0, name: serviceName };
       }
-    };
+      currentByService[serviceKey].amount += p.amount;
+    });
 
-    fetchIndexationData();
-    return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+    const previousByService: { [key: string]: { amount: number; name: string } } = {};
+    previousPayments.forEach((p: PaymentRecord) => {
+      const serviceKey = p.service_id ? `service_${p.service_id}` : 'no_service';
+      const serviceName = p.service_name || (p.service_id ? `Сервис ${p.service_id}` : 'Без сервиса');
+      if (!previousByService[serviceKey]) {
+        previousByService[serviceKey] = { amount: 0, name: serviceName };
+      }
+      previousByService[serviceKey].amount += p.amount;
+    });
+
+    let totalIndexation = 0;
+    const details: ServiceIndexation[] = [];
+
+    const allServiceKeys = new Set([
+      ...Object.keys(currentByService),
+      ...Object.keys(previousByService),
+    ]);
+
+    allServiceKeys.forEach((serviceKey) => {
+      const current = currentByService[serviceKey]?.amount || 0;
+      const previous = previousByService[serviceKey]?.amount || 0;
+      const name = currentByService[serviceKey]?.name || previousByService[serviceKey]?.name || serviceKey;
+
+      if (previous > 0 && current > 0) {
+        const diff = current - previous;
+        const percent = parseFloat(((diff / previous) * 100).toFixed(1));
+        totalIndexation += diff;
+        details.push({ serviceKey, serviceName: name, current, previous, diff, percent });
+      }
+    });
+
+    details.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+
+    const currentTotal = Object.values(currentByService).reduce((sum, v) => sum + v.amount, 0);
+    const previousTotal = Object.values(previousByService).reduce((sum, v) => sum + v.amount, 0);
+
+    const percentChange = previousTotal > 0
+      ? ((currentTotal - previousTotal) / previousTotal) * 100
+      : 0;
+
+    return {
+      indexationAmount: Math.abs(totalIndexation),
+      indexationPercent: parseFloat(percentChange.toFixed(1)),
+      serviceDetails: details,
+    };
+  }, [allPayments, period, dateFrom, dateTo]);
+
+  const { indexationAmount, indexationPercent, serviceDetails } = indexationData;
 
   return (
     <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547' }}>

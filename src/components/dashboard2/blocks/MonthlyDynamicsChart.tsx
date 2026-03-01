@@ -1,10 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Bar, Line } from 'react-chartjs-2';
-import { useEffect, useState } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useState, useEffect, useMemo } from 'react';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentRecord {
   status: string;
@@ -90,9 +89,7 @@ const buildData = (payments: PaymentRecord[], labels: string[], unit: UnitType, 
 
 const MonthlyDynamicsChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
-  const [chartData, setChartData] = useState<number[]>([]);
-  const [labels, setLabels] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
   const [isMobile, setIsMobile] = useState(false);
   const [isLight, setIsLight] = useState(false);
 
@@ -111,41 +108,19 @@ const MonthlyDynamicsChart = () => {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    // Вычисляем диапазон ДО await чтобы избежать race condition при смене периода
+  const { chartData, labels } = useMemo(() => {
     const { from, to } = getDateRange();
     const { labels: newLabels, unit } = getChartConfig(period, from, to);
 
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await response.json();
+    const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
+      if (p.status !== 'approved') return false;
+      const d = new Date(p.payment_date);
+      return d >= from && d <= to;
+    });
 
-        const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
-          if (p.status !== 'approved') return false;
-          const d = new Date(p.payment_date);
-          return d >= from && d <= to;
-        });
-
-        const values = buildData(filtered, newLabels, unit, from);
-        setLabels(newLabels);
-        setChartData(values);
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error('Failed to fetch dynamics data:', error);
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    };
-
-    fetchData();
-    return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+    const values = buildData(filtered, newLabels, unit, from);
+    return { chartData: values, labels: newLabels };
+  }, [allPayments, period, dateFrom, dateTo]);
 
   const chartLabels = isMobile && labels.length === MONTHS.length && labels[0] === MONTHS[0] ? MONTHS_SHORT : labels;
   const isBarChart = period === 'today' || period === 'week';

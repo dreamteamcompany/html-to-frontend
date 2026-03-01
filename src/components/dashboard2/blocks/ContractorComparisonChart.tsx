@@ -1,11 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Line } from 'react-chartjs-2';
-import { useState, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useState, useEffect, useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
 import Icon from '@/components/ui/icon';
 import { dashboardTypography } from '../dashboardStyles';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentRecord {
   status: string;
@@ -31,8 +30,7 @@ const fmt = (v: number) => {
 
 const ContractorComparisonChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
-  const [contractorData, setContractorData] = useState<{ name: string; amount: number }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
   const [showAll, setShowAll] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isLight, setIsLight] = useState(false);
@@ -52,44 +50,25 @@ const ContractorComparisonChart = () => {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const contractorData = useMemo(() => {
     const { from, to } = getDateRange();
 
-    const fetchContractorData = async () => {
-      setLoading(true);
-      try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await response.json();
+    const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
+      if (p.status !== 'approved') return false;
+      const d = new Date(p.payment_date);
+      return d >= from && d <= to;
+    });
 
-        const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
-          if (p.status !== 'approved') return false;
-          const d = new Date(p.payment_date);
-          return d >= from && d <= to;
-        });
+    const contractorMap: { [key: string]: number } = {};
+    filtered.forEach((payment: PaymentRecord) => {
+      const contractor = payment.contractor_name || 'Без контрагента';
+      contractorMap[contractor] = (contractorMap[contractor] || 0) + payment.amount;
+    });
 
-        const contractorMap: { [key: string]: number } = {};
-        filtered.forEach((payment: PaymentRecord) => {
-          const contractor = payment.contractor_name || 'Без контрагента';
-          contractorMap[contractor] = (contractorMap[contractor] || 0) + payment.amount;
-        });
-
-        const sorted = Object.entries(contractorMap)
-          .map(([name, amount]) => ({ name, amount }))
-          .sort((a, b) => b.amount - a.amount);
-
-        setContractorData(sorted);
-      } catch (error) {
-        if (!controller.signal.aborted) console.error('Failed to fetch contractor data:', error);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    };
-
-    fetchContractorData();
-    return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+    return Object.entries(contractorMap)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [allPayments, period, dateFrom, dateTo]);
 
   const displayData = showAll ? contractorData : contractorData.slice(0, 5);
   const total = contractorData.reduce((s, c) => s + c.amount, 0);

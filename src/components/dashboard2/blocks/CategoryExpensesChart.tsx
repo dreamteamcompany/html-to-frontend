@@ -1,9 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Bar } from 'react-chartjs-2';
-import { useState, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useState, useEffect, useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentRecord {
   status: string;
@@ -27,10 +26,8 @@ const colors = [
 ];
 
 const CategoryExpensesChart = () => {
-  const { period, getDateRange } = usePeriod();
-  const [categoryData, setCategoryData] = useState<{ [category: string]: number[] }>({});
-  const [xLabels, setXLabels] = useState<string[]>(MONTHS);
-  const [loading, setLoading] = useState(true);
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const { payments: allPayments, loading } = usePaymentsCache();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -40,83 +37,62 @@ const CategoryExpensesChart = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const { categoryData, xLabels } = useMemo(() => {
+    const { from, to } = getDateRange();
 
-    const fetchCategoryData = async () => {
-      setLoading(true);
-      try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await response.json();
+    const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
+      if (p.status !== 'approved') return false;
+      const d = new Date(p.payment_date);
+      return d >= from && d <= to;
+    });
 
-        const { from, to } = getDateRange();
+    const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+    let labels: string[];
+    let getKey: (p: PaymentRecord) => string;
 
-        const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
-          if (p.status !== 'approved') return false;
-          const d = new Date(p.payment_date);
-          return d >= from && d <= to;
-        });
-
-        const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
-        let labels: string[];
-        let getKey: (p: PaymentRecord) => string;
-
-        if (period === 'today') {
-          labels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
-          getKey = (p) => `${new Date(p.payment_date).getHours()}:00`;
-        } else if (period === 'week' || (period === 'custom' && diffDays <= 7)) {
-          labels = [];
-          const cur = new Date(from);
-          while (cur <= to) {
-            labels.push(cur.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }));
-            cur.setDate(cur.getDate() + 1);
-          }
-          getKey = (p) => {
-            const d = new Date(p.payment_date);
-            return d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' });
-          };
-        } else if (period === 'month' || (period === 'custom' && diffDays <= 31)) {
-          labels = [];
-          const cur = new Date(from);
-          while (cur <= to) {
-            labels.push(cur.getDate().toString());
-            cur.setDate(cur.getDate() + 1);
-          }
-          getKey = (p) => new Date(p.payment_date).getDate().toString();
-        } else {
-          labels = MONTHS;
-          getKey = (p) => MONTHS[new Date(p.payment_date).getMonth()];
-        }
-
-        const categoryMap: { [category: string]: { [key: string]: number } } = {};
-
-        filtered.forEach((payment: PaymentRecord) => {
-          const category = payment.category_name || 'Без категории';
-          const key = getKey(payment);
-          if (!categoryMap[category]) categoryMap[category] = {};
-          categoryMap[category][key] = (categoryMap[category][key] || 0) + payment.amount;
-        });
-
-        const result: { [category: string]: number[] } = {};
-        Object.keys(categoryMap).forEach((category) => {
-          result[category] = labels.map((label) => categoryMap[category][label] || 0);
-        });
-
-        setXLabels(labels);
-        setCategoryData(result);
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error('Failed to fetch category data:', error);
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
+    if (period === 'today') {
+      labels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+      getKey = (p) => `${new Date(p.payment_date).getHours()}:00`;
+    } else if (period === 'week' || (period === 'custom' && diffDays <= 7)) {
+      labels = [];
+      const cur = new Date(from);
+      while (cur <= to) {
+        labels.push(cur.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }));
+        cur.setDate(cur.getDate() + 1);
       }
-    };
+      getKey = (p) => {
+        const d = new Date(p.payment_date);
+        return d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' });
+      };
+    } else if (period === 'month' || (period === 'custom' && diffDays <= 31)) {
+      labels = [];
+      const cur = new Date(from);
+      while (cur <= to) {
+        labels.push(cur.getDate().toString());
+        cur.setDate(cur.getDate() + 1);
+      }
+      getKey = (p) => new Date(p.payment_date).getDate().toString();
+    } else {
+      labels = MONTHS;
+      getKey = (p) => MONTHS[new Date(p.payment_date).getMonth()];
+    }
 
-    fetchCategoryData();
-    return () => controller.abort();
-  }, [period, getDateRange]);
+    const categoryMap: { [category: string]: { [key: string]: number } } = {};
+
+    filtered.forEach((payment: PaymentRecord) => {
+      const category = payment.category_name || 'Без категории';
+      const key = getKey(payment);
+      if (!categoryMap[category]) categoryMap[category] = {};
+      categoryMap[category][key] = (categoryMap[category][key] || 0) + payment.amount;
+    });
+
+    const result: { [category: string]: number[] } = {};
+    Object.keys(categoryMap).forEach((category) => {
+      result[category] = labels.map((label) => categoryMap[category][label] || 0);
+    });
+
+    return { categoryData: result, xLabels: labels };
+  }, [allPayments, period, dateFrom, dateTo]);
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,

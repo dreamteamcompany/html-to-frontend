@@ -1,11 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Line } from 'react-chartjs-2';
-import { useState, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useState, useEffect, useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
 import Icon from '@/components/ui/icon';
 import { dashboardTypography } from '../dashboardStyles';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentRecord {
   status: string;
@@ -36,8 +35,7 @@ const fmt = (v: number) => {
 
 const LegalEntityComparisonChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
-  const [legalEntityData, setLegalEntityData] = useState<{ name: string; amount: number }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
   const [showAll, setShowAll] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isLight, setIsLight] = useState(false);
@@ -57,44 +55,25 @@ const LegalEntityComparisonChart = () => {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const legalEntityData = useMemo(() => {
     const { from, to } = getDateRange();
 
-    const fetchLegalEntityData = async () => {
-      setLoading(true);
-      try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await response.json();
+    const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
+      if (p.status !== 'approved') return false;
+      const d = new Date(p.payment_date);
+      return d >= from && d <= to;
+    });
 
-        const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
-          if (p.status !== 'approved') return false;
-          const d = new Date(p.payment_date);
-          return d >= from && d <= to;
-        });
+    const entityMap: { [key: string]: number } = {};
+    filtered.forEach((payment: PaymentRecord) => {
+      const entity = payment.legal_entity_name || 'Без юр. лица';
+      entityMap[entity] = (entityMap[entity] || 0) + payment.amount;
+    });
 
-        const entityMap: { [key: string]: number } = {};
-        filtered.forEach((payment: PaymentRecord) => {
-          const entity = payment.legal_entity_name || 'Без юр. лица';
-          entityMap[entity] = (entityMap[entity] || 0) + payment.amount;
-        });
-
-        const sorted = Object.entries(entityMap)
-          .map(([name, amount]) => ({ name, amount }))
-          .sort((a, b) => b.amount - a.amount);
-
-        setLegalEntityData(sorted);
-      } catch (error) {
-        if (!controller.signal.aborted) console.error('Failed to fetch legal entity data:', error);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    };
-
-    fetchLegalEntityData();
-    return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+    return Object.entries(entityMap)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [allPayments, period, dateFrom, dateTo]);
 
   const displayData = showAll ? legalEntityData : legalEntityData.slice(0, 5);
   const total = legalEntityData.reduce((s, c) => s + c.amount, 0);

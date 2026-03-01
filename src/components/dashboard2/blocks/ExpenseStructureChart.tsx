@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentRecord {
   status: string;
@@ -272,10 +271,8 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
 
 const ExpenseStructureChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const { payments: allPayments, loading } = usePaymentsCache();
   const [activeTab, setActiveTab] = useState<'general' | 'details'>('general');
-  const [categories, setCategories] = useState<CategoryData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalAmount, setTotalAmount] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -285,51 +282,35 @@ const ExpenseStructureChart = () => {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const { categories, totalAmount } = useMemo(() => {
     const { from, to } = getDateRange();
-    const fetchExpenseStructure = async () => {
-      setLoading(true);
-      try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await response.json();
 
-        const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
-          if (p.status !== 'approved') return false;
-          const raw = String(p.payment_date);
-          const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
-          return d >= from && d <= to;
-        });
+    const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
+      if (p.status !== 'approved') return false;
+      const raw = String(p.payment_date);
+      const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
+      return d >= from && d <= to;
+    });
 
-        const categoryMap: Record<string, number> = {};
-        let total = 0;
-        filtered.forEach((payment: PaymentRecord) => {
-          const name = payment.category_name || 'Прочее';
-          categoryMap[name] = (categoryMap[name] || 0) + payment.amount;
-          total += payment.amount;
-        });
+    const categoryMap: Record<string, number> = {};
+    let total = 0;
+    filtered.forEach((payment: PaymentRecord) => {
+      const name = payment.category_name || 'Прочее';
+      categoryMap[name] = (categoryMap[name] || 0) + payment.amount;
+      total += payment.amount;
+    });
 
-        const categoriesData = Object.entries(categoryMap)
-          .map(([name, amount], index) => ({
-            name,
-            amount,
-            value: total > 0 ? Math.round((amount / total) * 100) : 0,
-            color: ARC_PALETTE[index % ARC_PALETTE.length][1],
-          }))
-          .sort((a, b) => b.amount - a.amount);
+    const categoriesData = Object.entries(categoryMap)
+      .map(([name, amount], index) => ({
+        name,
+        amount,
+        value: total > 0 ? Math.round((amount / total) * 100) : 0,
+        color: ARC_PALETTE[index % ARC_PALETTE.length][1],
+      }))
+      .sort((a, b) => b.amount - a.amount);
 
-        setCategories(categoriesData);
-        setTotalAmount(total);
-      } catch (error) {
-        if (!controller.signal.aborted) console.error('Failed to fetch expense structure:', error);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    };
-    fetchExpenseStructure();
-    return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+    return { categories: categoriesData, totalAmount: total };
+  }, [allPayments, period, dateFrom, dateTo]);
 
   return (
     <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>

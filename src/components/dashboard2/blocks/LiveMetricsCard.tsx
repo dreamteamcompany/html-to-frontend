@@ -1,9 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentRecord {
   status: string;
@@ -15,59 +14,45 @@ interface PaymentRecord {
 
 const LiveMetricsCard = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
-  const [todayCount, setTodayCount] = useState(0);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [periodTotal, setPeriodTotal] = useState(0);
-  const [approvedRate, setApprovedRate] = useState(0);
-  const [avgAmount, setAvgAmount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const metrics = useMemo(() => {
     const { from, to } = getDateRange();
-    const load = async () => {
-      setLoading(true);
-      try {
-        const res = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await res.json();
-        const all: PaymentRecord[] = Array.isArray(data) ? data : [];
+    const all: PaymentRecord[] = Array.isArray(allPayments) ? allPayments : [];
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const todayPayments = all.filter(p => {
-          if (p.status === 'cancelled') return false;
-          const d = new Date(p.payment_date || p.created_at || '');
-          return d >= today && d < tomorrow;
-        });
-        setTodayCount(todayPayments.length);
+    const todayPayments = all.filter(p => {
+      if (p.status === 'cancelled') return false;
+      const d = new Date(p.payment_date || p.created_at || '');
+      return d >= today && d < tomorrow;
+    });
 
-        const periodPayments = all.filter(p => {
-          const d = new Date(p.payment_date);
-          return d >= from && d <= to;
-        });
-        const approved = periodPayments.filter(p => p.status === 'approved');
-        const rate = periodPayments.length > 0 ? Math.round((approved.length / periodPayments.length) * 100) : 0;
-        setApprovedRate(rate);
+    const periodPayments = all.filter(p => {
+      const d = new Date(p.payment_date);
+      return d >= from && d <= to;
+    });
+    const approved = periodPayments.filter(p => p.status === 'approved');
+    const rate = periodPayments.length > 0 ? Math.round((approved.length / periodPayments.length) * 100) : 0;
 
-        const totalAmount = approved.reduce((s, p) => s + Number(p.amount), 0);
-        setAvgAmount(approved.length > 0 ? Math.round(totalAmount / approved.length) : 0);
+    const totalAmount = approved.reduce((s, p) => s + Number(p.amount), 0);
+    const avg = approved.length > 0 ? Math.round(totalAmount / approved.length) : 0;
 
-        const pendingInPeriod = periodPayments.filter(p => p.status === 'pending_approval');
-        setPendingCount(pendingInPeriod.length);
-        setPeriodTotal(periodPayments.length);
-      } catch {
-        // silent
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
+    const pendingInPeriod = periodPayments.filter(p => p.status === 'pending_approval');
+
+    return {
+      todayCount: todayPayments.length,
+      pendingCount: pendingInPeriod.length,
+      periodTotal: periodPayments.length,
+      approvedRate: rate,
+      avgAmount: avg,
     };
-    load();
-    return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+  }, [allPayments, period, dateFrom, dateTo]);
+
+  const { todayCount, pendingCount, periodTotal, approvedRate, avgAmount } = metrics;
 
   const fmtAmount = (v: number) => {
     if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}м ₽`;
