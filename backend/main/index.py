@@ -4710,6 +4710,14 @@ def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: 
     if method != 'GET':
         return response(405, {'error': 'Метод не поддерживается'})
     
+    params = event.get('queryStringParameters') or {}
+    date_from = params.get('date_from')
+    date_to = params.get('date_to')
+
+    date_filter = ""
+    if date_from and date_to:
+        date_filter = f"WHERE created_at >= '{date_from} 00:00:00' AND created_at <= '{date_to} 23:59:59'"
+
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     try:
@@ -4718,10 +4726,15 @@ def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: 
                 COUNT(*) as count,
                 COALESCE(SUM(amount), 0) as total_amount
             FROM {SCHEMA}.savings
+            {date_filter}
         """)
         
         stats = cur.fetchone()
         
+        dept_date_filter = ""
+        if date_from and date_to:
+            dept_date_filter = f"AND s.created_at >= '{date_from} 00:00:00' AND s.created_at <= '{date_to} 23:59:59'"
+
         cur.execute(f"""
             SELECT 
                 cd.name as department_name,
@@ -4729,6 +4742,8 @@ def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: 
             FROM {SCHEMA}.savings s
             JOIN {SCHEMA}.services srv ON s.service_id = srv.id
             LEFT JOIN {SCHEMA}.customer_departments cd ON srv.customer_department_id = cd.id
+            WHERE 1=1
+            {dept_date_filter}
             GROUP BY cd.name
             ORDER BY total_saved DESC
             LIMIT 3
@@ -4738,7 +4753,7 @@ def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: 
         
         return response(200, {
             'total_amount': float(stats['total_amount']),
-            'count': stats['count'],
+            'count': int(stats['count']),
             'top_departments': [{
                 'department_name': dept['department_name'] or 'Не указан',
                 'total_saved': float(dept['total_saved'])
