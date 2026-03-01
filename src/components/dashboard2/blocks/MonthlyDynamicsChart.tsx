@@ -94,6 +94,7 @@ const MonthlyDynamicsChart = () => {
   const [labels, setLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -103,7 +104,19 @@ const MonthlyDynamicsChart = () => {
   }, []);
 
   useEffect(() => {
+    const check = () => setIsLight(document.documentElement.classList.contains('light'));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     const controller = new AbortController();
+
+    // Вычисляем диапазон ДО await чтобы избежать race condition при смене периода
+    const { from, to } = getDateRange();
+    const { labels: newLabels, unit } = getChartConfig(period, from, to);
 
     const fetchData = async () => {
       setLoading(true);
@@ -111,9 +124,6 @@ const MonthlyDynamicsChart = () => {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
         if (controller.signal.aborted) return;
         const data = await response.json();
-
-        const { from, to } = getDateRange();
-        const { labels: newLabels, unit } = getChartConfig(period, from, to);
 
         const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
           if (p.status !== 'approved') return false;
@@ -174,7 +184,7 @@ const MonthlyDynamicsChart = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          color: 'rgba(180, 190, 220, 0.8)',
+          color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.8)',
           font: { size: isMobile ? 9 : 12 },
           maxTicksLimit: isMobile ? 4 : 8,
           callback: (value: unknown) => {
@@ -183,11 +193,11 @@ const MonthlyDynamicsChart = () => {
             return new Intl.NumberFormat('ru-RU', { notation: 'compact' }).format(v);
           },
         },
-        grid: { color: 'rgba(255, 255, 255, 0.06)', lineWidth: isMobile ? 0.5 : 1 },
+        grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255, 255, 255, 0.06)', lineWidth: isMobile ? 0.5 : 1 },
       },
       x: {
         ticks: {
-          color: 'rgba(180, 190, 220, 0.8)',
+          color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.8)',
           font: { size: isMobile ? 7 : 11 },
           maxRotation: isMobile ? 45 : 0,
           minRotation: isMobile ? 45 : 0,

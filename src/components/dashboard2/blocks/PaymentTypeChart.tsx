@@ -22,7 +22,7 @@ const fmt = (v: number) => {
 };
 
 const PaymentTypeChart = () => {
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [cashAmount, setCashAmount] = useState(0);
   const [cashCount, setCashCount] = useState(0);
   const [legalAmount, setLegalAmount] = useState(0);
@@ -35,13 +35,15 @@ const PaymentTypeChart = () => {
   useEffect(() => {
     const controller = new AbortController();
 
+    // Вычисляем диапазон ДО await чтобы исключить race condition при смене периода
+    const { from, to } = getDateRange();
+
     const fetchData = async () => {
       setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
         if (controller.signal.aborted) return;
         const data = await response.json();
-        const { from, to } = getDateRange();
 
         const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
           if (p.status !== 'approved') return false;
@@ -88,7 +90,7 @@ const PaymentTypeChart = () => {
 
     fetchData();
     return () => controller.abort();
-  }, [period, getDateRange]);
+  }, [period, dateFrom, dateTo]);
 
   const total = cashAmount + legalAmount;
   const legalPct = total > 0 ? (legalAmount / total) * 100 : 0;
