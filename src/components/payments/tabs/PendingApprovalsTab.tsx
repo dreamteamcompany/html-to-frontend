@@ -91,12 +91,12 @@ const PendingApprovalsTab = () => {
             placeholder="Поиск по описанию, категории, сумме..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-background border-border"
+            className="pl-10 bg-background border-white/10"
           />
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="relative p-2 rounded-lg border border-border hover:bg-muted transition-colors"
+          className="relative p-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
         >
           <Icon name="SlidersHorizontal" size={20} />
           {activeFiltersCount > 0 && (
@@ -142,7 +142,7 @@ const PendingApprovalsTab = () => {
                 <span>Обрабатываем платежи...</span>
                 <span>{approveProgress.current} / {approveProgress.total}</span>
               </div>
-              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-green-500 rounded-full transition-all duration-300"
                   style={{ width: `${Math.round((approveProgress.current / approveProgress.total) * 100)}%` }}
@@ -176,13 +176,13 @@ const PendingApprovalsTab = () => {
       {notificationPermission !== 'granted' && (
         <div className="px-4 py-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm text-yellow-700 dark:text-yellow-200">
+            <div className="flex items-center gap-2 text-sm text-yellow-200">
               <Icon name="Bell" size={16} />
               <span>Включите уведомления, чтобы не пропустить новые заявки</span>
             </div>
             <button
               onClick={requestNotificationPermission}
-              className="text-sm text-yellow-700 dark:text-yellow-200 hover:text-yellow-900 dark:hover:text-yellow-100 font-medium whitespace-nowrap"
+              className="text-sm text-yellow-200 hover:text-yellow-100 font-medium whitespace-nowrap"
             >
               Включить
             </button>
