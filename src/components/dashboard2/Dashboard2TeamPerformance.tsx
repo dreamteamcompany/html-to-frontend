@@ -199,7 +199,7 @@ const Dashboard2TeamPerformance = () => {
   const total = currentData.reduce((s, d) => s + d.amount, 0);
 
   return (
-    <Card style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255,255,255,0.07)' }}>
+    <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255,255,255,0.07)' }}>
       <CardContent style={{ padding: isMobile ? '16px' : '24px' }}>
         {/* Заголовок */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? '16px' : '22px' }}>

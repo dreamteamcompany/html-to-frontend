@@ -135,15 +135,19 @@ const Dashboard2AllCards = () => {
       </div>
 
       {/* Department & Expense Structure Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6 items-stretch">
         {departmentCard && (
-          <div className="min-w-0 max-w-full">
-            {renderCard(departmentCard)}
+          <div className="min-w-0 max-w-full h-full">
+            <div className="h-full [&>*]:h-full">
+              {renderCard(departmentCard)}
+            </div>
           </div>
         )}
         {expenseStructureCard && (
-          <div className="min-w-0 max-w-full">
-            {renderCard(expenseStructureCard)}
+          <div className="min-w-0 max-w-full h-full">
+            <div className="h-full [&>*]:h-full">
+              {renderCard(expenseStructureCard)}
+            </div>
           </div>
         )}
       </div>
