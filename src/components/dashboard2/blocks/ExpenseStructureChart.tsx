@@ -271,7 +271,7 @@ const RingChart = ({ categories, totalAmount, isMobile }: RingChartProps) => {
 };
 
 const ExpenseStructureChart = () => {
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [activeTab, setActiveTab] = useState<'general' | 'details'>('general');
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -287,13 +287,13 @@ const ExpenseStructureChart = () => {
 
   useEffect(() => {
     const controller = new AbortController();
+    const { from, to } = getDateRange();
     const fetchExpenseStructure = async () => {
       setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
         if (controller.signal.aborted) return;
         const data = await response.json();
-        const { from, to } = getDateRange();
 
         const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
           if (p.status !== 'approved') return false;
@@ -329,7 +329,7 @@ const ExpenseStructureChart = () => {
     };
     fetchExpenseStructure();
     return () => controller.abort();
-  }, [period, getDateRange]);
+  }, [period, dateFrom, dateTo]);
 
   return (
     <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>

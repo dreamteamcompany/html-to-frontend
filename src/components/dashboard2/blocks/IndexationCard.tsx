@@ -25,7 +25,7 @@ interface ServiceIndexation {
 }
 
 const IndexationCard = () => {
-  const { getDateRange, period } = usePeriod();
+  const { getDateRange, period, dateFrom, dateTo } = usePeriod();
   const [indexationAmount, setIndexationAmount] = useState(0);
   const [indexationPercent, setIndexationPercent] = useState(0);
   const [serviceDetails, setServiceDetails] = useState<ServiceIndexation[]>([]);
@@ -33,6 +33,8 @@ const IndexationCard = () => {
 
   useEffect(() => {
     const controller = new AbortController();
+
+    const { from, to } = getDateRange();
 
     const fetchIndexationData = async () => {
       setLoading(true);
@@ -44,8 +46,6 @@ const IndexationCard = () => {
         const approvedPayments = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) =>
           p.status === 'approved'
         );
-
-        const { from, to } = getDateRange();
         const periodMs = to.getTime() - from.getTime();
 
         const prevTo = new Date(from.getTime() - 1);
@@ -125,7 +125,7 @@ const IndexationCard = () => {
 
     fetchIndexationData();
     return () => controller.abort();
-  }, [period, getDateRange]);
+  }, [period, dateFrom, dateTo]);
 
   return (
     <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547' }}>

@@ -145,7 +145,7 @@ const BarChart = ({ data, isMobile }: BarChartProps) => {
 };
 
 const Dashboard2TeamPerformance = () => {
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [currentData, setCurrentData] = useState<{ name: string; amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -158,13 +158,15 @@ const Dashboard2TeamPerformance = () => {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const { from: start, to: end } = getDateRange();
+
     const fetchDepartmentData = async () => {
       setLoading(true);
       try {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
         const data = await response.json();
-
-        const { from: start, to: end } = getDateRange();
 
         const payments: PaymentRecord[] = Array.isArray(data) ? data : (data.payments || []);
         const filtered = payments.filter(p => {
@@ -185,13 +187,14 @@ const Dashboard2TeamPerformance = () => {
 
         setCurrentData(sorted);
       } catch {
-        setCurrentData([]);
+        if (!controller.signal.aborted) setCurrentData([]);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
     fetchDepartmentData();
-  }, [period, getDateRange]);
+    return () => controller.abort();
+  }, [period, dateFrom, dateTo]);
 
   const total = currentData.reduce((s, d) => s + d.amount, 0);
 

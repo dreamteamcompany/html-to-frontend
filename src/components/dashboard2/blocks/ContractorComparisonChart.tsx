@@ -25,11 +25,12 @@ const colors = [
 ];
 
 const ContractorComparisonChart = () => {
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [contractorData, setContractorData] = useState<{ name: string, amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -39,7 +40,18 @@ const ContractorComparisonChart = () => {
   }, []);
 
   useEffect(() => {
+    const check = () => setIsLight(document.documentElement.classList.contains('light'));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     const controller = new AbortController();
+
+    // getDateRange вызывается ДО await
+    const { from, to } = getDateRange();
 
     const fetchContractorData = async () => {
       setLoading(true);
@@ -47,8 +59,6 @@ const ContractorComparisonChart = () => {
         const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
         if (controller.signal.aborted) return;
         const data = await response.json();
-
-        const { from, to } = getDateRange();
 
         const filtered = (Array.isArray(data) ? data : []).filter((p: PaymentRecord) => {
           if (p.status !== 'approved') return false;
@@ -78,9 +88,12 @@ const ContractorComparisonChart = () => {
 
     fetchContractorData();
     return () => controller.abort();
-  }, [period, getDateRange]);
+  }, [period, dateFrom, dateTo]);
 
   const displayData = showAll ? contractorData : contractorData.slice(0, 5);
+
+  const tickColor = isLight ? 'rgba(30, 30, 50, 0.75)' : 'rgba(180, 190, 220, 0.8)';
+  const gridColor = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.06)';
 
   return (
     <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
@@ -120,7 +133,9 @@ const ContractorComparisonChart = () => {
                   data: displayData.map(d => d.amount),
                   backgroundColor: displayData.map((_, i) => colors[i % colors.length]),
                   borderRadius: isMobile ? 4 : 8,
-                  barThickness: isMobile ? 20 : 30
+                  barPercentage: 0.85,
+                  categoryPercentage: 0.8,
+                  maxBarThickness: isMobile ? 32 : 48,
                 }]
               }}
               options={{
@@ -142,7 +157,7 @@ const ContractorComparisonChart = () => {
                   x: {
                     beginAtZero: true,
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.8)',
+                      color: tickColor,
                       font: { size: isMobile ? 10 : 12 },
                       maxTicksLimit: isMobile ? 5 : 8,
                       callback: (value) => {
@@ -151,10 +166,10 @@ const ContractorComparisonChart = () => {
                         return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
                       }
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.06)' }
+                    grid: { color: gridColor }
                   },
                   y: {
-                    ticks: { color: 'rgba(180, 190, 220, 0.8)', font: { size: isMobile ? 9 : 12 } },
+                    ticks: { color: tickColor, font: { size: isMobile ? 9 : 12 } },
                     grid: { display: false }
                   }
                 }

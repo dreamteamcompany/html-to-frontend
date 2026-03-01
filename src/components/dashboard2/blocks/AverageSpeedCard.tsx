@@ -9,36 +9,40 @@ const AverageSpeedCard = () => {
   const [avgHours, setAvgHours] = useState<number | null>(null);
   const [changePercent, setChangePercent] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom: periodDateFrom, dateTo: periodDateTo } = usePeriod();
 
   useEffect(() => {
-    loadStats();
-  }, [period, getDateRange]);
+    const controller = new AbortController();
+    const { from, to } = getDateRange();
 
-  const loadStats = async () => {
-    try {
-      const { from, to } = getDateRange();
-      const dateFrom = from.toISOString().split('T')[0];
-      const dateTo = to.toISOString().split('T')[0];
-      const url = `${API_ENDPOINTS.statsApi}?date_from=${dateFrom}&date_to=${dateTo}`;
-      const response = await apiFetch(url);
-      const data = await response.json();
-      
-      const currentAvg = data.approval_speed?.avg_hours;
-      const prevAvg = data.prev_month_speed?.avg_hours;
-      
-      setAvgHours(currentAvg);
-      
-      if (currentAvg && prevAvg) {
-        const change = ((currentAvg - prevAvg) / prevAvg) * 100;
-        setChangePercent(change);
+    const loadStats = async () => {
+      try {
+        const dateFrom = from.toISOString().split('T')[0];
+        const dateTo = to.toISOString().split('T')[0];
+        const url = `${API_ENDPOINTS.statsApi}?date_from=${dateFrom}&date_to=${dateTo}`;
+        const response = await apiFetch(url);
+        if (controller.signal.aborted) return;
+        const data = await response.json();
+
+        const currentAvg = data.approval_speed?.avg_hours;
+        const prevAvg = data.prev_month_speed?.avg_hours;
+
+        setAvgHours(currentAvg);
+
+        if (currentAvg && prevAvg) {
+          const change = ((currentAvg - prevAvg) / prevAvg) * 100;
+          setChangePercent(change);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) console.error('Failed to load stats:', error);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to load stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadStats();
+    return () => controller.abort();
+  }, [period, periodDateFrom, periodDateTo]);
 
   const formatTime = (hours: number | null) => {
     if (hours === null || hours === undefined || typeof hours !== 'number') return '—';

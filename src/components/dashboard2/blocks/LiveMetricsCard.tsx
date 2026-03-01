@@ -14,7 +14,7 @@ interface PaymentRecord {
 }
 
 const LiveMetricsCard = () => {
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [todayCount, setTodayCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [approvedRate, setApprovedRate] = useState(0);
@@ -23,6 +23,7 @@ const LiveMetricsCard = () => {
 
   useEffect(() => {
     const controller = new AbortController();
+    const { from, to } = getDateRange();
     const load = async () => {
       setLoading(true);
       try {
@@ -45,8 +46,6 @@ const LiveMetricsCard = () => {
 
         const pending = all.filter(p => p.status === 'pending_approval');
         setPendingCount(pending.length);
-
-        const { from, to } = getDateRange();
         const periodPayments = all.filter(p => {
           const d = new Date(p.payment_date);
           return d >= from && d <= to;
@@ -65,7 +64,7 @@ const LiveMetricsCard = () => {
     };
     load();
     return () => controller.abort();
-  }, [period, getDateRange]);
+  }, [period, dateFrom, dateTo]);
 
   const fmtAmount = (v: number) => {
     if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}м ₽`;

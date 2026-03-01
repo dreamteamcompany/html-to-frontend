@@ -15,30 +15,32 @@ interface PaymentRecord {
 
 const TotalExpensesCard = () => {
   const { token } = useAuth();
-  const { getDateRange } = usePeriod();
+  const { getDateRange, period, dateFrom, dateTo } = usePeriod();
   const [total, setTotal] = useState(0);
   const [count, setCount] = useState(0);
   const [changePercent, setChangePercent] = useState(0);
   const [isIncrease, setIsIncrease] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const { period } = usePeriod();
-
   useEffect(() => {
+    if (!token) return;
+    const controller = new AbortController();
+
+    // getDateRange вызывается ДО await
+    const { from, to } = getDateRange();
+
     const fetchStats = async () => {
-      if (!token) return;
       setLoading(true);
       try {
         const response = await fetch(
           `${API_ENDPOINTS.main}?endpoint=payments`,
           { headers: { 'X-Auth-Token': token } }
         );
+        if (controller.signal.aborted) return;
         const data = await response.json();
         const payments: PaymentRecord[] = (Array.isArray(data) ? data : []).filter(
           (p: PaymentRecord) => p.status === 'approved'
         );
-
-        const { from, to } = getDateRange();
         const periodMs = to.getTime() - from.getTime();
 
         const current = payments.filter((p) => {
@@ -65,14 +67,15 @@ const TotalExpensesCard = () => {
         setChangePercent(Math.abs(diff));
         setIsIncrease(diff > 0);
       } catch (error) {
-        console.error('Failed to fetch dashboard stats:', error);
+        if (!controller.signal.aborted) console.error('Failed to fetch dashboard stats:', error);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchStats();
-  }, [token, period, getDateRange]);
+    return () => controller.abort();
+  }, [token, period, dateFrom, dateTo]);
 
   const formatAmount = (amount: number) =>
     amount.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' ₽';

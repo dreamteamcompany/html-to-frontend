@@ -18,13 +18,13 @@ interface TopPayment {
 const TopPaymentsCard = () => {
   const [payments, setPayments] = useState<TopPayment[]>([]);
   const [loading, setLoading] = useState(true);
-  const { period, getDateRange } = usePeriod();
+  const { period, getDateRange, dateFrom: periodDateFrom, dateTo: periodDateTo } = usePeriod();
 
   useEffect(() => {
     const controller = new AbortController();
+    const { from, to } = getDateRange();
     const loadTopPayments = async () => {
       try {
-        const { from, to } = getDateRange();
         const dateFrom = from.toISOString().split('T')[0];
         const dateTo = to.toISOString().split('T')[0];
         const url = `${API_ENDPOINTS.statsApi}?date_from=${dateFrom}&date_to=${dateTo}`;
@@ -40,7 +40,7 @@ const TopPaymentsCard = () => {
     };
     loadTopPayments();
     return () => controller.abort();
-  }, [period, getDateRange]);
+  }, [period, periodDateFrom, periodDateTo]);
 
   const getColor = (index: number) => {
     const colors = ['#7551e9', '#3965ff', '#01b574', '#ffb547', '#ff6b6b'];
