@@ -94,12 +94,21 @@ const MonthlyDynamicsChart = () => {
   const [labels, setLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const check = () => setIsLight(document.documentElement.classList.contains('light'));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -144,17 +153,21 @@ const MonthlyDynamicsChart = () => {
     label: 'Расходы',
     data: chartData,
     borderColor: 'rgb(117, 81, 233)',
-    backgroundColor: isBarChart ? 'rgba(117, 81, 233, 0.7)' : 'rgba(117, 81, 233, 0.1)',
+    backgroundColor: isBarChart ? 'rgba(117, 81, 233, 0.7)' : (isLight ? 'rgba(117, 81, 233, 0.15)' : 'rgba(117, 81, 233, 0.1)'),
     borderRadius: isMobile ? 4 : 8,
     borderWidth: isMobile ? 1.5 : 3,
     fill: true,
     tension: 0.4,
     pointBackgroundColor: 'rgb(117, 81, 233)',
-    pointBorderColor: '#fff',
+    pointBorderColor: isLight ? '#ffffff' : 'rgb(24, 35, 78)',
     pointBorderWidth: isMobile ? 1 : 2,
     pointRadius: isMobile ? 2 : 4,
     pointHoverRadius: isMobile ? 4 : 7,
+    ...(isBarChart ? { barPercentage: 0.85, categoryPercentage: 0.8, maxBarThickness: isMobile ? 40 : 60 } : {}),
   };
+
+  const tickColor = isLight ? 'rgba(30, 30, 50, 0.75)' : 'rgba(180, 190, 220, 0.8)';
+  const gridColor = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.06)';
 
   const commonOptions = {
     responsive: true,
@@ -174,7 +187,7 @@ const MonthlyDynamicsChart = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          color: 'rgba(180, 190, 220, 0.8)',
+          color: tickColor,
           font: { size: isMobile ? 9 : 12 },
           maxTicksLimit: isMobile ? 4 : 8,
           callback: (value: unknown) => {
@@ -183,11 +196,11 @@ const MonthlyDynamicsChart = () => {
             return new Intl.NumberFormat('ru-RU', { notation: 'compact' }).format(v);
           },
         },
-        grid: { color: 'rgba(255, 255, 255, 0.06)', lineWidth: isMobile ? 0.5 : 1 },
+        grid: { color: gridColor, lineWidth: isMobile ? 0.5 : 1 },
       },
       x: {
         ticks: {
-          color: 'rgba(180, 190, 220, 0.8)',
+          color: tickColor,
           font: { size: isMobile ? 7 : 11 },
           maxRotation: isMobile ? 45 : 0,
           minRotation: isMobile ? 45 : 0,
