@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { dashboardTypography } from './dashboardStyles';
+import { usePeriod } from '@/contexts/PeriodContext';
 
 interface Service {
   name: string;
@@ -18,258 +19,284 @@ interface Payment {
   status: string;
 }
 
+const BAR_COLORS = ['#3965ff', '#2CD9FF', '#01B574', '#7551e9', '#ffb547', '#ff6b6b', '#4ecdc4', '#ff9ff3'];
+
+const fmt = (v: number) => {
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)} млн ₽`;
+  if (v >= 1_000) return `${Math.round(v / 1_000)} тыс ₽`;
+  return `${v.toLocaleString('ru-RU')} ₽`;
+};
+
 const Dashboard2ServicesDynamics = () => {
-  const [hoveredService, setHoveredService] = useState<number | null>(null);
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [servicesData, setServicesData] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
-    loadServicesData();
+    const check = () => setIsLight(document.documentElement.classList.contains('light'));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
-  const loadServicesData = async () => {
-    try {
-      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-      const data = await response.json();
-      
-      const approvedPayments = (Array.isArray(data) ? data : []).filter((p: Payment) => 
-        p.status === 'approved'
-      );
+  useEffect(() => {
+    const controller = new AbortController();
 
-      const now = new Date();
-      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    // Вычисляем диапазон ДО await
+    const { from, to } = getDateRange();
 
-      // Платежи текущего месяца
-      const currentMonthPayments = approvedPayments.filter((p: Payment) => {
-        const paymentDate = new Date(p.payment_date);
-        return paymentDate >= currentMonthStart && paymentDate <= currentMonthEnd;
-      });
+    // Предыдущий период той же длины — для тренда
+    const diffMs = to.getTime() - from.getTime();
+    const prevTo = new Date(from.getTime() - 1);
+    const prevFrom = new Date(prevTo.getTime() - diffMs);
 
-      // Платежи предыдущего месяца
-      const previousMonthPayments = approvedPayments.filter((p: Payment) => {
-        const paymentDate = new Date(p.payment_date);
-        return paymentDate >= previousMonthStart && paymentDate <= previousMonthEnd;
-      });
+    const load = async () => {
+      setLoading(true);
+      setMounted(false);
+      try {
+        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
+        const data = await response.json();
 
-      // Группируем по сервисам для текущего месяца
-      const currentByService: {[key: string]: number} = {};
-      currentMonthPayments.forEach((p: Payment) => {
-        const serviceName = p.service_name || 'Без сервиса';
-        currentByService[serviceName] = (currentByService[serviceName] || 0) + p.amount;
-      });
+        const approved = (Array.isArray(data) ? data : []).filter(
+          (p: Payment) => p.status === 'approved'
+        );
 
-      // Группируем по сервисам для предыдущего месяца
-      const previousByService: {[key: string]: number} = {};
-      previousMonthPayments.forEach((p: Payment) => {
-        const serviceName = p.service_name || 'Без сервиса';
-        previousByService[serviceName] = (previousByService[serviceName] || 0) + p.amount;
-      });
+        // Текущий период
+        const current = approved.filter((p: Payment) => {
+          const d = new Date(p.payment_date);
+          return d >= from && d <= to;
+        });
 
-      // Формируем данные с трендами
-      const services: Service[] = Object.keys(currentByService).map(serviceName => {
-        const currentAmount = currentByService[serviceName];
-        const previousAmount = previousByService[serviceName] || 0;
-        
-        let trend = 0;
-        if (previousAmount > 0) {
-          trend = Math.round(((currentAmount - previousAmount) / previousAmount) * 100);
-        } else if (currentAmount > 0) {
-          trend = 100; // Новый сервис
-        }
+        // Предыдущий период (для тренда)
+        const previous = approved.filter((p: Payment) => {
+          const d = new Date(p.payment_date);
+          return d >= prevFrom && d <= prevTo;
+        });
 
-        return {
-          name: serviceName,
-          amount: currentAmount,
-          trend: trend
+        const byService = (payments: Payment[]) => {
+          const map: { [key: string]: number } = {};
+          payments.forEach((p) => {
+            const name = p.service_name || 'Без сервиса';
+            map[name] = (map[name] || 0) + p.amount;
+          });
+          return map;
         };
-      });
 
-      setServicesData(services);
-    } catch (error) {
-      console.error('Failed to load services data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+        const currentMap = byService(current);
+        const previousMap = byService(previous);
+
+        const services: Service[] = Object.keys(currentMap).map((name) => {
+          const cur = currentMap[name];
+          const prev = previousMap[name] || 0;
+          let trend = 0;
+          if (prev > 0) {
+            trend = Math.round(((cur - prev) / prev) * 100);
+          } else if (cur > 0) {
+            trend = 100;
+          }
+          return { name, amount: cur, trend };
+        });
+
+        setServicesData(services);
+      } catch (error) {
+        if (!controller.signal.aborted) console.error('Failed to load services data:', error);
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          setTimeout(() => setMounted(true), 80);
+        }
+      }
+    };
+
+    load();
+    return () => controller.abort();
+  }, [period, dateFrom, dateTo]);
 
   const sortedData = [...servicesData].sort((a, b) => b.amount - a.amount);
-  const maxAmount = Math.max(...sortedData.map(s => s.amount));
-  const totalAmount = sortedData.reduce((sum, s) => sum + s.amount, 0);
-  const avgTrend = Math.round(sortedData.reduce((sum, s) => sum + s.trend, 0) / sortedData.length);
+  const maxAmount = sortedData[0]?.amount || 1;
+  const total = sortedData.reduce((s, c) => s + c.amount, 0);
+  const growing = sortedData.filter((s) => s.trend > 0).length;
+  const falling = sortedData.filter((s) => s.trend < 0).length;
 
-  const formatAmount = (amount: number) => {
-    return amount.toLocaleString('ru-RU') + ' ₽';
-  };
-
-  const barColors = ['#3965ff', '#2CD9FF', '#01B574', '#7551e9', '#ffb547'];
+  const itemBg = isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.025)';
+  const itemBorder = isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)';
+  const nameColor = isLight ? 'rgba(30,30,50,0.8)' : 'rgba(180,195,225,0.85)';
+  const amountColor = isLight ? 'rgba(15,15,35,0.95)' : '#ffffff';
+  const trackBg = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)';
 
   return (
-    <Card className="w-full max-w-full" style={{ 
+    <Card className="w-full max-w-full" style={{
       background: 'hsl(var(--card))',
-      border: '1px solid hsl(var(--border))',
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(45,217,255,0.25)',
+      borderTop: '4px solid #2CD9FF',
+      boxShadow: isLight
+        ? '0 4px 20px rgba(45,217,255,0.07)'
+        : '0 4px 24px rgba(45,217,255,0.1)',
       overflow: 'hidden',
       position: 'relative',
-      marginBottom: '20px'
     }}>
-      <CardContent className="p-3 sm:p-4 md:p-6" style={{ position: 'relative', zIndex: 1 }}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 sm:mb-6">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="sm:gap-2">
-            <Icon name="Activity" size={16} style={{ color: '#2CD9FF' }} className="sm:w-[18px] sm:h-[18px]" />
-            <h3 className={`${dashboardTypography.cardTitle}`} style={{ color: 'hsl(var(--foreground))' }}>Динамика расходов по сервисам</h3>
+      {/* Декоративный фон */}
+      <div style={{
+        position: 'absolute', top: 0, right: 0,
+        width: '180px', height: '180px',
+        background: 'radial-gradient(circle at top right, rgba(45,217,255,0.06) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
+        {/* Шапка */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '20px' }}>
+          <div style={{
+            width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
+            background: 'rgba(45,217,255,0.12)',
+            border: '1px solid rgba(45,217,255,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name="Activity" size={16} style={{ color: '#2CD9FF' }} />
+          </div>
+          <div>
+            <h3 className={dashboardTypography.cardTitle} style={{ fontSize: '15px', lineHeight: 1.2 }}>
+              Динамика расходов по сервисам
+            </h3>
+            {!loading && total > 0 && (
+              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>
+                Итого:{' '}
+                <span style={{ color: '#2CD9FF', fontWeight: 700 }}>{fmt(total)}</span>
+                {sortedData.length > 0 && (
+                  <span style={{ marginLeft: '6px', opacity: 0.7 }}>· {sortedData.length} сервисов</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center" style={{ height: '200px' }}>
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', flexDirection: 'column', gap: '12px' }}>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: '#2CD9FF' }} />
+            <span style={{ fontSize: '13px', color: 'hsl(var(--muted-foreground))' }}>Загрузка данных...</span>
           </div>
         ) : sortedData.length === 0 ? (
-          <div className="flex items-center justify-center" style={{ height: '200px', color: '#a3aed0' }}>
-            Нет данных о платежах
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', gap: '12px' }}>
+            <Icon name="PackageSearch" size={44} style={{ color: 'hsl(var(--muted-foreground))', opacity: 0.35 }} />
+            <p style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
           <>
-        <div style={{ 
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px'
-        }}>
-          {sortedData.map((service, index) => {
-            const barWidthPercent = (service.amount / maxAmount) * 100;
-            const color = barColors[index % barColors.length];
-            
-            return (
-              <div key={`service-${index}`} style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                borderRadius: '10px',
-                padding: '10px',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.borderColor = color + '40';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-              }}>
-                <div className="flex items-center justify-between mb-2">
-                  <span style={{ 
-                    color: '#c8cfca', 
-                    fontSize: '13px',
-                    fontWeight: '500'
-                  }} className="sm:text-sm">
-                    {service.name}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span style={{ 
-                      color: '#fff', 
-                      fontSize: '13px', 
-                      fontWeight: '600'
-                    }} className="sm:text-sm">
-                      {formatAmount(service.amount)}
-                    </span>
-                    {service.trend !== 0 && (
-                      <div style={{
-                        background: service.trend > 0 ? '#01B574' : '#E31A1A',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontSize: '10px',
-                        fontWeight: 'bold',
-                        color: '#fff'
-                      }} className="sm:text-xs">
-                        {service.trend > 0 ? '+' : ''}{service.trend}%
+            {/* Список сервисов */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+              {sortedData.map((service, index) => {
+                const color = BAR_COLORS[index % BAR_COLORS.length];
+                const barPct = (service.amount / maxAmount) * 100;
+                const share = total > 0 ? Math.round((service.amount / total) * 100) : 0;
+
+                return (
+                  <div
+                    key={service.name}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: '10px',
+                      background: itemBg,
+                      border: `1px solid ${itemBorder}`,
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = isLight
+                        ? `${color}12`
+                        : `${color}14`;
+                      e.currentTarget.style.borderColor = `${color}45`;
+                      e.currentTarget.style.boxShadow = `0 3px 14px ${color}22`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = itemBg;
+                      e.currentTarget.style.borderColor = itemBorder;
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    {/* Имя + сумма + тренд */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <div style={{
+                          width: '8px', height: '8px', borderRadius: '50%',
+                          background: color, flexShrink: 0,
+                          boxShadow: `0 0 6px ${color}80`,
+                        }} />
+                        <span style={{
+                          fontSize: '13px', fontWeight: 500,
+                          color: nameColor,
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>
+                          {service.name}
+                        </span>
                       </div>
-                    )}
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: amountColor }}>
+                          {fmt(service.amount)}
+                        </span>
+                        <span style={{
+                          fontSize: '10px', fontWeight: 500,
+                          color: isLight ? 'rgba(30,30,50,0.45)' : 'rgba(180,190,220,0.5)',
+                        }}>
+                          {share}%
+                        </span>
+                        {service.trend !== 0 && (
+                          <div style={{
+                            padding: '2px 7px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
+                            color: '#fff',
+                            background: service.trend > 0 ? '#01B574' : '#E31A1A',
+                            boxShadow: service.trend > 0 ? '0 1px 6px rgba(1,181,116,0.35)' : '0 1px 6px rgba(227,26,26,0.35)',
+                          }}>
+                            {service.trend > 0 ? '+' : ''}{service.trend}%
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Прогресс-бар */}
+                    <div style={{ height: '4px', borderRadius: '99px', background: trackBg, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', borderRadius: '99px',
+                        background: `linear-gradient(90deg, ${color}80, ${color})`,
+                        width: mounted ? `${barPct}%` : '0%',
+                        transition: 'width 0.65s cubic-bezier(.4,0,.2,1)',
+                        transitionDelay: `${index * 50}ms`,
+                        boxShadow: `0 0 8px ${color}60`,
+                      }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Итоговые плашки */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              {[
+                { icon: 'Layers' as const,      label: 'Всего',      value: sortedData.length, color: '#3965ff', bg: 'rgba(57,101,255,0.1)' },
+                { icon: 'TrendingUp' as const,   label: 'Растущих',   value: growing,           color: '#01B574', bg: 'rgba(1,181,116,0.1)' },
+                { icon: 'TrendingDown' as const, label: 'Снижается',  value: falling,           color: '#ff6b6b', bg: 'rgba(255,107,107,0.1)' },
+              ].map((stat) => (
+                <div key={stat.label} style={{
+                  padding: '10px',
+                  borderRadius: '10px',
+                  background: isLight ? stat.bg.replace('0.1)', '0.07)') : stat.bg,
+                  border: `1px solid ${stat.color}30`,
+                  textAlign: 'center',
+                }}>
+                  <Icon name={stat.icon} size={14} style={{ color: stat.color, marginBottom: '4px' }} />
+                  <div style={{ fontSize: '20px', fontWeight: 900, color: stat.color, lineHeight: 1 }}>
+                    {stat.value}
+                  </div>
+                  <div style={{ fontSize: '11px', fontWeight: 500, color: 'hsl(var(--muted-foreground))', marginTop: '3px' }}>
+                    {stat.label}
                   </div>
                 </div>
-                <div style={{
-                  width: '100%',
-                  height: '6px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: '3px',
-                  overflow: 'hidden',
-                  position: 'relative'
-                }}>
-                  <div style={{
-                    width: `${barWidthPercent}%`,
-                    height: '100%',
-                    background: `linear-gradient(90deg, ${color}60 0%, ${color} 100%)`,
-                    borderRadius: '3px',
-                    transition: 'width 0.5s ease',
-                    boxShadow: `0 0 10px ${color}60`
-                  }} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(3, 1fr)', 
-          gap: '6px'
-        }}>
-          {[
-            { 
-              icon: 'Layers', 
-              label: 'Всего сервисов', 
-              value: sortedData.length.toString(), 
-              color: '#3965ff',
-              bgGradient: 'rgba(57, 101, 255, 0.15)'
-            },
-            { 
-              icon: 'TrendingUp', 
-              label: 'Растущих', 
-              value: sortedData.filter(s => s.trend > 0).length.toString(), 
-              color: '#01B574',
-              bgGradient: 'rgba(1, 181, 116, 0.15)'
-            },
-            { 
-              icon: 'TrendingDown', 
-              label: 'Снижающихся', 
-              value: sortedData.filter(s => s.trend < 0).length.toString(), 
-              color: '#ff6b6b',
-              bgGradient: 'rgba(255, 107, 107, 0.15)'
-            }
-          ].map((stat, idx) => (
-            <div key={idx} style={{ 
-              background: `linear-gradient(135deg, ${stat.bgGradient} 0%, ${stat.bgGradient}80 100%)`,
-              padding: '6px',
-              borderRadius: '6px',
-              border: `1px solid ${stat.color}30`,
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.borderColor = stat.color;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.borderColor = `${stat.color}30`;
-            }}>
-              <Icon name={stat.icon} size={10} style={{ color: stat.color, marginBottom: '3px' }} />
-              <div style={{ 
-                color: stat.color, 
-                fontSize: '20px', 
-                fontWeight: '900',
-                marginBottom: '2px'
-              }}>
-                {stat.value}
-              </div>
-              <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '15px', fontWeight: '600' }}>
-                {stat.label}
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-        </>
+          </>
         )}
       </CardContent>
     </Card>
