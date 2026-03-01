@@ -313,7 +313,7 @@ const ExpenseStructureChart = () => {
   }, [allPayments, period, dateFrom, dateTo]);
 
   return (
-    <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+    <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
       <CardContent className="p-6">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#ffffff' }}>Структура Расходов</h3>
