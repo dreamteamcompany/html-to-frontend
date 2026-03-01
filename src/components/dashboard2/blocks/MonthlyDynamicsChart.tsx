@@ -150,7 +150,7 @@ const MonthlyDynamicsChart = () => {
     fill: true,
     tension: 0.4,
     pointBackgroundColor: 'rgb(117, 81, 233)',
-    pointBorderColor: 'rgb(24, 35, 78)',
+    pointBorderColor: '#fff',
     pointBorderWidth: isMobile ? 1 : 2,
     pointRadius: isMobile ? 2 : 4,
     pointHoverRadius: isMobile ? 4 : 7,
@@ -183,7 +183,7 @@ const MonthlyDynamicsChart = () => {
             return new Intl.NumberFormat('ru-RU', { notation: 'compact' }).format(v);
           },
         },
-        grid: { color: 'rgba(255, 255, 255, 0.07)', lineWidth: isMobile ? 0.5 : 1 },
+        grid: { color: 'rgba(255, 255, 255, 0.06)', lineWidth: isMobile ? 0.5 : 1 },
       },
       x: {
         ticks: {

@@ -25,7 +25,7 @@ const colors = [
 ];
 
 const LegalEntityComparisonChart = () => {
-  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const { period, getDateRange } = usePeriod();
   const [legalEntityData, setLegalEntityData] = useState<{ name: string, amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -77,7 +77,7 @@ const LegalEntityComparisonChart = () => {
 
     fetchLegalEntityData();
     return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+  }, [period, getDateRange]);
 
   return (
     <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
@@ -125,7 +125,7 @@ const LegalEntityComparisonChart = () => {
                   x: {
                     beginAtZero: true,
                     ticks: {
-                      color: 'hsl(var(--muted-foreground))',
+                      color: 'rgba(180, 190, 220, 0.8)',
                       font: { size: isMobile ? 10 : 12 },
                       maxTicksLimit: isMobile ? 5 : 8,
                       callback: (value) => {
@@ -134,10 +134,10 @@ const LegalEntityComparisonChart = () => {
                         return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
                       }
                     },
-                    grid: { color: 'hsl(var(--border))' }
+                    grid: { color: 'rgba(255, 255, 255, 0.06)' }
                   },
                   y: {
-                    ticks: { color: 'hsl(var(--muted-foreground))', font: { size: isMobile ? 9 : 12 } },
+                    ticks: { color: 'rgba(180, 190, 220, 0.8)', font: { size: isMobile ? 9 : 12 } },
                     grid: { display: false }
                   }
                 }

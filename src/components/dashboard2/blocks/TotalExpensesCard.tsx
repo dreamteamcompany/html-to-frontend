@@ -15,12 +15,14 @@ interface PaymentRecord {
 
 const TotalExpensesCard = () => {
   const { token } = useAuth();
-  const { getDateRange, period, dateFrom, dateTo } = usePeriod();
+  const { getDateRange } = usePeriod();
   const [total, setTotal] = useState(0);
   const [count, setCount] = useState(0);
   const [changePercent, setChangePercent] = useState(0);
   const [isIncrease, setIsIncrease] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const { period } = usePeriod();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -70,7 +72,7 @@ const TotalExpensesCard = () => {
     };
 
     fetchStats();
-  }, [token, period, dateFrom, dateTo]);
+  }, [token, period, getDateRange]);
 
   const formatAmount = (amount: number) =>
     amount.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' ₽';

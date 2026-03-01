@@ -22,7 +22,7 @@ const fmt = (v: number) => {
 };
 
 const PaymentTypeChart = () => {
-  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const { period, getDateRange } = usePeriod();
   const [cashAmount, setCashAmount] = useState(0);
   const [cashCount, setCashCount] = useState(0);
   const [legalAmount, setLegalAmount] = useState(0);
@@ -88,7 +88,7 @@ const PaymentTypeChart = () => {
 
     fetchData();
     return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+  }, [period, getDateRange]);
 
   const total = cashAmount + legalAmount;
   const legalPct = total > 0 ? (legalAmount / total) * 100 : 0;

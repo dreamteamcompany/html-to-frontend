@@ -27,7 +27,7 @@ const colors = [
 ];
 
 const CategoryExpensesChart = () => {
-  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const { period, getDateRange } = usePeriod();
   const [categoryData, setCategoryData] = useState<{ [category: string]: number[] }>({});
   const [xLabels, setXLabels] = useState<string[]>(MONTHS);
   const [loading, setLoading] = useState(true);
@@ -116,7 +116,7 @@ const CategoryExpensesChart = () => {
 
     fetchCategoryData();
     return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+  }, [period, getDateRange]);
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,
@@ -152,45 +152,23 @@ const CategoryExpensesChart = () => {
                     labels: {
                       padding: isMobile ? 10 : 20,
                       usePointStyle: true,
-                      color: 'rgba(200, 210, 235, 0.9)',
+                      color: '#ffffff',
                       font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
                     }
                   },
                   tooltip: {
                     enabled: !isMobile,
-                    backgroundColor: 'rgba(18, 18, 32, 0.92)',
-                    borderColor: 'rgba(117, 81, 233, 0.4)',
-                    borderWidth: 1,
-                    padding: 12,
-                    cornerRadius: 10,
-                    titleColor: 'rgba(255,255,255,0.55)',
-                    titleFont: { size: 12, weight: 'normal' as const },
-                    bodyColor: '#ffffff',
-                    bodyFont: { size: 13, weight: 'bold' as const, family: 'Plus Jakarta Sans, sans-serif' },
                     callbacks: {
-                      title: (items) => items[0]?.label ?? '',
-                      label: (context) => {
-                        const val = context.raw as number;
-                        if (val === 0) return '';
-                        return `  ${context.dataset.label}: ${new Intl.NumberFormat('ru-RU').format(val)} ₽`;
-                      },
-                      footer: (items) => {
-                        const total = items.reduce((s, i) => s + (i.raw as number), 0);
-                        if (items.length <= 1 || total === 0) return '';
-                        return `Итого: ${new Intl.NumberFormat('ru-RU').format(total)} ₽`;
-                      }
-                    },
-                    footerColor: 'rgba(117, 81, 233, 0.9)',
-                    footerFont: { size: 12, weight: 'bold' as const },
-                    footerMarginTop: 8,
-                    filter: (item) => (item.raw as number) > 0,
+                      label: (context) =>
+                        `${context.dataset.label}: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`
+                    }
                   }
                 },
                 scales: {
                   y: {
                     beginAtZero: true,
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.8)',
+                      color: 'rgba(180, 190, 220, 0.7)',
                       font: { size: isMobile ? 10 : 11 },
                       maxTicksLimit: isMobile ? 4 : 6,
                       padding: 6,
@@ -201,12 +179,12 @@ const CategoryExpensesChart = () => {
                         return String(v);
                       }
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.07)', lineWidth: 1 },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
                     border: { dash: [4, 4], display: false }
                   },
                   x: {
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.8)',
+                      color: 'rgba(180, 190, 220, 0.75)',
                       font: { size: isMobile ? 9 : 11 },
                       maxRotation: isMobile ? 45 : 0,
                       minRotation: isMobile ? 45 : 0,

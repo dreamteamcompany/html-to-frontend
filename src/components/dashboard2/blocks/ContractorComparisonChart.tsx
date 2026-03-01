@@ -25,7 +25,7 @@ const colors = [
 ];
 
 const ContractorComparisonChart = () => {
-  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const { period, getDateRange } = usePeriod();
   const [contractorData, setContractorData] = useState<{ name: string, amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
@@ -78,7 +78,7 @@ const ContractorComparisonChart = () => {
 
     fetchContractorData();
     return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+  }, [period, getDateRange]);
 
   const displayData = showAll ? contractorData : contractorData.slice(0, 5);
 
@@ -142,7 +142,7 @@ const ContractorComparisonChart = () => {
                   x: {
                     beginAtZero: true,
                     ticks: {
-                      color: 'hsl(var(--muted-foreground))',
+                      color: 'rgba(180, 190, 220, 0.8)',
                       font: { size: isMobile ? 10 : 12 },
                       maxTicksLimit: isMobile ? 5 : 8,
                       callback: (value) => {
@@ -151,10 +151,10 @@ const ContractorComparisonChart = () => {
                         return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
                       }
                     },
-                    grid: { color: 'hsl(var(--border))' }
+                    grid: { color: 'rgba(255, 255, 255, 0.06)' }
                   },
                   y: {
-                    ticks: { color: 'hsl(var(--muted-foreground))', font: { size: isMobile ? 9 : 12 } },
+                    ticks: { color: 'rgba(180, 190, 220, 0.8)', font: { size: isMobile ? 9 : 12 } },
                     grid: { display: false }
                   }
                 }

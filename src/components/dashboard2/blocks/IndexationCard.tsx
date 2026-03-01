@@ -25,7 +25,7 @@ interface ServiceIndexation {
 }
 
 const IndexationCard = () => {
-  const { getDateRange, period, dateFrom, dateTo } = usePeriod();
+  const { getDateRange, period } = usePeriod();
   const [indexationAmount, setIndexationAmount] = useState(0);
   const [indexationPercent, setIndexationPercent] = useState(0);
   const [serviceDetails, setServiceDetails] = useState<ServiceIndexation[]>([]);
@@ -125,7 +125,7 @@ const IndexationCard = () => {
 
     fetchIndexationData();
     return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+  }, [period, getDateRange]);
 
   return (
     <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547' }}>
