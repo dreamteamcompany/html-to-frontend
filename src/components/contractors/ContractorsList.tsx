@@ -47,7 +47,7 @@ const ContractorsList = ({ contractors, loading, handleEdit, handleDelete }: Con
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
+                  <tr className="border-b border-border">
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Название</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">ИНН</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Контакты</th>
@@ -56,7 +56,7 @@ const ContractorsList = ({ contractors, loading, handleEdit, handleDelete }: Con
                 </thead>
                 <tbody>
                   {contractors.map((contractor) => (
-                    <tr key={contractor.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <tr key={contractor.id} className="border-b border-border hover:bg-muted/40 transition-colors">
                       <td className="p-4">
                         <div className="font-medium">{contractor.name}</div>
                         {contractor.contact_person && (
