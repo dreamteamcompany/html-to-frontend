@@ -169,8 +169,30 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 ORDER BY p.payment_date DESC
             """, params)
             rows = cur.fetchall()
+            payment_ids = [row['id'] for row in rows]
+
+            # Загружаем все custom_fields одним запросом (избегаем N+1)
+            custom_fields_map = {}
+            if payment_ids:
+                ids_placeholder = ','.join(['%s'] * len(payment_ids))
+                cur.execute(f"""
+                    SELECT cfv.payment_id, cf.id, cf.name, cf.field_type, cfv.value
+                    FROM {SCHEMA}.custom_field_values cfv
+                    JOIN {SCHEMA}.custom_fields cf ON cfv.custom_field_id = cf.id
+                    WHERE cfv.payment_id IN ({ids_placeholder})
+                """, tuple(payment_ids))
+                for cf_row in cur.fetchall():
+                    pid = cf_row['payment_id']
+                    if pid not in custom_fields_map:
+                        custom_fields_map[pid] = []
+                    custom_fields_map[pid].append({
+                        'id': cf_row['id'],
+                        'name': cf_row['name'],
+                        'field_type': cf_row['field_type'],
+                        'value': cf_row['value'],
+                    })
+
             payments = []
-            
             for row in rows:
                 payment = dict(row)
                 payment['amount'] = float(payment['amount'])
@@ -187,16 +209,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     payment['ceo_approved_at'] = payment['ceo_approved_at'].isoformat()
                 if payment['invoice_date']:
                     payment['invoice_date'] = payment['invoice_date'].isoformat()
-                
-                cur.execute(f"""
-                    SELECT cf.id, cf.name, cf.field_type, cfv.value
-                    FROM {SCHEMA}.custom_field_values cfv
-                    JOIN {SCHEMA}.custom_fields cf ON cfv.custom_field_id = cf.id
-                    WHERE cfv.payment_id = %s
-                """, (payment['id'],))
-                custom_fields = cur.fetchall()
-                payment['custom_fields'] = [dict(cf) for cf in custom_fields]
-                
+
+                payment['custom_fields'] = custom_fields_map.get(payment['id'], [])
                 payments.append(payment)
             
             cur.close()
