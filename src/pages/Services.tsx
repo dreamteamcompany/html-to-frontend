@@ -200,6 +200,16 @@ const Services = () => {
   };
 
   const handleEdit = (service: Service) => {
+    setFormData({
+      name: service.name || '',
+      description: service.description || '',
+      intermediate_approver_id: service.intermediate_approver_id?.toString() || '',
+      final_approver_id: service.final_approver_id?.toString() || '',
+      customer_department_id: service.customer_department_id?.toString() || '',
+      category_id: service.category_id?.toString() || '',
+      legal_entity_id: service.legal_entity_id?.toString() || '',
+      contractor_id: service.contractor_id?.toString() || '',
+    });
     handleEditBase(service);
   };
 

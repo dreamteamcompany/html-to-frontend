@@ -82,15 +82,19 @@ const ServicesTable = ({ services, loading, onEdit, onDelete }: ServicesTablePro
                           variant="ghost"
                           size="sm"
                           onClick={() => onEdit(service)}
+                          className="gap-2"
                         >
                           <Icon name="Pencil" size={16} />
+                          Редактировать
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => onDelete(service.id)}
+                          className="gap-2 text-red-500 hover:text-red-600"
                         >
                           <Icon name="Trash2" size={16} />
+                          Удалить
                         </Button>
                       </div>
                     </TableCell>
