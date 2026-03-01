@@ -32,12 +32,21 @@ const CategoryExpensesChart = () => {
   const [xLabels, setXLabels] = useState<string[]>(MONTHS);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const check = () => setIsLight(document.documentElement.classList.contains('light'));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -123,7 +132,7 @@ const CategoryExpensesChart = () => {
     backgroundColor: colors[index % colors.length],
     borderRadius: isMobile ? 5 : 10,
     borderSkipped: false as const,
-    maxBarThickness: isMobile ? 18 : 28,
+    maxBarThickness: isMobile ? 28 : 42,
   }));
 
   return (
@@ -151,7 +160,7 @@ const CategoryExpensesChart = () => {
                     labels: {
                       padding: isMobile ? 10 : 20,
                       usePointStyle: true,
-                      color: '#ffffff',
+                      color: isLight ? 'rgba(30, 30, 50, 0.85)' : 'rgba(200, 210, 235, 0.9)',
                       font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
                     }
                   },
@@ -167,7 +176,7 @@ const CategoryExpensesChart = () => {
                   y: {
                     beginAtZero: true,
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.7)',
+                      color: isLight ? 'rgba(30, 30, 50, 0.75)' : 'rgba(180, 190, 220, 0.7)',
                       font: { size: isMobile ? 10 : 11 },
                       maxTicksLimit: isMobile ? 4 : 6,
                       padding: 6,
@@ -178,12 +187,12 @@ const CategoryExpensesChart = () => {
                         return String(v);
                       }
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
+                    grid: { color: isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
                     border: { dash: [4, 4], display: false }
                   },
                   x: {
                     ticks: {
-                      color: 'rgba(180, 190, 220, 0.75)',
+                      color: isLight ? 'rgba(30, 30, 50, 0.75)' : 'rgba(180, 190, 220, 0.75)',
                       font: { size: isMobile ? 9 : 11 },
                       maxRotation: isMobile ? 45 : 0,
                       minRotation: isMobile ? 45 : 0,
