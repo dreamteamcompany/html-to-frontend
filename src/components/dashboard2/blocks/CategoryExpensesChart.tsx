@@ -60,30 +60,37 @@ const CategoryExpensesChart = () => {
     let getKey: (p: PaymentRecord) => string;
 
     if (period === 'today') {
-      labels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
-      getKey = (p) => `${new Date(p.payment_date).getHours()}:00`;
+      labels = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+      getKey = (p) => `${String(new Date(p.payment_date).getHours()).padStart(2, '0')}:00`;
     } else if (period === 'week' || (period === 'custom' && diffDays <= 7)) {
       labels = [];
       const cur = new Date(from);
       while (cur <= to) {
-        labels.push(cur.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }));
+        const d = String(cur.getDate()).padStart(2, '0');
+        const m = String(cur.getMonth() + 1).padStart(2, '0');
+        labels.push(`${d}.${m}`);
         cur.setDate(cur.getDate() + 1);
       }
       getKey = (p) => {
         const d = new Date(p.payment_date);
-        return d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' });
+        return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
       };
     } else if (period === 'month' || (period === 'custom' && diffDays <= 31)) {
       labels = [];
       const cur = new Date(from);
       while (cur <= to) {
-        labels.push(cur.getDate().toString());
+        const d = String(cur.getDate()).padStart(2, '0');
+        const m = String(cur.getMonth() + 1).padStart(2, '0');
+        labels.push(`${d}.${m}`);
         cur.setDate(cur.getDate() + 1);
       }
-      getKey = (p) => new Date(p.payment_date).getDate().toString();
+      getKey = (p) => {
+        const d = new Date(p.payment_date);
+        return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+      };
     } else {
-      labels = MONTHS;
-      getKey = (p) => MONTHS[new Date(p.payment_date).getMonth()];
+      labels = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+      getKey = (p) => String(new Date(p.payment_date).getMonth() + 1).padStart(2, '0');
     }
 
     const categoryMap: { [category: string]: { [key: string]: number } } = {};
@@ -174,7 +181,7 @@ const CategoryExpensesChart = () => {
                       maxRotation: isMobile ? 45 : 0,
                       minRotation: isMobile ? 45 : 0,
                       autoSkip: true,
-                      maxTicksLimit: isMobile ? 6 : 14,
+                      maxTicksLimit: isMobile ? 6 : (period === 'year' ? 12 : period === 'today' ? 12 : 16),
                       padding: 4,
                     },
                     grid: { display: false }
