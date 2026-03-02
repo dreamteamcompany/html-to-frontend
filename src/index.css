@@ -133,3 +133,32 @@
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
+
+/* Vertical scroll in dropdowns (Payments page) */
+[data-radix-popper-content-wrapper] .overflow-y-auto::-webkit-scrollbar,
+[cmdk-list]::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-radix-popper-content-wrapper] .overflow-y-auto::-webkit-scrollbar-track,
+[cmdk-list]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-radix-popper-content-wrapper] .overflow-y-auto::-webkit-scrollbar-thumb,
+[cmdk-list]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+[data-radix-popper-content-wrapper]
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+[cmdk-list]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+[data-radix-popper-content-wrapper] .overflow-y-auto,
+[cmdk-list] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
