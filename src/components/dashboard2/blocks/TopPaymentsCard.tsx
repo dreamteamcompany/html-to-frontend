@@ -83,7 +83,7 @@ const TopPaymentsCard = () => {
           }} className="sm:p-3">
             <Icon name="TrendingUp" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
           </div>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'hsl(var(--foreground))' }} className="sm:text-lg">Топ-5 Платежей</h3>
+          <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'hsl(var(--foreground))' }} className="sm:text-base">Топ-5 Платежей</h3>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="sm:gap-4">
           {payments.length === 0 ? (
@@ -114,14 +114,14 @@ const TopPaymentsCard = () => {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start' }} className="sm:mb-2">
                     <div style={{ flex: 1 }}>
-                      <div style={{ color: 'hsl(var(--foreground))', fontSize: '18px', fontWeight: '600', marginBottom: '2px' }} className="sm:text-xl">
+                      <div style={{ color: 'hsl(var(--foreground))', fontSize: '15px', fontWeight: '600', marginBottom: '2px' }} className="sm:text-lg">
                         {payment.service_name || 'Без сервиса'}
                       </div>
-                      <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '15px', fontWeight: '500' }} className="sm:text-base">
+                      <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '13px', fontWeight: '500' }} className="sm:text-sm">
                         {payment.category_name || 'Без категории'}
                       </div>
                     </div>
-                    <span style={{ color: color, fontSize: '18px', fontWeight: '700', marginLeft: '8px', whiteSpace: 'nowrap' }} className="sm:text-xl">
+                    <span style={{ color: color, fontSize: '15px', fontWeight: '700', marginLeft: '8px', whiteSpace: 'nowrap' }} className="sm:text-lg">
                       {new Intl.NumberFormat('ru-RU').format(payment.amount)} ₽
                     </span>
                   </div>
