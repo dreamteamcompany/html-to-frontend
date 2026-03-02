@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Chart, registerables } from 'chart.js';
 import Dashboard2ChartsSection from './Dashboard2ChartsSection';
 import Dashboard2StatsRow from './Dashboard2StatsRow';
-import Dashboard2KPIRow from './Dashboard2KPIRow';
 import Dashboard2PaymentCalendar from './Dashboard2PaymentCalendar';
 import Dashboard2UpcomingPayments from './Dashboard2UpcomingPayments';
 import Dashboard2TeamPerformance from './Dashboard2TeamPerformance';
@@ -68,8 +67,7 @@ const Dashboard2FullEditableLayout = () => {
   const defaultLayouts: BlockLayout[] = [
     { id: 'charts-section', x: 0, y: 0, width: 1150, height: 1000, component: 'Dashboard2ChartsSection' },
     { id: 'stats-row', x: 0, y: 1020, width: 1150, height: 450, component: 'Dashboard2StatsRow' },
-    { id: 'kpi-row', x: 0, y: 1490, width: 1150, height: 350, component: 'Dashboard2KPIRow' },
-    { id: 'payment-calendar', x: 0, y: 1860, width: 1150, height: 500, component: 'Dashboard2PaymentCalendar' },
+    { id: 'payment-calendar', x: 0, y: 1490, width: 1150, height: 500, component: 'Dashboard2PaymentCalendar' },
     { id: 'upcoming-payments', x: 0, y: 2380, width: 1150, height: 550, component: 'Dashboard2UpcomingPayments' },
     { id: 'team-performance', x: 0, y: 2950, width: 1150, height: 600, component: 'Dashboard2TeamPerformance' },
     { id: 'services-dynamics', x: 0, y: 3570, width: 1150, height: 200, component: 'Dashboard2ServicesDynamics' },
@@ -80,7 +78,6 @@ const Dashboard2FullEditableLayout = () => {
   const componentMap: Record<string, React.ComponentType> = {
     Dashboard2ChartsSection,
     Dashboard2StatsRow,
-    Dashboard2KPIRow,
     Dashboard2PaymentCalendar,
     Dashboard2UpcomingPayments,
     Dashboard2TeamPerformance,
