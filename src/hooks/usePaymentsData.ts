@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
-import { Payment, CustomField } from '@/types/payment';
+import { Payment } from '@/types/payment';
 import { useDictionaryContext } from '@/contexts/DictionaryContext';
 
 // Module-level cache for personal payments (draft/my)
-const myPaymentsCache: Payment[] | null = null;
-const myPaymentsCacheTime = 0;
+let myPaymentsCache: Payment[] | null = null;
+let myPaymentsCacheTime = 0;
 const MY_CACHE_TTL = 30_000;
 
 interface Category {

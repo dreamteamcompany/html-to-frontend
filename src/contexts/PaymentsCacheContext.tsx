@@ -50,7 +50,7 @@ export const PaymentsCacheProvider = ({ children }: { children: ReactNode }) => 
     }
 
     if (!globalFetchPromise) {
-      globalFetchPromise = apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`)
+      globalFetchPromise = apiFetch(`${API_ENDPOINTS.paymentsApi}?scope=all`)
         .then(r => r.json())
         .then((data): PaymentRecord[] => {
           const list = Array.isArray(data) ? data : (data.payments ?? []);
