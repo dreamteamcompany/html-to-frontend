@@ -81,9 +81,11 @@ const IndexationCard = () => {
       const previous = previousByService[serviceKey]?.amount || 0;
       const name = currentByService[serviceKey]?.name || previousByService[serviceKey]?.name || serviceKey;
 
-      if (previous > 0 && current > 0) {
+      if (previous > 0 || current > 0) {
         const diff = current - previous;
-        const percent = parseFloat(((diff / previous) * 100).toFixed(1));
+        const percent = previous > 0
+          ? parseFloat(((diff / previous) * 100).toFixed(1))
+          : current > 0 ? 100 : -100;
         totalIndexation += diff;
         details.push({ serviceKey, serviceName: name, current, previous, diff, percent });
       }
@@ -98,14 +100,17 @@ const IndexationCard = () => {
       ? ((currentTotal - previousTotal) / previousTotal) * 100
       : 0;
 
+    const hasPreviousData = previousTotal > 0;
+
     return {
-      indexationAmount: Math.abs(totalIndexation),
+      indexationAmount: totalIndexation,
       indexationPercent: parseFloat(percentChange.toFixed(1)),
       serviceDetails: details,
+      hasPreviousData,
     };
   }, [allPayments, period, dateFrom, dateTo]);
 
-  const { indexationAmount, indexationPercent, serviceDetails } = indexationData;
+  const { indexationAmount, indexationPercent, serviceDetails, hasPreviousData } = indexationData;
 
   return (
     <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547' }}>
@@ -126,14 +131,20 @@ const IndexationCard = () => {
           </div>
         ) : (
           <>
-            <div className={`${dashboardTypography.cardValue} mb-1`}>
-              {new Intl.NumberFormat('ru-RU').format(indexationAmount)} ₽
+            <div className={`${dashboardTypography.cardValue} mb-1`} style={{ color: indexationAmount > 0 ? '#ff6b6b' : indexationAmount < 0 ? '#01b574' : undefined }}>
+              {indexationAmount > 0 ? '+' : ''}{new Intl.NumberFormat('ru-RU').format(Math.round(indexationAmount))} ₽
             </div>
             <div className={`${dashboardTypography.cardSecondary} mb-2`}>за выбранный период</div>
-            <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5 mb-4`} style={{ color: indexationPercent >= 0 ? '#01b574' : '#ff6b6b' }}>
-              <Icon name={indexationPercent >= 0 ? "ArrowUp" : "ArrowDown"} size={14} />
-              {indexationPercent >= 0 ? '+' : ''}{indexationPercent}% к предыдущему периоду
-            </div>
+            {hasPreviousData ? (
+              <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5 mb-4`} style={{ color: indexationPercent >= 0 ? '#ff6b6b' : '#01b574' }}>
+                <Icon name={indexationPercent >= 0 ? "ArrowUp" : "ArrowDown"} size={14} />
+                {indexationPercent >= 0 ? '+' : ''}{indexationPercent}% к предыдущему периоду
+              </div>
+            ) : (
+              <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5 mb-4`} style={{ color: 'hsl(var(--muted-foreground))' }}>
+                — нет данных за предыдущий период
+              </div>
+            )}
 
             {serviceDetails.length > 0 && (
               <div className="border-t border-border pt-3 space-y-2">
