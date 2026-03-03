@@ -50,19 +50,22 @@ const ContractorComparisonChart = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Сбрасываем showAll при смене периода
+  useEffect(() => {
+    setShowAll(false);
+  }, [period, dateFrom, dateTo]);
+
   const contractorData = useMemo(() => {
     const { from, to } = getDateRange();
 
-    const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
-      if (p.status !== 'approved') return false;
-      const d = new Date(p.payment_date);
-      return d >= from && d <= to;
-    });
-
     const contractorMap: { [key: string]: number } = {};
-    filtered.forEach((payment: PaymentRecord) => {
-      const contractor = payment.contractor_name || 'Без контрагента';
-      contractorMap[contractor] = (contractorMap[contractor] || 0) + payment.amount;
+
+    (Array.isArray(allPayments) ? allPayments : []).forEach((p: PaymentRecord) => {
+      if (p.status !== 'approved') return;
+      const d = new Date(p.payment_date);
+      if (d < from || d > to) return;
+      const name = p.contractor_name || 'Без контрагента';
+      contractorMap[name] = (contractorMap[name] || 0) + p.amount;
     });
 
     return Object.entries(contractorMap)
@@ -70,13 +73,25 @@ const ContractorComparisonChart = () => {
       .sort((a, b) => b.amount - a.amount);
   }, [allPayments, period, dateFrom, dateTo]);
 
-  const displayData = showAll ? contractorData : contractorData.slice(0, 5);
-  const total = contractorData.reduce((s, c) => s + c.amount, 0);
+  const total = useMemo(
+    () => contractorData.reduce((s, c) => s + c.amount, 0),
+    [contractorData]
+  );
+
+  const displayData = useMemo(
+    () => (showAll ? contractorData : contractorData.slice(0, 5)),
+    [contractorData, showAll]
+  );
+
+  const chartKey = useMemo(
+    () => `${period}-${dateFrom}-${dateTo}-${showAll}-${displayData.length}`,
+    [period, dateFrom, dateTo, showAll, displayData.length]
+  );
 
   const tickColor = isLight ? 'rgba(30,30,50,0.6)' : 'rgba(180,190,220,0.65)';
   const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)';
 
-  const areaData = {
+  const areaData = useMemo(() => ({
     labels: displayData.map((_, i) => `#${i + 1}`),
     datasets: [{
       label: 'Расходы',
@@ -99,11 +114,12 @@ const ContractorComparisonChart = () => {
       tension: 0.38,
       borderWidth: 2.5,
     }],
-  };
+  }), [displayData, isLight, isMobile]);
 
-  const chartOptions = {
+  const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
+    animation: { duration: 250 },
     interaction: { mode: 'index' as const, intersect: false },
     plugins: {
       legend: { display: false },
@@ -122,8 +138,7 @@ const ContractorComparisonChart = () => {
             const idx = items[0]?.dataIndex ?? 0;
             return displayData[idx]?.name ?? '';
           },
-          label: (context: { raw: unknown }) =>
-            `  ${fmt(context.raw as number)}`,
+          label: (context: { raw: unknown }) => `  ${fmt(context.raw as number)}`,
         },
       },
     },
@@ -160,7 +175,7 @@ const ContractorComparisonChart = () => {
         border: { dash: [4, 4], display: false },
       },
     },
-  };
+  }), [displayData, isLight, isMobile, tickColor, gridColor]);
 
   return (
     <Card style={{
@@ -179,7 +194,6 @@ const ContractorComparisonChart = () => {
       }} />
 
       <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
-        {/* Шапка */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
@@ -210,13 +224,13 @@ const ContractorComparisonChart = () => {
                   key={label}
                   onClick={() => setShowAll(val)}
                   style={{
-                    background: showAll === val ? '#7551e9' : 'transparent',
-                    border: 'none',
-                    color: showAll === val ? 'white' : 'hsl(var(--muted-foreground))',
-                    padding: isMobile ? '5px 10px' : '6px 14px',
+                    padding: '4px 12px',
                     borderRadius: '8px',
+                    border: 'none',
                     cursor: 'pointer',
-                    fontSize: isMobile ? '11px' : '12px',
+                    fontSize: '12px',
+                    background: showAll === val ? '#7551e9' : 'transparent',
+                    color: showAll === val ? '#fff' : 'hsl(var(--muted-foreground))',
                     fontWeight: '600',
                     transition: 'all 0.18s',
                     boxShadow: showAll === val ? '0 2px 10px rgba(117,81,233,0.4)' : 'none',
@@ -242,13 +256,12 @@ const ContractorComparisonChart = () => {
           </div>
         ) : (
           <>
-            {/* Цветные точки-легенда */}
             {!isMobile && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '18px' }}>
                 {displayData.map((item, i) => {
                   const col = LINE_COLORS[i % LINE_COLORS.length];
                   return (
-                    <div key={item.name} style={{
+                    <div key={`${item.name}-${i}`} style={{
                       display: 'flex', alignItems: 'center', gap: '6px',
                       padding: '3px 10px 3px 7px', borderRadius: '99px',
                       background: isLight ? `${col.line.replace('1)', '0.08)')}` : `${col.line.replace('1)', '0.12)')}`,
@@ -274,17 +287,16 @@ const ContractorComparisonChart = () => {
             )}
 
             <div className="h-[220px] sm:h-[300px]" style={{ position: 'relative' }}>
-              <Line data={areaData} options={chartOptions} />
+              <Line key={chartKey} data={areaData} options={chartOptions} />
             </div>
 
-            {/* Мобильный список */}
             {isMobile && (
               <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {displayData.map((item, i) => {
                   const col = LINE_COLORS[i % LINE_COLORS.length];
                   const pct = total > 0 ? ((item.amount / total) * 100).toFixed(1) : '0';
                   return (
-                    <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div key={`${item.name}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: col.line, flexShrink: 0 }} />
                       <span style={{ flex: 1, fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: col.line, flexShrink: 0 }}>{pct}%</span>
