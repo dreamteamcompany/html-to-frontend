@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { useState, useEffect, useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
 import Icon from '@/components/ui/icon';
@@ -92,27 +92,24 @@ const ContractorComparisonChart = () => {
   const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)';
 
   const areaData = useMemo(() => ({
-    labels: displayData.map((_, i) => `#${i + 1}`),
+    labels: displayData.map(d => d.name),
     datasets: [{
       label: 'Расходы',
       data: displayData.map(d => d.amount),
-      borderColor: 'rgba(117,81,233,0.9)',
-      backgroundColor: (ctx: { chart: { ctx: CanvasRenderingContext2D; chartArea?: { top: number; bottom: number } } }) => {
+      backgroundColor: (ctx: { dataIndex: number; chart: { ctx: CanvasRenderingContext2D; chartArea?: { top: number; bottom: number } } }) => {
         const { ctx: c, chartArea } = ctx.chart;
-        if (!chartArea) return 'rgba(117,81,233,0.1)';
+        const col = LINE_COLORS[ctx.dataIndex % LINE_COLORS.length];
+        if (!chartArea) return col.line.replace('1)', '0.75)');
         const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-        gradient.addColorStop(0, isLight ? 'rgba(117,81,233,0.18)' : 'rgba(117,81,233,0.22)');
-        gradient.addColorStop(1, 'rgba(117,81,233,0.0)');
+        gradient.addColorStop(0, col.line.replace('1)', '0.85)'));
+        gradient.addColorStop(1, col.line.replace('1)', '0.45)'));
         return gradient;
       },
-      pointBackgroundColor: displayData.map((_, i) => LINE_COLORS[i % LINE_COLORS.length].line),
-      pointBorderColor: isLight ? '#ffffff' : '#1a1a2e',
-      pointBorderWidth: 2,
-      pointRadius: isMobile ? 5 : 7,
-      pointHoverRadius: isMobile ? 8 : 10,
-      fill: true,
-      tension: 0.38,
-      borderWidth: 2.5,
+      borderColor: displayData.map((_, i) => LINE_COLORS[i % LINE_COLORS.length].line),
+      borderWidth: 2,
+      borderRadius: 8,
+      borderSkipped: false,
+      hoverBackgroundColor: displayData.map((_, i) => LINE_COLORS[i % LINE_COLORS.length].line),
     }],
   }), [displayData, isLight, isMobile]);
 
@@ -120,7 +117,7 @@ const ContractorComparisonChart = () => {
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: 250 },
-    interaction: { mode: 'index' as const, intersect: false },
+    interaction: { mode: 'nearest' as const, intersect: true },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -287,7 +284,7 @@ const ContractorComparisonChart = () => {
             )}
 
             <div className="h-[220px] sm:h-[300px]" style={{ position: 'relative' }}>
-              <Line key={chartKey} data={areaData} options={chartOptions} />
+              <Bar key={chartKey} data={areaData} options={chartOptions} />
             </div>
 
             {isMobile && (
