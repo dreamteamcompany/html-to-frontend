@@ -1,46 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
-interface TopPayment {
+interface PaymentRecord {
   id: number;
-  description: string;
-  amount: number;
-  category_name: string;
-  category_icon: string;
-  service_name: string;
   status: string;
+  payment_date: string;
+  amount: number;
+  description?: string;
+  category_name?: string;
+  service_name?: string;
+  [key: string]: unknown;
 }
 
 const TopPaymentsCard = () => {
-  const [payments, setPayments] = useState<TopPayment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { period, getDateRange, dateFrom: periodDateFrom, dateTo: periodDateTo } = usePeriod();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const { payments: allPayments, loading } = usePaymentsCache();
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const payments = useMemo(() => {
     const { from, to } = getDateRange();
-    const loadTopPayments = async () => {
-      try {
-        const dateFrom = from.toISOString().split('T')[0];
-        const dateTo = to.toISOString().split('T')[0];
-        const url = `${API_ENDPOINTS.statsApi}?date_from=${dateFrom}&date_to=${dateTo}`;
-        const response = await apiFetch(url);
-        if (controller.signal.aborted) return;
-        const data = await response.json();
-        setPayments(data.top_payments || []);
-      } catch {
-        // silent
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    };
-    loadTopPayments();
-    return () => controller.abort();
-  }, [period, periodDateFrom, periodDateTo]);
+    return (Array.isArray(allPayments) ? allPayments : [])
+      .filter((p: PaymentRecord) => {
+        if (p.status !== 'approved') return false;
+        const d = new Date(p.payment_date);
+        return d >= from && d <= to;
+      })
+      .sort((a: PaymentRecord, b: PaymentRecord) => b.amount - a.amount)
+      .slice(0, 5);
+  }, [allPayments, period, dateFrom, dateTo]);
 
   const getColor = (index: number) => {
     const colors = ['#7551e9', '#3965ff', '#01b574', '#ffb547', '#ff6b6b'];
@@ -51,8 +40,8 @@ const TopPaymentsCard = () => {
 
   if (loading) {
     return (
-      <Card style={{ 
-        background: 'hsl(var(--card))', 
+      <Card style={{
+        background: 'hsl(var(--card))',
         border: '1px solid hsl(var(--border))',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
       }}>
@@ -66,8 +55,8 @@ const TopPaymentsCard = () => {
   }
 
   return (
-    <Card style={{ 
-      background: 'hsl(var(--card))', 
+    <Card style={{
+      background: 'hsl(var(--card))',
       border: '1px solid hsl(var(--border))',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       position: 'relative',
@@ -75,7 +64,7 @@ const TopPaymentsCard = () => {
     }}>
       <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }} className="sm:gap-3 sm:mb-6">
-          <div style={{ 
+          <div style={{
             background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
             padding: '8px',
             borderRadius: '10px',
@@ -88,15 +77,15 @@ const TopPaymentsCard = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="sm:gap-4">
           {payments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Нет данных о платежах
+              Нет данных за выбранный период
             </div>
           ) : (
             payments.map((payment, idx) => {
               const color = getColor(idx);
               const percent = (payment.amount / maxAmount) * 100;
-              
+
               return (
-                <div key={payment.id} style={{ 
+                <div key={payment.id} style={{
                   background: 'hsl(var(--muted))',
                   padding: '10px',
                   borderRadius: '10px',
@@ -125,16 +114,16 @@ const TopPaymentsCard = () => {
                       {new Intl.NumberFormat('ru-RU').format(payment.amount)} ₽
                     </span>
                   </div>
-                  <div style={{ 
-                    width: '100%', 
-                    height: '5px', 
-                    background: 'hsl(var(--muted))', 
+                  <div style={{
+                    width: '100%',
+                    height: '5px',
+                    background: 'hsl(var(--muted))',
                     borderRadius: '10px',
                     overflow: 'hidden'
                   }}>
-                    <div style={{ 
-                      width: `${percent}%`, 
-                      height: '100%', 
+                    <div style={{
+                      width: `${percent}%`,
+                      height: '100%',
                       background: `linear-gradient(90deg, ${color} 0%, ${color}aa 100%)`,
                       borderRadius: '10px',
                       boxShadow: `0 2px 8px ${color}40`,

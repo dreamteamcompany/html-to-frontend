@@ -1,79 +1,59 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useEffect, useState } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useMemo } from 'react';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { usePeriod } from '@/contexts/PeriodContext';
 
 interface Payment {
   amount: number;
   payment_date: string;
   category_name?: string;
-  service_name?: string;
   status: string;
 }
 
-interface StatsData {
-  total: number;
-  serverTotal: number;
-  commTotal: number;
-  count: number;
-  prevMonthTotal: number;
-  prevMonthCount: number;
-}
-
 const Dashboard2StatsCards = () => {
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const load = async () => {
-      try {
-        const res = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        const data = await res.json();
-        if (controller.signal.aborted) return;
+  const stats = useMemo(() => {
+    const { from, to } = getDateRange();
+    const periodMs = to.getTime() - from.getTime();
 
-        const payments: Payment[] = Array.isArray(data) ? data : [];
-        const approved = payments.filter(p => p.status === 'approved');
+    const prevFrom = new Date(from.getTime() - periodMs - 1);
+    const prevTo = new Date(from.getTime() - 1);
 
-        const now = new Date();
-        const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const prevMonthEnd   = new Date(now.getFullYear(), now.getMonth(), 0);
+    const all: Payment[] = Array.isArray(allPayments) ? allPayments : [];
+    const approved = all.filter(p => p.status === 'approved');
 
-        const thisMonth = approved.filter(p => new Date(p.payment_date) >= thisMonthStart);
-        const prevMonth = approved.filter(p => {
-          const d = new Date(p.payment_date);
-          return d >= prevMonthStart && d <= prevMonthEnd;
-        });
+    const current = approved.filter(p => {
+      const d = new Date(p.payment_date);
+      return d >= from && d <= to;
+    });
+    const prev = approved.filter(p => {
+      const d = new Date(p.payment_date);
+      return d >= prevFrom && d <= prevTo;
+    });
 
-        const total = approved.reduce((s, p) => s + (p.amount || 0), 0);
-        const serverTotal = approved
-          .filter(p => ['Инфраструктура', 'Серверы', 'Хостинг'].includes(p.category_name || ''))
-          .reduce((s, p) => s + (p.amount || 0), 0);
-        const commTotal = approved
-          .filter(p => ['Телефония', 'Мессенджеры', 'Коммуникации'].includes(p.category_name || ''))
-          .reduce((s, p) => s + (p.amount || 0), 0);
+    const total = current.reduce((s, p) => s + (p.amount || 0), 0);
+    const prevTotal = prev.reduce((s, p) => s + (p.amount || 0), 0);
 
-        const prevMonthTotal = prevMonth.reduce((s, p) => s + (p.amount || 0), 0);
+    const serverTotal = current
+      .filter(p => ['Инфраструктура', 'Серверы', 'Хостинг'].includes(p.category_name || ''))
+      .reduce((s, p) => s + (p.amount || 0), 0);
 
-        setStats({
-          total,
-          serverTotal,
-          commTotal,
-          count: approved.length,
-          prevMonthTotal,
-          prevMonthCount: prevMonth.length - thisMonth.length,
-        });
-      } catch {
-        // silent
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
+    const commTotal = current
+      .filter(p => ['Телефония', 'Мессенджеры', 'Коммуникации'].includes(p.category_name || ''))
+      .reduce((s, p) => s + (p.amount || 0), 0);
+
+    return {
+      total,
+      prevTotal,
+      serverTotal,
+      commTotal,
+      count: current.length,
+      prevCount: prev.length,
     };
-    load();
-    return () => controller.abort();
-  }, []);
+  }, [allPayments, period, dateFrom, dateTo]);
 
   const fmt = (v: number) => new Intl.NumberFormat('ru-RU').format(Math.round(v)) + ' ₽';
 
@@ -92,7 +72,7 @@ const Dashboard2StatsCards = () => {
     return (
       <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: up ? '#e31a1a' : '#01b574' }}>
         <Icon name={up ? 'ArrowUp' : 'ArrowDown'} size={14} />
-        {up ? '+' : ''}{value}% {label || 'с прошлого месяца'}
+        {up ? '+' : ''}{value}% {label || 'к предыдущему периоду'}
       </div>
     );
   };
@@ -122,15 +102,12 @@ const Dashboard2StatsCards = () => {
     );
   }
 
-  const totalChange = pctChange(
-    stats?.total ?? 0,
-    stats?.prevMonthTotal ?? 0,
-  );
+  const totalChange = pctChange(stats.total, stats.prevTotal);
+  const countChange = pctChange(stats.count, stats.prevCount);
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '30px' }}>
 
-      {/* Общие IT Расходы */}
       <Card style={cardStyle('#7551e9')}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
@@ -143,14 +120,13 @@ const Dashboard2StatsCards = () => {
             </div>
           </div>
           <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>
-            {fmt(stats?.total ?? 0)}
+            {stats.total === 0 ? '—' : fmt(stats.total)}
           </div>
-          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', marginBottom: '12px' }}>Общая сумма расходов</div>
+          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', marginBottom: '12px' }}>Сумма за выбранный период</div>
           <ChangeTag value={totalChange} />
         </CardContent>
       </Card>
 
-      {/* Серверная Инфраструктура */}
       <Card style={cardStyle('#01b574')}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
@@ -163,16 +139,15 @@ const Dashboard2StatsCards = () => {
             </div>
           </div>
           <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>
-            {fmt(stats?.serverTotal ?? 0)}
+            {stats.serverTotal === 0 ? '—' : fmt(stats.serverTotal)}
           </div>
           <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', marginBottom: '12px' }}>
-            {stats && stats.total > 0 ? Math.round((stats.serverTotal / stats.total) * 100) : 0}% от общего бюджета
+            {stats.total > 0 ? Math.round((stats.serverTotal / stats.total) * 100) : 0}% от расходов периода
           </div>
           <ChangeTag value={null} label="данные по категории" />
         </CardContent>
       </Card>
 
-      {/* Коммуникационные Сервисы */}
       <Card style={cardStyle('#3965ff')}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
@@ -185,10 +160,10 @@ const Dashboard2StatsCards = () => {
             </div>
           </div>
           <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>
-            {fmt(stats?.commTotal ?? 0)}
+            {stats.commTotal === 0 ? '—' : fmt(stats.commTotal)}
           </div>
           <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', marginBottom: '12px' }}>
-            {stats && stats.total > 0 ? Math.round((stats.commTotal / stats.total) * 100) : 0}% от общего бюджета
+            {stats.total > 0 ? Math.round((stats.commTotal / stats.total) * 100) : 0}% от расходов периода
           </div>
           <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: 'hsl(var(--muted-foreground))' }}>
             <Icon name="Minus" size={14} /> Без изменений
@@ -196,7 +171,6 @@ const Dashboard2StatsCards = () => {
         </CardContent>
       </Card>
 
-      {/* Всего Платежей */}
       <Card style={cardStyle('#ffb547')}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
@@ -209,13 +183,10 @@ const Dashboard2StatsCards = () => {
             </div>
           </div>
           <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>
-            {stats?.count ?? 0}
+            {stats.count}
           </div>
-          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', marginBottom: '12px' }}>платежей за всё время</div>
-          <ChangeTag
-            value={stats?.prevMonthCount !== undefined && stats.prevMonthCount !== 0 ? stats.prevMonthCount : null}
-            label="за последний месяц"
-          />
+          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', marginBottom: '12px' }}>платежей за выбранный период</div>
+          <ChangeTag value={countChange} label="к предыдущему периоду" />
         </CardContent>
       </Card>
     </div>
