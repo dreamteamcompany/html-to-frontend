@@ -17,9 +17,8 @@ interface PaymentRecord {
 interface ServiceIndexation {
   serviceKey: string;
   serviceName: string;
-  current: number;
-  previous: number;
-  diff: number;
+  avgCurrent: number;
+  avgPrevious: number;
   percent: number;
 }
 
@@ -33,8 +32,8 @@ const IndexationCard = () => {
     const approvedPayments = (Array.isArray(allPayments) ? allPayments : []).filter(
       (p: PaymentRecord) => p.status === 'approved'
     );
-    const periodMs = to.getTime() - from.getTime();
 
+    const periodMs = to.getTime() - from.getTime();
     const prevTo = new Date(from.getTime() - 1);
     const prevFrom = new Date(prevTo.getTime() - periodMs);
 
@@ -48,69 +47,65 @@ const IndexationCard = () => {
       return d >= prevFrom && d <= prevTo;
     });
 
-    const currentByService: { [key: string]: { amount: number; name: string } } = {};
-    currentPayments.forEach((p: PaymentRecord) => {
-      const serviceKey = p.service_id ? `service_${p.service_id}` : 'no_service';
-      const serviceName = p.service_name || (p.service_id ? `Сервис ${p.service_id}` : 'Без сервиса');
-      if (!currentByService[serviceKey]) {
-        currentByService[serviceKey] = { amount: 0, name: serviceName };
-      }
-      currentByService[serviceKey].amount += p.amount;
-    });
-
-    const previousByService: { [key: string]: { amount: number; name: string } } = {};
-    previousPayments.forEach((p: PaymentRecord) => {
-      const serviceKey = p.service_id ? `service_${p.service_id}` : 'no_service';
-      const serviceName = p.service_name || (p.service_id ? `Сервис ${p.service_id}` : 'Без сервиса');
-      if (!previousByService[serviceKey]) {
-        previousByService[serviceKey] = { amount: 0, name: serviceName };
-      }
-      previousByService[serviceKey].amount += p.amount;
-    });
-
-    let totalIndexation = 0;
-    const details: ServiceIndexation[] = [];
-
-    const allServiceKeys = new Set([
-      ...Object.keys(currentByService),
-      ...Object.keys(previousByService),
-    ]);
-
-    allServiceKeys.forEach((serviceKey) => {
-      const current = currentByService[serviceKey]?.amount || 0;
-      const previous = previousByService[serviceKey]?.amount || 0;
-      const name = currentByService[serviceKey]?.name || previousByService[serviceKey]?.name || serviceKey;
-
-      if (previous > 0 || current > 0) {
-        const diff = current - previous;
-        const percent = previous > 0
-          ? parseFloat(((diff / previous) * 100).toFixed(1))
-          : current > 0 ? 100 : -100;
-        totalIndexation += diff;
-        details.push({ serviceKey, serviceName: name, current, previous, diff, percent });
-      }
-    });
-
-    details.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
-
-    const currentTotal = Object.values(currentByService).reduce((sum, v) => sum + v.amount, 0);
-    const previousTotal = Object.values(previousByService).reduce((sum, v) => sum + v.amount, 0);
-
-    const percentChange = previousTotal > 0
-      ? ((currentTotal - previousTotal) / previousTotal) * 100
-      : 0;
-
-    const hasPreviousData = previousTotal > 0;
-
-    return {
-      indexationAmount: totalIndexation,
-      indexationPercent: parseFloat(percentChange.toFixed(1)),
-      serviceDetails: details,
-      hasPreviousData,
+    // Группируем по сервису: считаем сумму и количество для средней цены
+    const buildServiceMap = (payments: PaymentRecord[]) => {
+      const map: { [key: string]: { totalAmount: number; count: number; name: string } } = {};
+      payments.forEach((p) => {
+        const key = p.service_id ? `service_${p.service_id}` : `no_service`;
+        const name = p.service_name || (p.service_id ? `Сервис ${p.service_id}` : 'Без сервиса');
+        if (!map[key]) map[key] = { totalAmount: 0, count: 0, name };
+        map[key].totalAmount += p.amount;
+        map[key].count += 1;
+      });
+      return map;
     };
+
+    const currentMap = buildServiceMap(currentPayments);
+    const previousMap = buildServiceMap(previousPayments);
+
+    // Сравниваем только услуги, присутствующие в ОБОИХ периодах
+    const commonKeys = Object.keys(currentMap).filter((key) => key in previousMap);
+
+    const hasPreviousData = previousPayments.length > 0;
+
+    if (commonKeys.length === 0) {
+      return { indexationPercent: 0, serviceDetails: [], hasPreviousData };
+    }
+
+    const details: ServiceIndexation[] = [];
+    let totalAvgCurrent = 0;
+    let totalAvgPrevious = 0;
+
+    commonKeys.forEach((key) => {
+      const cur = currentMap[key];
+      const prev = previousMap[key];
+      const avgCurrent = cur.totalAmount / cur.count;
+      const avgPrevious = prev.totalAmount / prev.count;
+      const percent = parseFloat((((avgCurrent - avgPrevious) / avgPrevious) * 100).toFixed(1));
+
+      totalAvgCurrent += avgCurrent;
+      totalAvgPrevious += avgPrevious;
+
+      details.push({
+        serviceKey: key,
+        serviceName: cur.name,
+        avgCurrent,
+        avgPrevious,
+        percent,
+      });
+    });
+
+    details.sort((a, b) => Math.abs(b.percent) - Math.abs(a.percent));
+
+    // Общий процент — через средние по всем общим сервисам
+    const overallPercent = parseFloat(
+      (((totalAvgCurrent - totalAvgPrevious) / totalAvgPrevious) * 100).toFixed(1)
+    );
+
+    return { indexationPercent: overallPercent, serviceDetails: details, hasPreviousData };
   }, [allPayments, period, dateFrom, dateTo]);
 
-  const { indexationAmount, indexationPercent, serviceDetails, hasPreviousData } = indexationData;
+  const { indexationPercent, serviceDetails, hasPreviousData } = indexationData;
 
   return (
     <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547' }}>
@@ -131,18 +126,27 @@ const IndexationCard = () => {
           </div>
         ) : (
           <>
-            <div className={`${dashboardTypography.cardValue} mb-1`} style={{ color: indexationAmount > 0 ? '#ff6b6b' : indexationAmount < 0 ? '#01b574' : undefined }}>
-              {indexationAmount > 0 ? '+' : ''}{new Intl.NumberFormat('ru-RU').format(Math.round(indexationAmount))} ₽
+            <div
+              className={`${dashboardTypography.cardValue} mb-1`}
+              style={{ color: serviceDetails.length === 0 ? undefined : indexationPercent > 0 ? '#01b574' : indexationPercent < 0 ? '#ff6b6b' : undefined }}
+            >
+              {serviceDetails.length > 0
+                ? `${indexationPercent > 0 ? '+' : ''}${indexationPercent}%`
+                : '—'}
             </div>
             <div className={`${dashboardTypography.cardSecondary} mb-2`}>за выбранный период</div>
-            {hasPreviousData ? (
-              <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5 mb-4`} style={{ color: indexationPercent >= 0 ? '#ff6b6b' : '#01b574' }}>
-                <Icon name={indexationPercent >= 0 ? "ArrowUp" : "ArrowDown"} size={14} />
+
+            {hasPreviousData && serviceDetails.length > 0 ? (
+              <div
+                className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5 mb-4`}
+                style={{ color: indexationPercent >= 0 ? '#01b574' : '#ff6b6b' }}
+              >
+                <Icon name={indexationPercent >= 0 ? 'ArrowUp' : 'ArrowDown'} size={14} />
                 {indexationPercent >= 0 ? '+' : ''}{indexationPercent}% к предыдущему периоду
               </div>
             ) : (
               <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5 mb-4`} style={{ color: 'hsl(var(--muted-foreground))' }}>
-                — нет данных за предыдущий период
+                +0% к предыдущему периоду
               </div>
             )}
 
@@ -154,18 +158,13 @@ const IndexationCard = () => {
                     <div className="flex items-center gap-1.5 min-w-0">
                       <div
                         className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                        style={{ background: item.diff >= 0 ? '#01b574' : '#ff6b6b' }}
+                        style={{ background: item.percent >= 0 ? '#01b574' : '#ff6b6b' }}
                       />
                       <span className="text-xs text-muted-foreground truncate">{item.serviceName}</span>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-xs font-semibold" style={{ color: item.diff >= 0 ? '#01b574' : '#ff6b6b' }}>
-                        {item.diff >= 0 ? '+' : ''}{new Intl.NumberFormat('ru-RU').format(Math.round(item.diff))} ₽
-                      </span>
-                      <span className="text-xs" style={{ color: item.percent >= 0 ? '#01b574' : '#ff6b6b' }}>
-                        ({item.percent >= 0 ? '+' : ''}{item.percent}%)
-                      </span>
-                    </div>
+                    <span className="text-xs font-semibold flex-shrink-0" style={{ color: item.percent >= 0 ? '#01b574' : '#ff6b6b' }}>
+                      {item.percent >= 0 ? '+' : ''}{item.percent}%
+                    </span>
                   </div>
                 ))}
                 {serviceDetails.length > 5 && (
@@ -176,7 +175,7 @@ const IndexationCard = () => {
               </div>
             )}
 
-            {serviceDetails.length === 0 && !loading && (
+            {!hasPreviousData && (
               <div className="border-t border-border pt-3">
                 <div className="text-xs text-muted-foreground text-center">Нет данных для сравнения с предыдущим периодом</div>
               </div>
