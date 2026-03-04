@@ -48,6 +48,7 @@ interface Service {
   category_icon?: string;
   legal_entity_name?: string;
   contractor_name?: string;
+  customer_department_name?: string;
   department_name?: string;
 }
 

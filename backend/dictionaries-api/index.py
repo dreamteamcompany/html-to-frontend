@@ -503,7 +503,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     SELECT s.id, s.name, s.description, s.intermediate_approver_id, s.final_approver_id,
                            s.customer_department_id, s.category_id, s.legal_entity_id, s.contractor_id,
                            c.name as category_name, c.icon as category_icon,
-                           cd.name as department_name,
+                           cd.name as customer_department_name,
                            u1.username as intermediate_approver_name,
                            u2.username as final_approver_name,
                            le.name as legal_entity_name,
