@@ -9,6 +9,11 @@ let myPaymentsCache: Payment[] | null = null;
 let myPaymentsCacheTime = 0;
 const MY_CACHE_TTL = 30_000;
 
+export const invalidateMyPaymentsCache = () => {
+  myPaymentsCache = null;
+  myPaymentsCacheTime = 0;
+};
+
 interface Category {
   id: number;
   name: string;

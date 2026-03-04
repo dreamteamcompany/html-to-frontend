@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePaymentsData } from '@/hooks/usePaymentsData';
 import { usePaymentForm } from '@/hooks/usePaymentForm';
+import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 import PaymentForm from '@/components/payments/PaymentForm';
 import CashPaymentForm from '@/components/payments/CashPaymentForm';
 import PlannedPaymentsModal from '@/components/payments/PlannedPaymentsModal';
@@ -15,6 +16,7 @@ const MyPaymentsTab = () => {
   const { token } = useAuth();
   const { toast } = useToast();
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const { refresh } = useAllPaymentsCache();
 
   const {
     payments,
@@ -30,6 +32,11 @@ const MyPaymentsTab = () => {
     loadLegalEntities,
   } = usePaymentsData();
 
+  const handlePaymentSaved = useCallback(() => {
+    loadPayments();
+    refresh();
+  }, [loadPayments, refresh]);
+
   const {
     dialogOpen,
     setDialogOpen,
@@ -42,7 +49,7 @@ const MyPaymentsTab = () => {
     handleExtractData,
     fileName,
     fileType,
-  } = usePaymentForm(customFields, loadPayments, loadContractors, loadLegalEntities);
+  } = usePaymentForm(customFields, handlePaymentSaved, loadContractors, loadLegalEntities);
 
   const handleApprove = async (paymentId: number) => {
     try {
@@ -189,7 +196,7 @@ const MyPaymentsTab = () => {
         <CashPaymentForm
           categories={categories}
           customerDepartments={customerDepartments}
-          onSuccess={loadPayments}
+          onSuccess={handlePaymentSaved}
         />
 
         <PlannedPaymentsModal />

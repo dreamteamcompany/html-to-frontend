@@ -8,6 +8,7 @@ import EditPaymentModal from '@/components/payments/EditPaymentModal';
 import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
 import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
+import { invalidateMyPaymentsCache } from '@/hooks/usePaymentsData';
 
 interface ExtendedPayment extends Payment {
   rejected_at?: string;
@@ -177,6 +178,7 @@ const RejectedPaymentsTab = () => {
         onClose={() => setEditingPayment(null)}
         onSuccess={() => {
           setEditingPayment(null);
+          invalidateMyPaymentsCache();
           fetchRejectedPayments();
         }}
       />
