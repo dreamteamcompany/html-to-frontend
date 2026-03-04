@@ -23,6 +23,10 @@ interface Service {
   category_id?: number;
   category_name?: string;
   category_icon?: string;
+  legal_entity_id?: number;
+  legal_entity_name?: string;
+  contractor_id?: number;
+  contractor_name?: string;
   created_at: string;
 }
 
@@ -53,8 +57,9 @@ const ServicesTable = ({ services, loading, onEdit, onDelete }: ServicesTablePro
                 <TableRow>
                   <TableHead>Название</TableHead>
                   <TableHead>Категория</TableHead>
-                  <TableHead>Описание</TableHead>
                   <TableHead>Отдел-заказчик</TableHead>
+                  <TableHead>Юридическое лицо</TableHead>
+                  <TableHead>Контрагент</TableHead>
                   <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
               </TableHeader>
@@ -70,8 +75,9 @@ const ServicesTable = ({ services, loading, onEdit, onDelete }: ServicesTablePro
                         </div>
                       ) : '—'}
                     </TableCell>
-                    <TableCell>{service.description || '—'}</TableCell>
                     <TableCell>{service.customer_department_name || '—'}</TableCell>
+                    <TableCell>{service.legal_entity_name || '—'}</TableCell>
+                    <TableCell>{service.contractor_name || '—'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button

@@ -564,17 +564,36 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     SET name = %s, description = %s, intermediate_approver_id = %s, final_approver_id = %s,
                         customer_department_id = %s, category_id = %s, legal_entity_id = %s, contractor_id = %s
                     WHERE id = %s
-                    RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id
                 """, (svc_req.name, svc_req.description, svc_req.intermediate_approver_id,
                       svc_req.final_approver_id, svc_req.customer_department_id, svc_req.category_id,
                       svc_req.legal_entity_id, svc_req.contractor_id, svc_id))
-                row = cur.fetchone()
                 
-                if not row:
+                if cur.rowcount == 0:
                     conn.close()
                     return response(404, {'error': 'Service not found'})
                 
                 conn.commit()
+                
+                cur.execute(f"""
+                    SELECT s.id, s.name, s.description, s.intermediate_approver_id, s.final_approver_id,
+                           s.customer_department_id, s.category_id, s.legal_entity_id, s.contractor_id,
+                           c.name as category_name, c.icon as category_icon,
+                           cd.name as customer_department_name,
+                           u1.username as intermediate_approver_name,
+                           u2.username as final_approver_name,
+                           le.name as legal_entity_name,
+                           ct.name as contractor_name
+                    FROM {SCHEMA}.services s
+                    LEFT JOIN {SCHEMA}.categories c ON s.category_id = c.id
+                    LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
+                    LEFT JOIN {SCHEMA}.users u1 ON s.intermediate_approver_id = u1.id
+                    LEFT JOIN {SCHEMA}.users u2 ON s.final_approver_id = u2.id
+                    LEFT JOIN {SCHEMA}.legal_entities le ON s.legal_entity_id = le.id
+                    LEFT JOIN {SCHEMA}.contractors ct ON s.contractor_id = ct.id
+                    WHERE s.id = %s
+                """, (svc_id,))
+                row = cur.fetchone()
+                
                 cur.close()
                 conn.close()
                 return response(200, dict(row))
