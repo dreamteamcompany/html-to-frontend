@@ -626,7 +626,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, dict(row))
             
             elif method == 'DELETE':
-                if not check_user_permission(conn, user_id, 'payments.delete'):
+                if not check_user_permission(conn, user_id, 'services.remove'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
