@@ -577,22 +577,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return response(403, {'error': 'Forbidden'})
                 
                 data = json.loads(event.get('body', '{}'))
-                svc_req = ServiceRequest(**data)
+                try:
+                    svc_req = ServiceRequest(**data)
+                except ValidationError as ve:
+                    conn.close()
+                    return response(400, {'error': ve.errors()[0]['msg'] if ve.errors() else 'Validation error'})
                 
                 cur.execute(f"""
                     INSERT INTO {SCHEMA}.services 
                     (name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id
+                    RETURNING id, name, description, intermediate_approver_id, final_approver_id,
+                              customer_department_id, category_id, legal_entity_id, contractor_id, created_at
                 """, (svc_req.name, svc_req.description, svc_req.intermediate_approver_id, 
                       svc_req.final_approver_id, svc_req.customer_department_id, svc_req.category_id,
                       svc_req.legal_entity_id, svc_req.contractor_id))
                 row = cur.fetchone()
                 conn.commit()
                 
+                result = dict(row)
+                if result.get('created_at'):
+                    result['created_at'] = result['created_at'].isoformat()
+                
                 cur.close()
                 conn.close()
-                return response(201, dict(row))
+                return response(201, result)
             
             elif method == 'PUT':
                 if not is_admin and not check_user_permission(conn, user_id, 'payments.update'):
