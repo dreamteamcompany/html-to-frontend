@@ -5,7 +5,7 @@ import jwt
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional, Union
-from pydantic import BaseModel, Field, model_validator, field_validator
+from pydantic import BaseModel, Field, model_validator, field_validator, ValidationError
 
 SCHEMA = 't_p61788166_html_to_frontend'
 
@@ -27,14 +27,20 @@ class CategoryRequest(BaseModel):
     def _fix(cls, v): return _none_to_str(v, ['icon'])
 
 class LegalEntityRequest(BaseModel):
+    model_config = {'populate_by_name': True}
     name: str = Field(..., min_length=1)
-    inn: Optional[str] = Field(default='')
-    kpp: Optional[str] = Field(default='')
-    address: Optional[str] = Field(default='')
+    inn: str = Field(default='')
+    kpp: str = Field(default='')
+    address: str = Field(default='')
 
-    @field_validator('inn', 'kpp', 'address', mode='before')
+    @model_validator(mode='before')
     @classmethod
-    def _none_to_empty(cls, v): return '' if v is None else v
+    def _coerce(cls, v):
+        if isinstance(v, dict):
+            for f in ('inn', 'kpp', 'address'):
+                if v.get(f) is None:
+                    v[f] = ''
+        return v
 
 class ContractorRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -730,6 +736,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         conn.close()
         return response(404, {'error': f'Endpoint not found: {endpoint}'})
         
+    except ValidationError as e:
+        if conn:
+            conn.close()
+        return response(400, {'error': str(e)})
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
