@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import ServicesHeader from '@/components/services/ServicesHeader';
 import ServiceFormDialog from '@/components/services/ServiceFormDialog';
 import ServicesTable from '@/components/services/ServicesTable';
+import { useDictionaryContext } from '@/contexts/DictionaryContext';
 
 interface User {
   id: number;
@@ -62,6 +63,7 @@ interface Service {
 
 const Services = () => {
   const { hasPermission } = useAuth();
+  const { refresh: refreshDictionary } = useDictionaryContext();
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<CustomerDepartment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -185,6 +187,7 @@ const Services = () => {
 
     try {
       await handleSubmitBase(e);
+      await refreshDictionary('services');
       toast({
         title: 'Успешно',
         description: editingService ? 'Сервис обновлён' : 'Сервис создан',
