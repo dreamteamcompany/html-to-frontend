@@ -210,7 +210,7 @@ const Services = () => {
         />
 
         <ServicesTable
-          services={services}
+          services={[...services].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))}
           loading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}
