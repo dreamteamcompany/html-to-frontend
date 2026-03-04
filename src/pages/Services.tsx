@@ -128,7 +128,6 @@ const Services = () => {
 
   const handleDelete = async (id: number) => {
     if (!confirm('Удалить этот сервис?')) return;
-
     try {
       await handleDeleteBase(id);
       toast({

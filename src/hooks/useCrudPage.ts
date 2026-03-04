@@ -93,21 +93,16 @@ export const useCrudPage = <T extends { id: number }>({
   }, [editingItem, formData, endpoint, baseApi, initialFormData, loadData, onSuccess, onError]);
 
   const handleDelete = useCallback(async (id: number) => {
-    if (!confirm('Вы уверены, что хотите удалить эту запись?')) {
-      return;
-    }
-
     try {
-      const response = await apiFetch(`${API_ENDPOINTS[baseApi]}?endpoint=${endpoint}`, {
+      const response = await apiFetch(`${API_ENDPOINTS[baseApi]}?endpoint=${endpoint}&id=${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id }),
       });
 
       if (response.ok) {
-        await loadData();
+        setItems(prev => prev.filter(item => item.id !== id));
         if (onSuccess) {
           onSuccess();
         }
@@ -122,7 +117,7 @@ export const useCrudPage = <T extends { id: number }>({
       }
       throw error;
     }
-  }, [endpoint, baseApi, loadData, onSuccess, onError]);
+  }, [endpoint, baseApi, setItems, onSuccess, onError]);
 
   const resetForm = useCallback(() => {
     setEditingItem(null);
