@@ -660,6 +660,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cur.execute(f'UPDATE {SCHEMA}.payments SET service_id = NULL WHERE service_id = %s', (svc_id,))
                 cur.execute(f'UPDATE {SCHEMA}.savings SET service_id = NULL WHERE service_id = %s', (svc_id,))
+                cur.execute(f'UPDATE {SCHEMA}.tickets SET service_id = NULL WHERE service_id = %s', (svc_id,))
+                cur.execute(f'UPDATE {SCHEMA}.planned_payments SET service_id = NULL WHERE service_id = %s', (svc_id,))
                 cur.execute(f'DELETE FROM {SCHEMA}.services WHERE id = %s', (svc_id,))
                 conn.commit()
                 
