@@ -4,8 +4,8 @@ import sys
 import jwt
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from typing import Dict, Any, Optional
-from pydantic import BaseModel, Field, model_validator
+from typing import Dict, Any, Optional, Union
+from pydantic import BaseModel, Field, model_validator, field_validator
 
 SCHEMA = 't_p61788166_html_to_frontend'
 
@@ -32,9 +32,9 @@ class LegalEntityRequest(BaseModel):
     kpp: Optional[str] = Field(default='')
     address: Optional[str] = Field(default='')
 
-    @model_validator(mode='before')
+    @field_validator('inn', 'kpp', 'address', mode='before')
     @classmethod
-    def _fix(cls, v): return _none_to_str(v, ['inn','kpp','address'])
+    def _none_to_empty(cls, v): return '' if v is None else v
 
 class ContractorRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -52,27 +52,27 @@ class ContractorRequest(BaseModel):
     correspondent_account: Optional[str] = Field(default='')
     notes: Optional[str] = Field(default='')
 
-    @model_validator(mode='before')
+    @field_validator('inn', 'kpp', 'ogrn', 'legal_address', 'actual_address', 'phone', 'email',
+                     'contact_person', 'bank_name', 'bank_bik', 'bank_account', 'correspondent_account', 'notes', mode='before')
     @classmethod
-    def _fix(cls, v): return _none_to_str(v, ['inn','kpp','ogrn','legal_address','actual_address','phone','email',
-                      'contact_person','bank_name','bank_bik','bank_account','correspondent_account','notes'])
+    def _none_to_empty(cls, v): return '' if v is None else v
 
 class CustomerDepartmentRequest(BaseModel):
     name: str = Field(..., min_length=1)
     description: Optional[str] = Field(default='')
 
-    @model_validator(mode='before')
+    @field_validator('description', mode='before')
     @classmethod
-    def _fix(cls, v): return _none_to_str(v, ['description'])
+    def _none_to_empty(cls, v): return '' if v is None else v
 
 class CustomFieldRequest(BaseModel):
     name: str = Field(..., min_length=1)
     field_type: str = Field(..., pattern='^(text|select|file|toggle)$')
     options: Optional[str] = Field(default='')
 
-    @model_validator(mode='before')
+    @field_validator('options', mode='before')
     @classmethod
-    def _fix(cls, v): return _none_to_str(v, ['options'])
+    def _none_to_empty(cls, v): return '' if v is None else v
 
 class ServiceRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -84,9 +84,9 @@ class ServiceRequest(BaseModel):
     legal_entity_id: int | None = None
     contractor_id: int | None = None
 
-    @model_validator(mode='before')
+    @field_validator('description', mode='before')
     @classmethod
-    def _fix(cls, v): return _none_to_str(v, ['description'])
+    def _none_to_empty(cls, v): return '' if v is None else v
 
 def response(status_code: int, data: Any) -> Dict[str, Any]:
     return {
