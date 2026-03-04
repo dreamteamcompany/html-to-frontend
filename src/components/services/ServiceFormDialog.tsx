@@ -27,27 +27,13 @@ interface User {
 interface CustomerDepartment {
   id: number;
   name: string;
-  description: string;
+  description?: string;
 }
 
 interface Category {
   id: number;
   name: string;
   icon: string;
-}
-
-interface LegalEntity {
-  id: number;
-  name: string;
-  inn: string;
-  kpp: string;
-  address: string;
-}
-
-interface Contractor {
-  id: number;
-  name: string;
-  inn: string;
 }
 
 interface LegalEntity {
@@ -89,11 +75,13 @@ interface ServiceFormDialogProps {
   formData: {
     name: string;
     description: string;
+    intermediate_approver_id?: string;
     final_approver_id: string;
     customer_department_id: string;
     category_id: string;
     legal_entity_id: string;
     contractor_id: string;
+    [key: string]: string | undefined;
   };
   setFormData: (data: ServiceFormDialogProps['formData']) => void;
   users: User[];

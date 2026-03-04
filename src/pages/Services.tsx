@@ -1,45 +1,13 @@
 import { useState, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import { useCrudPage } from '@/hooks/useCrudPage';
-import { getApiUrl, API_ENDPOINTS } from '@/config/api';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useToast } from '@/hooks/use-toast';
 import ServicesHeader from '@/components/services/ServicesHeader';
 import ServiceFormDialog from '@/components/services/ServiceFormDialog';
 import ServicesTable from '@/components/services/ServicesTable';
 import { useDictionaryContext } from '@/contexts/DictionaryContext';
-
-interface User {
-  id: number;
-  full_name: string;
-  role: string;
-}
-
-interface CustomerDepartment {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  icon: string;
-}
-
-interface LegalEntity {
-  id: number;
-  name: string;
-  inn?: string;
-}
-
-interface Contractor {
-  id: number;
-  name: string;
-  inn?: string;
-}
 
 interface Service {
   id: number;
@@ -63,12 +31,15 @@ interface Service {
 
 const Services = () => {
   const { hasPermission } = useAuth();
-  const { refresh: refreshDictionary } = useDictionaryContext();
-  const [users, setUsers] = useState<User[]>([]);
-  const [departments, setDepartments] = useState<CustomerDepartment[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
-  const [contractors, setContractors] = useState<Contractor[]>([]);
+  const {
+    categories,
+    departments,
+    legalEntities,
+    contractors,
+    users,
+    refresh: refreshDictionary,
+  } = useDictionaryContext();
+
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const { toast } = useToast();
@@ -110,72 +81,11 @@ const Services = () => {
 
   useEffect(() => {
     loadServices();
-    loadUsers();
-    loadDepartments();
-    loadCategories();
-    loadLegalEntities();
-    loadContractors();
   }, [loadServices]);
-
-  const loadUsers = async () => {
-    try {
-      const response = await apiFetch(API_ENDPOINTS.usersApi);
-      const data = await response.json();
-      setUsers(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Failed to load users:', error);
-      setUsers([]);
-    }
-  };
-
-  const loadDepartments = async () => {
-    try {
-      const response = await apiFetch(getApiUrl('customer-departments'));
-      const data = await response.json();
-      setDepartments(Array.isArray(data) ? data : data.departments || []);
-    } catch (error) {
-      console.error('Failed to load departments:', error);
-      setDepartments([]);
-    }
-  };
-
-  const loadCategories = async () => {
-    try {
-      const response = await apiFetch(getApiUrl('categories'));
-      const data = await response.json();
-      setCategories(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Failed to load categories:', error);
-      setCategories([]);
-    }
-  };
-
-  const loadLegalEntities = async () => {
-    try {
-      const response = await apiFetch(getApiUrl('legal-entities'));
-      const data = await response.json();
-      setLegalEntities(Array.isArray(data) ? data : data.legalEntities || []);
-    } catch (error) {
-      console.error('Failed to load legal entities:', error);
-      setLegalEntities([]);
-    }
-  };
-
-  const loadContractors = async () => {
-    try {
-      const response = await apiFetch(getApiUrl('contractors'));
-      const data = await response.json();
-      setContractors(Array.isArray(data) ? data : data.contractors || []);
-    } catch (error) {
-      console.error('Failed to load contractors:', error);
-      setContractors([]);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Custom validation for Services
     if (!formData.name) {
       toast({
         title: 'Ошибка',
