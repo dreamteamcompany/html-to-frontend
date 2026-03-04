@@ -12,15 +12,29 @@ SCHEMA = 't_p61788166_html_to_frontend'
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
 
+def _none_to_str(values: dict, fields: list) -> dict:
+    for f in fields:
+        if isinstance(values, dict) and values.get(f) is None:
+            values[f] = ''
+    return values
+
 class CategoryRequest(BaseModel):
     name: str = Field(..., min_length=1)
-    icon: str = Field(default='Tag')
+    icon: Optional[str] = Field(default='Tag')
+
+    @model_validator(mode='before')
+    @classmethod
+    def _fix(cls, v): return _none_to_str(v, ['icon'])
 
 class LegalEntityRequest(BaseModel):
     name: str = Field(..., min_length=1)
-    inn: str = Field(default='')
-    kpp: str = Field(default='')
-    address: str = Field(default='')
+    inn: Optional[str] = Field(default='')
+    kpp: Optional[str] = Field(default='')
+    address: Optional[str] = Field(default='')
+
+    @model_validator(mode='before')
+    @classmethod
+    def _fix(cls, v): return _none_to_str(v, ['inn','kpp','address'])
 
 class ContractorRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -40,36 +54,39 @@ class ContractorRequest(BaseModel):
 
     @model_validator(mode='before')
     @classmethod
-    def none_to_empty_string(cls, values):
-        str_fields = ['inn','kpp','ogrn','legal_address','actual_address','phone','email',
-                      'contact_person','bank_name','bank_bik','bank_account','correspondent_account','notes']
-        for f in str_fields:
-            if isinstance(values, dict) and values.get(f) is None:
-                values[f] = ''
-        return values
+    def _fix(cls, v): return _none_to_str(v, ['inn','kpp','ogrn','legal_address','actual_address','phone','email',
+                      'contact_person','bank_name','bank_bik','bank_account','correspondent_account','notes'])
 
 class CustomerDepartmentRequest(BaseModel):
     name: str = Field(..., min_length=1)
     description: Optional[str] = Field(default='')
 
-    def model_post_init(self, __context):
-        if self.description is None:
-            self.description = ''
+    @model_validator(mode='before')
+    @classmethod
+    def _fix(cls, v): return _none_to_str(v, ['description'])
 
 class CustomFieldRequest(BaseModel):
     name: str = Field(..., min_length=1)
     field_type: str = Field(..., pattern='^(text|select|file|toggle)$')
-    options: str = Field(default='')
+    options: Optional[str] = Field(default='')
+
+    @model_validator(mode='before')
+    @classmethod
+    def _fix(cls, v): return _none_to_str(v, ['options'])
 
 class ServiceRequest(BaseModel):
     name: str = Field(..., min_length=1)
-    description: str = Field(default='')
+    description: Optional[str] = Field(default='')
     intermediate_approver_id: int | None = None
     final_approver_id: int | None = None
     customer_department_id: int | None = None
     category_id: int | None = None
     legal_entity_id: int | None = None
     contractor_id: int | None = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def _fix(cls, v): return _none_to_str(v, ['description'])
 
 def response(status_code: int, data: Any) -> Dict[str, Any]:
     return {
