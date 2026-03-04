@@ -5,7 +5,7 @@ import jwt
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 SCHEMA = 't_p61788166_html_to_frontend'
 
@@ -24,19 +24,29 @@ class LegalEntityRequest(BaseModel):
 
 class ContractorRequest(BaseModel):
     name: str = Field(..., min_length=1)
-    inn: str = Field(default='')
-    kpp: str = Field(default='')
-    ogrn: str = Field(default='')
-    legal_address: str = Field(default='')
-    actual_address: str = Field(default='')
-    phone: str = Field(default='')
-    email: str = Field(default='')
-    contact_person: str = Field(default='')
-    bank_name: str = Field(default='')
-    bank_bik: str = Field(default='')
-    bank_account: str = Field(default='')
-    correspondent_account: str = Field(default='')
-    notes: str = Field(default='')
+    inn: Optional[str] = Field(default='')
+    kpp: Optional[str] = Field(default='')
+    ogrn: Optional[str] = Field(default='')
+    legal_address: Optional[str] = Field(default='')
+    actual_address: Optional[str] = Field(default='')
+    phone: Optional[str] = Field(default='')
+    email: Optional[str] = Field(default='')
+    contact_person: Optional[str] = Field(default='')
+    bank_name: Optional[str] = Field(default='')
+    bank_bik: Optional[str] = Field(default='')
+    bank_account: Optional[str] = Field(default='')
+    correspondent_account: Optional[str] = Field(default='')
+    notes: Optional[str] = Field(default='')
+
+    @model_validator(mode='before')
+    @classmethod
+    def none_to_empty_string(cls, values):
+        str_fields = ['inn','kpp','ogrn','legal_address','actual_address','phone','email',
+                      'contact_person','bank_name','bank_bik','bank_account','correspondent_account','notes']
+        for f in str_fields:
+            if isinstance(values, dict) and values.get(f) is None:
+                values[f] = ''
+        return values
 
 class CustomerDepartmentRequest(BaseModel):
     name: str = Field(..., min_length=1)
