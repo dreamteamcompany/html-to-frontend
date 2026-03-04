@@ -82,6 +82,20 @@ def check_user_permission(conn, user_id: int, required_permission: str) -> bool:
     finally:
         cur.close()
 
+def is_admin_user(conn, user_id: int) -> bool:
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute(f"""
+            SELECT r.name
+            FROM {SCHEMA}.roles r
+            JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
+            WHERE ur.user_id = %s
+        """, (user_id,))
+        roles = [row['name'] for row in cur.fetchall()]
+        return 'Администратор' in roles or 'Admin' in roles
+    finally:
+        cur.close()
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     API для управления платежами (создание, чтение, обновление, удаление).
@@ -119,10 +133,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 conn.close()
                 return response(403, {'error': 'Forbidden'})
             
+            is_admin = is_admin_user(conn, payload['user_id'])
             query_params = event.get('queryStringParameters') or {}
             scope = query_params.get('scope', 'my')
             
             if scope == 'all':
+                if not is_admin:
+                    conn.close()
+                    return response(403, {'error': 'Только администратор может просматривать все платежи'})
                 where_clause = ""
                 params = tuple()
             else:
@@ -374,7 +392,27 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not payment_id:
                 conn.close()
                 return response(400, {'error': 'Payment ID is required'})
-            
+
+            is_admin = is_admin_user(conn, payload['user_id'])
+
+            cur.execute(f'SELECT created_by, status FROM {SCHEMA}.payments WHERE id = %s', (payment_id,))
+            payment_row = cur.fetchone()
+            if not payment_row:
+                cur.close()
+                conn.close()
+                return response(404, {'error': 'Платёж не найден'})
+
+            if not is_admin and payment_row['status'] != 'draft':
+                cur.close()
+                conn.close()
+                return response(403, {'error': 'Можно удалять только платежи со статусом "Черновик"'})
+
+            if not is_admin and payment_row['created_by'] != payload['user_id']:
+                cur.close()
+                conn.close()
+                return response(403, {'error': 'Вы можете удалять только свои платежи'})
+
+            cur.execute(f'DELETE FROM {SCHEMA}.custom_field_values WHERE payment_id = %s', (payment_id,))
             cur.execute(f'DELETE FROM {SCHEMA}.payments WHERE id = %s', (payment_id,))
             conn.commit()
             

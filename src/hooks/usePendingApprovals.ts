@@ -40,11 +40,14 @@ export const usePendingApprovals = () => {
           }),
         ]);
 
+        if (!paymentsRes.ok || !servicesRes.ok) return;
+
         const paymentsData = await paymentsRes.json();
         const servicesData = await servicesRes.json();
 
         const allPayments = Array.isArray(paymentsData) ? paymentsData : [];
-        const services = Array.isArray(servicesData) ? servicesData : [];
+        const servicesRaw = Array.isArray(servicesData) ? servicesData : (servicesData?.services ?? []);
+        const services: Service[] = Array.isArray(servicesRaw) ? servicesRaw : [];
 
         const myPendingPayments = allPayments.filter((payment: Payment) => {
           if (!payment.status || !payment.service_id) return false;
