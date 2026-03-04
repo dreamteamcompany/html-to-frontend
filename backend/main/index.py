@@ -247,6 +247,7 @@ def verify_token_and_permission(event: Dict[str, Any], conn, required_permission
     # Если у пользователя роль администратора - даём полный доступ
     if 'Администратор' in roles or 'Admin' in roles:
         cur.close()
+        payload['is_admin'] = True
         return payload, None
     
     # Иначе проверяем конкретное разрешение
@@ -1307,13 +1308,15 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 cur.close()
                 return response(404, {'error': 'Платёж не найден'})
             
-            # Разрешаем удаление только черновиков
-            if payment['status'] != 'draft':
+            is_admin = payload.get('is_admin', False)
+
+            # Разрешаем удаление только черновиков (администратор может удалять любые)
+            if not is_admin and payment['status'] != 'draft':
                 cur.close()
                 return response(403, {'error': 'Можно удалять только платежи со статусом "Черновик"'})
             
-            # Проверяем, что пользователь является создателем платежа
-            if payment['created_by'] != payload['user_id']:
+            # Проверяем, что пользователь является создателем платежа (администратор может удалять любые)
+            if not is_admin and payment['created_by'] != payload['user_id']:
                 cur.close()
                 return response(403, {'error': 'Вы можете удалять только свои платежи'})
             
@@ -1405,7 +1408,7 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             row = cur.fetchone()
             if not row:
                 return response(404, {'error': 'Запланированный платёж не найден'})
-            if row['created_by'] != payload['user_id']:
+            if not payload.get('is_admin', False) and row['created_by'] != payload['user_id']:
                 return response(403, {'error': 'Нет доступа'})
 
             fields = ['category_id', 'amount', 'description', 'planned_date', 'legal_entity_id',
@@ -1437,7 +1440,7 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             row = cur.fetchone()
             if not row:
                 return response(404, {'error': 'Запланированный платёж не найден'})
-            if row['created_by'] != payload['user_id']:
+            if not payload.get('is_admin', False) and row['created_by'] != payload['user_id']:
                 return response(403, {'error': 'Нет доступа'})
 
             cur.execute(f"DELETE FROM {SCHEMA}.planned_payments WHERE id = %s", (pp_id,))
