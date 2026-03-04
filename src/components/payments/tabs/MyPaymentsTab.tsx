@@ -196,6 +196,7 @@ const MyPaymentsTab = () => {
         <CashPaymentForm
           categories={categories}
           customerDepartments={customerDepartments}
+          services={services}
           onSuccess={handlePaymentSaved}
         />
 

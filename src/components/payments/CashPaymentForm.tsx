@@ -26,13 +26,20 @@ interface CustomerDepartment {
   description: string;
 }
 
+interface Service {
+  id: number;
+  name: string;
+  description: string;
+}
+
 interface CashPaymentFormProps {
   categories: Category[];
   customerDepartments: CustomerDepartment[];
+  services: Service[];
   onSuccess: () => void;
 }
 
-const CashPaymentForm = ({ categories, customerDepartments, onSuccess }: CashPaymentFormProps) => {
+const CashPaymentForm = ({ categories, customerDepartments, services, onSuccess }: CashPaymentFormProps) => {
   const { hasPermission } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +53,12 @@ const CashPaymentForm = ({ categories, customerDepartments, onSuccess }: CashPay
     handleFileSelect,
     handleSubmit,
   } = useCashPaymentForm(onSuccess);
+
+  const serviceOptions = services.map(s => ({
+    value: s.id.toString(),
+    label: s.name,
+    sublabel: s.description || undefined,
+  }));
 
   const categoryOptions = categories.map(c => ({
     value: c.id.toString(),
@@ -90,7 +103,7 @@ const CashPaymentForm = ({ categories, customerDepartments, onSuccess }: CashPay
               Наличный платёж
             </DialogTitle>
             <DialogDescription>
-              Тип оплаты: Наличные — платёж фиксируется в реестре расходов
+              Тип оплаты: Наличные — платёж будет отправлен на согласование директору
             </DialogDescription>
           </DialogHeader>
 
@@ -102,6 +115,19 @@ const CashPaymentForm = ({ categories, customerDepartments, onSuccess }: CashPay
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Сервис */}
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Сервис *</Label>
+                <SearchableSelect
+                  options={serviceOptions}
+                  value={formData.service_id}
+                  onValueChange={v => setFormData({ ...formData, service_id: v ?? '' })}
+                  placeholder="Выберите сервис"
+                  searchPlaceholder="Поиск сервиса..."
+                  emptyText="Сервис не найден"
+                />
+              </div>
+
               {/* Категория */}
               <div className="space-y-2">
                 <Label>Категория *</Label>
@@ -249,8 +275,8 @@ const CashPaymentForm = ({ categories, customerDepartments, onSuccess }: CashPay
                 onMouseEnter={e => (e.currentTarget.style.background = '#00a066')}
                 onMouseLeave={e => (e.currentTarget.style.background = '#01b574')}
               >
-                <Icon name="Check" size={16} className="mr-2" />
-                Зафиксировать платёж
+                <Icon name="Send" size={16} className="mr-2" />
+                Отправить на согласование
               </Button>
             </div>
           </form>

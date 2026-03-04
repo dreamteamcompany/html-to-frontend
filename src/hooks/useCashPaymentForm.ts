@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/config/api';
 
 interface FormData {
+  service_id: string;
   category_id: string;
   subcategory: string;
   contractor_name: string;
@@ -16,6 +17,7 @@ interface FormData {
 }
 
 const EMPTY_FORM: FormData = {
+  service_id: '',
   category_id: '',
   subcategory: '',
   contractor_name: '',
@@ -84,6 +86,10 @@ export const useCashPaymentForm = (onSuccess: () => void) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.service_id) {
+      toast({ title: 'Ошибка', description: 'Выберите сервис', variant: 'destructive' });
+      return;
+    }
     if (!formData.category_id) {
       toast({ title: 'Ошибка', description: 'Выберите категорию', variant: 'destructive' });
       return;
@@ -102,7 +108,7 @@ export const useCashPaymentForm = (onSuccess: () => void) => {
     }
 
     try {
-      const response = await fetch(API_ENDPOINTS.paymentsApi, {
+      const createResponse = await fetch(API_ENDPOINTS.paymentsApi, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
         body: JSON.stringify({
@@ -111,25 +117,40 @@ export const useCashPaymentForm = (onSuccess: () => void) => {
           amount: parseFloat(formData.amount),
           payment_date: formData.payment_date,
           payment_type: 'cash',
-          contractor_name: formData.contractor_name || null,
+          service_id: parseInt(formData.service_id),
+          contractor_id: null,
           department_id: formData.department_id ? parseInt(formData.department_id) : null,
           comment: formData.comment || null,
           invoice_file_url: formData.receipt_file_url || null,
           subcategory: formData.subcategory || null,
-          status: 'approved',
         }),
       });
 
-      if (response.ok) {
-        toast({ title: 'Успешно', description: 'Наличный платёж добавлен' });
+      if (!createResponse.ok) {
+        const error = await createResponse.json();
+        toast({ title: 'Ошибка', description: error.error || 'Не удалось добавить платёж', variant: 'destructive' });
+        return;
+      }
+
+      const created = await createResponse.json();
+      const paymentId = created.id;
+
+      const submitResponse = await fetch(API_ENDPOINTS.approvalsApi, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+        body: JSON.stringify({ payment_id: paymentId, action: 'submit' }),
+      });
+
+      if (submitResponse.ok) {
+        toast({ title: 'Успешно', description: 'Наличный платёж отправлен на согласование' });
         setDialogOpen(false);
         setFormData(EMPTY_FORM);
         setReceiptFile(null);
         setReceiptPreview(null);
         onSuccess();
       } else {
-        const error = await response.json();
-        toast({ title: 'Ошибка', description: error.error || 'Не удалось добавить платёж', variant: 'destructive' });
+        const error = await submitResponse.json();
+        toast({ title: 'Ошибка', description: error.error || 'Не удалось отправить на согласование', variant: 'destructive' });
       }
     } catch {
       toast({ title: 'Ошибка сети', description: 'Проверьте подключение к интернету', variant: 'destructive' });
