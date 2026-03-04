@@ -52,6 +52,7 @@ const Contractors = () => {
     handleDelete: handleDeleteBase,
   } = useCrudPage<Contractor>({
     endpoint: 'contractors',
+    baseApi: 'dictionariesApi',
     initialFormData: {
       name: '',
       inn: '',
