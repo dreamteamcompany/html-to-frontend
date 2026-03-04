@@ -55,8 +55,6 @@ const ServicesTable = ({ services, loading, onEdit, onDelete }: ServicesTablePro
                   <TableHead>Категория</TableHead>
                   <TableHead>Описание</TableHead>
                   <TableHead>Отдел-заказчик</TableHead>
-                  <TableHead>Промежуточное согласование</TableHead>
-                  <TableHead>Окончательное согласование</TableHead>
                   <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
               </TableHeader>
@@ -74,8 +72,6 @@ const ServicesTable = ({ services, loading, onEdit, onDelete }: ServicesTablePro
                     </TableCell>
                     <TableCell>{service.description || '—'}</TableCell>
                     <TableCell>{service.customer_department_name || '—'}</TableCell>
-                    <TableCell>{service.intermediate_approver_name || '—'}</TableCell>
-                    <TableCell>{service.final_approver_name || '—'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
