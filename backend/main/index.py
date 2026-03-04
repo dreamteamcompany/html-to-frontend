@@ -2834,8 +2834,14 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 
                 cur.execute(f"SELECT COUNT(*) as cnt FROM {SCHEMA}.savings WHERE service_id = %s", (service_id,))
                 saving_count = cur.fetchone()['cnt']
+
+                cur.execute(f"SELECT COUNT(*) as cnt FROM {SCHEMA}.tickets WHERE service_id = %s", (service_id,))
+                ticket_count = cur.fetchone()['cnt']
+
+                cur.execute(f"SELECT COUNT(*) as cnt FROM {SCHEMA}.planned_payments WHERE service_id = %s", (service_id,))
+                planned_count = cur.fetchone()['cnt']
                 
-                log(f"[DELETE SERVICE] Dependencies: payments={payment_count}, savings={saving_count}")
+                log(f"[DELETE SERVICE] Dependencies: payments={payment_count}, savings={saving_count}, tickets={ticket_count}, planned_payments={planned_count}")
                 
                 if payment_count > 0:
                     cur.execute(f"UPDATE {SCHEMA}.payments SET service_id = NULL WHERE service_id = %s", (service_id,))
@@ -2844,6 +2850,14 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 if saving_count > 0:
                     cur.execute(f"UPDATE {SCHEMA}.savings SET service_id = NULL WHERE service_id = %s", (service_id,))
                     log(f"[DELETE SERVICE] Detached {saving_count} savings")
+
+                if ticket_count > 0:
+                    cur.execute(f"UPDATE {SCHEMA}.tickets SET service_id = NULL WHERE service_id = %s", (service_id,))
+                    log(f"[DELETE SERVICE] Detached {ticket_count} tickets")
+
+                if planned_count > 0:
+                    cur.execute(f"UPDATE {SCHEMA}.planned_payments SET service_id = NULL WHERE service_id = %s", (service_id,))
+                    log(f"[DELETE SERVICE] Detached {planned_count} planned_payments")
                 
                 cur.execute(f"DELETE FROM {SCHEMA}.services WHERE id = %s RETURNING id, name", (service_id,))
                 row = cur.fetchone()
@@ -2859,15 +2873,24 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     user_id=payload['user_id'],
                     username=payload.get('email', 'unknown'),
                     old_values={'id': row['id'], 'name': row['name']},
-                    metadata={'detached_payments': payment_count, 'detached_savings': saving_count}
+                    metadata={'detached_payments': payment_count, 'detached_savings': saving_count, 'detached_tickets': ticket_count, 'detached_planned': planned_count}
                 )
                 
                 conn.commit()
                 log(f"[DELETE SERVICE] Successfully deleted service_id={service_id}")
                 
-                message = f"Услуга удалена"
-                if payment_count > 0 or saving_count > 0:
-                    message += f" (отвязано: платежей {payment_count}, экономий {saving_count})"
+                message = "Услуга удалена"
+                parts = []
+                if payment_count > 0:
+                    parts.append(f"платежей {payment_count}")
+                if saving_count > 0:
+                    parts.append(f"экономий {saving_count}")
+                if ticket_count > 0:
+                    parts.append(f"заявок {ticket_count}")
+                if planned_count > 0:
+                    parts.append(f"плановых платежей {planned_count}")
+                if parts:
+                    message += f" (отвязано: {', '.join(parts)})"
                 
                 return response(200, {'message': message, 'detached_payments': payment_count, 'detached_savings': saving_count})
             except Exception as e:
