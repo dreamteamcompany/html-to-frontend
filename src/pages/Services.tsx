@@ -203,6 +203,7 @@ const Services = () => {
   };
 
   const handleEdit = (service: Service) => {
+    handleEditBase(service);
     setFormData({
       name: service.name || '',
       description: service.description || '',
@@ -213,7 +214,6 @@ const Services = () => {
       legal_entity_id: service.legal_entity_id?.toString() || '',
       contractor_id: service.contractor_id?.toString() || '',
     });
-    handleEditBase(service);
   };
 
   const handleDelete = async (id: number) => {
