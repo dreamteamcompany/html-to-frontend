@@ -81,6 +81,7 @@ export const usePaymentsData = () => {
       .then(res => res.json())
       .then(data => {
         const list = Array.isArray(data) ? data : [];
+        list.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
         myPaymentsCache = list;
         myPaymentsCacheTime = Date.now();
         setPayments(list);

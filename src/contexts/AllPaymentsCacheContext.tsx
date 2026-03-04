@@ -36,6 +36,7 @@ export const AllPaymentsCacheProvider = ({ children }: { children: ReactNode }) 
         .then(r => r.json())
         .then((data): Payment[] => {
           const list: Payment[] = Array.isArray(data) ? data : [];
+          list.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
           globalCache = list;
           globalCacheTime = Date.now();
           return list;
