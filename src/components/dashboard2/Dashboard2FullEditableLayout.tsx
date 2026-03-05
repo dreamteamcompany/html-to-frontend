@@ -8,7 +8,6 @@ import Dashboard2StatsRow from './Dashboard2StatsRow';
 import Dashboard2PaymentCalendar from './Dashboard2PaymentCalendar';
 import Dashboard2UpcomingPayments from './Dashboard2UpcomingPayments';
 import Dashboard2TeamPerformance from './Dashboard2TeamPerformance';
-import Dashboard2ServicesDynamics from './Dashboard2ServicesDynamics';
 import Dashboard2CostIndexing from './Dashboard2CostIndexing';
 import Dashboard2BudgetBreakdown from './Dashboard2BudgetBreakdown';
 
@@ -70,8 +69,7 @@ const Dashboard2FullEditableLayout = () => {
     { id: 'payment-calendar', x: 0, y: 1490, width: 1150, height: 500, component: 'Dashboard2PaymentCalendar' },
     { id: 'upcoming-payments', x: 0, y: 2380, width: 1150, height: 550, component: 'Dashboard2UpcomingPayments' },
     { id: 'team-performance', x: 0, y: 2950, width: 1150, height: 600, component: 'Dashboard2TeamPerformance' },
-    { id: 'services-dynamics', x: 0, y: 3570, width: 1150, height: 200, component: 'Dashboard2ServicesDynamics' },
-    { id: 'cost-indexing', x: 0, y: 3790, width: 1150, height: 550, component: 'Dashboard2CostIndexing' },
+    { id: 'cost-indexing', x: 0, y: 3570, width: 1150, height: 550, component: 'Dashboard2CostIndexing' },
     { id: 'budget-breakdown', x: 0, y: 4360, width: 1150, height: 400, component: 'Dashboard2BudgetBreakdown' },
   ];
 
@@ -81,7 +79,6 @@ const Dashboard2FullEditableLayout = () => {
     Dashboard2PaymentCalendar,
     Dashboard2UpcomingPayments,
     Dashboard2TeamPerformance,
-    Dashboard2ServicesDynamics,
     Dashboard2CostIndexing,
     Dashboard2BudgetBreakdown,
   };
