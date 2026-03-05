@@ -26,7 +26,7 @@ const Dashboard2AllCards = () => {
     { id: 'payment-type-chart', title: 'Тип расчётов', type: 'stat' },
     { id: 'monthly-dynamics', title: 'Динамика Расходов по Месяцам', type: 'chart' },
     { id: 'category-expenses', title: 'IT Расходы по Категориям', type: 'chart' },
-    { id: 'contractor-comparison', title: 'Сравнение по Контрагентам', type: 'chart' },
+    { id: 'contractor-comparison', title: 'Сравнение по Сервисам', type: 'chart' },
     { id: 'expense-structure', title: 'Структура Расходов', type: 'chart' },
     { id: 'department-comparison', title: 'Сравнение по Отделам-Заказчикам', type: 'chart' },
     { id: 'legal-entity-comparison', title: 'Сравнение по Юридическим Лицам', type: 'chart' },

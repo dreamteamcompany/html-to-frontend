@@ -203,7 +203,7 @@ const ContractorComparisonChart = () => {
                 <Icon name="Users" size={16} style={{ color: '#7551e9' }} />
               </div>
               <h3 className={dashboardTypography.cardTitle} style={{ fontSize: '15px' }}>
-                Сравнение по Контрагентам
+                Сравнение по Сервисам
               </h3>
             </div>
             {!loading && total > 0 && (
