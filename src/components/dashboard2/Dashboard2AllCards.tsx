@@ -9,6 +9,7 @@ import ExpenseStructureChart from './blocks/ExpenseStructureChart';
 import LegalEntityComparisonChart from './blocks/LegalEntityComparisonChart';
 import Dashboard2TeamPerformance from './Dashboard2TeamPerformance';
 import PaymentTypeChart from './blocks/PaymentTypeChart';
+import ExpenseShareChart from './blocks/ExpenseShareChart';
 
 interface DashboardCard {
   id: string;
@@ -30,6 +31,7 @@ const Dashboard2AllCards = () => {
     { id: 'expense-structure', title: 'Структура Расходов', type: 'chart' },
     { id: 'department-comparison', title: 'Сравнение по Отделам-Заказчикам', type: 'chart' },
     { id: 'legal-entity-comparison', title: 'Сравнение по Юридическим Лицам', type: 'chart' },
+    { id: 'expense-share', title: 'Доля расходов', type: 'chart' },
   ];
 
   useEffect(() => {
@@ -84,6 +86,8 @@ const Dashboard2AllCards = () => {
         return <LegalEntityComparisonChart />;
       case 'payment-type-chart':
         return <PaymentTypeChart />;
+      case 'expense-share':
+        return <ExpenseShareChart />;
       default:
         return null;
     }
@@ -98,12 +102,14 @@ const Dashboard2AllCards = () => {
   const expenseStructureCard = chartCards.find(c => c.id === 'expense-structure');
   const legalEntityCard = chartCards.find(c => c.id === 'legal-entity-comparison');
   const departmentCard = chartCards.find(c => c.id === 'department-comparison');
-  
-  const otherCharts = chartCards.filter(c => 
-    c.id !== 'contractor-comparison' && 
-    c.id !== 'expense-structure' && 
-    c.id !== 'legal-entity-comparison' && 
-    c.id !== 'department-comparison'
+  const expenseShareCard = chartCards.find(c => c.id === 'expense-share');
+
+  const otherCharts = chartCards.filter(c =>
+    c.id !== 'contractor-comparison' &&
+    c.id !== 'expense-structure' &&
+    c.id !== 'legal-entity-comparison' &&
+    c.id !== 'department-comparison' &&
+    c.id !== 'expense-share'
   );
 
   return (
@@ -149,7 +155,7 @@ const Dashboard2AllCards = () => {
       </div>
 
       {/* Contractor & Legal Entity Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {contractorCard && (
           <div className="min-w-0 max-w-full">
             {renderCard(contractorCard)}
@@ -161,6 +167,15 @@ const Dashboard2AllCards = () => {
           </div>
         )}
       </div>
+
+      {/* Expense Share Row */}
+      {expenseShareCard && (
+        <div className="grid grid-cols-1 gap-4 sm:gap-6">
+          <div className="min-w-0 max-w-full">
+            {renderCard(expenseShareCard)}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
