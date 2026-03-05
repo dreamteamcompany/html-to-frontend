@@ -168,10 +168,15 @@ ${sheetData}
   a.href = url;
   const dateStr = new Date().toISOString().slice(0, 10);
   a.download = `Платежи_${periodLabel}_${dateStr}.xlsx`;
+  a.style.position = 'fixed';
+  a.style.top = '-9999px';
+  a.style.left = '-9999px';
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => {
+    if (a.parentNode === document.body) document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 500);
 };
 
 // ─── Минимальный ZIP builder ─────────────────────────────────────────────────
