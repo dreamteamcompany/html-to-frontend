@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { PeriodProvider, PeriodType } from '@/contexts/PeriodContext';
 import { PaymentsCacheProvider } from '@/contexts/PaymentsCacheContext';
+import ExportExcelButton from '@/components/dashboard2/ExportExcelButton';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -89,7 +90,7 @@ const Dashboard2 = () => {
 
         <div style={{ padding: '20px 0' }}>
           <Tabs value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as PeriodType)} className="mb-6">
-            <TabsList className="grid w-full grid-cols-5 max-w-2xl text-xs sm:text-sm">
+            <TabsList className="grid grid-cols-5 text-xs sm:text-sm" style={{ width: 'fit-content', minWidth: '280px' }}>
               <TabsTrigger value="today" className="px-2 sm:px-4">Сегодня</TabsTrigger>
               <TabsTrigger value="week" className="px-2 sm:px-4">Неделя</TabsTrigger>
               <TabsTrigger value="month" className="px-2 sm:px-4">Месяц</TabsTrigger>
@@ -128,7 +129,10 @@ const Dashboard2 = () => {
 
           <PaymentsCacheProvider>
             <PeriodProvider period={selectedPeriod} dateFrom={dateFrom} dateTo={dateTo}>
-              <div className="space-y-6 mt-6">
+              <div className="flex justify-end mb-2">
+                <ExportExcelButton />
+              </div>
+              <div className="space-y-6">
                 <Dashboard2AllCards />
                 <Dashboard2Charts />
               </div>
