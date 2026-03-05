@@ -113,9 +113,9 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
     cur.execute(f"""
         SELECT DISTINCT
             p.id, p.category_id, p.amount, p.description, p.payment_date,
-            p.status, p.created_at, p.updated_at, p.created_by_user_id,
+            p.status, p.created_at, p.created_by,
             p.legal_entity_id, p.contractor_id, p.department_id, p.service_id,
-            p.invoice_number, p.invoice_date,
+            p.invoice_number, p.invoice_date, p.invoice_file_url, p.payment_type,
             c.name as category_name,
             le.name as legal_entity_name,
             cont.name as contractor_name,
@@ -129,8 +129,8 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
         LEFT JOIN {SCHEMA}.contractors cont ON p.contractor_id = cont.id
         LEFT JOIN {SCHEMA}.customer_departments dep ON p.department_id = dep.id
         LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
-        LEFT JOIN {SCHEMA}.users u ON p.created_by_user_id = u.id
-        WHERE p.status = 'pending_ceo'
+        LEFT JOIN {SCHEMA}.users u ON p.created_by = u.id
+        WHERE p.status IN ('pending_ceo', 'pending_tech_director', 'pending_ib', 'pending_cfo')
         ORDER BY p.created_at DESC
     """)
     
@@ -142,12 +142,13 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
         
         # Получаем историю утверждений
         cur.execute(f"""
-            SELECT id, payment_id, approver_id, action, comment, created_at,
-                   (SELECT username FROM {SCHEMA}.users WHERE id = approver_id) as approver_username,
-                   (SELECT full_name FROM {SCHEMA}.users WHERE id = approver_id) as approver_full_name
-            FROM {SCHEMA}.approval_history
-            WHERE payment_id = %s
-            ORDER BY created_at DESC
+            SELECT a.id, a.payment_id, a.approver_id, a.action, a.comment, a.created_at,
+                   u.username as approver_username,
+                   u.full_name as approver_full_name
+            FROM {SCHEMA}.approvals a
+            LEFT JOIN {SCHEMA}.users u ON a.approver_id = u.id
+            WHERE a.payment_id = %s
+            ORDER BY a.created_at DESC
         """, (payment['id'],))
         
         approval_history = [dict(row) for row in cur.fetchall()]

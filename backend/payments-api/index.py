@@ -138,9 +138,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             scope = query_params.get('scope', 'my')
             
             if scope == 'all':
-                if not is_admin:
+                # Проверяем роли: администратор, CEO или утверждающий могут видеть все платежи
+                cur2 = conn.cursor(cursor_factory=RealDictCursor)
+                cur2.execute(f"""
+                    SELECT r.name FROM {SCHEMA}.roles r
+                    JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
+                    WHERE ur.user_id = %s
+                """, (payload['user_id'],))
+                user_roles_list = [row['name'] for row in cur2.fetchall()]
+                cur2.close()
+                is_ceo = 'CEO' in user_roles_list or 'Генеральный директор' in user_roles_list
+                is_approver_role = check_user_permission(conn, payload['user_id'], 'approvals.read')
+                if not is_admin and not is_ceo and not is_approver_role:
                     conn.close()
-                    return response(403, {'error': 'Только администратор может просматривать все платежи'})
+                    return response(403, {'error': 'Недостаточно прав для просмотра всех платежей'})
                 where_clause = ""
                 params = tuple()
             else:
@@ -175,7 +186,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     s.name as service_name,
                     s.description as service_description,
                     p.invoice_number,
-                    p.invoice_date
+                    p.invoice_date,
+                    p.invoice_file_url,
+                    p.payment_type,
+                    p.cash_receipt_url
                 FROM {SCHEMA}.payments p
                 LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
                 LEFT JOIN {SCHEMA}.legal_entities le ON p.legal_entity_id = le.id

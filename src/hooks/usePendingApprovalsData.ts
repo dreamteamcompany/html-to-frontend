@@ -8,7 +8,7 @@ import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 export const usePendingApprovalsData = () => {
   const { token, user } = useAuth();
   const { toast } = useToast();
-  const { payments: allPayments, loading, removePayment } = useAllPaymentsCache();
+  const { payments: allPayments, loading, removePayment, refresh } = useAllPaymentsCache();
   const [approveProgress, setApproveProgress] = useState<{ current: number; total: number } | null>(null);
 
   const payments = useMemo(() => {
@@ -41,6 +41,7 @@ export const usePendingApprovalsData = () => {
           description: 'Платёж согласован',
         });
         removePayment(paymentId);
+        refresh();
       } else {
         const errorData = await response.json();
         toast({
@@ -57,7 +58,7 @@ export const usePendingApprovalsData = () => {
         variant: 'destructive',
       });
     }
-  }, [token, toast]);
+  }, [token, toast, removePayment, refresh]);
 
   const handleApproveAll = useCallback(async (paymentIds: number[]) => {
     if (paymentIds.length === 0) return;
@@ -91,6 +92,7 @@ export const usePendingApprovalsData = () => {
 
     setApproveProgress(null);
     paymentIds.forEach(id => removePayment(id));
+    refresh();
     toast({
       title: succeeded > 0 ? 'Успешно' : 'Ошибка',
       description: failed > 0
@@ -98,7 +100,7 @@ export const usePendingApprovalsData = () => {
         : `Одобрено ${succeeded} платежей`,
       variant: failed > 0 ? 'destructive' : 'default',
     });
-  }, [token, toast]);
+  }, [token, toast, removePayment, refresh]);
 
   const handleReject = useCallback(async (paymentId: number, rejectComment?: string) => {
     console.log('[handleReject] Called with paymentId:', paymentId, 'comment:', rejectComment);
@@ -122,6 +124,7 @@ export const usePendingApprovalsData = () => {
           description: 'Платёж отклонён',
         });
         removePayment(paymentId);
+        refresh();
       } else {
         const errorData = await response.json();
         toast({
@@ -138,7 +141,7 @@ export const usePendingApprovalsData = () => {
         variant: 'destructive',
       });
     }
-  }, [token, toast]);
+  }, [token, toast, removePayment, refresh]);
 
   return {
     payments,

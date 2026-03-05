@@ -31,6 +31,9 @@ export const AllPaymentsCacheProvider = ({ children }: { children: ReactNode }) 
       return;
     }
 
+    setLoading(true);
+    setError(false);
+
     if (!globalFetchPromise) {
       globalFetchPromise = apiFetch(`${API_ENDPOINTS.paymentsApi}?scope=all`)
         .then(r => r.json())
@@ -41,11 +44,13 @@ export const AllPaymentsCacheProvider = ({ children }: { children: ReactNode }) 
           globalCacheTime = Date.now();
           return list;
         })
+        .catch(err => {
+          globalFetchPromise = null;
+          throw err;
+        })
         .finally(() => { globalFetchPromise = null; });
     }
 
-    setLoading(true);
-    setError(false);
     try {
       const list = await globalFetchPromise;
       setPayments(list);
