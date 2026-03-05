@@ -3,6 +3,8 @@ import { Bar } from 'react-chartjs-2';
 import { useState, useEffect, useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { useDrillDown } from '../useDrillDown';
+import DrillDownModal from '../DrillDownModal';
 
 interface PaymentRecord {
   status: string;
@@ -28,6 +30,7 @@ const colors = [
 const CategoryExpensesChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
+  const { drillFilter, openDrill, closeDrill } = useDrillDown();
   const [isMobile, setIsMobile] = useState(false);
   const [isLight, setIsLight] = useState(false);
 
@@ -119,80 +122,93 @@ const CategoryExpensesChart = () => {
     maxBarThickness: isMobile ? 18 : 28,
   }));
 
+  const handleChartClick = (_event: unknown, elements: { datasetIndex: number }[]) => {
+    if (!elements.length) return;
+    const dsIdx = elements[0].datasetIndex;
+    const catName = datasets[dsIdx]?.label;
+    if (!catName) return;
+    openDrill({ type: 'category', value: catName, label: catName });
+  };
+
   return (
-    <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
-      <CardContent className="p-6">
-        <div style={{ marginBottom: '16px' }}>
-          <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>IT Расходы по Категориям</h3>
-        </div>
-        {loading ? (
-          <div className="flex items-center justify-center" style={{ height: '250px' }}>
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+    <>
+      <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+        <CardContent className="p-6">
+          <div style={{ marginBottom: '16px' }}>
+            <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>IT Расходы по Категориям</h3>
           </div>
-        ) : (
-          <div className="h-[250px] sm:h-[350px]" style={{ position: 'relative' }}>
-            <Bar
-              data={{ labels: xLabels, datasets }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index' as const, intersect: false },
-                plugins: {
-                  legend: {
-                    position: 'bottom',
-                    display: !isMobile,
-                    labels: {
-                      padding: isMobile ? 10 : 20,
-                      usePointStyle: true,
-                      color: isLight ? 'rgba(30,30,50,0.75)' : 'rgba(200,210,230,0.85)',
-                      font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
-                    }
-                  },
-                  tooltip: {
-                    enabled: !isMobile,
-                    callbacks: {
-                      label: (context) =>
-                        `${context.dataset.label}: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`
-                    }
-                  }
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.7)',
-                      font: { size: isMobile ? 10 : 11 },
-                      maxTicksLimit: isMobile ? 4 : 6,
-                      padding: 6,
-                      callback: (value) => {
-                        const v = value as number;
-                        if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн';
-                        if (v >= 1000) return (v / 1000).toFixed(0) + 'k';
-                        return String(v);
+          {loading ? (
+            <div className="flex items-center justify-center" style={{ height: '250px' }}>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+            </div>
+          ) : (
+            <div className="h-[250px] sm:h-[350px]" style={{ position: 'relative', cursor: 'pointer' }}>
+              <Bar
+                data={{ labels: xLabels, datasets }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  interaction: { mode: 'index' as const, intersect: false },
+                  onClick: handleChartClick,
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                      display: !isMobile,
+                      labels: {
+                        padding: isMobile ? 10 : 20,
+                        usePointStyle: true,
+                        color: isLight ? 'rgba(30,30,50,0.75)' : 'rgba(200,210,230,0.85)',
+                        font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
                       }
                     },
-                    grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
-                    border: { dash: [4, 4], display: false }
+                    tooltip: {
+                      enabled: !isMobile,
+                      callbacks: {
+                        label: (context) =>
+                          `${context.dataset.label}: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`,
+                        footer: () => 'Нажмите для детализации',
+                      }
+                    }
                   },
-                  x: {
-                    ticks: {
-                      color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.75)',
-                      font: { size: isMobile ? 9 : 11 },
-                      maxRotation: isMobile ? 45 : 0,
-                      minRotation: isMobile ? 45 : 0,
-                      autoSkip: true,
-                      maxTicksLimit: isMobile ? 6 : (period === 'year' ? 12 : period === 'today' ? 12 : 16),
-                      padding: 4,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.7)',
+                        font: { size: isMobile ? 10 : 11 },
+                        maxTicksLimit: isMobile ? 4 : 6,
+                        padding: 6,
+                        callback: (value) => {
+                          const v = value as number;
+                          if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн';
+                          if (v >= 1000) return (v / 1000).toFixed(0) + 'k';
+                          return String(v);
+                        }
+                      },
+                      grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
+                      border: { dash: [4, 4], display: false }
                     },
-                    grid: { display: false }
+                    x: {
+                      ticks: {
+                        color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.75)',
+                        font: { size: isMobile ? 9 : 11 },
+                        maxRotation: isMobile ? 45 : 0,
+                        minRotation: isMobile ? 45 : 0,
+                        autoSkip: true,
+                        maxTicksLimit: isMobile ? 6 : (period === 'year' ? 12 : period === 'today' ? 12 : 16),
+                        padding: 4,
+                      },
+                      grid: { display: false }
+                    }
                   }
-                }
-              }}
-            />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                }}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    </>
   );
 };
 

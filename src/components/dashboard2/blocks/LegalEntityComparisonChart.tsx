@@ -5,6 +5,8 @@ import { usePeriod } from '@/contexts/PeriodContext';
 import Icon from '@/components/ui/icon';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { useDrillDown } from '../useDrillDown';
+import DrillDownModal from '../DrillDownModal';
 
 interface PaymentRecord {
   status: string;
@@ -36,6 +38,7 @@ const fmt = (v: number) => {
 const LegalEntityComparisonChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
+  const { drillFilter, openDrill, closeDrill } = useDrillDown();
   const [showAll, setShowAll] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isLight, setIsLight] = useState(false);
@@ -110,6 +113,11 @@ const LegalEntityComparisonChart = () => {
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index' as const, intersect: false },
+    onClick: (_event: unknown, elements: { index: number }[]) => {
+      if (!elements.length) return;
+      const name = displayData[elements[0].index]?.name;
+      if (name) openDrill({ type: 'legal_entity', value: name, label: name });
+    },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -128,6 +136,7 @@ const LegalEntityComparisonChart = () => {
             return displayData[idx]?.name ?? '';
           },
           label: (context: { raw: unknown }) => `  ${fmt(context.raw as number)}`,
+          footer: () => 'Нажмите для детализации',
         },
       },
     },
@@ -167,6 +176,7 @@ const LegalEntityComparisonChart = () => {
   };
 
   return (
+    <>
     <Card style={{
       background: 'hsl(var(--card))',
       border: '1px solid rgba(57,101,255,0.22)',
@@ -277,7 +287,7 @@ const LegalEntityComparisonChart = () => {
               </div>
             )}
 
-            <div className="h-[220px] sm:h-[300px]" style={{ position: 'relative' }}>
+            <div className="h-[220px] sm:h-[300px]" style={{ position: 'relative', cursor: 'pointer' }}>
               <Line data={areaData} options={chartOptions} />
             </div>
 
@@ -302,6 +312,8 @@ const LegalEntityComparisonChart = () => {
         )}
       </CardContent>
     </Card>
+    <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    </>
   );
 };
 

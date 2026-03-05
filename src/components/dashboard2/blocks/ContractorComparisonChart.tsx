@@ -5,6 +5,8 @@ import { usePeriod } from '@/contexts/PeriodContext';
 import Icon from '@/components/ui/icon';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { useDrillDown } from '../useDrillDown';
+import DrillDownModal from '../DrillDownModal';
 
 interface PaymentRecord {
   status: string;
@@ -31,6 +33,7 @@ const fmt = (v: number) => {
 const ContractorComparisonChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
+  const { drillFilter, openDrill, closeDrill } = useDrillDown();
   const [showAll, setShowAll] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isLight, setIsLight] = useState(false);
@@ -118,6 +121,11 @@ const ContractorComparisonChart = () => {
     maintainAspectRatio: false,
     animation: { duration: 250 },
     interaction: { mode: 'nearest' as const, intersect: true },
+    onClick: (_event: unknown, elements: { index: number }[]) => {
+      if (!elements.length) return;
+      const name = displayData[elements[0].index]?.name;
+      if (name) openDrill({ type: 'contractor', value: name, label: name });
+    },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -136,6 +144,7 @@ const ContractorComparisonChart = () => {
             return displayData[idx]?.name ?? '';
           },
           label: (context: { raw: unknown }) => `  ${fmt(context.raw as number)}`,
+          footer: () => 'Нажмите для детализации',
         },
       },
     },
@@ -175,6 +184,7 @@ const ContractorComparisonChart = () => {
   }), [displayData, isLight, isMobile, tickColor, gridColor]);
 
   return (
+    <>
     <Card style={{
       background: 'hsl(var(--card))',
       border: '1px solid rgba(117,81,233,0.22)',
@@ -283,7 +293,7 @@ const ContractorComparisonChart = () => {
               </div>
             )}
 
-            <div className="h-[220px] sm:h-[300px]" style={{ position: 'relative' }}>
+            <div className="h-[220px] sm:h-[300px]" style={{ position: 'relative', cursor: 'pointer' }}>
               <Bar key={chartKey} data={areaData} options={chartOptions} />
             </div>
 
@@ -307,6 +317,8 @@ const ContractorComparisonChart = () => {
         )}
       </CardContent>
     </Card>
+    <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    </>
   );
 };
 

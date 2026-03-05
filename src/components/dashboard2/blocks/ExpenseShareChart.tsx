@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache, PaymentRecord } from '@/contexts/PaymentsCacheContext';
+import { useDrillDown } from '../useDrillDown';
+import DrillDownModal from '../DrillDownModal';
 
 // ─── Palette ────────────────────────────────────────────────────────────────
 const PALETTE = [
@@ -55,9 +57,10 @@ interface DonutProps {
   slices: SliceData[];
   total: number;
   size: number;
+  onSegmentClick?: (name: string) => void;
 }
 
-const Donut = ({ slices, total, size }: DonutProps) => {
+const Donut = ({ slices, total, size, onSegmentClick }: DonutProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number } | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -138,6 +141,7 @@ const Donut = ({ slices, total, size }: DonutProps) => {
               opacity={hovered !== null && !isHov ? 0.2 : 1}
               style={{ transition: 'all 0.22s cubic-bezier(.4,0,.2,1)', cursor: 'pointer' }}
               onMouseEnter={() => setHovered(i)}
+              onClick={() => onSegmentClick?.(slices[i]?.name)}
             />
           );
         })}
@@ -208,14 +212,21 @@ const Donut = ({ slices, total, size }: DonutProps) => {
 // ─── Legend ───────────────────────────────────────────────────────────────────
 interface LegendProps {
   slices: SliceData[];
+  onItemClick?: (name: string) => void;
 }
 
-const Legend = ({ slices }: LegendProps) => {
+const Legend = ({ slices, onItemClick }: LegendProps) => {
   const isLight = document.documentElement.classList.contains('light');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
       {slices.map((s) => (
-        <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div
+          key={s.name}
+          onClick={() => onItemClick?.(s.name)}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '4px 6px', borderRadius: '6px', transition: 'background 0.15s' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+        >
           <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <span style={{ fontSize: '13px', fontWeight: 500, color: 'hsl(var(--foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
@@ -269,8 +280,20 @@ const tabInactiveStyle: React.CSSProperties = {
 const ExpenseShareChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
+  const { drillFilter, openDrill, closeDrill } = useDrillDown();
   const [groupBy, setGroupBy] = useState<GroupKey>('service');
   const [isMobile, setIsMobile] = useState(false);
+
+  const drillTypeMap: Record<GroupKey, 'service' | 'department' | 'category'> = {
+    service: 'service',
+    department: 'department',
+    category: 'category',
+  };
+
+  const handleSegmentClick = (name: string) => {
+    if (name === 'Прочие') return;
+    openDrill({ type: drillTypeMap[groupBy], value: name, label: name });
+  };
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -331,6 +354,7 @@ const ExpenseShareChart = () => {
   const size = isMobile ? 200 : 240;
 
   return (
+    <>
     <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
       <CardContent className="p-6">
         {/* Header */}
@@ -362,15 +386,17 @@ const ExpenseShareChart = () => {
             gap: isMobile ? '24px' : '32px',
           }}>
             <div style={{ flexShrink: 0 }}>
-              <Donut slices={slices} total={total} size={size} />
+              <Donut slices={slices} total={total} size={size} onSegmentClick={handleSegmentClick} />
             </div>
             <div style={{ flex: 1, minWidth: 0, alignSelf: 'center' }}>
-              <Legend slices={slices} />
+              <Legend slices={slices} onItemClick={handleSegmentClick} />
             </div>
           </div>
         )}
       </CardContent>
     </Card>
+    <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    </>
   );
 };
 

@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { useDrillDown } from '../useDrillDown';
+import DrillDownModal from '../DrillDownModal';
 
 interface PaymentRecord {
   status: string;
@@ -90,6 +92,7 @@ const buildData = (payments: PaymentRecord[], labels: string[], unit: UnitType, 
 const MonthlyDynamicsChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
+  const { drillFilter, openDrill, closeDrill } = useDrillDown();
   const [isMobile, setIsMobile] = useState(false);
   const [isLight, setIsLight] = useState(false);
 
@@ -108,7 +111,7 @@ const MonthlyDynamicsChart = () => {
     return () => observer.disconnect();
   }, []);
 
-  const { chartData, labels } = useMemo(() => {
+  const { chartData, labels, chartUnit } = useMemo(() => {
     const { from, to } = getDateRange();
     const { labels: newLabels, unit } = getChartConfig(period, from, to);
 
@@ -119,11 +122,24 @@ const MonthlyDynamicsChart = () => {
     });
 
     const values = buildData(filtered, newLabels, unit, from);
-    return { chartData: values, labels: newLabels };
+    return { chartData: values, labels: newLabels, chartUnit: unit };
   }, [allPayments, period, dateFrom, dateTo]);
 
   const chartLabels = isMobile && labels.length === MONTHS.length && labels[0] === MONTHS[0] ? MONTHS_SHORT : labels;
   const isBarChart = period === 'today' || period === 'week';
+
+  const handleChartClick = (_event: unknown, elements: { index: number }[]) => {
+    if (!elements.length) return;
+    const idx = elements[0].index;
+    const label = chartLabels[idx];
+    if (!label) return;
+    let filterValue = label;
+    if (chartUnit === 'month') {
+      const monthIdx = MONTHS.indexOf(label);
+      filterValue = monthIdx >= 0 ? String(monthIdx + 1).padStart(2, '0') : label;
+    }
+    openDrill({ type: 'date', value: filterValue, label: `Период: ${label}` });
+  };
 
   const commonDataset = {
     label: 'Расходы',
@@ -145,6 +161,7 @@ const MonthlyDynamicsChart = () => {
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index' as const, intersect: false },
+    onClick: handleChartClick,
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -152,6 +169,7 @@ const MonthlyDynamicsChart = () => {
         callbacks: {
           label: (context: { raw: unknown }) =>
             `Расходы: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`,
+          footer: () => 'Нажмите для детализации',
         },
       },
     },
@@ -193,32 +211,35 @@ const MonthlyDynamicsChart = () => {
   };
 
   return (
-    <Card style={{ background: 'hsl(var(--card))', border: '1px solid rgba(117, 81, 233, 0.4)' }}>
-      <CardContent className="p-3 sm:p-6">
-        <div style={{ marginBottom: '12px' }} className="sm:mb-4">
-          <h3 className={dashboardTypography.cardTitle}>{titleMap[period] || 'Динамика Расходов'}</h3>
-        </div>
-        {loading ? (
-          <div className="flex items-center justify-center sm:h-[250px]" style={{ height: '200px' }}>
-            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-purple-500"></div>
+    <>
+      <Card style={{ background: 'hsl(var(--card))', border: '1px solid rgba(117, 81, 233, 0.4)' }}>
+        <CardContent className="p-3 sm:p-6">
+          <div style={{ marginBottom: '12px' }} className="sm:mb-4">
+            <h3 className={dashboardTypography.cardTitle}>{titleMap[period] || 'Динамика Расходов'}</h3>
           </div>
-        ) : (
-          <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative' }}>
-            {isBarChart ? (
-              <Bar
-                data={{ labels: chartLabels, datasets: [{ ...commonDataset }] }}
-                options={commonOptions}
-              />
-            ) : (
-              <Line
-                data={{ labels: chartLabels, datasets: [{ ...commonDataset }] }}
-                options={commonOptions}
-              />
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          {loading ? (
+            <div className="flex items-center justify-center sm:h-[250px]" style={{ height: '200px' }}>
+              <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-purple-500"></div>
+            </div>
+          ) : (
+            <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative', cursor: 'pointer' }}>
+              {isBarChart ? (
+                <Bar
+                  data={{ labels: chartLabels, datasets: [{ ...commonDataset }] }}
+                  options={commonOptions}
+                />
+              ) : (
+                <Line
+                  data={{ labels: chartLabels, datasets: [{ ...commonDataset }] }}
+                  options={commonOptions}
+                />
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    </>
   );
 };
 

@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { useDrillDown } from '../useDrillDown';
+import DrillDownModal from '../DrillDownModal';
 
 interface PaymentRecord {
   status: string;
@@ -57,6 +59,7 @@ interface RingChartProps {
   totalAmount: number;
   isMobile: boolean;
   isLight: boolean;
+  onSegmentClick?: (name: string) => void;
 }
 
 const fmt = (v: number) => {
@@ -65,7 +68,7 @@ const fmt = (v: number) => {
   return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
 };
 
-const RingChart = ({ categories, totalAmount, isMobile, isLight }: RingChartProps) => {
+const RingChart = ({ categories, totalAmount, isMobile, isLight, onSegmentClick }: RingChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -155,6 +158,7 @@ const RingChart = ({ categories, totalAmount, isMobile, isLight }: RingChartProp
                 style={{ transition: 'all 0.22s cubic-bezier(.4,0,.2,1)', cursor: 'pointer' }}
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
+                onClick={() => onSegmentClick?.(categories[i]?.name)}
               />
             );
           })}
@@ -210,13 +214,14 @@ const RingChart = ({ categories, totalAmount, isMobile, isLight }: RingChartProp
               key={i}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
+              onClick={() => onSegmentClick?.(cat.name)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: isMobile ? '7px 10px' : '9px 12px',
                 borderRadius: '10px',
                 background: isHov ? `${palette[1]}18` : isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.025)',
                 border: `1px solid ${isHov ? `${palette[1]}45` : isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}`,
-                cursor: 'default',
+                cursor: 'pointer',
                 transition: 'all 0.18s ease',
                 opacity: hovered !== null && !isHov ? 0.35 : 1,
               }}
@@ -273,9 +278,14 @@ const RingChart = ({ categories, totalAmount, isMobile, isLight }: RingChartProp
 const ExpenseStructureChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
+  const { drillFilter, openDrill, closeDrill } = useDrillDown();
   const [activeTab, setActiveTab] = useState<'general' | 'details'>('general');
   const [isMobile, setIsMobile] = useState(false);
   const [isLight, setIsLight] = useState(false);
+
+  const handleCategoryClick = (name: string) => {
+    openDrill({ type: 'category', value: name, label: name });
+  };
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -323,6 +333,7 @@ const ExpenseStructureChart = () => {
   }, [allPayments, period, dateFrom, dateTo]);
 
   return (
+    <>
     <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
       <CardContent className="p-6">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -346,7 +357,7 @@ const ExpenseStructureChart = () => {
             <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
           </div>
         ) : activeTab === 'general' ? (
-          <RingChart categories={categories} totalAmount={totalAmount} isMobile={isMobile} isLight={isLight} />
+          <RingChart categories={categories} totalAmount={totalAmount} isMobile={isMobile} isLight={isLight} onSegmentClick={handleCategoryClick} />
         ) : (
           <div className="h-[300px] sm:h-[450px]" style={{ overflowY: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -359,7 +370,13 @@ const ExpenseStructureChart = () => {
               </thead>
               <tbody>
                 {categories.map((cat) => (
-                  <tr key={cat.name} style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+                  <tr
+                    key={cat.name}
+                    onClick={() => handleCategoryClick(cat.name)}
+                    style={{ borderBottom: '1px solid hsl(var(--border))', cursor: 'pointer', transition: 'background 0.15s' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(117,81,233,0.06)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                  >
                     <td style={{ padding: '14px 12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: cat.color, flexShrink: 0 }} />
@@ -386,6 +403,8 @@ const ExpenseStructureChart = () => {
         )}
       </CardContent>
     </Card>
+    <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    </>
   );
 };
 

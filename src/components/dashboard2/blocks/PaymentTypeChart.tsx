@@ -3,6 +3,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { useDrillDown } from '../useDrillDown';
+import DrillDownModal from '../DrillDownModal';
 
 interface PaymentRecord {
   status: string;
@@ -23,6 +25,7 @@ const fmt = (v: number) => {
 const PaymentTypeChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
+  const { drillFilter, openDrill, closeDrill } = useDrillDown();
   const [hovered, setHovered] = useState<'cash' | 'legal' | null>(null);
 
   const { cashAmount, cashCount, legalAmount, legalCount } = useMemo(() => {
@@ -54,6 +57,7 @@ const PaymentTypeChart = () => {
   const cashPct = total > 0 ? (cashAmount / total) * 100 : 0;
 
   return (
+    <>
     <Card
       className="h-full"
       style={{
@@ -91,6 +95,7 @@ const PaymentTypeChart = () => {
                 }}
                 onMouseEnter={() => setHovered('legal')}
                 onMouseLeave={() => setHovered(null)}
+                onClick={() => openDrill({ type: 'payment_type', value: 'legal', label: 'Безналичные' })}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -122,6 +127,7 @@ const PaymentTypeChart = () => {
                 }}
                 onMouseEnter={() => setHovered('cash')}
                 onMouseLeave={() => setHovered(null)}
+                onClick={() => openDrill({ type: 'payment_type', value: 'cash', label: 'Наличные' })}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -148,6 +154,8 @@ const PaymentTypeChart = () => {
 
       </CardContent>
     </Card>
+    <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    </>
   );
 };
 
