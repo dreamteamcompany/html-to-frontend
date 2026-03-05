@@ -44,6 +44,9 @@ const Index = () => {
   const barChartRef = useRef<HTMLCanvasElement>(null);
   const doughnutChartRef = useRef<HTMLCanvasElement>(null);
   const departmentChartRef = useRef<HTMLCanvasElement>(null);
+  const barChartInstance = useRef<Chart | null>(null);
+  const doughnutChartInstance = useRef<Chart | null>(null);
+  const departmentChartInstance = useRef<Chart | null>(null);
   const [stats, setStats] = useState<Stats>({
     stats: {
       total_payments: 0,
@@ -94,6 +97,13 @@ const Index = () => {
     if (!barChartRef.current || !doughnutChartRef.current || !departmentChartRef.current || loading) return;
     if (stats.category_stats.length === 0 && stats.department_stats.length === 0) return;
 
+    barChartInstance.current?.destroy();
+    doughnutChartInstance.current?.destroy();
+    departmentChartInstance.current?.destroy();
+    barChartInstance.current = null;
+    doughnutChartInstance.current = null;
+    departmentChartInstance.current = null;
+
     const barCtx = barChartRef.current.getContext('2d');
     const doughnutCtx = doughnutChartRef.current.getContext('2d');
     const departmentCtx = departmentChartRef.current.getContext('2d');
@@ -103,7 +113,7 @@ const Index = () => {
     const categoryData = stats.category_stats.map(c => c.total_amount);
     const categoryLabels = stats.category_stats.map(c => c.name);
 
-    const barChart = new Chart(barCtx, {
+    barChartInstance.current = new Chart(barCtx, {
       type: 'bar',
       data: {
         labels: categoryLabels,
@@ -141,7 +151,7 @@ const Index = () => {
       }
     });
 
-    const doughnutChart = new Chart(doughnutCtx, {
+    doughnutChartInstance.current = new Chart(doughnutCtx, {
       type: 'doughnut',
       data: {
         labels: categoryLabels,
@@ -171,7 +181,7 @@ const Index = () => {
     const departmentData = stats.department_stats.map(d => d.total_amount);
     const departmentLabels = stats.department_stats.map(d => d.name);
 
-    const departmentChart = new Chart(departmentCtx, {
+    departmentChartInstance.current = new Chart(departmentCtx, {
       type: 'bar',
       data: {
         labels: departmentLabels,
@@ -237,9 +247,12 @@ const Index = () => {
     });
 
     return () => {
-      barChart.destroy();
-      doughnutChart.destroy();
-      departmentChart.destroy();
+      barChartInstance.current?.destroy();
+      doughnutChartInstance.current?.destroy();
+      departmentChartInstance.current?.destroy();
+      barChartInstance.current = null;
+      doughnutChartInstance.current = null;
+      departmentChartInstance.current = null;
     };
   }, [stats, loading]);
 
