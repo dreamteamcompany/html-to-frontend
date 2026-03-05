@@ -30,11 +30,17 @@ const RejectedPaymentsTab = () => {
 
   const handleResubmit = async (paymentId: number) => {
     try {
-      await apiFetch(`${API_ENDPOINTS.approvalsApi}`, {
+      const res = await apiFetch(`${API_ENDPOINTS.approvalsApi}`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payment_id: paymentId, action: 'submit' })
       });
-      fetchRejectedPayments();
+      if (res.ok) {
+        fetchRejectedPayments();
+      } else {
+        const err = await res.json();
+        console.error('Failed to resubmit payment:', err);
+      }
     } catch (error) {
       console.error('Failed to resubmit payment:', error);
     }
@@ -109,7 +115,7 @@ const RejectedPaymentsTab = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <h3 className="text-lg font-semibold">{payment.category_name}</h3>
-                          <span className="px-3 py-1 rounded-full text-xs bg-red-500/20" style={{ color: '#000000' }}>✗ Отклонено</span>
+                          <span className="px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-400">✗ Отклонено</span>
                         </div>
                         <p className="text-muted-foreground text-sm mb-2">{payment.description}</p>
                         <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
@@ -150,8 +156,7 @@ const RejectedPaymentsTab = () => {
                         e.stopPropagation();
                         handleResubmit(payment.id);
                       }}
-                      className="px-4 py-2 text-sm rounded bg-blue-500/20 hover:bg-blue-500/30 font-medium w-full lg:w-auto"
-                      style={{ color: '#000000' }}
+                      className="px-4 py-2 text-sm rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-medium w-full lg:w-auto"
                     >
                       Отправить на повторное согласование
                     </button>

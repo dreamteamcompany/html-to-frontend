@@ -27,7 +27,7 @@ const ApprovedPaymentsTab = () => {
   const { toast } = useToast();
 
   const payments = useMemo(() =>
-    (allPayments as ExtendedPayment[]).filter(p => p.status === 'approved' && p.ceo_approved_at !== null),
+    (allPayments as ExtendedPayment[]).filter(p => p.status === 'approved'),
     [allPayments]
   );
 

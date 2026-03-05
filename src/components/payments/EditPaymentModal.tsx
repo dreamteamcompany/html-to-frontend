@@ -130,12 +130,12 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
   const loadDictionaries = async () => {
     try {
       const [categoriesRes, legalEntitiesRes, contractorsRes, departmentsRes, servicesRes, customFieldsRes] = await Promise.all([
-        apiFetch(`${API_ENDPOINTS.dictionariesApi}?type=categories`),
-        apiFetch(`${API_ENDPOINTS.dictionariesApi}?type=legal_entities`),
-        apiFetch(`${API_ENDPOINTS.dictionariesApi}?type=contractors`),
-        apiFetch(`${API_ENDPOINTS.dictionariesApi}?type=customer_departments`),
-        apiFetch(`${API_ENDPOINTS.dictionariesApi}?type=services`),
-        apiFetch(`${API_ENDPOINTS.dictionariesApi}?type=custom_fields`),
+        apiFetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=categories`),
+        apiFetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=legal-entities`),
+        apiFetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=contractors`),
+        apiFetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=customer-departments`),
+        apiFetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=services`),
+        apiFetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=custom-fields`),
       ]);
 
       const categoriesData = await categoriesRes.json();
