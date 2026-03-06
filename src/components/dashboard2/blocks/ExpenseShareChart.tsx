@@ -4,6 +4,8 @@ import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache, PaymentRecord } from '@/contexts/PaymentsCacheContext';
 import { useDrillDown } from '../useDrillDown';
 import DrillDownModal from '../DrillDownModal';
+import Icon from '@/components/ui/icon';
+import { exportPaymentsToExcel } from '@/utils/exportExcel';
 
 // ─── Palette ────────────────────────────────────────────────────────────────
 const PALETTE = [
@@ -277,11 +279,26 @@ const tabInactiveStyle: React.CSSProperties = {
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
+const PERIOD_LABEL: Record<string, string> = {
+  today: 'Сегодня',
+  week: 'Неделя',
+  month: 'Месяц',
+  year: 'Год',
+  custom: 'Период',
+};
+
+const GROUP_LABEL: Record<GroupKey, string> = {
+  service: 'Сервисы',
+  department: 'Отделы',
+  category: 'Категории',
+};
+
 const ExpenseShareChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
   const { drillFilter, openDrill, closeDrill } = useDrillDown();
   const [groupBy, setGroupBy] = useState<GroupKey>('service');
+  const [exporting, setExporting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   const drillTypeMap: Record<GroupKey, 'service' | 'department' | 'category'> = {
@@ -302,7 +319,7 @@ const ExpenseShareChart = () => {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const { slices, total } = useMemo(() => {
+  const { slices, total, filteredPayments } = useMemo(() => {
     const { from, to } = getDateRange();
 
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
@@ -348,8 +365,19 @@ const ExpenseShareChart = () => {
       };
     });
 
-    return { slices: result, total: totalAmt };
+    return { slices: result, total: totalAmt, filteredPayments: filtered };
   }, [allPayments, groupBy, period, dateFrom, dateTo]);
+
+  const handleExport = () => {
+    if (loading || exporting || filteredPayments.length === 0) return;
+    setExporting(true);
+    try {
+      const label = `ДоляРасходов_${GROUP_LABEL[groupBy]}_${PERIOD_LABEL[period] || period}`;
+      exportPaymentsToExcel(filteredPayments, label);
+    } finally {
+      setTimeout(() => setExporting(false), 800);
+    }
+  };
 
   const size = isMobile ? 200 : 240;
 
@@ -360,12 +388,48 @@ const ExpenseShareChart = () => {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'hsl(var(--foreground))' }}>Доля расходов</h3>
-          <div style={{ display: 'flex', gap: '4px', background: 'hsl(var(--muted))', padding: '4px', borderRadius: '10px' }}>
-            {TABS.map((tab) => (
-              <button key={tab} style={groupBy === tab ? tabActiveStyle : tabInactiveStyle} onClick={() => setGroupBy(tab)}>
-                {TAB_LABELS[tab]}
-              </button>
-            ))}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '4px', background: 'hsl(var(--muted))', padding: '4px', borderRadius: '10px' }}>
+              {TABS.map((tab) => (
+                <button key={tab} style={groupBy === tab ? tabActiveStyle : tabInactiveStyle} onClick={() => setGroupBy(tab)}>
+                  {TAB_LABELS[tab]}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={handleExport}
+              disabled={loading || exporting || filteredPayments.length === 0}
+              title="Экспорт в Excel"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '5px',
+                padding: '6px 12px', borderRadius: '8px',
+                border: '1px solid rgba(0,185,100,0.3)',
+                background: (loading || exporting || filteredPayments.length === 0)
+                  ? 'rgba(255,255,255,0.04)'
+                  : 'rgba(0,185,100,0.1)',
+                color: (loading || exporting || filteredPayments.length === 0)
+                  ? 'hsl(var(--muted-foreground))'
+                  : '#00b964',
+                fontSize: '12px', fontWeight: 600,
+                cursor: (loading || exporting || filteredPayments.length === 0) ? 'not-allowed' : 'pointer',
+                transition: 'all 0.18s', whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={e => {
+                if (!loading && !exporting && filteredPayments.length > 0)
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(0,185,100,0.18)';
+              }}
+              onMouseLeave={e => {
+                if (!loading && !exporting && filteredPayments.length > 0)
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(0,185,100,0.1)';
+              }}
+            >
+              {exporting ? (
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2" style={{ borderColor: '#00b964' }} />
+              ) : (
+                <Icon name="FileSpreadsheet" size={13} />
+              )}
+              <span className="hidden sm:inline">{exporting ? 'Формирую...' : 'Excel'}</span>
+            </button>
           </div>
         </div>
 
