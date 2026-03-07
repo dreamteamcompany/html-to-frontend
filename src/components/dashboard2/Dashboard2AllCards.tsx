@@ -10,6 +10,7 @@ import LegalEntityComparisonChart from './blocks/LegalEntityComparisonChart';
 import Dashboard2TeamPerformance from './Dashboard2TeamPerformance';
 import PaymentTypeChart from './blocks/PaymentTypeChart';
 import ExpenseShareChart from './blocks/ExpenseShareChart';
+import TopPaymentsCard from './blocks/TopPaymentsCard';
 
 interface DashboardCard {
   id: string;
@@ -168,14 +169,21 @@ const Dashboard2AllCards = () => {
         )}
       </div>
 
-      {/* Expense Share Row */}
-      {expenseShareCard && (
-        <div className="grid grid-cols-1 gap-4 sm:gap-6">
-          <div className="min-w-0 max-w-full">
-            {renderCard(expenseShareCard)}
+      {/* Expense Share & Top Payments Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
+        {expenseShareCard && (
+          <div className="min-w-0 max-w-full flex flex-col">
+            <div className="flex-1">
+              {renderCard(expenseShareCard)}
+            </div>
+          </div>
+        )}
+        <div className="min-w-0 max-w-full flex flex-col">
+          <div className="flex-1">
+            <TopPaymentsCard />
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
