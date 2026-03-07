@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePaymentsCache, PaymentRecord } from '@/contexts/PaymentsCacheContext';
 import { usePeriod } from '@/contexts/PeriodContext';
 import Icon from '@/components/ui/icon';
+import { exportDrillDownToExcel } from '@/utils/exportExcel';
 
 export interface DrillDownFilter {
   type: 'category' | 'contractor' | 'department' | 'legal_entity' | 'payment_type' | 'date' | 'service';
@@ -46,6 +47,7 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [search, setSearch] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -129,6 +131,16 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortField(field); setSortDir('asc'); }
+  };
+
+  const handleExport = () => {
+    if (exporting || sorted.length === 0 || !filter) return;
+    setExporting(true);
+    try {
+      exportDrillDownToExcel(sorted, filter.label);
+    } finally {
+      setTimeout(() => setExporting(false), 800);
+    }
   };
 
   const isLight = document.documentElement.classList.contains('light');
@@ -241,8 +253,8 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
             />
           </div>
 
-          {/* Sort buttons */}
-          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+          {/* Sort buttons + Export */}
+          <div style={{ display: 'flex', gap: '6px', flexShrink: 0, flexWrap: 'wrap' }}>
             {(['payment_date', 'amount'] as SortField[]).map(f => (
               <button
                 key={f}
@@ -262,6 +274,37 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
                 <SortIcon field={f} />
               </button>
             ))}
+            <button
+              onClick={handleExport}
+              disabled={exporting || sorted.length === 0}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '5px',
+                padding: '6px 12px', borderRadius: '8px',
+                border: '1px solid rgba(0,185,100,0.3)',
+                background: (exporting || sorted.length === 0) ? 'rgba(255,255,255,0.04)' : 'rgba(0,185,100,0.1)',
+                color: (exporting || sorted.length === 0) ? 'hsl(var(--muted-foreground))' : '#00b964',
+                fontSize: '12px', fontWeight: 600,
+                cursor: (exporting || sorted.length === 0) ? 'not-allowed' : 'pointer',
+                transition: 'all 0.18s', whiteSpace: 'nowrap',
+                flex: isMobile ? '1 0 100%' : undefined,
+                justifyContent: isMobile ? 'center' : undefined,
+              }}
+              onMouseEnter={e => {
+                if (!exporting && sorted.length > 0)
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(0,185,100,0.18)';
+              }}
+              onMouseLeave={e => {
+                if (!exporting && sorted.length > 0)
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(0,185,100,0.1)';
+              }}
+            >
+              {exporting ? (
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2" style={{ borderColor: '#00b964' }} />
+              ) : (
+                <Icon name="FileSpreadsheet" size={13} />
+              )}
+              {exporting ? 'Формирую...' : 'Выгрузить Excel'}
+            </button>
           </div>
         </div>
 
