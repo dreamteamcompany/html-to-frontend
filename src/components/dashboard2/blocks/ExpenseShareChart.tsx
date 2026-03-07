@@ -396,40 +396,7 @@ const ExpenseShareChart = () => {
                 </button>
               ))}
             </div>
-            <button
-              onClick={handleExport}
-              disabled={loading || exporting || filteredPayments.length === 0}
-              title="Экспорт в Excel"
-              style={{
-                display: 'flex', alignItems: 'center', gap: '5px',
-                padding: '6px 12px', borderRadius: '8px',
-                border: '1px solid rgba(0,185,100,0.3)',
-                background: (loading || exporting || filteredPayments.length === 0)
-                  ? 'rgba(255,255,255,0.04)'
-                  : 'rgba(0,185,100,0.1)',
-                color: (loading || exporting || filteredPayments.length === 0)
-                  ? 'hsl(var(--muted-foreground))'
-                  : '#00b964',
-                fontSize: '12px', fontWeight: 600,
-                cursor: (loading || exporting || filteredPayments.length === 0) ? 'not-allowed' : 'pointer',
-                transition: 'all 0.18s', whiteSpace: 'nowrap',
-              }}
-              onMouseEnter={e => {
-                if (!loading && !exporting && filteredPayments.length > 0)
-                  (e.currentTarget as HTMLElement).style.background = 'rgba(0,185,100,0.18)';
-              }}
-              onMouseLeave={e => {
-                if (!loading && !exporting && filteredPayments.length > 0)
-                  (e.currentTarget as HTMLElement).style.background = 'rgba(0,185,100,0.1)';
-              }}
-            >
-              {exporting ? (
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2" style={{ borderColor: '#00b964' }} />
-              ) : (
-                <Icon name="FileSpreadsheet" size={13} />
-              )}
-              <span className="hidden sm:inline">{exporting ? 'Формирую...' : 'Excel'}</span>
-            </button>
+
           </div>
         </div>
 
