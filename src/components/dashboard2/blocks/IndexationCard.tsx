@@ -2,57 +2,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useMemo } from 'react';
 import { dashboardTypography } from '../dashboardStyles';
-import { usePeriod, PeriodType } from '@/contexts/PeriodContext';
+import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
-
-const MONTHS_RU = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
-const MONTHS_RU_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-
-const formatPrevLabel = (period: PeriodType, prevFrom: Date, prevTo: Date): string => {
-  switch (period) {
-    case 'today':
-      return `${prevFrom.getDate()} ${MONTHS_RU_GEN[prevFrom.getMonth()]}`;
-    case 'week':
-      return `${prevFrom.getDate()} ${MONTHS_RU_GEN[prevFrom.getMonth()]} – ${prevTo.getDate()} ${MONTHS_RU_GEN[prevTo.getMonth()]}`;
-    case 'month':
-      return `${MONTHS_RU[prevFrom.getMonth()]} ${prevFrom.getFullYear()}`;
-    case 'year':
-      return `${prevFrom.getFullYear()} год`;
-    case 'custom':
-      return `${prevFrom.getDate()} ${MONTHS_RU_GEN[prevFrom.getMonth()]} – ${prevTo.getDate()} ${MONTHS_RU_GEN[prevTo.getMonth()]}`;
-  }
-};
-
-const getPreviousRange = (period: PeriodType, from: Date, to: Date, dateFrom?: Date, dateTo?: Date): { prevFrom: Date; prevTo: Date } => {
-  switch (period) {
-    case 'today': {
-      const prevFrom = new Date(from.getFullYear(), from.getMonth(), from.getDate() - 1, 0, 0, 0, 0);
-      const prevTo   = new Date(from.getFullYear(), from.getMonth(), from.getDate() - 1, 23, 59, 59, 999);
-      return { prevFrom, prevTo };
-    }
-    case 'week': {
-      const prevFrom = new Date(from.getFullYear(), from.getMonth(), from.getDate() - 7, 0, 0, 0, 0);
-      const prevTo   = new Date(to.getFullYear(),   to.getMonth(),   to.getDate()   - 7, 23, 59, 59, 999);
-      return { prevFrom, prevTo };
-    }
-    case 'month': {
-      const prevFrom = new Date(from.getFullYear(), from.getMonth() - 1, 1, 0, 0, 0, 0);
-      const prevTo   = new Date(from.getFullYear(), from.getMonth(), 0, 23, 59, 59, 999);
-      return { prevFrom, prevTo };
-    }
-    case 'year': {
-      const prevFrom = new Date(from.getFullYear() - 1, 0, 1, 0, 0, 0, 0);
-      const prevTo   = new Date(from.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
-      return { prevFrom, prevTo };
-    }
-    case 'custom': {
-      const periodMs = to.getTime() - from.getTime();
-      const prevTo   = new Date(from.getTime() - 1);
-      const prevFrom = new Date(prevTo.getTime() - periodMs);
-      return { prevFrom, prevTo };
-    }
-  }
-};
 
 interface PaymentRecord {
   status: string;
@@ -82,8 +33,9 @@ const IndexationCard = () => {
       (p: PaymentRecord) => p.status === 'approved'
     );
 
-    const { prevFrom, prevTo } = getPreviousRange(period, from, to, dateFrom, dateTo);
-    const prevLabel = formatPrevLabel(period, prevFrom, prevTo);
+    const periodMs = to.getTime() - from.getTime();
+    const prevTo = new Date(from.getTime() - 1);
+    const prevFrom = new Date(prevTo.getTime() - periodMs);
 
     const currentPayments = approvedPayments.filter((p: PaymentRecord) => {
       const d = new Date(p.payment_date);
@@ -152,10 +104,10 @@ const IndexationCard = () => {
       ? parseFloat((((totalCurrentAmount - totalPreviousAmount) / totalPreviousAmount) * 100).toFixed(1))
       : 0;
 
-    return { indexationPercent: overallPercent, serviceDetails: details, hasPreviousData, prevLabel };
+    return { indexationPercent: overallPercent, serviceDetails: details, hasPreviousData };
   }, [allPayments, period, dateFrom, dateTo]);
 
-  const { indexationPercent, serviceDetails, hasPreviousData, prevLabel } = indexationData;
+  const { indexationPercent, serviceDetails, hasPreviousData } = indexationData;
 
   return (
     <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547' }}>
@@ -192,11 +144,11 @@ const IndexationCard = () => {
                 style={{ color: indexationPercent >= 0 ? '#01b574' : '#ff6b6b' }}
               >
                 <Icon name={indexationPercent >= 0 ? 'ArrowUp' : 'ArrowDown'} size={14} />
-                {indexationPercent >= 0 ? '+' : ''}{indexationPercent}% vs {prevLabel}
+                {indexationPercent >= 0 ? '+' : ''}{indexationPercent}% к предыдущему периоду
               </div>
             ) : (
               <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5 mb-4`} style={{ color: 'hsl(var(--muted-foreground))' }}>
-                vs {prevLabel}
+                +0% к предыдущему периоду
               </div>
             )}
 

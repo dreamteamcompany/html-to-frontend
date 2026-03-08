@@ -161,11 +161,7 @@ ${sheetData}
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {
-    try {
-      if (a.parentNode && a.parentNode.contains(a)) {
-        a.parentNode.removeChild(a);
-      }
-    } catch (e) { /* элемент уже удалён */ }
+    if (a.parentNode === document.body) document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, 500);
 };
@@ -308,11 +304,7 @@ ${sheetData}
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {
-    try {
-      if (a.parentNode && a.parentNode.contains(a)) {
-        a.parentNode.removeChild(a);
-      }
-    } catch (e) { /* элемент уже удалён */ }
+    if (a.parentNode === document.body) document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, 500);
 };
