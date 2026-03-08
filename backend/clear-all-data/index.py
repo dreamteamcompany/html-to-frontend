@@ -32,44 +32,67 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'isBase64Encoded': False
         }
     
+    body_raw = event.get('body') or '{}'
+    try:
+        body = json.loads(body_raw)
+    except Exception:
+        body = {}
+    
+    mode = body.get('mode', 'all')
+    SCHEMA = 't_p61788166_html_to_frontend'
+    
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
     
     try:
-        # Список таблиц для очистки (все кроме системных)
-        tables_to_clear = [
-            'payments',
-            'approvals',
-            'audit_logs',
-            'savings',
-            'legal_entities',
-            'categories',
-            'custom_fields',
-            'custom_field_values',
-            'payment_custom_field_values',
-            'payment_custom_values',
-            'contractors',
-            'customer_departments',
-            'services',
-            'saving_reasons',
-            'payment_comments',
-            'comment_likes',
-            'log_files',
-            'log_entries',
-            'log_statistics',
-            'dashboard_layouts'
-        ]
-        
-        cleared_count = 0
+        cleared = []
         
         with conn.cursor() as cur:
-            for table in tables_to_clear:
-                try:
-                    # TRUNCATE быстрее чем DELETE и сбрасывает счётчики
-                    cur.execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE")
-                    cleared_count += 1
-                except Exception as e:
-                    # Если таблица не существует, пропускаем
-                    print(f"Failed to clear {table}: {e}")
+            if mode == 'payments_only':
+                # Удаляем только платежи и связанные записи, справочники не трогаем
+                payment_tables = [
+                    'payment_comments',
+                    'comment_likes',
+                    'approvals',
+                    'custom_field_values',
+                    'savings',
+                    'payments',
+                ]
+                for table in payment_tables:
+                    try:
+                        cur.execute(f"DELETE FROM {SCHEMA}.{table}")
+                        cleared.append(table)
+                    except Exception as e:
+                        print(f"Skip {table}: {e}")
+            else:
+                # Полная очистка всех таблиц кроме системных
+                tables_to_clear = [
+                    'payments',
+                    'approvals',
+                    'audit_logs',
+                    'savings',
+                    'legal_entities',
+                    'categories',
+                    'custom_fields',
+                    'custom_field_values',
+                    'payment_custom_field_values',
+                    'payment_custom_values',
+                    'contractors',
+                    'customer_departments',
+                    'services',
+                    'saving_reasons',
+                    'payment_comments',
+                    'comment_likes',
+                    'log_files',
+                    'log_entries',
+                    'log_statistics',
+                    'dashboard_layouts',
+                ]
+                for table in tables_to_clear:
+                    try:
+                        cur.execute(f"TRUNCATE TABLE {SCHEMA}.{table} RESTART IDENTITY CASCADE")
+                        cleared.append(table)
+                    except Exception as e:
+                        print(f"Skip {table}: {e}")
             
             conn.commit()
         
@@ -78,7 +101,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
             'body': json.dumps({
                 'success': True,
-                'tables_cleared': cleared_count,
+                'tables_cleared': len(cleared),
+                'cleared_tables': cleared,
                 'message': 'Все данные успешно удалены'
             }),
             'isBase64Encoded': False
