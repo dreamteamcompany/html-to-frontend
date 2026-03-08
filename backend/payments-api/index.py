@@ -24,6 +24,7 @@ class PaymentRequest(BaseModel):
     service_id: int | None = None
     invoice_number: str | None = None
     invoice_date: str | None = None
+    invoice_file_url: str | None = None
 
 def response(status_code: int, data: Any) -> Dict[str, Any]:
     return {
@@ -269,12 +270,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             category_name = category['name']
             
             cur.execute(
-                f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, created_by, status) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
-                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, status, created_by""",
+                f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, invoice_file_url, created_by, status) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
+                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, invoice_file_url, status, created_by""",
                 (category_name, pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
                  pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, pay_req.service_id, 
-                 pay_req.invoice_number, pay_req.invoice_date, payload['user_id'])
+                 pay_req.invoice_number, pay_req.invoice_date, pay_req.invoice_file_url, payload['user_id'])
             )
             row = cur.fetchone()
             payment_id = row['id']
@@ -357,13 +358,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 UPDATE {SCHEMA}.payments 
                 SET category = %s, category_id = %s, amount = %s, description = %s, 
                     payment_date = %s, legal_entity_id = %s, contractor_id = %s, 
-                    department_id = %s, service_id = %s, invoice_number = %s, invoice_date = %s
+                    department_id = %s, service_id = %s, invoice_number = %s, invoice_date = %s,
+                    invoice_file_url = COALESCE(%s, invoice_file_url)
                 WHERE id = %s
-                RETURNING id, category_id, amount, description, payment_date, created_at, status
+                RETURNING id, category_id, amount, description, payment_date, created_at, invoice_file_url, status
             """, (category_name, pay_req.category_id, pay_req.amount, pay_req.description, 
                   pay_req.payment_date, pay_req.legal_entity_id, pay_req.contractor_id, 
                   pay_req.department_id, pay_req.service_id, pay_req.invoice_number, 
-                  pay_req.invoice_date, payment_id))
+                  pay_req.invoice_date, pay_req.invoice_file_url, payment_id))
             
             row = cur.fetchone()
             if not row:
