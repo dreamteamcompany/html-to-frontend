@@ -73,18 +73,20 @@ const IndexationCard = () => {
     }
 
     const details: ServiceIndexation[] = [];
-    let totalAvgCurrent = 0;
-    let totalAvgPrevious = 0;
+    let totalCurrentAmount = 0;
+    let totalPreviousAmount = 0;
 
     commonKeys.forEach((key) => {
       const cur = currentMap[key];
       const prev = previousMap[key];
       const avgCurrent = cur.totalAmount / cur.count;
       const avgPrevious = prev.totalAmount / prev.count;
-      const percent = parseFloat((((avgCurrent - avgPrevious) / avgPrevious) * 100).toFixed(1));
+      const percent = avgPrevious > 0
+        ? parseFloat((((avgCurrent - avgPrevious) / avgPrevious) * 100).toFixed(1))
+        : 0;
 
-      totalAvgCurrent += avgCurrent;
-      totalAvgPrevious += avgPrevious;
+      totalCurrentAmount += cur.totalAmount;
+      totalPreviousAmount += prev.totalAmount;
 
       details.push({
         serviceKey: key,
@@ -97,10 +99,10 @@ const IndexationCard = () => {
 
     details.sort((a, b) => Math.abs(b.percent) - Math.abs(a.percent));
 
-    // Общий процент — через средние по всем общим сервисам
-    const overallPercent = parseFloat(
-      (((totalAvgCurrent - totalAvgPrevious) / totalAvgPrevious) * 100).toFixed(1)
-    );
+    // Общий процент — взвешенный по суммарному объёму платежей по общим сервисам
+    const overallPercent = totalPreviousAmount > 0
+      ? parseFloat((((totalCurrentAmount - totalPreviousAmount) / totalPreviousAmount) * 100).toFixed(1))
+      : 0;
 
     return { indexationPercent: overallPercent, serviceDetails: details, hasPreviousData };
   }, [allPayments, period, dateFrom, dateTo]);
