@@ -745,14 +745,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
-                params = event.get('queryStringParameters', {})
+                params = event.get('queryStringParameters', {}) or {}
                 field_id = params.get('id')
                 
                 if not field_id:
                     conn.close()
                     return response(400, {'error': 'ID is required'})
                 
-                cur.execute(f'DELETE FROM {SCHEMA}.custom_fields WHERE id = %s', (field_id,))
+                try:
+                    field_id_int = int(field_id)
+                except (ValueError, TypeError):
+                    conn.close()
+                    return response(400, {'error': 'Invalid ID format'})
+                
+                cur.execute(f'DELETE FROM {SCHEMA}.custom_field_values WHERE custom_field_id = %s', (field_id_int,))
+                cur.execute(f'DELETE FROM {SCHEMA}.custom_fields WHERE id = %s', (field_id_int,))
                 conn.commit()
                 
                 cur.close()

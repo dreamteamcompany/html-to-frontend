@@ -107,8 +107,12 @@ export const useCrudPage = <T extends { id: number }>({
           onSuccess();
         }
       } else {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to delete');
+        const text = await response.text();
+        let errorMsg = 'Failed to delete';
+        if (text) {
+          try { errorMsg = JSON.parse(text)?.error || errorMsg; } catch { /* ignore */ }
+        }
+        throw new Error(errorMsg);
       }
     } catch (error) {
       console.error(`Failed to delete ${endpoint}:`, error);
