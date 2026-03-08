@@ -37,7 +37,6 @@ interface Payment {
   department_id?: number;
   invoice_number?: string;
   invoice_date?: string;
-  invoice_file_url?: string;
   created_at?: string;
   submitted_at?: string;
   ceo_approved_at?: string;
@@ -197,48 +196,6 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
                 <p className="font-medium">{payment.invoice_number}</p>
-              </div>
-            )}
-
-            {payment.invoice_file_url && (
-              <div className="rounded-lg border border-border bg-muted/30 p-3">
-                <p className="text-sm text-muted-foreground mb-2 font-medium flex items-center gap-1.5">
-                  <Icon name="Paperclip" size={14} />
-                  Прикреплённый счёт
-                </p>
-                {(() => {
-                  const url = payment.invoice_file_url;
-                  const fileName = url.split('/').pop()?.replace(/^\d+_/, '') || 'Документ';
-                  const uploadDate = payment.created_at
-                    ? new Date(payment.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' })
-                    : null;
-                  return (
-                    <>
-                      <p className="text-xs text-muted-foreground mb-2 truncate" title={fileName}>{fileName}</p>
-                      {uploadDate && <p className="text-xs text-muted-foreground mb-2">Загружен: {uploadDate}</p>}
-                      <div className="flex items-center gap-3">
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
-                        >
-                          <Icon name="FileText" size={15} />
-                          Открыть
-                        </a>
-                        <span className="text-muted-foreground text-xs">·</span>
-                        <a
-                          href={url}
-                          download
-                          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <Icon name="Download" size={14} />
-                          Скачать
-                        </a>
-                      </div>
-                    </>
-                  );
-                })()}
               </div>
             )}
 

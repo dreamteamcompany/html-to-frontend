@@ -238,39 +238,26 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                   <Icon name="Paperclip" size={14} />
                   Прикреплённый счёт
                 </p>
-                {(() => {
-                  const url = payment.invoice_file_url;
-                  const fileName = url.split('/').pop()?.replace(/^\d+_/, '') || 'Документ';
-                  const uploadDate = payment.created_at
-                    ? new Date(payment.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' })
-                    : null;
-                  return (
-                    <>
-                      <p className="text-xs text-muted-foreground mb-1 truncate" title={fileName}>{fileName}</p>
-                      {uploadDate && <p className="text-xs text-muted-foreground mb-2">Загружен: {uploadDate}</p>}
-                      <div className="flex items-center gap-3">
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
-                        >
-                          <Icon name="FileText" size={15} />
-                          Открыть
-                        </a>
-                        <span className="text-muted-foreground text-xs">·</span>
-                        <a
-                          href={url}
-                          download
-                          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <Icon name="Download" size={14} />
-                          Скачать
-                        </a>
-                      </div>
-                    </>
-                  );
-                })()}
+                <div className="flex items-center gap-2">
+                  <a
+                    href={payment.invoice_file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+                  >
+                    <Icon name="FileText" size={16} />
+                    Открыть документ
+                  </a>
+                  <span className="text-muted-foreground">·</span>
+                  <a
+                    href={payment.invoice_file_url}
+                    download
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Icon name="Download" size={14} />
+                    Скачать
+                  </a>
+                </div>
               </div>
             )}
 

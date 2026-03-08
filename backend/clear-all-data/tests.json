@@ -1,11 +1,16 @@
 {
   "tests": [
     {
-      "name": "Проверка доступности эндпоинта",
-      "method": "OPTIONS",
+      "name": "Очистка данных",
+      "method": "POST",
       "path": "/",
       "expectedStatus": 200,
-      "bodyMatcher": "none"
+      "expectedBody": {
+        "success": true,
+        "tables_cleared": "number",
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }
