@@ -205,7 +205,7 @@ def load_reference_data() -> dict:
         'categories': f'SELECT id, name FROM {SCHEMA}.categories ORDER BY name',
         'services': f'SELECT id, name, category_id FROM {SCHEMA}.services ORDER BY name',
         'departments': f'SELECT id, name FROM {SCHEMA}.customer_departments ORDER BY name',
-        'legal_entities': f'SELECT id, name, inn, kpp FROM {SCHEMA}.legal_entities ORDER BY name',
+        'legal_entities': f'SELECT id, name, inn, kpp FROM {SCHEMA}.legal_entities WHERE is_active = true ORDER BY name',
         'contractors': f'SELECT id, name, inn, kpp FROM {SCHEMA}.contractors ORDER BY name',
     }
 

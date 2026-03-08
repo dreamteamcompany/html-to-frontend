@@ -25,6 +25,7 @@ interface LegalEntity {
   inn: string;
   kpp: string;
   address: string;
+  postal_code?: string;
   city?: string;
   created_at?: string;
 }
@@ -61,6 +62,7 @@ const LegalEntities = () => {
       inn: '', 
       kpp: '', 
       address: '', 
+      postal_code: '',
       city: '' 
     },
   });
@@ -82,7 +84,7 @@ const LegalEntities = () => {
   const handleDialogClose = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
-      setFormData({ name: '', inn: '', kpp: '', address: '', city: '' });
+      setFormData({ name: '', inn: '', kpp: '', address: '', postal_code: '', city: '' });
     }
   };
 
@@ -170,12 +172,13 @@ const LegalEntities = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="city">Город</Label>
+                  <Label htmlFor="postal_code">Индекс</Label>
                   <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    placeholder="Москва"
+                    id="postal_code"
+                    value={formData.postal_code}
+                    onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                    placeholder="123456"
+                    maxLength={10}
                   />
                 </div>
                 <div className="space-y-2">
@@ -225,6 +228,7 @@ const LegalEntities = () => {
                     <div className="space-y-1 text-sm text-muted-foreground mb-4">
                       {entity.inn && <div>ИНН: {entity.inn}</div>}
                       {entity.kpp && <div>КПП: {entity.kpp}</div>}
+                      {entity.postal_code && <div>Индекс: {entity.postal_code}</div>}
                       {entity.address && <div className="line-clamp-2">{entity.address}</div>}
                     </div>
                     {(hasPermission('legal_entities', 'update') || hasPermission('legal_entities', 'delete')) && (

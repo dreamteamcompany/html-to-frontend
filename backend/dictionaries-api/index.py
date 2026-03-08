@@ -32,12 +32,13 @@ class LegalEntityRequest(BaseModel):
     inn: str = Field(default='')
     kpp: str = Field(default='')
     address: str = Field(default='')
+    postal_code: str = Field(default='')
 
     @model_validator(mode='before')
     @classmethod
     def _coerce(cls, v):
         if isinstance(v, dict):
-            for f in ('inn', 'kpp', 'address'):
+            for f in ('inn', 'kpp', 'address', 'postal_code'):
                 if v.get(f) is None:
                     v[f] = ''
         return v
@@ -287,7 +288,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
-                cur.execute(f'SELECT id, name, inn, kpp, address FROM {SCHEMA}.legal_entities ORDER BY name')
+                cur.execute(f'SELECT id, name, inn, kpp, address, postal_code FROM {SCHEMA}.legal_entities WHERE is_active = true ORDER BY name')
                 entities = [dict(row) for row in cur.fetchall()]
                 
                 cur.close()
@@ -303,8 +304,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 le_req = LegalEntityRequest(**data)
                 
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.legal_entities (name, inn, kpp, address) VALUES (%s, %s, %s, %s) RETURNING id, name, inn, kpp, address",
-                    (le_req.name, le_req.inn, le_req.kpp, le_req.address)
+                    f"INSERT INTO {SCHEMA}.legal_entities (name, inn, kpp, address, postal_code, is_active) VALUES (%s, %s, %s, %s, %s, true) RETURNING id, name, inn, kpp, address, postal_code",
+                    (le_req.name, le_req.inn, le_req.kpp, le_req.address, le_req.postal_code)
                 )
                 row = cur.fetchone()
                 conn.commit()
@@ -327,8 +328,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return response(400, {'error': 'ID is required'})
                 
                 cur.execute(
-                    f"UPDATE {SCHEMA}.legal_entities SET name = %s, inn = %s, kpp = %s, address = %s WHERE id = %s RETURNING id, name, inn, kpp, address",
-                    (le_req.name, le_req.inn, le_req.kpp, le_req.address, le_id)
+                    f"UPDATE {SCHEMA}.legal_entities SET name = %s, inn = %s, kpp = %s, address = %s, postal_code = %s WHERE id = %s RETURNING id, name, inn, kpp, address, postal_code",
+                    (le_req.name, le_req.inn, le_req.kpp, le_req.address, le_req.postal_code, le_id)
                 )
                 row = cur.fetchone()
                 
