@@ -177,7 +177,7 @@ const LegalEntityComparisonChart = () => {
 
   return (
     <>
-    <Card style={{
+    <Card className="h-full" style={{
       background: 'hsl(var(--card))',
       border: '1px solid rgba(57,101,255,0.22)',
       borderTop: '4px solid rgba(57,101,255,1)',
@@ -287,7 +287,7 @@ const LegalEntityComparisonChart = () => {
               </div>
             )}
 
-            <div className="h-[220px] sm:h-[300px]" style={{ position: 'relative', cursor: 'pointer' }}>
+            <div className="h-[260px] sm:h-[360px]" style={{ position: 'relative', cursor: 'pointer' }}>
               <Line data={areaData} options={chartOptions} />
             </div>
 

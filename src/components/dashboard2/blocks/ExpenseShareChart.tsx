@@ -383,7 +383,7 @@ const ExpenseShareChart = () => {
 
   return (
     <>
-    <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+    <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
       <CardContent className="p-6">
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
@@ -402,11 +402,11 @@ const ExpenseShareChart = () => {
 
         {/* Body */}
         {loading ? (
-          <div className="flex items-center justify-center h-[300px]">
+          <div className="flex items-center justify-center h-[260px] sm:h-[360px]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500" />
           </div>
         ) : slices.length === 0 ? (
-          <div className="flex items-center justify-center h-[300px]">
+          <div className="flex items-center justify-center h-[260px] sm:h-[360px]">
             <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
@@ -415,6 +415,7 @@ const ExpenseShareChart = () => {
             flexDirection: isMobile ? 'column' : 'row',
             alignItems: isMobile ? 'center' : 'flex-start',
             gap: isMobile ? '24px' : '32px',
+            minHeight: '260px',
           }}>
             <div style={{ flexShrink: 0 }}>
               <Donut slices={slices} total={total} size={size} onSegmentClick={handleSegmentClick} />
