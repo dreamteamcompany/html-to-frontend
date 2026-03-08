@@ -2,8 +2,39 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useMemo } from 'react';
 import { dashboardTypography } from '../dashboardStyles';
-import { usePeriod } from '@/contexts/PeriodContext';
+import { usePeriod, PeriodType } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+
+const getPreviousRange = (period: PeriodType, from: Date, to: Date, dateFrom?: Date, dateTo?: Date): { prevFrom: Date; prevTo: Date } => {
+  switch (period) {
+    case 'today': {
+      const prevFrom = new Date(from.getFullYear(), from.getMonth(), from.getDate() - 1, 0, 0, 0, 0);
+      const prevTo   = new Date(from.getFullYear(), from.getMonth(), from.getDate() - 1, 23, 59, 59, 999);
+      return { prevFrom, prevTo };
+    }
+    case 'week': {
+      const prevFrom = new Date(from.getFullYear(), from.getMonth(), from.getDate() - 7, 0, 0, 0, 0);
+      const prevTo   = new Date(to.getFullYear(),   to.getMonth(),   to.getDate()   - 7, 23, 59, 59, 999);
+      return { prevFrom, prevTo };
+    }
+    case 'month': {
+      const prevFrom = new Date(from.getFullYear(), from.getMonth() - 1, 1, 0, 0, 0, 0);
+      const prevTo   = new Date(from.getFullYear(), from.getMonth(), 0, 23, 59, 59, 999);
+      return { prevFrom, prevTo };
+    }
+    case 'year': {
+      const prevFrom = new Date(from.getFullYear() - 1, 0, 1, 0, 0, 0, 0);
+      const prevTo   = new Date(from.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+      return { prevFrom, prevTo };
+    }
+    case 'custom': {
+      const periodMs = to.getTime() - from.getTime();
+      const prevTo   = new Date(from.getTime() - 1);
+      const prevFrom = new Date(prevTo.getTime() - periodMs);
+      return { prevFrom, prevTo };
+    }
+  }
+};
 
 interface PaymentRecord {
   status: string;
@@ -33,9 +64,7 @@ const IndexationCard = () => {
       (p: PaymentRecord) => p.status === 'approved'
     );
 
-    const periodMs = to.getTime() - from.getTime();
-    const prevTo = new Date(from.getTime() - 1);
-    const prevFrom = new Date(prevTo.getTime() - periodMs);
+    const { prevFrom, prevTo } = getPreviousRange(period, from, to, dateFrom, dateTo);
 
     const currentPayments = approvedPayments.filter((p: PaymentRecord) => {
       const d = new Date(p.payment_date);
