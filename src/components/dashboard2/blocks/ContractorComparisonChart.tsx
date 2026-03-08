@@ -185,7 +185,7 @@ const ContractorComparisonChart = () => {
 
   return (
     <>
-    <Card className="h-full" style={{
+    <Card style={{
       background: 'hsl(var(--card))',
       border: '1px solid rgba(117,81,233,0.22)',
       borderTop: '4px solid #7551e9',
@@ -293,7 +293,7 @@ const ContractorComparisonChart = () => {
               </div>
             )}
 
-            <div className="h-[260px] sm:h-[360px]" style={{ position: 'relative', cursor: 'pointer' }}>
+            <div className="h-[220px] sm:h-[300px]" style={{ position: 'relative', cursor: 'pointer' }}>
               <Bar key={chartKey} data={areaData} options={chartOptions} />
             </div>
 

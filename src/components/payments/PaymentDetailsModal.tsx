@@ -35,7 +35,6 @@ interface Payment {
   department_id?: number;
   invoice_number?: string;
   invoice_date?: string;
-  invoice_file_url?: string;
   created_at?: string;
   submitted_at?: string;
   rejection_comment?: string;
@@ -229,35 +228,6 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
                 <p className="font-medium">{payment.invoice_number}</p>
-              </div>
-            )}
-
-            {payment.invoice_file_url && (
-              <div className="rounded-lg border border-border bg-muted/30 p-3">
-                <p className="text-sm text-muted-foreground mb-2 font-medium flex items-center gap-1.5">
-                  <Icon name="Paperclip" size={14} />
-                  Прикреплённый счёт
-                </p>
-                <div className="flex items-center gap-2">
-                  <a
-                    href={payment.invoice_file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-primary hover:underline font-medium"
-                  >
-                    <Icon name="FileText" size={16} />
-                    Открыть документ
-                  </a>
-                  <span className="text-muted-foreground">·</span>
-                  <a
-                    href={payment.invoice_file_url}
-                    download
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Icon name="Download" size={14} />
-                    Скачать
-                  </a>
-                </div>
               </div>
             )}
 

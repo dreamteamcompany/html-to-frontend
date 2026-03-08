@@ -114,68 +114,74 @@ const Dashboard2AllCards = () => {
   );
 
   return (
-    <div className="mb-6 sm:mb-8 max-w-full space-y-4 sm:space-y-6">
-      {/* Stat Cards Row — 4 одинаковых колонки */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
-        {statCards.map((card) => (
-          <div key={card.id} className="min-w-0 h-full">
+    <div className="mb-6 sm:mb-8 max-w-full">
+      {/* Stat Cards Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-4 sm:mb-6">
+        {statCards.map((card) => {
+          return (
+            <div 
+              key={card.id} 
+              className="w-full"
+            >
+              {renderCard(card)}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Other Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        {otherCharts.map((card) => (
+          <div 
+            key={card.id} 
+            className="min-w-0 max-w-full"
+          >
             {renderCard(card)}
           </div>
         ))}
       </div>
 
-      {/* Top charts row: MonthlyDynamics + CategoryExpenses */}
-      {otherCharts.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-          {otherCharts.map((card) => (
-            <div key={card.id} className="min-w-0 h-full">
-              {renderCard(card)}
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Department & Expense Structure Row */}
-      {(departmentCard || expenseStructureCard) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-          {departmentCard && (
-            <div className="min-w-0 h-full">
-              {renderCard(departmentCard)}
-            </div>
-          )}
-          {expenseStructureCard && (
-            <div className="min-w-0 h-full">
-              {renderCard(expenseStructureCard)}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        {departmentCard && (
+          <div className="min-w-0 max-w-full">
+            {renderCard(departmentCard)}
+          </div>
+        )}
+        {expenseStructureCard && (
+          <div className="min-w-0 max-w-full">
+            {renderCard(expenseStructureCard)}
+          </div>
+        )}
+      </div>
 
       {/* Contractor & Legal Entity Row */}
-      {(contractorCard || legalEntityCard) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-          {contractorCard && (
-            <div className="min-w-0 h-full">
-              {renderCard(contractorCard)}
-            </div>
-          )}
-          {legalEntityCard && (
-            <div className="min-w-0 h-full">
-              {renderCard(legalEntityCard)}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        {contractorCard && (
+          <div className="min-w-0 max-w-full">
+            {renderCard(contractorCard)}
+          </div>
+        )}
+        {legalEntityCard && (
+          <div className="min-w-0 max-w-full">
+            {renderCard(legalEntityCard)}
+          </div>
+        )}
+      </div>
 
       {/* Expense Share & Top Payments Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
         {expenseShareCard && (
-          <div className="min-w-0 h-full">
-            {renderCard(expenseShareCard)}
+          <div className="min-w-0 max-w-full flex flex-col">
+            <div className="flex-1">
+              {renderCard(expenseShareCard)}
+            </div>
           </div>
         )}
-        <div className="min-w-0 h-full">
-          <TopPaymentsCard />
+        <div className="min-w-0 max-w-full flex flex-col">
+          <div className="flex-1">
+            <TopPaymentsCard />
+          </div>
         </div>
       </div>
     </div>
