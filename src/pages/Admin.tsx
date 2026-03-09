@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Icon from "@/components/ui/icon";
 import { useToast } from "@/components/ui/use-toast";
 import AdminContestsTab from "@/components/admin/AdminContestsTab";
 import AdminApplicationsTab from "@/components/admin/AdminApplicationsTab";
 import AdminResultsAndReviewsTab from "@/components/admin/AdminResultsAndReviewsTab";
+import AdminLoginForm from "@/components/admin/AdminLoginForm";
+import AdminNavbar, { AdminTabs } from "@/components/admin/AdminNavbar";
+import AdminCertificatesTab from "@/components/admin/AdminCertificatesTab";
+import AdminSettingsTab from "@/components/admin/AdminSettingsTab";
 
 interface Contest {
   id?: number;
@@ -563,124 +561,59 @@ const Admin = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md rounded-3xl shadow-2xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-heading font-bold text-primary">
-              🔐 Вход в админ-панель
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="login" className="text-base font-semibold">Логин</Label>
-                <Input
-                  id="login"
-                  type="text"
-                  placeholder="Введите логин"
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
-                  required
-                  className="rounded-xl border-2 focus:border-primary"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-base font-semibold">Пароль</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Введите пароль"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="rounded-xl border-2 focus:border-primary"
-                />
-              </div>
-              <Button type="submit" className="w-full rounded-xl bg-primary hover:bg-primary/90 text-lg py-6">
-                <Icon name="LogIn" className="mr-2" />
-                Войти
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+      <AdminLoginForm
+        login={login}
+        setLogin={setLogin}
+        password={password}
+        setPassword={setPassword}
+        handleLogin={handleLogin}
+      />
     );
   }
 
+  const handleCertificatesClick = () => {
+    setActiveTab('certificates');
+    if (certificatesLog.length === 0) {
+      setCertLoading(true);
+      fetch(CERTIFICATES_LOG_URL)
+        .then(r => r.json())
+        .then(data => setCertificatesLog(data))
+        .finally(() => setCertLoading(false));
+    }
+  };
+
+  const handleCertificatesRefresh = () => {
+    setCertLoading(true);
+    fetch(CERTIFICATES_LOG_URL)
+      .then(r => r.json())
+      .then(data => setCertificatesLog(data))
+      .finally(() => setCertLoading(false));
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      <nav className="sticky top-0 z-50 backdrop-blur-md shadow-md bg-gradient-to-r from-primary to-secondary">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-heading font-bold text-white">Админ-панель</h1>
-            <Button onClick={handleLogout} variant="ghost" className="text-white hover:bg-white/20 rounded-xl">
-              <Icon name="LogOut" className="mr-2" />
-              Выйти
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <AdminNavbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        applicationsCount={applications.length}
+        deletedApplicationsCount={deletedApplications.length}
+        resultsCount={results.length}
+        reviewsCount={reviews.length}
+        certificatesLogLength={certificatesLog.length}
+        onCertificatesClick={handleCertificatesClick}
+        handleLogout={handleLogout}
+      />
 
       <div className="container mx-auto px-4 py-12">
-        <div className="flex gap-4 mb-8 border-b">
-          <Button
-            variant={activeTab === 'contests' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('contests')}
-            className="rounded-t-xl rounded-b-none"
-          >
-            <Icon name="Trophy" className="mr-2" />
-            Конкурсы
-          </Button>
-          <Button
-            variant={activeTab === 'applications' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('applications')}
-            className="rounded-t-xl rounded-b-none"
-          >
-            <Icon name="FileText" className="mr-2" />
-            Заявки ({applications.length + deletedApplications.length})
-          </Button>
-          <Button
-            variant={activeTab === 'results' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('results')}
-            className="rounded-t-xl rounded-b-none"
-          >
-            <Icon name="Award" className="mr-2" />
-            Результаты ({results.length})
-          </Button>
-          <Button
-            variant={activeTab === 'reviews' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('reviews')}
-            className="rounded-t-xl rounded-b-none"
-          >
-            <Icon name="MessageSquare" className="mr-2" />
-            Отзывы ({reviews.length})
-          </Button>
-          <Button
-            variant={activeTab === 'certificates' ? 'default' : 'ghost'}
-            onClick={() => {
-              setActiveTab('certificates');
-              if (certificatesLog.length === 0) {
-                setCertLoading(true);
-                fetch(CERTIFICATES_LOG_URL)
-                  .then(r => r.json())
-                  .then(data => setCertificatesLog(data))
-                  .finally(() => setCertLoading(false));
-              }
-            }}
-            className="rounded-t-xl rounded-b-none"
-          >
-            <Icon name="ScrollText" className="mr-2" />
-            Выданные справки
-          </Button>
-          <Button
-            variant={activeTab === 'settings' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('settings')}
-            className="rounded-t-xl rounded-b-none"
-          >
-            <Icon name="Settings" className="mr-2" />
-            Настройки
-          </Button>
-        </div>
+        <AdminTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          applicationsCount={applications.length}
+          deletedApplicationsCount={deletedApplications.length}
+          resultsCount={results.length}
+          reviewsCount={reviews.length}
+          onCertificatesClick={handleCertificatesClick}
+        />
 
         {activeTab === 'contests' && (
           <AdminContestsTab
@@ -763,161 +696,20 @@ const Admin = () => {
         )}
 
         {activeTab === 'certificates' && (
-          <div>
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-heading font-bold text-primary">Выданные справки</h2>
-              <Button variant="outline" size="sm" onClick={() => {
-                setCertLoading(true);
-                fetch(CERTIFICATES_LOG_URL)
-                  .then(r => r.json())
-                  .then(data => setCertificatesLog(data))
-                  .finally(() => setCertLoading(false));
-              }}>
-                <Icon name="RefreshCw" size={16} className="mr-2" />
-                Обновить
-              </Button>
-            </div>
-            {certLoading ? (
-              <div className="flex items-center gap-2 text-muted-foreground"><Icon name="Loader2" className="animate-spin" /> Загрузка...</div>
-            ) : certificatesLog.length === 0 ? (
-              <p className="text-muted-foreground">Справки ещё не выдавались</p>
-            ) : (
-              <div className="rounded-2xl border overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="text-left px-4 py-3 font-semibold">ID</th>
-                      <th className="text-left px-4 py-3 font-semibold">Участник</th>
-                      <th className="text-left px-4 py-3 font-semibold">Конкурс</th>
-                      <th className="text-left px-4 py-3 font-semibold">ID результата</th>
-                      <th className="text-left px-4 py-3 font-semibold">Дата и время выдачи</th>
-                      <th className="px-4 py-3"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {certificatesLog.map((row, i) => (
-                      <tr key={row.id} className={i % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
-                        <td className="px-4 py-3 text-muted-foreground">{row.id}</td>
-                        <td className="px-4 py-3 font-medium">{row.full_name || '—'}</td>
-                        <td className="px-4 py-3">{row.contest_name || '—'}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{row.result_id}</td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {new Date(row.issued_at).toLocaleString('ru-RU', {
-                            day: '2-digit', month: '2-digit', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit'
-                          })}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={async () => {
-                              const res = await fetch(`https://functions.poehali.dev/7ea2c01d-bd1a-4567-b4f0-21aab3b96774?id=${row.result_id}`);
-                              if (!res.ok) { toast({ title: 'Ошибка', description: 'Не удалось сформировать справку', variant: 'destructive' }); return; }
-                              const blob = await res.blob();
-                              const url = URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `certificate_${row.result_id}_${(row.full_name || '').replace(/\s+/g, '_')}.pdf`;
-                              a.click();
-                              URL.revokeObjectURL(url);
-                            }}
-                          >
-                            <Icon name="Download" size={16} />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          <AdminCertificatesTab
+            certificatesLog={certificatesLog}
+            certLoading={certLoading}
+            onRefresh={handleCertificatesRefresh}
+            toast={toast}
+          />
         )}
 
         {activeTab === 'settings' && (
-          <div>
-            <h2 className="text-3xl font-heading font-bold text-primary mb-8">Настройки</h2>
-            <Card className="p-6 rounded-2xl max-w-2xl">
-              <h3 className="text-xl font-heading font-bold mb-4 flex items-center gap-2">
-                <Icon name="ClipboardList" size={20} className="text-primary" />
-                Лист подачи заявки
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Загрузите файл листа подачи заявки (DOCX, DOC или PDF). Он будет доступен для скачивания в разделе «Документы» на сайте.
-              </p>
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <Input
-                    type="file"
-                    accept=".docx,.doc,.pdf"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setUploadingAppForm(true);
-                      try {
-                        const reader = new FileReader();
-                        reader.onload = async () => {
-                          const base64 = reader.result?.toString().split(',')[1];
-                          const response = await fetch(UPLOAD_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              file: base64,
-                              fileName: file.name,
-                              fileType: file.type || 'application/octet-stream',
-                              folder: 'application-forms'
-                            })
-                          });
-                          const data = await response.json();
-                          setApplicationFormUrl(data.url);
-                          await fetch(SETTINGS_API_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ key: 'application_form_url', value: data.url })
-                          });
-                          toast({ title: 'Файл загружен', description: 'Лист подачи заявки успешно загружен' });
-                        };
-                        reader.readAsDataURL(file);
-                      } catch (error) {
-                        toast({ title: 'Ошибка', description: 'Не удалось загрузить файл', variant: 'destructive' });
-                      } finally {
-                        setUploadingAppForm(false);
-                      }
-                    }}
-                    disabled={uploadingAppForm}
-                    className="rounded-xl h-10"
-                  />
-                  {uploadingAppForm && <Icon name="Loader2" className="animate-spin" />}
-                </div>
-                {applicationFormUrl && (
-                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-200">
-                    <Icon name="CheckCircle" size={18} className="text-green-600" />
-                    <a href={applicationFormUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
-                      <Icon name="ExternalLink" size={14} />
-                      Просмотреть загруженный файл
-                    </a>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="ml-auto text-destructive hover:text-destructive"
-                      onClick={async () => {
-                        setApplicationFormUrl('');
-                        await fetch(SETTINGS_API_URL, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ key: 'application_form_url', value: '' })
-                        });
-                        toast({ title: 'Удалено', description: 'Ссылка на лист подачи заявки удалена' });
-                      }}
-                    >
-                      <Icon name="Trash2" size={16} />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
+          <AdminSettingsTab
+            applicationFormUrl={applicationFormUrl}
+            setApplicationFormUrl={setApplicationFormUrl}
+            toast={toast}
+          />
         )}
       </div>
     </div>
