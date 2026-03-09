@@ -171,7 +171,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     API для управления справочниками: категории, юрлица, контрагенты, подразделения, сервисы, кастомные поля.
     '''
     method = event.get('httpMethod', 'GET')
-    endpoint = event.get('queryStringParameters', {}).get('endpoint', '')
+    endpoint = (event.get('queryStringParameters') or {}).get('endpoint', '')
     
     if method == 'OPTIONS':
         return {
@@ -527,7 +527,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
-                params = event.get('queryStringParameters', {})
+                params = event.get('queryStringParameters') or {}
                 dept_id = params.get('id')
                 
                 if not dept_id:
