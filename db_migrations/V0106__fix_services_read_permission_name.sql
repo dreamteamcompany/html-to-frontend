@@ -1,0 +1,1 @@
+UPDATE t_p61788166_html_to_frontend.permissions SET name = 'services.read' WHERE name = 'services:read';
