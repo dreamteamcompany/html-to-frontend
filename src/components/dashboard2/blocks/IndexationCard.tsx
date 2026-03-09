@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import type { PeriodType } from '@/contexts/PeriodContext';
 
 interface PaymentRecord {
   status: string;
@@ -17,10 +18,68 @@ interface PaymentRecord {
 interface ServiceIndexation {
   serviceKey: string;
   serviceName: string;
-  avgCurrent: number;
-  avgPrevious: number;
+  currentTotal: number;
+  previousTotal: number;
   percent: number;
 }
+
+const parsePaymentDate = (raw: string): Date => {
+  // Если дата без времени (YYYY-MM-DD), парсим как локальное время,
+  // чтобы избежать сдвига UTC в браузерах
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return new Date(raw + 'T00:00:00');
+  }
+  return new Date(raw);
+};
+
+const getPreviousPeriodRange = (
+  period: PeriodType,
+  from: Date,
+  to: Date,
+  dateFrom?: Date,
+  dateTo?: Date
+): { prevFrom: Date; prevTo: Date } => {
+  switch (period) {
+    case 'today': {
+      const prevDay = new Date(from);
+      prevDay.setDate(prevDay.getDate() - 1);
+      const prevFrom = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 0, 0, 0, 0);
+      const prevTo = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 23, 59, 59, 999);
+      return { prevFrom, prevTo };
+    }
+    case 'week': {
+      const prevFrom = new Date(from);
+      prevFrom.setDate(prevFrom.getDate() - 7);
+      const prevTo = new Date(to);
+      prevTo.setDate(prevTo.getDate() - 7);
+      return { prevFrom, prevTo };
+    }
+    case 'month': {
+      // Предыдущий календарный месяц
+      const prevFrom = new Date(from.getFullYear(), from.getMonth() - 1, 1, 0, 0, 0, 0);
+      const prevTo = new Date(from.getFullYear(), from.getMonth(), 0, 23, 59, 59, 999);
+      return { prevFrom, prevTo };
+    }
+    case 'year': {
+      const prevFrom = new Date(from.getFullYear() - 1, 0, 1, 0, 0, 0, 0);
+      const prevTo = new Date(from.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+      return { prevFrom, prevTo };
+    }
+    case 'custom': {
+      // Для произвольного периода сдвигаем на такое же количество дней
+      const periodMs = to.getTime() - from.getTime();
+      const prevTo = new Date(from.getTime() - 1);
+      const prevFrom = new Date(prevTo.getTime() - periodMs);
+      return { prevFrom, prevTo };
+    }
+    default: {
+      const periodMs = to.getTime() - from.getTime();
+      const prevTo = new Date(from.getTime() - 1);
+      const prevFrom = new Date(prevTo.getTime() - periodMs);
+      return { prevFrom, prevTo };
+    }
+  }
+};
 
 const IndexationCard = () => {
   const { getDateRange, period, dateFrom, dateTo } = usePeriod();
@@ -33,29 +92,37 @@ const IndexationCard = () => {
       (p: PaymentRecord) => p.status === 'approved'
     );
 
-    const periodMs = to.getTime() - from.getTime();
-    const prevTo = new Date(from.getTime() - 1);
-    const prevFrom = new Date(prevTo.getTime() - periodMs);
+    const { prevFrom, prevTo } = getPreviousPeriodRange(period, from, to, dateFrom, dateTo);
 
     const currentPayments = approvedPayments.filter((p: PaymentRecord) => {
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(String(p.payment_date));
       return d >= from && d <= to;
     });
 
     const previousPayments = approvedPayments.filter((p: PaymentRecord) => {
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(String(p.payment_date));
       return d >= prevFrom && d <= prevTo;
     });
 
-    // Группируем по сервису: считаем сумму и количество для средней цены
+    // Суммарные расходы по периодам
+    const currentTotal = currentPayments.reduce((sum, p) => sum + p.amount, 0);
+    const previousTotal = previousPayments.reduce((sum, p) => sum + p.amount, 0);
+
+    const hasPreviousData = previousPayments.length > 0;
+
+    // Общий процент изменения суммарных расходов
+    const overallPercent = hasPreviousData && previousTotal > 0
+      ? parseFloat((((currentTotal - previousTotal) / previousTotal) * 100).toFixed(1))
+      : 0;
+
+    // Детализация по сервисам: сравниваем суммарные расходы
     const buildServiceMap = (payments: PaymentRecord[]) => {
-      const map: { [key: string]: { totalAmount: number; count: number; name: string } } = {};
+      const map: { [key: string]: { totalAmount: number; name: string } } = {};
       payments.forEach((p) => {
         const key = p.service_id ? `service_${p.service_id}` : `no_service`;
         const name = p.service_name || (p.service_id ? `Сервис ${p.service_id}` : 'Без сервиса');
-        if (!map[key]) map[key] = { totalAmount: 0, count: 0, name };
+        if (!map[key]) map[key] = { totalAmount: 0, name };
         map[key].totalAmount += p.amount;
-        map[key].count += 1;
       });
       return map;
     };
@@ -63,46 +130,26 @@ const IndexationCard = () => {
     const currentMap = buildServiceMap(currentPayments);
     const previousMap = buildServiceMap(previousPayments);
 
-    // Сравниваем только услуги, присутствующие в ОБОИХ периодах
     const commonKeys = Object.keys(currentMap).filter((key) => key in previousMap);
 
-    const hasPreviousData = previousPayments.length > 0;
-
-    if (commonKeys.length === 0) {
-      return { indexationPercent: 0, serviceDetails: [], hasPreviousData };
-    }
-
-    const details: ServiceIndexation[] = [];
-    let totalAvgCurrent = 0;
-    let totalAvgPrevious = 0;
-
-    commonKeys.forEach((key) => {
+    const details: ServiceIndexation[] = commonKeys.map((key) => {
       const cur = currentMap[key];
       const prev = previousMap[key];
-      const avgCurrent = cur.totalAmount / cur.count;
-      const avgPrevious = prev.totalAmount / prev.count;
-      const percent = parseFloat((((avgCurrent - avgPrevious) / avgPrevious) * 100).toFixed(1));
-
-      totalAvgCurrent += avgCurrent;
-      totalAvgPrevious += avgPrevious;
-
-      details.push({
+      const percent = prev.totalAmount > 0
+        ? parseFloat((((cur.totalAmount - prev.totalAmount) / prev.totalAmount) * 100).toFixed(1))
+        : 0;
+      return {
         serviceKey: key,
         serviceName: cur.name,
-        avgCurrent,
-        avgPrevious,
+        currentTotal: cur.totalAmount,
+        previousTotal: prev.totalAmount,
         percent,
-      });
+      };
     });
 
     details.sort((a, b) => Math.abs(b.percent) - Math.abs(a.percent));
 
-    // Общий процент — через средние по всем общим сервисам
-    const overallPercent = parseFloat(
-      (((totalAvgCurrent - totalAvgPrevious) / totalAvgPrevious) * 100).toFixed(1)
-    );
-
-    return { indexationPercent: overallPercent, serviceDetails: details, hasPreviousData };
+    return { indexationPercent: overallPercent, serviceDetails: details, hasPreviousData, currentTotal, previousTotal };
   }, [allPayments, period, dateFrom, dateTo]);
 
   const { indexationPercent, serviceDetails, hasPreviousData } = indexationData;
@@ -128,15 +175,15 @@ const IndexationCard = () => {
           <>
             <div
               className={`${dashboardTypography.cardValue} mb-1`}
-              style={{ color: serviceDetails.length === 0 ? undefined : indexationPercent > 0 ? '#01b574' : indexationPercent < 0 ? '#ff6b6b' : undefined }}
+              style={{ color: !hasPreviousData ? undefined : indexationPercent > 0 ? '#01b574' : indexationPercent < 0 ? '#ff6b6b' : undefined }}
             >
-              {serviceDetails.length > 0
+              {hasPreviousData
                 ? `${indexationPercent > 0 ? '+' : ''}${indexationPercent}%`
                 : '—'}
             </div>
             <div className={`${dashboardTypography.cardSecondary} mb-2`}>за выбранный период</div>
 
-            {hasPreviousData && serviceDetails.length > 0 ? (
+            {hasPreviousData ? (
               <div
                 className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5 mb-4`}
                 style={{ color: indexationPercent >= 0 ? '#01b574' : '#ff6b6b' }}
