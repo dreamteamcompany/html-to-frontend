@@ -468,7 +468,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
-                cur.execute(f'SELECT id, name, description FROM {SCHEMA}.customer_departments ORDER BY name')
+                cur.execute(f'SELECT id, name, description FROM {SCHEMA}.customer_departments WHERE is_active = true ORDER BY name')
                 departments = [dict(row) for row in cur.fetchall()]
                 
                 cur.close()
