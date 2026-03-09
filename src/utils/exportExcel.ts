@@ -161,7 +161,9 @@ ${sheetData}
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {
-    if (a.parentNode === document.body) document.body.removeChild(a);
+    try {
+      if (a.parentNode) a.parentNode.removeChild(a);
+    } catch (_) { /* элемент уже удалён */ }
     URL.revokeObjectURL(url);
   }, 500);
 };
@@ -304,7 +306,9 @@ ${sheetData}
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {
-    if (a.parentNode === document.body) document.body.removeChild(a);
+    try {
+      if (a.parentNode) a.parentNode.removeChild(a);
+    } catch (_) { /* элемент уже удалён */ }
     URL.revokeObjectURL(url);
   }, 500);
 };

@@ -97,9 +97,9 @@ const Index = () => {
     if (!barChartRef.current || !doughnutChartRef.current || !departmentChartRef.current || loading) return;
     if (stats.category_stats.length === 0 && stats.department_stats.length === 0) return;
 
-    barChartInstance.current?.destroy();
-    doughnutChartInstance.current?.destroy();
-    departmentChartInstance.current?.destroy();
+    try { barChartInstance.current?.destroy(); } catch (_) { /* canvas уже удалён */ }
+    try { doughnutChartInstance.current?.destroy(); } catch (_) { /* canvas уже удалён */ }
+    try { departmentChartInstance.current?.destroy(); } catch (_) { /* canvas уже удалён */ }
     barChartInstance.current = null;
     doughnutChartInstance.current = null;
     departmentChartInstance.current = null;
@@ -247,9 +247,9 @@ const Index = () => {
     });
 
     return () => {
-      barChartInstance.current?.destroy();
-      doughnutChartInstance.current?.destroy();
-      departmentChartInstance.current?.destroy();
+      try { barChartInstance.current?.destroy(); } catch (_) { /* canvas уже удалён */ }
+      try { doughnutChartInstance.current?.destroy(); } catch (_) { /* canvas уже удалён */ }
+      try { departmentChartInstance.current?.destroy(); } catch (_) { /* canvas уже удалён */ }
       barChartInstance.current = null;
       doughnutChartInstance.current = null;
       departmentChartInstance.current = null;
