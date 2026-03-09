@@ -17,16 +17,20 @@ interface PaymentRecord {
 const MONTHS = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
 const MONTHS_SHORT = ['Я', 'Ф', 'М', 'А', 'М', 'И', 'И', 'А', 'С', 'О', 'Н', 'Д'];
 
+const WEEK_DAYS_RU = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+
+const fmtWeekLabel = (d: Date) => `${WEEK_DAYS_RU[d.getDay()]}, ${String(d.getDate()).padStart(2, '0')}`;
+
 const getChartConfig = (period: string, from: Date, to: Date) => {
   if (period === 'today') {
-    const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+    const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
     return { labels: hours, unit: 'hour' as const };
   }
   if (period === 'week') {
     const days: string[] = [];
     const cur = new Date(from);
     while (cur <= to) {
-      days.push(cur.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }));
+      days.push(fmtWeekLabel(cur));
       cur.setDate(cur.getDate() + 1);
     }
     return { labels: days, unit: 'week_day' as const };
@@ -45,14 +49,23 @@ const getChartConfig = (period: string, from: Date, to: Date) => {
   }
   const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
   if (diffDays <= 1) {
-    const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+    const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
     return { labels: hours, unit: 'hour' as const };
+  }
+  if (diffDays <= 7) {
+    const days: string[] = [];
+    const cur = new Date(from);
+    while (cur <= to) {
+      days.push(fmtWeekLabel(cur));
+      cur.setDate(cur.getDate() + 1);
+    }
+    return { labels: days, unit: 'week_day' as const };
   }
   if (diffDays <= 31) {
     const days: string[] = [];
     const cur = new Date(from);
     while (cur <= to) {
-      days.push(`${cur.getDate()}.${cur.getMonth() + 1}`);
+      days.push(cur.getDate().toString());
       cur.setDate(cur.getDate() + 1);
     }
     return { labels: days, unit: 'custom_day' as const };
@@ -70,15 +83,15 @@ const buildData = (payments: PaymentRecord[], labels: string[], unit: UnitType, 
     let key: string;
 
     if (unit === 'hour') {
-      key = `${d.getHours()}:00`;
+      key = `${String(d.getHours()).padStart(2, '0')}:00`;
     } else if (unit === 'month') {
       key = MONTHS[d.getMonth()];
     } else if (unit === 'month_day') {
       key = d.getDate().toString();
     } else if (unit === 'custom_day') {
-      key = `${d.getDate()}.${d.getMonth() + 1}`;
+      key = d.getDate().toString();
     } else if (unit === 'week_day') {
-      key = d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' });
+      key = fmtWeekLabel(d);
     } else {
       key = d.getDate().toString();
     }

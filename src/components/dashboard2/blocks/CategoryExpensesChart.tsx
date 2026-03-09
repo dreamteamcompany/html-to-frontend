@@ -15,6 +15,8 @@ interface PaymentRecord {
 }
 
 const MONTHS = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+const WEEK_DAYS_RU = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+const fmtWeekLabel = (d: Date) => `${WEEK_DAYS_RU[d.getDay()]}, ${String(d.getDate()).padStart(2, '0')}`;
 
 const colors = [
   'rgb(117, 81, 233)',
@@ -62,38 +64,28 @@ const CategoryExpensesChart = () => {
     let labels: string[];
     let getKey: (p: PaymentRecord) => string;
 
-    if (period === 'today') {
+    if (period === 'today' || (period === 'custom' && diffDays <= 1)) {
       labels = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
       getKey = (p) => `${String(new Date(p.payment_date).getHours()).padStart(2, '0')}:00`;
     } else if (period === 'week' || (period === 'custom' && diffDays <= 7)) {
       labels = [];
       const cur = new Date(from);
       while (cur <= to) {
-        const d = String(cur.getDate()).padStart(2, '0');
-        const m = String(cur.getMonth() + 1).padStart(2, '0');
-        labels.push(`${d}.${m}`);
+        labels.push(fmtWeekLabel(cur));
         cur.setDate(cur.getDate() + 1);
       }
-      getKey = (p) => {
-        const d = new Date(p.payment_date);
-        return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
-      };
+      getKey = (p) => fmtWeekLabel(new Date(p.payment_date));
     } else if (period === 'month' || (period === 'custom' && diffDays <= 31)) {
       labels = [];
       const cur = new Date(from);
       while (cur <= to) {
-        const d = String(cur.getDate()).padStart(2, '0');
-        const m = String(cur.getMonth() + 1).padStart(2, '0');
-        labels.push(`${d}.${m}`);
+        labels.push(cur.getDate().toString());
         cur.setDate(cur.getDate() + 1);
       }
-      getKey = (p) => {
-        const d = new Date(p.payment_date);
-        return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
-      };
+      getKey = (p) => new Date(p.payment_date).getDate().toString();
     } else {
-      labels = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
-      getKey = (p) => String(new Date(p.payment_date).getMonth() + 1).padStart(2, '0');
+      labels = MONTHS;
+      getKey = (p) => MONTHS[new Date(p.payment_date).getMonth()];
     }
 
     const categoryMap: { [category: string]: { [key: string]: number } } = {};
