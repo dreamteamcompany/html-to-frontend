@@ -132,17 +132,17 @@ const CategoryExpensesChart = () => {
 
   return (
     <>
-      <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
-        <CardContent className="p-6">
+      <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+        <CardContent className="p-6 flex flex-col flex-1">
           <div style={{ marginBottom: '16px' }}>
             <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>IT Расходы по Категориям</h3>
           </div>
           {loading ? (
-            <div className="flex items-center justify-center" style={{ height: '250px' }}>
+            <div className="flex items-center justify-center flex-1 min-h-[200px]">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
             </div>
           ) : (
-            <div className="h-[250px] sm:h-[350px]" style={{ position: 'relative', cursor: 'pointer' }}>
+            <div className="flex-1 min-h-[200px] sm:min-h-[300px]" style={{ position: 'relative', cursor: 'pointer' }}>
               <Bar
                 data={{ labels: xLabels, datasets }}
                 options={{

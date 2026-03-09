@@ -334,8 +334,8 @@ const ExpenseStructureChart = () => {
 
   return (
     <>
-    <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
-      <CardContent className="p-6">
+    <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+      <CardContent className="p-6 flex flex-col flex-1">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'hsl(var(--foreground))' }}>Структура Расходов</h3>
           <div style={{ display: 'flex', gap: '8px', background: 'hsl(var(--muted))', padding: '4px', borderRadius: '10px' }}>
@@ -349,17 +349,19 @@ const ExpenseStructureChart = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-[300px]">
+          <div className="flex items-center justify-center flex-1 min-h-[250px]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500" />
           </div>
         ) : categories.length === 0 ? (
-          <div className="flex items-center justify-center h-[300px]">
+          <div className="flex items-center justify-center flex-1 min-h-[250px]">
             <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
           </div>
         ) : activeTab === 'general' ? (
-          <RingChart categories={categories} totalAmount={totalAmount} isMobile={isMobile} isLight={isLight} onSegmentClick={handleCategoryClick} />
+          <div className="flex-1 flex items-center justify-center min-h-[250px]">
+            <RingChart categories={categories} totalAmount={totalAmount} isMobile={isMobile} isLight={isLight} onSegmentClick={handleCategoryClick} />
+          </div>
         ) : (
-          <div className="h-[300px] sm:h-[450px]" style={{ overflowY: 'auto' }}>
+          <div className="flex-1 min-h-[250px] sm:min-h-[380px]" style={{ overflowY: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid hsl(var(--border))' }}>

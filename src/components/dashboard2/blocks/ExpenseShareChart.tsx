@@ -383,8 +383,8 @@ const ExpenseShareChart = () => {
 
   return (
     <>
-    <Card style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-      <CardContent className="p-6">
+    <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <CardContent className="p-6 flex flex-col flex-1">
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'hsl(var(--foreground))' }}>Доля расходов</h3>
@@ -402,18 +402,18 @@ const ExpenseShareChart = () => {
 
         {/* Body */}
         {loading ? (
-          <div className="flex items-center justify-center h-[300px]">
+          <div className="flex items-center justify-center flex-1 min-h-[250px]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500" />
           </div>
         ) : slices.length === 0 ? (
-          <div className="flex items-center justify-center h-[300px]">
+          <div className="flex items-center justify-center flex-1 min-h-[250px]">
             <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <div style={{
+          <div className="flex-1 flex items-center" style={{
             display: 'flex',
             flexDirection: isMobile ? 'column' : 'row',
-            alignItems: isMobile ? 'center' : 'flex-start',
+            alignItems: isMobile ? 'center' : 'center',
             gap: isMobile ? '24px' : '32px',
           }}>
             <div style={{ flexShrink: 0 }}>

@@ -40,29 +40,27 @@ const TopPaymentsCard = () => {
 
   if (loading) {
     return (
-      <Card style={{
+      <Card className="h-full flex flex-col" style={{
         background: 'hsl(var(--card))',
         border: '1px solid hsl(var(--border))',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
       }}>
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          </div>
+        <CardContent className="p-4 sm:p-6 flex flex-col flex-1 items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card style={{
+    <Card className="h-full flex flex-col" style={{
       background: 'hsl(var(--card))',
       border: '1px solid hsl(var(--border))',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       position: 'relative',
       overflow: 'hidden'
     }}>
-      <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
+      <CardContent className="p-4 sm:p-6 flex flex-col flex-1" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }} className="sm:gap-3 sm:mb-6">
           <div style={{
             background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',

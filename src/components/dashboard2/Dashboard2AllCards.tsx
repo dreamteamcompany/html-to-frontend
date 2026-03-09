@@ -130,7 +130,7 @@ const Dashboard2AllCards = () => {
       </div>
 
       {/* Other Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6 items-stretch">
         {otherCharts.map((card) => (
           <div 
             key={card.id} 
@@ -142,7 +142,7 @@ const Dashboard2AllCards = () => {
       </div>
 
       {/* Department & Expense Structure Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6 items-stretch">
         {departmentCard && (
           <div className="min-w-0 max-w-full">
             {renderCard(departmentCard)}
@@ -156,7 +156,7 @@ const Dashboard2AllCards = () => {
       </div>
 
       {/* Contractor & Legal Entity Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6 items-stretch">
         {contractorCard && (
           <div className="min-w-0 max-w-full">
             {renderCard(contractorCard)}
@@ -172,16 +172,12 @@ const Dashboard2AllCards = () => {
       {/* Expense Share & Top Payments Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
         {expenseShareCard && (
-          <div className="min-w-0 max-w-full flex flex-col">
-            <div className="flex-1">
-              {renderCard(expenseShareCard)}
-            </div>
+          <div className="min-w-0 max-w-full">
+            {renderCard(expenseShareCard)}
           </div>
         )}
-        <div className="min-w-0 max-w-full flex flex-col">
-          <div className="flex-1">
-            <TopPaymentsCard />
-          </div>
+        <div className="min-w-0 max-w-full">
+          <TopPaymentsCard />
         </div>
       </div>
     </div>

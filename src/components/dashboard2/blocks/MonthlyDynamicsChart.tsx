@@ -212,17 +212,17 @@ const MonthlyDynamicsChart = () => {
 
   return (
     <>
-      <Card style={{ background: 'hsl(var(--card))', border: '1px solid rgba(117, 81, 233, 0.4)' }}>
-        <CardContent className="p-3 sm:p-6">
+      <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(117, 81, 233, 0.4)' }}>
+        <CardContent className="p-3 sm:p-6 flex flex-col flex-1">
           <div style={{ marginBottom: '12px' }} className="sm:mb-4">
             <h3 className={dashboardTypography.cardTitle}>{titleMap[period] || 'Динамика Расходов'}</h3>
           </div>
           {loading ? (
-            <div className="flex items-center justify-center sm:h-[250px]" style={{ height: '200px' }}>
+            <div className="flex items-center justify-center flex-1 min-h-[200px]">
               <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-purple-500"></div>
             </div>
           ) : (
-            <div className="h-[200px] sm:h-[350px]" style={{ position: 'relative', cursor: 'pointer' }}>
+            <div className="flex-1 min-h-[200px] sm:min-h-[300px]" style={{ position: 'relative', cursor: 'pointer' }}>
               {isBarChart ? (
                 <Bar
                   data={{ labels: chartLabels, datasets: [{ ...commonDataset }] }}

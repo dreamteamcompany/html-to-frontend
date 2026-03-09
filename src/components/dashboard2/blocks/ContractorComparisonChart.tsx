@@ -185,7 +185,7 @@ const ContractorComparisonChart = () => {
 
   return (
     <>
-    <Card style={{
+    <Card className="h-full flex flex-col" style={{
       background: 'hsl(var(--card))',
       border: '1px solid rgba(117,81,233,0.22)',
       borderTop: '4px solid #7551e9',
@@ -200,7 +200,7 @@ const ContractorComparisonChart = () => {
         pointerEvents: 'none',
       }} />
 
-      <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
+      <CardContent className="p-4 sm:p-6 flex flex-col flex-1" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
@@ -252,12 +252,12 @@ const ContractorComparisonChart = () => {
         </div>
 
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '240px', flexDirection: 'column', gap: '12px' }}>
+          <div className="flex-1 min-h-[200px]" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
             <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: '#7551e9' }} />
             <span style={{ fontSize: '13px', color: 'hsl(var(--muted-foreground))' }}>Загрузка данных...</span>
           </div>
         ) : displayData.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '240px', gap: '12px' }}>
+          <div className="flex-1 min-h-[200px]" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
             <Icon name="PackageSearch" size={44} style={{ color: 'hsl(var(--muted-foreground))', opacity: 0.35 }} />
             <p style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px' }}>Нет данных за выбранный период</p>
           </div>
@@ -293,7 +293,7 @@ const ContractorComparisonChart = () => {
               </div>
             )}
 
-            <div className="h-[220px] sm:h-[300px]" style={{ position: 'relative', cursor: 'pointer' }}>
+            <div className="flex-1 min-h-[200px] sm:min-h-[280px]" style={{ position: 'relative', cursor: 'pointer' }}>
               <Bar key={chartKey} data={areaData} options={chartOptions} />
             </div>
 
