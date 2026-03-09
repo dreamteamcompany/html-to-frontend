@@ -1,0 +1,1 @@
+INSERT INTO contest_categories (category_id, name) VALUES ('preschool', 'Конкурсы для детей дошкольного возраста');

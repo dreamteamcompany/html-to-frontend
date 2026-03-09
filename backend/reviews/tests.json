@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "Get approved reviews",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "type"
+    },
+    {
+      "name": "Create new review",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "author_name": "Тестовый пользователь",
+        "author_role": "Родитель участника",
+        "rating": 5,
+        "text": "Отличная студия!"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "id": "number",
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "tests": [
+    {
+      "name": "Test OPTIONS request",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": "",
+      "bodyMatcher": "exact"
+    },
+    {
+      "name": "Test payment creation with valid data",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "amount": 300,
+        "description": "Оплата участия в конкурсе Зимняя сказка",
+        "contest_name": "Зимняя сказка",
+        "email": "test@example.com",
+        "application_data": {
+          "full_name": "Иванов Иван",
+          "age": 10,
+          "teacher": "Петрова А.Б.",
+          "institution": "Школа №1",
+          "work_title": "Тестовая работа",
+          "email": "test@example.com",
+          "contest_name": "Зимняя сказка",
+          "work_file": "dGVzdGZpbGVjb250ZW50",
+          "file_name": "test.jpg",
+          "file_type": "image/jpeg",
+          "gallery_consent": true
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "payment_id": "string",
+        "confirmation_url": "string",
+        "status": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

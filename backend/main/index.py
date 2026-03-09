@@ -4732,45 +4732,54 @@ def handle_budget_breakdown(method: str, event: Dict[str, Any], conn, payload: D
         cur.close()
 
 def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Статистика экономии для дашборда"""
+    """Статистика экономии для дашборда с фильтрацией по периоду"""
     if method != 'GET':
         return response(405, {'error': 'Метод не поддерживается'})
-    
+
+    qp = event.get('queryStringParameters') or {}
+    start_date = qp.get('startDate')
+    end_date = qp.get('endDate')
+
+    date_filter = ''
+    if start_date and end_date:
+        date_filter = f"WHERE created_at >= '{start_date}' AND created_at <= '{end_date}'"
+
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    
+
     try:
         cur.execute(f"""
-            SELECT 
+            SELECT
                 COUNT(*) as count,
                 COALESCE(SUM(amount), 0) as total_amount
             FROM {SCHEMA}.savings
+            {date_filter}
         """)
-        
+
         stats = cur.fetchone()
-        
+
         cur.execute(f"""
-            SELECT 
+            SELECT
                 cd.name as department_name,
                 SUM(s.amount) as total_saved
             FROM {SCHEMA}.savings s
-            JOIN {SCHEMA}.services srv ON s.service_id = srv.id
-            LEFT JOIN {SCHEMA}.customer_departments cd ON srv.customer_department_id = cd.id
+            LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
+            {date_filter}
             GROUP BY cd.name
             ORDER BY total_saved DESC
             LIMIT 3
         """)
-        
+
         top_departments = [dict(row) for row in cur.fetchall()]
-        
+
         return response(200, {
             'total_amount': float(stats['total_amount']),
-            'count': stats['count'],
+            'count': int(stats['count']),
             'top_departments': [{
                 'department_name': dept['department_name'] or 'Не указан',
                 'total_saved': float(dept['total_saved'])
             } for dept in top_departments]
         })
-    
+
     except Exception as e:
         return response(500, {'error': str(e)})
     finally:

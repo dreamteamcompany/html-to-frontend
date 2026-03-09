@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Test OPTIONS request",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": "",
+      "bodyMatcher": "exact"
+    },
+    {
+      "name": "Test ignored event type",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "event": "payment.canceled",
+        "object": {
+          "id": "test-payment-id",
+          "status": "canceled",
+          "metadata": {}
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "status": "ignored"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

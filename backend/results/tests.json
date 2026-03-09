@@ -1,0 +1,34 @@
+{
+  "tests": [
+    {
+      "name": "Get all results",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Create result",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "full_name": "Иванов Иван Иванович",
+        "age": 10,
+        "teacher": "Петрова М.И.",
+        "institution": "Школа №1",
+        "work_title": "Моя работа",
+        "email": "test@example.com",
+        "contest_id": 1,
+        "contest_name": "Тестовый конкурс",
+        "result": "Победитель",
+        "place": 1,
+        "score": 95.5
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "full_name": "Иванов Иван Иванович",
+        "result": "Победитель"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

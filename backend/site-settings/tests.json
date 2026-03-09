@@ -1,0 +1,19 @@
+{
+  "tests": [
+    {
+      "name": "Get settings",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Save setting",
+      "method": "POST",
+      "path": "/",
+      "body": {"key": "test_key", "value": "test_value"},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

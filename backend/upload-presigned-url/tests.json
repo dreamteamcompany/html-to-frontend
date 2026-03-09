@@ -1,0 +1,49 @@
+{
+  "tests": [
+    {
+      "name": "Generate presigned URL for image",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "file_name": "test_image.jpg",
+        "file_type": "image/jpeg"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "presigned_url": "string",
+        "file_url": "string",
+        "file_key": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Generate presigned URL for PDF",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "file_name": "test_document.pdf",
+        "file_type": "application/pdf"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "presigned_url": "string",
+        "file_url": "string",
+        "file_key": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Missing file_name",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "file_type": "image/jpeg"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

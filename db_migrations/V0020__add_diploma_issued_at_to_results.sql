@@ -1,0 +1,1 @@
+ALTER TABLE results ADD COLUMN diploma_issued_at DATE;

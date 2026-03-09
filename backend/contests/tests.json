@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Get all contests",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "0": {
+          "id": "number",
+          "title": "string",
+          "categoryId": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get contests by category",
+      "method": "GET",
+      "path": "/?category_id=visual-arts",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "0": {
+          "categoryId": "visual-arts"
+        }
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

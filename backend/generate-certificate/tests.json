@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Missing id parameter",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400,
+      "expectedBody": {"error": "Parameter id is required"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Not found result",
+      "method": "GET",
+      "path": "/?id=999999",
+      "expectedStatus": 404,
+      "expectedBody": {"error": "Result not found"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}
