@@ -1,0 +1,1 @@
+INSERT INTO legal_entities (name, inn, kpp, address) VALUES ('Клиники', NULL, NULL, NULL);
