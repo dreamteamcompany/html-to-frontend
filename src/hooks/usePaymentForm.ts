@@ -58,6 +58,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     if (!file) {
       setInvoiceFile(null);
       setInvoicePreview(null);
+      setFormData(prev => ({ ...prev, invoice_file_url: '' }));
       return;
     }
 
@@ -73,13 +74,28 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       reader.readAsDataURL(file);
     }
 
-    // Автоматически запускаем распознавание после загрузки
     toast({
       title: 'Файл загружен',
-      description: 'Начинаю автоматическое распознавание данных...',
+      description: 'Сохраняю документ и начинаю распознавание...',
     });
+
+    // Сначала загружаем файл напрямую в S3 — чтобы URL был сохранён независимо от OCR
+    try {
+      const presignedRes = await fetch(FUNC2URL['upload-presigned-url'], {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+        body: JSON.stringify({ file_name: file.name, file_type: file.type }),
+      });
+      if (presignedRes.ok) {
+        const { presigned_url, file_url } = await presignedRes.json();
+        await fetch(presigned_url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+        setFormData(prev => ({ ...prev, invoice_file_url: file_url }));
+      }
+    } catch (err) {
+      console.error('Direct upload failed:', err);
+    }
     
-    // Небольшая задержка чтобы пользователь увидел превью
+    // Запускаем OCR для автозаполнения полей (не критично если упадёт)
     setTimeout(() => {
       handleExtractDataFromFile(file);
     }, 500);
@@ -154,14 +170,23 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         }),
       });
 
+      let ocrData: Record<string, unknown> = {};
       if (!ocrResponse.ok) {
         const errorData = await ocrResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Ошибка при обработке документа');
+        if (errorData.file_url) {
+          setFormData(prev => ({ ...prev, invoice_file_url: errorData.file_url as string }));
+          toast({
+            title: 'Файл прикреплён',
+            description: 'Документ сохранён, но распознавание данных не удалось',
+          });
+          return;
+        }
+        throw new Error((errorData as { error?: string }).error || 'Ошибка при обработке документа');
       }
 
-      const ocrData = await ocrResponse.json();
-      const fileUrl = ocrData.file_url || '';
-      const extracted = ocrData.extracted_data || {};
+      ocrData = await ocrResponse.json();
+      const fileUrl = (ocrData.file_url as string) || '';
+      const extracted = (ocrData.extracted_data as Record<string, unknown>) || {};
       console.log('GPT result:', { extracted, gpt_raw: ocrData.gpt_raw, warning: ocrData.warning });
 
       const updates: Record<string, string | undefined> = {};
@@ -173,7 +198,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       if (ocrData.warning && !ocrData.extracted_data) {
         toast({
           title: 'Файл загружен',
-          description: ocrData.warning,
+          description: ocrData.warning as string,
           variant: 'destructive',
         });
         setFormData(prev => ({ ...prev, ...updates }));
@@ -181,28 +206,28 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       }
 
       if (extracted.amount) {
-        const cleaned = extracted.amount.toString().replace(/\s/g, '').replace(',', '.');
+        const cleaned = (extracted.amount as string | number).toString().replace(/\s/g, '').replace(',', '.');
         updates.amount = cleaned;
       }
 
       if (extracted.invoice_number) {
-        updates.invoice_number = extracted.invoice_number;
+        updates.invoice_number = extracted.invoice_number as string;
       }
 
       if (extracted.invoice_date) {
-        updates.invoice_date = extracted.invoice_date;
+        updates.invoice_date = extracted.invoice_date as string;
       }
 
-      if (extracted.description) updates.description = extracted.description;
-      if (extracted.service_id) updates.service_id = extracted.service_id.toString();
-      if (extracted.category_id) updates.category_id = extracted.category_id.toString();
-      if (extracted.department_id) updates.department_id = extracted.department_id.toString();
+      if (extracted.description) updates.description = extracted.description as string;
+      if (extracted.service_id) updates.service_id = (extracted.service_id as number).toString();
+      if (extracted.category_id) updates.category_id = (extracted.category_id as number).toString();
+      if (extracted.department_id) updates.department_id = (extracted.department_id as number).toString();
       if (extracted.legal_entity_id) {
-        updates.legal_entity_id = extracted.legal_entity_id.toString();
+        updates.legal_entity_id = (extracted.legal_entity_id as number).toString();
       }
 
       if (extracted.contractor_id) {
-        updates.contractor_id = extracted.contractor_id.toString();
+        updates.contractor_id = (extracted.contractor_id as number).toString();
       } else if (extracted.contractor_name) {
         try {
           const res = await fetch(`${FUNC2URL['main']}?endpoint=contractors`, {
