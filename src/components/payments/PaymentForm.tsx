@@ -76,6 +76,7 @@ interface PaymentFormProps {
   handleSubmit: (e: React.FormEvent) => void;
   invoicePreview: string | null;
   isProcessingInvoice: boolean;
+  isUploadingInvoice?: boolean;
   handleFileSelect: (file: File | null) => void;
   handleExtractData: () => void;
   fileName?: string;
@@ -97,6 +98,7 @@ const PaymentForm = ({
   handleSubmit,
   invoicePreview,
   isProcessingInvoice,
+  isUploadingInvoice,
   handleFileSelect,
   handleExtractData,
   fileName,
@@ -194,6 +196,7 @@ const PaymentForm = ({
                 onFileSelect={handleFileSelect}
                 onExtractData={handleExtractData}
                 isProcessing={isProcessingInvoice}
+                isUploading={isUploadingInvoice}
                 previewUrl={invoicePreview}
                 fileName={fileName}
                 fileType={fileType}

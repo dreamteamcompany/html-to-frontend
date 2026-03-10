@@ -22,6 +22,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [invoicePreview, setInvoicePreview] = useState<string | null>(null);
   const [isProcessingInvoice, setIsProcessingInvoice] = useState(false);
+  const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
   const [formData, setFormData] = useState<Record<string, string | undefined>>({
     category_id: '',
     description: '',
@@ -81,6 +82,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     });
 
     // Загружаем файл через backend (base64) — без CORS-проблем presigned PUT
+    setIsUploadingInvoice(true);
     try {
       const fileBase64 = await new Promise<string>((resolve) => {
         const reader = new FileReader();
@@ -98,6 +100,8 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       }
     } catch (err) {
       console.error('Direct upload failed:', err);
+    } finally {
+      setIsUploadingInvoice(false);
     }
     
     // Запускаем OCR для автозаполнения полей (не критично если упадёт)
@@ -409,6 +413,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     invoiceFile,
     invoicePreview,
     isProcessingInvoice,
+    isUploadingInvoice,
     handleFileSelect,
     handleExtractData,
     fileName: invoiceFile?.name,

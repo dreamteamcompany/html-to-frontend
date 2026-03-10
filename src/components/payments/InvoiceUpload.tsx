@@ -7,13 +7,14 @@ interface InvoiceUploadProps {
   onFileSelect: (file: File | null) => void;
   onExtractData: () => void;
   isProcessing: boolean;
+  isUploading?: boolean;
   previewUrl: string | null;
   fileName?: string;
   fileType?: string;
   existingFileUrl?: string;
 }
 
-const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, fileName, fileType, existingFileUrl }: InvoiceUploadProps) => {
+const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading, previewUrl, fileName, fileType, existingFileUrl }: InvoiceUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [replacing, setReplacing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -75,11 +76,12 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, 
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={hasFile ? undefined : handleClick}
+        onClick={hasFile || isUploading ? undefined : handleClick}
         className={`
           border-2 border-dashed rounded-lg p-8 text-center
           transition-colors duration-200
-          ${hasFile ? 'bg-muted/20 border-muted-foreground/25' : 'cursor-pointer border-muted-foreground/25 hover:border-primary/50'}
+          ${hasFile || isUploading ? 'bg-muted/20 border-muted-foreground/25' : 'cursor-pointer border-muted-foreground/25 hover:border-primary/50'}
+          ${isUploading ? 'border-primary/40 bg-primary/5' : ''}
           ${isDragging ? 'border-primary bg-primary/5' : ''}
         `}
       >
@@ -161,6 +163,18 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, 
                 <Icon name="RefreshCw" size={14} className="mr-1" />
                 Заменить файл
               </Button>
+            </div>
+          </div>
+        ) : isUploading ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-center">
+              <div className="relative">
+                <Icon name="Loader2" size={48} className="animate-spin text-primary mx-auto" />
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-primary">Загружаю файл...</p>
+              <p className="text-xs text-muted-foreground mt-1">Сохраняю документ в хранилище</p>
             </div>
           </div>
         ) : (

@@ -45,6 +45,7 @@ const MyPaymentsTab = () => {
     handleSubmit,
     invoicePreview,
     isProcessingInvoice,
+    isUploadingInvoice,
     handleFileSelect,
     handleExtractData,
     fileName,
@@ -188,6 +189,7 @@ const MyPaymentsTab = () => {
           handleSubmit={handleSubmit}
           invoicePreview={invoicePreview}
           isProcessingInvoice={isProcessingInvoice}
+          isUploadingInvoice={isUploadingInvoice}
           handleFileSelect={handleFileSelect}
           handleExtractData={handleExtractData}
           fileName={fileName}
