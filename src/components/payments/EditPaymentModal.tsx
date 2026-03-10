@@ -112,23 +112,22 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
 
     setIsUploadingFile(true);
     try {
-      const presignedRes = await fetch(FUNC2URL['upload-presigned-url'], {
+      const fileBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+
+      const uploadRes = await fetch(FUNC2URL['upload-presigned-url'], {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
-        body: JSON.stringify({ file_name: file.name, file_type: file.type }),
+        body: JSON.stringify({ file_name: file.name, file_type: file.type, file_data: fileBase64 }),
       });
 
-      if (!presignedRes.ok) throw new Error('Не удалось получить URL для загрузки');
+      if (!uploadRes.ok) throw new Error('Не удалось загрузить файл');
 
-      const { presigned_url, file_url } = await presignedRes.json();
-
-      const uploadRes = await fetch(presigned_url, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
-
-      if (!uploadRes.ok) throw new Error('Ошибка при загрузке файла');
+      const { file_url } = await uploadRes.json();
+      if (!file_url) throw new Error('Сервер не вернул URL файла');
 
       setFormData(prev => ({ ...prev, invoice_file_url: file_url }));
       setUploadedFileName(file.name);

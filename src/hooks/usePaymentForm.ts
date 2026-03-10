@@ -80,17 +80,21 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       description: 'Сохраняю документ и начинаю распознавание...',
     });
 
-    // Сначала загружаем файл напрямую в S3 — чтобы URL был сохранён независимо от OCR
+    // Загружаем файл через backend (base64) — без CORS-проблем presigned PUT
     try {
-      const presignedRes = await fetch(FUNC2URL['upload-presigned-url'], {
+      const fileBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      const uploadRes = await fetch(FUNC2URL['upload-presigned-url'], {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
-        body: JSON.stringify({ file_name: file.name, file_type: file.type }),
+        body: JSON.stringify({ file_name: file.name, file_type: file.type, file_data: fileBase64 }),
       });
-      if (presignedRes.ok) {
-        const { presigned_url, file_url } = await presignedRes.json();
-        await fetch(presigned_url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
-        setFormData(prev => ({ ...prev, invoice_file_url: file_url }));
+      if (uploadRes.ok) {
+        const { file_url } = await uploadRes.json();
+        if (file_url) setFormData(prev => ({ ...prev, invoice_file_url: file_url }));
       }
     } catch (err) {
       console.error('Direct upload failed:', err);

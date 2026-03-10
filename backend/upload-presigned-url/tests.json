@@ -1,23 +1,23 @@
 {
   "tests": [
     {
-      "name": "Generate presigned URL for image",
+      "name": "Upload file via base64",
       "method": "POST",
       "path": "/",
       "body": {
         "file_name": "test_image.jpg",
-        "file_type": "image/jpeg"
+        "file_type": "image/jpeg",
+        "file_data": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k="
       },
       "expectedStatus": 200,
       "expectedBody": {
-        "presigned_url": "string",
         "file_url": "string",
         "file_key": "string"
       },
       "bodyMatcher": "partial"
     },
     {
-      "name": "Generate presigned URL for PDF",
+      "name": "Get presigned URL without file_data",
       "method": "POST",
       "path": "/",
       "body": {
@@ -27,8 +27,7 @@
       "expectedStatus": 200,
       "expectedBody": {
         "presigned_url": "string",
-        "file_url": "string",
-        "file_key": "string"
+        "file_url": "string"
       },
       "bodyMatcher": "partial"
     },
