@@ -2,88 +2,21 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
 import Icon from '@/components/ui/icon';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import SearchableSelect from '@/components/ui/searchable-select';
 import { useAuth } from '@/contexts/AuthContext';
 import FUNC2URL from '@/../backend/func2url.json';
-
-interface Payment {
-  id: number;
-  category_id: number;
-  category_name: string;
-  category_icon: string;
-  description: string;
-  amount: number;
-  payment_date: string;
-  legal_entity_id?: number;
-  legal_entity_name?: string;
-  status?: string;
-  service_id?: number;
-  service_name?: string;
-  contractor_id?: number;
-  contractor_name?: string;
-  department_id?: number;
-  department_name?: string;
-  invoice_number?: string;
-  invoice_date?: string;
-  invoice_file_url?: string;
-  documents?: Array<{
-    id: number;
-    payment_id: number;
-    file_name: string;
-    file_url: string;
-    document_type: string;
-    uploaded_at: string;
-  }>;
-  custom_fields?: Array<{
-    id: number;
-    name: string;
-    field_type: string;
-    value: string;
-  }>;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  icon: string;
-}
-
-interface LegalEntity {
-  id: number;
-  name: string;
-}
-
-interface Contractor {
-  id: number;
-  name: string;
-}
-
-interface Department {
-  id: number;
-  name: string;
-}
-
-interface Service {
-  id: number;
-  name: string;
-  description: string;
-  category_id?: number;
-}
-
-interface CustomField {
-  id: number;
-  name: string;
-  field_type: string;
-  options: string;
-}
-
-interface EditPaymentModalProps {
-  payment: Payment | null;
-  onClose: () => void;
-  onSuccess: () => void;
-}
+import {
+  EditPayment,
+  EditPaymentModalProps,
+  Category,
+  LegalEntity,
+  Contractor,
+  Department,
+  Service,
+  CustomFieldDef,
+  PaymentDocument,
+} from './editPaymentTypes';
+import EditPaymentFields from './EditPaymentFields';
+import EditPaymentDocuments from './EditPaymentDocuments';
 
 const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps) => {
   const { token } = useAuth();
@@ -105,7 +38,7 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [customFields, setCustomFields] = useState<CustomFieldDef[]>([]);
   const [loading, setLoading] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -252,7 +185,7 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
 
   if (!payment) return null;
 
-  const existingDocs = payment.documents && payment.documents.length > 0
+  const existingDocs: PaymentDocument[] = payment.documents && payment.documents.length > 0
     ? payment.documents
     : payment.invoice_file_url
       ? [{
@@ -283,219 +216,29 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="service_id">Сервис *</Label>
-              <SearchableSelect
-                options={services.map(s => ({ value: s.id.toString(), label: s.name }))}
-                value={formData.service_id || ''}
-                onChange={(value) => {
-                  const service = services.find(s => s.id.toString() === value);
-                  setFormData(prev => ({
-                    ...prev,
-                    service_id: value,
-                    category_id: service?.category_id?.toString() || prev.category_id,
-                  }));
-                }}
-                placeholder="Выберите сервис"
-              />
-            </div>
+          <EditPaymentFields
+            formData={formData}
+            setFormData={setFormData}
+            categories={categories}
+            legalEntities={legalEntities}
+            contractors={contractors}
+            departments={departments}
+            services={services}
+            customFields={customFields}
+          />
 
-            <div className="space-y-2">
-              <Label htmlFor="category_id">Категория *</Label>
-              <SearchableSelect
-                options={categories.map(c => ({ value: c.id.toString(), label: c.name }))}
-                value={formData.category_id || ''}
-                onChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
-                placeholder="Выберите категорию"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="legal_entity_id">Юридическое лицо</Label>
-              <SearchableSelect
-                options={legalEntities.map(le => ({ value: le.id.toString(), label: le.name }))}
-                value={formData.legal_entity_id || ''}
-                onChange={(value) => setFormData(prev => ({ ...prev, legal_entity_id: value }))}
-                placeholder="Выберите юр. лицо"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contractor_id">Контрагент</Label>
-              <SearchableSelect
-                options={contractors.map(c => ({ value: c.id.toString(), label: c.name }))}
-                value={formData.contractor_id || ''}
-                onChange={(value) => setFormData(prev => ({ ...prev, contractor_id: value }))}
-                placeholder="Выберите контрагента"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="department_id">Отдел-заказчик</Label>
-              <SearchableSelect
-                options={departments.map(d => ({ value: d.id.toString(), label: d.name }))}
-                value={formData.department_id || ''}
-                onChange={(value) => setFormData(prev => ({ ...prev, department_id: value }))}
-                placeholder="Выберите отдел"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="amount">Сумма (₽) *</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                value={formData.amount || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                placeholder="0.00"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="invoice_number">Номер счёта</Label>
-              <Input
-                id="invoice_number"
-                value={formData.invoice_number || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, invoice_number: e.target.value }))}
-                placeholder="Введите номер"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="invoice_date">Дата счёта</Label>
-              <Input
-                id="invoice_date"
-                type="date"
-                value={formData.invoice_date || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, invoice_date: e.target.value }))}
-              />
-            </div>
-
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="payment_date">Дата платежа *</Label>
-              <Input
-                id="payment_date"
-                type="date"
-                value={formData.payment_date || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, payment_date: e.target.value }))}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Описание (назначение платежа) *</Label>
-            <Input
-              id="description"
-              value={formData.description || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Введите описание"
-              required
-            />
-          </div>
-
-          {/* Документы */}
-          <div className="space-y-3">
-            <Label>Документы (счёт)</Label>
-
-            {/* Существующие документы */}
-            {existingDocs.length > 0 && (
-              <div className="rounded-lg border border-white/10 divide-y divide-white/5 overflow-hidden">
-                {existingDocs.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between gap-2 px-3 py-2.5 bg-primary/5">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
-                      <span className="text-sm font-medium truncate">{doc.file_name}</span>
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <a
-                        href={doc.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline"
-                      >
-                        <Icon name="Eye" size={13} />
-                        Открыть
-                      </a>
-                      <a
-                        href={doc.file_url}
-                        download
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        <Icon name="Download" size={13} />
-                        Скачать
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Новый загруженный файл (если отличается от уже существующих) */}
-            {currentFileUrl && uploadedFileName && (
-              <div className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-green-500/30 bg-green-500/5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Icon name="CheckCircle" size={16} className="text-green-400 flex-shrink-0" />
-                  <span className="text-sm font-medium truncate text-green-300">{displayFileName}</span>
-                  <span className="text-xs text-green-400/70">новый</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData(prev => ({ ...prev, invoice_file_url: payment.invoice_file_url || '' }));
-                    setUploadedFileName(null);
-                  }}
-                  className="text-xs text-muted-foreground hover:text-red-400 transition-colors flex-shrink-0"
-                >
-                  <Icon name="X" size={14} />
-                </button>
-              </div>
-            )}
-
-            {/* Кнопка загрузки */}
-            <label className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-white/20 hover:border-primary/50 cursor-pointer transition-colors ${isUploadingFile ? 'opacity-50 pointer-events-none' : ''}`}>
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={handleFileChange}
-                className="hidden"
-                disabled={isUploadingFile}
-              />
-              {isUploadingFile ? (
-                <>
-                  <Icon name="Loader2" size={16} className="animate-spin text-primary" />
-                  <span className="text-sm text-muted-foreground">Загрузка файла...</span>
-                </>
-              ) : (
-                <>
-                  <Icon name="Paperclip" size={16} className="text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {existingDocs.length > 0 ? 'Заменить документ' : 'Прикрепить документ'} (PDF, JPG, PNG)
-                  </span>
-                </>
-              )}
-            </label>
-          </div>
-
-          {customFields.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="font-medium text-sm text-muted-foreground">Дополнительные поля</h3>
-              {customFields.map((field) => (
-                <div key={field.id} className="space-y-2">
-                  <Label htmlFor={`custom_field_${field.id}`}>{field.name}</Label>
-                  <Input
-                    id={`custom_field_${field.id}`}
-                    value={formData[`custom_field_${field.id}`] || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, [`custom_field_${field.id}`]: e.target.value }))}
-                    placeholder={`Введите ${field.name.toLowerCase()}`}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          <EditPaymentDocuments
+            existingDocs={existingDocs}
+            currentFileUrl={currentFileUrl}
+            uploadedFileName={uploadedFileName}
+            displayFileName={displayFileName}
+            isUploadingFile={isUploadingFile}
+            onFileChange={handleFileChange}
+            onCancelNewFile={() => {
+              setFormData(prev => ({ ...prev, invoice_file_url: payment.invoice_file_url || '' }));
+              setUploadedFileName(null);
+            }}
+          />
 
           <div className="flex gap-3 pt-4">
             <button
