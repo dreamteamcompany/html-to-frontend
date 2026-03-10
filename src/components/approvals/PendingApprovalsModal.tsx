@@ -158,7 +158,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
       <div className="bg-card border border-white/10 rounded-xl w-full max-w-[1400px] h-[95vh] sm:h-[90vh] flex flex-col">
         <div className="bg-card border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold">Детали заявки #{payment.id}</h2>
+          <h2 className="text-lg sm:text-xl font-semibold">Детали платежа #{payment.id}</h2>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-white transition-colors"
