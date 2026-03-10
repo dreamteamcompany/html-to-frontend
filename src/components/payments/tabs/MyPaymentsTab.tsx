@@ -49,6 +49,7 @@ const MyPaymentsTab = () => {
     handleExtractData,
     fileName,
     fileType,
+    invoiceFileUrl,
   } = usePaymentForm(customFields, handlePaymentSaved, loadContractors, loadLegalEntities);
 
   const handleApprove = async (paymentId: number) => {
@@ -191,6 +192,7 @@ const MyPaymentsTab = () => {
           handleExtractData={handleExtractData}
           fileName={fileName}
           fileType={fileType}
+          invoiceFileUrl={invoiceFileUrl}
         />
 
         <CashPaymentForm

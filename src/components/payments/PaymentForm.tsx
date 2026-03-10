@@ -80,6 +80,7 @@ interface PaymentFormProps {
   handleExtractData: () => void;
   fileName?: string;
   fileType?: string;
+  invoiceFileUrl?: string;
 }
 
 const PaymentForm = ({
@@ -100,6 +101,7 @@ const PaymentForm = ({
   handleExtractData,
   fileName,
   fileType,
+  invoiceFileUrl,
 }: PaymentFormProps) => {
   const { hasPermission } = useAuth();
 
@@ -195,6 +197,7 @@ const PaymentForm = ({
                 previewUrl={invoicePreview}
                 fileName={fileName}
                 fileType={fileType}
+                existingFileUrl={!invoicePreview ? invoiceFileUrl : undefined}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

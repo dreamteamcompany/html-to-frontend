@@ -58,7 +58,8 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     if (!file) {
       setInvoiceFile(null);
       setInvoicePreview(null);
-      setFormData(prev => ({ ...prev, invoice_file_url: '' }));
+      // НЕ сбрасываем invoice_file_url — файл уже загружен в S3
+      // Пользователь может выбрать новый файл, который перезапишет URL
       return;
     }
 
@@ -408,5 +409,6 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
     handleExtractData,
     fileName: invoiceFile?.name,
     fileType: invoiceFile?.type,
+    invoiceFileUrl: formData.invoice_file_url || '',
   };
 };

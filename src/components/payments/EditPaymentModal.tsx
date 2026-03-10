@@ -5,6 +5,8 @@ import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SearchableSelect from '@/components/ui/searchable-select';
+import { useAuth } from '@/contexts/AuthContext';
+import FUNC2URL from '@/../backend/func2url.json';
 
 interface Payment {
   id: number;
@@ -26,6 +28,14 @@ interface Payment {
   invoice_number?: string;
   invoice_date?: string;
   invoice_file_url?: string;
+  documents?: Array<{
+    id: number;
+    payment_id: number;
+    file_name: string;
+    file_url: string;
+    document_type: string;
+    uploaded_at: string;
+  }>;
   custom_fields?: Array<{
     id: number;
     name: string;
@@ -76,6 +86,7 @@ interface EditPaymentModalProps {
 }
 
 const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps) => {
+  const { token } = useAuth();
   const [formData, setFormData] = useState<Record<string, string | undefined>>({
     category_id: '',
     description: '',
@@ -96,6 +107,8 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
   const [services, setServices] = useState<Service[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
   useEffect(() => {
     if (payment) {
@@ -106,7 +119,7 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
 
   const populateFormData = () => {
     if (!payment) return;
-    
+
     const data: Record<string, string | undefined> = {
       category_id: payment.category_id?.toString() || '',
       description: payment.description || '',
@@ -128,6 +141,7 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
     }
 
     setFormData(data);
+    setUploadedFileName(null);
   };
 
   const loadDictionaries = async () => {
@@ -156,6 +170,41 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
       setCustomFields(Array.isArray(customFieldsData) ? customFieldsData : []);
     } catch (error) {
       console.error('Failed to load dictionaries:', error);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingFile(true);
+    try {
+      const presignedRes = await fetch(FUNC2URL['upload-presigned-url'], {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+        body: JSON.stringify({ file_name: file.name, file_type: file.type }),
+      });
+
+      if (!presignedRes.ok) throw new Error('Не удалось получить URL для загрузки');
+
+      const { presigned_url, file_url } = await presignedRes.json();
+
+      const uploadRes = await fetch(presigned_url, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+
+      if (!uploadRes.ok) throw new Error('Ошибка при загрузке файла');
+
+      setFormData(prev => ({ ...prev, invoice_file_url: file_url }));
+      setUploadedFileName(file.name);
+    } catch (err) {
+      console.error('File upload failed:', err);
+      alert('Не удалось загрузить файл. Попробуйте снова.');
+    } finally {
+      setIsUploadingFile(false);
+      e.target.value = '';
     }
   };
 
@@ -202,6 +251,23 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
   };
 
   if (!payment) return null;
+
+  const existingDocs = payment.documents && payment.documents.length > 0
+    ? payment.documents
+    : payment.invoice_file_url
+      ? [{
+          id: 0,
+          payment_id: payment.id,
+          file_name: payment.invoice_file_url.split('/').pop()?.split('_').slice(2).join('_') || 'Счёт',
+          file_url: payment.invoice_file_url,
+          document_type: 'invoice',
+          uploaded_at: '',
+        }]
+      : [];
+
+  const currentFileUrl = formData.invoice_file_url;
+  const displayFileName = uploadedFileName
+    || (currentFileUrl ? currentFileUrl.split('/').pop()?.split('_').slice(2).join('_') || currentFileUrl.split('/').pop() : null);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -276,7 +342,7 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Сумма *</Label>
+              <Label htmlFor="amount">Сумма (₽) *</Label>
               <Input
                 id="amount"
                 type="number"
@@ -331,6 +397,89 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
             />
           </div>
 
+          {/* Документы */}
+          <div className="space-y-3">
+            <Label>Документы (счёт)</Label>
+
+            {/* Существующие документы */}
+            {existingDocs.length > 0 && (
+              <div className="rounded-lg border border-white/10 divide-y divide-white/5 overflow-hidden">
+                {existingDocs.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between gap-2 px-3 py-2.5 bg-primary/5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
+                      <span className="text-sm font-medium truncate">{doc.file_name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <a
+                        href={doc.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        <Icon name="Eye" size={13} />
+                        Открыть
+                      </a>
+                      <a
+                        href={doc.file_url}
+                        download
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        <Icon name="Download" size={13} />
+                        Скачать
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Новый загруженный файл (если отличается от уже существующих) */}
+            {currentFileUrl && uploadedFileName && (
+              <div className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-green-500/30 bg-green-500/5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon name="CheckCircle" size={16} className="text-green-400 flex-shrink-0" />
+                  <span className="text-sm font-medium truncate text-green-300">{displayFileName}</span>
+                  <span className="text-xs text-green-400/70">новый</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, invoice_file_url: payment.invoice_file_url || '' }));
+                    setUploadedFileName(null);
+                  }}
+                  className="text-xs text-muted-foreground hover:text-red-400 transition-colors flex-shrink-0"
+                >
+                  <Icon name="X" size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Кнопка загрузки */}
+            <label className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-white/20 hover:border-primary/50 cursor-pointer transition-colors ${isUploadingFile ? 'opacity-50 pointer-events-none' : ''}`}>
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={handleFileChange}
+                className="hidden"
+                disabled={isUploadingFile}
+              />
+              {isUploadingFile ? (
+                <>
+                  <Icon name="Loader2" size={16} className="animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Загрузка файла...</span>
+                </>
+              ) : (
+                <>
+                  <Icon name="Paperclip" size={16} className="text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {existingDocs.length > 0 ? 'Заменить документ' : 'Прикрепить документ'} (PDF, JPG, PNG)
+                  </span>
+                </>
+              )}
+            </label>
+          </div>
+
           {customFields.length > 0 && (
             <div className="space-y-4">
               <h3 className="font-medium text-sm text-muted-foreground">Дополнительные поля</h3>
@@ -359,8 +508,8 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium transition-colors disabled:opacity-50"
-              disabled={loading}
+              className="flex-1 px-4 py-3 rounded-lg bg-primary text-white hover:bg-primary/90 font-medium transition-colors disabled:opacity-50"
+              disabled={loading || isUploadingFile}
             >
               {loading ? 'Сохранение...' : 'Сохранить изменения'}
             </button>

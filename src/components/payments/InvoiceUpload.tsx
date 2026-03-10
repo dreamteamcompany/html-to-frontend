@@ -1,19 +1,21 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Label } from '@/components/ui/label';
 
 interface InvoiceUploadProps {
-  onFileSelect: (file: File) => void;
+  onFileSelect: (file: File | null) => void;
   onExtractData: () => void;
   isProcessing: boolean;
   previewUrl: string | null;
   fileName?: string;
   fileType?: string;
+  existingFileUrl?: string;
 }
 
-const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, fileName, fileType }: InvoiceUploadProps) => {
+const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, fileName, fileType, existingFileUrl }: InvoiceUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [replacing, setReplacing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getFileIcon = (type?: string) => {
@@ -21,12 +23,6 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, 
     if (type.startsWith('image/')) return 'Image';
     if (type === 'application/pdf') return 'FileText';
     return 'File';
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -41,7 +37,7 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const files = e.dataTransfer.files;
     if (files && files[0]) {
       const file = files[0];
@@ -62,20 +58,29 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, 
     fileInputRef.current?.click();
   };
 
+  useEffect(() => {
+    if (previewUrl && replacing) setReplacing(false);
+  }, [previewUrl, replacing]);
+
+  const hasFile = !!previewUrl || (!!existingFileUrl && !replacing);
+  const displayName = fileName
+    || (existingFileUrl ? existingFileUrl.split('/').pop()?.split('_').slice(2).join('_') || existingFileUrl.split('/').pop() : undefined)
+    || 'Файл загружен';
+
   return (
     <div className="space-y-4">
       <Label>Загрузка счёта</Label>
-      
+
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={handleClick}
+        onClick={hasFile ? undefined : handleClick}
         className={`
-          border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+          border-2 border-dashed rounded-lg p-8 text-center
           transition-colors duration-200
-          ${isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'}
-          ${previewUrl ? 'bg-muted/20' : ''}
+          ${hasFile ? 'bg-muted/20 border-muted-foreground/25' : 'cursor-pointer border-muted-foreground/25 hover:border-primary/50'}
+          ${isDragging ? 'border-primary bg-primary/5' : ''}
         `}
       >
         <input
@@ -85,59 +90,76 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, 
           onChange={handleFileChange}
           className="hidden"
         />
-        
-        {previewUrl ? (
+
+        {hasFile ? (
           <div className="space-y-4">
-            {/* Информация о файле */}
             <div className="flex items-center gap-3 p-3 bg-background rounded-lg border">
               <div className="flex-shrink-0">
                 <Icon name={getFileIcon(fileType)} size={32} className="text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{fileName || 'Файл загружен'}</p>
+                <p className="text-sm font-medium truncate">{displayName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {fileType === 'application/pdf' ? 'PDF документ' : 
+                  {fileType === 'application/pdf' ? 'PDF документ' :
                    fileType?.startsWith('image/') ? 'Изображение' : 'Документ'}
                 </p>
               </div>
-            </div>
-
-            {/* Превью */}
-            <div className="max-w-full mx-auto">
-              {previewUrl.endsWith('.pdf') ? (
-                <div className="flex flex-col items-center justify-center gap-4 p-8 bg-muted/30 rounded-lg border-2 border-dashed">
-                  <Icon name="FileText" size={64} className="text-muted-foreground" />
-                  <div className="text-center">
-                    <p className="text-sm font-medium">PDF документ</p>
-                    <p className="text-xs text-muted-foreground mt-1">{fileName}</p>
-                  </div>
-                </div>
-              ) : (
-                <img 
-                  src={previewUrl} 
-                  alt="Preview" 
-                  className="max-h-64 w-full object-contain mx-auto rounded-lg border shadow-sm"
-                />
+              {existingFileUrl && !previewUrl && (
+                <a
+                  href={existingFileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-primary hover:underline flex-shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Icon name="Eye" size={14} />
+                  Открыть
+                </a>
               )}
             </div>
+
+            {previewUrl && (
+              <div className="max-w-full mx-auto">
+                {previewUrl.endsWith('.pdf') ? (
+                  <div className="flex flex-col items-center justify-center gap-4 p-8 bg-muted/30 rounded-lg border-2 border-dashed">
+                    <Icon name="FileText" size={64} className="text-muted-foreground" />
+                    <div className="text-center">
+                      <p className="text-sm font-medium">PDF документ</p>
+                      <p className="text-xs text-muted-foreground mt-1">{displayName}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="max-h-64 w-full object-contain mx-auto rounded-lg border shadow-sm"
+                  />
+                )}
+              </div>
+            )}
+
             {isProcessing && (
               <div className="flex items-center justify-center gap-2 text-primary">
                 <Icon name="Loader2" size={16} className="animate-spin" />
                 <span className="text-sm font-medium">Автоматическое распознавание данных...</span>
               </div>
             )}
+
             <div className="flex gap-2 justify-center">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onFileSelect(null!);
+                  setReplacing(true);
+                  onFileSelect(null);
+                  fileInputRef.current?.click();
                 }}
                 disabled={isProcessing}
               >
-                <Icon name="X" size={16} className="mr-2" />
-                Удалить файл
+                <Icon name="RefreshCw" size={14} className="mr-1" />
+                Заменить файл
               </Button>
             </div>
           </div>
@@ -153,7 +175,7 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, previewUrl, 
           </div>
         )}
       </div>
-      
+
       <p className="text-xs text-muted-foreground">
         <Icon name="Sparkles" size={12} className="inline mr-1" />
         Загрузите счёт — система автоматически распознает и заполнит все поля
