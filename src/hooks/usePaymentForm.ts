@@ -185,15 +185,10 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       }
 
       ocrData = await ocrResponse.json();
-      const fileUrl = (ocrData.file_url as string) || '';
       const extracted = (ocrData.extracted_data as Record<string, unknown>) || {};
       console.log('GPT result:', { extracted, gpt_raw: ocrData.gpt_raw, warning: ocrData.warning });
 
       const updates: Record<string, string | undefined> = {};
-
-      if (fileUrl) {
-        updates.invoice_file_url = fileUrl;
-      }
 
       if (ocrData.warning && !ocrData.extracted_data) {
         toast({

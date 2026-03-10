@@ -44,7 +44,7 @@ def handler(event: dict, context) -> dict:
             
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             unique_file_name = f"{timestamp}_{file_name}"
-            file_key = f'works/{unique_file_name}'
+            file_key = f'invoices/{unique_file_name}'
             
             presigned_url = s3.generate_presigned_url(
                 'put_object',
