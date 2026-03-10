@@ -1,6 +1,6 @@
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import PaymentComments from './PaymentComments';
 import PaymentAuditLog from './PaymentAuditLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
+import FUNC2URL from '@/../backend/func2url.json';
 
 interface CustomField {
   id: number;
