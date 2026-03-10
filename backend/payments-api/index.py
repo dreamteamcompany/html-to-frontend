@@ -207,6 +207,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
             payment_ids = [row['id'] for row in rows]
             custom_fields_map = {}
+            documents_map = {}
             if payment_ids:
                 ids_placeholder = ','.join(['%s'] * len(payment_ids))
                 cur.execute(f"""
@@ -219,6 +220,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     cf = dict(cf_row)
                     pid = cf.pop('payment_id')
                     custom_fields_map.setdefault(pid, []).append(cf)
+                cur.execute(f"""
+                    SELECT id, payment_id, file_name, file_url, document_type, uploaded_at
+                    FROM {SCHEMA}.payment_documents
+                    WHERE payment_id IN ({ids_placeholder})
+                    ORDER BY uploaded_at ASC
+                """, tuple(payment_ids))
+                for doc_row in cur.fetchall():
+                    doc = dict(doc_row)
+                    pid = doc['payment_id']
+                    if doc.get('uploaded_at'):
+                        doc['uploaded_at'] = doc['uploaded_at'].isoformat()
+                    documents_map.setdefault(pid, []).append(doc)
 
             for row in rows:
                 payment = dict(row)
@@ -240,6 +253,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     payment['invoice_file_uploaded_at'] = payment['invoice_file_uploaded_at'].isoformat()
                 
                 payment['custom_fields'] = custom_fields_map.get(payment['id'], [])
+                payment['documents'] = documents_map.get(payment['id'], [])
                 payments.append(payment)
             
             cur.close()
@@ -292,6 +306,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         f"INSERT INTO {SCHEMA}.custom_field_values (payment_id, custom_field_id, value) VALUES (%s, %s, %s)",
                         (payment_id, field_id, str(field_value))
                     )
+            
+            if pay_req.invoice_file_url:
+                raw_name = pay_req.invoice_file_url.split('/')[-1]
+                parts = raw_name.split('_')
+                file_name = '_'.join(parts[2:]) if len(parts) > 2 else raw_name
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.payment_documents (payment_id, file_name, file_url, document_type, uploaded_at, uploaded_by) VALUES (%s, %s, %s, 'invoice', %s, %s)",
+                    (payment_id, file_name, pay_req.invoice_file_url, file_uploaded_at, payload['user_id'])
+                )
             
             conn.commit()
             
@@ -390,6 +413,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     cur.execute(
                         f"INSERT INTO {SCHEMA}.custom_field_values (payment_id, custom_field_id, value) VALUES (%s, %s, %s)",
                         (payment_id, field_id, str(field_value))
+                    )
+            
+            if pay_req.invoice_file_url:
+                cur.execute(
+                    f"SELECT id FROM {SCHEMA}.payment_documents WHERE payment_id = %s AND file_url = %s",
+                    (payment_id, pay_req.invoice_file_url)
+                )
+                if not cur.fetchone():
+                    raw_name = pay_req.invoice_file_url.split('/')[-1]
+                    parts = raw_name.split('_')
+                    file_name = '_'.join(parts[2:]) if len(parts) > 2 else raw_name
+                    cur.execute(
+                        f"INSERT INTO {SCHEMA}.payment_documents (payment_id, file_name, file_url, document_type, uploaded_at, uploaded_by) VALUES (%s, %s, %s, 'invoice', %s, %s)",
+                        (payment_id, file_name, pay_req.invoice_file_url, file_uploaded_at, payload['user_id'])
                     )
             
             conn.commit()

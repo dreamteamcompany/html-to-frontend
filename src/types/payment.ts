@@ -6,6 +6,15 @@ export interface CustomField {
   options?: string;
 }
 
+export interface PaymentDocument {
+  id: number;
+  payment_id: number;
+  file_name: string;
+  file_url: string;
+  document_type: string;
+  uploaded_at: string;
+}
+
 export interface Payment {
   id: number;
   category_id: number;
@@ -36,5 +45,6 @@ export interface Payment {
   rejection_comment?: string;
   rejected_at?: string;
   custom_fields?: CustomField[];
-  [key: string]: string | number | boolean | undefined | CustomField[] | null;
+  documents?: PaymentDocument[];
+  [key: string]: string | number | boolean | undefined | CustomField[] | PaymentDocument[] | null;
 }

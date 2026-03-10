@@ -17,6 +17,15 @@ interface CustomField {
   value: string;
 }
 
+interface PaymentDocument {
+  id: number;
+  payment_id: number;
+  file_name: string;
+  file_url: string;
+  document_type: string;
+  uploaded_at: string;
+}
+
 interface Payment {
   id: number;
   category_id: number;
@@ -43,6 +52,7 @@ interface Payment {
   created_at?: string;
   submitted_at?: string;
   custom_fields?: CustomField[];
+  documents?: PaymentDocument[];
 }
 
 interface PendingApprovalsModalProps {
@@ -212,44 +222,63 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                 </div>
               )}
 
-              {payment.invoice_file_url && (
-                <div className="rounded-lg border border-primary/30 p-3 bg-primary/5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon name="Receipt" size={14} className="text-primary" />
-                    <p className="text-sm font-medium text-primary">Счёт</p>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
-                      <span className="text-sm font-medium truncate">
-                        {payment.invoice_file_url.split('/').pop()?.split('_').slice(2).join('_') || 'Счёт'}
-                      </span>
+              {(() => {
+                const docs: PaymentDocument[] = payment.documents && payment.documents.length > 0
+                  ? payment.documents
+                  : payment.invoice_file_url
+                    ? [{
+                        id: 0,
+                        payment_id: payment.id,
+                        file_name: payment.invoice_file_url.split('/').pop()?.split('_').slice(2).join('_') || 'Счёт',
+                        file_url: payment.invoice_file_url,
+                        document_type: 'invoice',
+                        uploaded_at: payment.invoice_file_uploaded_at || payment.created_at || '',
+                      }]
+                    : [];
+                if (docs.length === 0) return null;
+                return (
+                  <div className="rounded-lg border border-primary/30 p-3 bg-primary/5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon name="Receipt" size={14} className="text-primary" />
+                      <p className="text-sm font-medium text-primary">Счёт</p>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <a
-                        href={payment.invoice_file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline"
-                      >
-                        <Icon name="Eye" size={14} />
-                        Просмотр
-                      </a>
-                      <a
-                        href={payment.invoice_file_url}
-                        download
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        <Icon name="Download" size={14} />
-                        Скачать
-                      </a>
+                    <div className="space-y-2">
+                      {docs.map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
+                            <div className="min-w-0">
+                              <span className="text-sm font-medium truncate block">{doc.file_name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ru-RU') : ''}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <a
+                              href={doc.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-primary hover:underline"
+                            >
+                              <Icon name="Eye" size={14} />
+                              Просмотр
+                            </a>
+                            <a
+                              href={doc.file_url}
+                              download
+                              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              <Icon name="Download" size={14} />
+                              Скачать
+                            </a>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Загружен: {new Date(payment.invoice_file_uploaded_at || payment.created_at || '').toLocaleDateString('ru-RU')}
-                  </p>
-                </div>
-              )}
+                );
+              })()}
 
               {payment.created_by_name && (
                 <div>
