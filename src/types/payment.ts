@@ -29,6 +29,7 @@ export interface Payment {
   invoice_number?: string;
   invoice_date?: string;
   invoice_file_url?: string;
+  invoice_file_uploaded_at?: string;
   created_at?: string;
   submitted_at?: string;
   is_planned?: boolean;

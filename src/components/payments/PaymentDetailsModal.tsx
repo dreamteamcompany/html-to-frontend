@@ -36,6 +36,7 @@ interface Payment {
   invoice_number?: string;
   invoice_date?: string;
   invoice_file_url?: string;
+  invoice_file_uploaded_at?: string;
   created_at?: string;
   submitted_at?: string;
   rejection_comment?: string;
@@ -233,13 +234,16 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
             )}
 
             {payment.invoice_file_url && (
-              <div className="rounded-lg border border-white/10 p-3 bg-primary/5">
-                <p className="text-sm text-muted-foreground mb-2">Документ</p>
+              <div className="rounded-lg border border-primary/30 p-3 bg-primary/5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon name="Receipt" size={14} className="text-primary" />
+                  <p className="text-sm font-medium text-primary">Счёт</p>
+                </div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
                     <span className="text-sm font-medium truncate">
-                      {payment.invoice_file_url.split('/').pop()?.split('_').slice(2).join('_') || 'Документ'}
+                      {payment.invoice_file_url.split('/').pop()?.split('_').slice(2).join('_') || 'Счёт'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -262,11 +266,9 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                     </a>
                   </div>
                 </div>
-                {payment.created_at && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Загружен: {new Date(payment.created_at).toLocaleDateString('ru-RU')}
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Загружен: {new Date(payment.invoice_file_uploaded_at || payment.created_at || '').toLocaleDateString('ru-RU')}
+                </p>
               </div>
             )}
 

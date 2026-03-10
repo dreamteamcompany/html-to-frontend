@@ -189,6 +189,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     p.invoice_number,
                     p.invoice_date,
                     p.invoice_file_url,
+                    p.invoice_file_uploaded_at,
                     p.payment_type,
                     p.cash_receipt_url
                 FROM {SCHEMA}.payments p
@@ -235,6 +236,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     payment['ceo_approved_at'] = payment['ceo_approved_at'].isoformat()
                 if payment['invoice_date']:
                     payment['invoice_date'] = payment['invoice_date'].isoformat()
+                if payment.get('invoice_file_uploaded_at'):
+                    payment['invoice_file_uploaded_at'] = payment['invoice_file_uploaded_at'].isoformat()
                 
                 payment['custom_fields'] = custom_fields_map.get(payment['id'], [])
                 payments.append(payment)
@@ -269,13 +272,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             category_name = category['name']
             
+            file_uploaded_at = datetime.now().isoformat() if pay_req.invoice_file_url else None
             cur.execute(
-                f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, invoice_file_url, created_by, status) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
-                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, invoice_file_url, status, created_by""",
+                f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, invoice_file_url, invoice_file_uploaded_at, created_by, status) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
+                   RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, invoice_file_url, invoice_file_uploaded_at, status, created_by""",
                 (category_name, pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
                  pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, pay_req.service_id, 
-                 pay_req.invoice_number, pay_req.invoice_date, pay_req.invoice_file_url, payload['user_id'])
+                 pay_req.invoice_number, pay_req.invoice_date, pay_req.invoice_file_url, file_uploaded_at, payload['user_id'])
             )
             row = cur.fetchone()
             payment_id = row['id']
@@ -299,6 +303,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 result['created_at'] = result['created_at'].isoformat()
             if result.get('invoice_date'):
                 result['invoice_date'] = result['invoice_date'].isoformat()
+            if result.get('invoice_file_uploaded_at'):
+                result['invoice_file_uploaded_at'] = result['invoice_file_uploaded_at'].isoformat()
             
             cur.close()
             conn.close()
@@ -354,18 +360,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             category_name = category['name']
             
+            file_uploaded_at = datetime.now().isoformat() if pay_req.invoice_file_url else None
             cur.execute(f"""
                 UPDATE {SCHEMA}.payments 
                 SET category = %s, category_id = %s, amount = %s, description = %s, 
                     payment_date = %s, legal_entity_id = %s, contractor_id = %s, 
                     department_id = %s, service_id = %s, invoice_number = %s, invoice_date = %s,
-                    invoice_file_url = COALESCE(%s, invoice_file_url)
+                    invoice_file_url = COALESCE(%s, invoice_file_url),
+                    invoice_file_uploaded_at = COALESCE(%s, invoice_file_uploaded_at)
                 WHERE id = %s
-                RETURNING id, category_id, amount, description, payment_date, created_at, status, invoice_file_url
+                RETURNING id, category_id, amount, description, payment_date, created_at, status, invoice_file_url, invoice_file_uploaded_at
             """, (category_name, pay_req.category_id, pay_req.amount, pay_req.description, 
                   pay_req.payment_date, pay_req.legal_entity_id, pay_req.contractor_id, 
                   pay_req.department_id, pay_req.service_id, pay_req.invoice_number, 
-                  pay_req.invoice_date, pay_req.invoice_file_url, payment_id))
+                  pay_req.invoice_date, pay_req.invoice_file_url, file_uploaded_at, payment_id))
             
             row = cur.fetchone()
             if not row:
@@ -392,6 +400,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 result['payment_date'] = result['payment_date'].isoformat()
             if result['created_at']:
                 result['created_at'] = result['created_at'].isoformat()
+            if result.get('invoice_file_uploaded_at'):
+                result['invoice_file_uploaded_at'] = result['invoice_file_uploaded_at'].isoformat()
             
             cur.close()
             conn.close()

@@ -115,7 +115,7 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
             p.id, p.category_id, p.amount, p.description, p.payment_date,
             p.status, p.created_at, p.created_by,
             p.legal_entity_id, p.contractor_id, p.department_id, p.service_id,
-            p.invoice_number, p.invoice_date, p.invoice_file_url, p.payment_type,
+            p.invoice_number, p.invoice_date, p.invoice_file_url, p.invoice_file_uploaded_at, p.payment_type,
             c.name as category_name,
             le.name as legal_entity_name,
             cont.name as contractor_name,
