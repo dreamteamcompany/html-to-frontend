@@ -136,9 +136,25 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
     
     payments_data = cur.fetchall()
     payments = []
+
+    payment_ids = [row['id'] for row in payments_data]
+    custom_fields_map = {}
+    if payment_ids:
+        ids_placeholder = ','.join(['%s'] * len(payment_ids))
+        cur.execute(f"""
+            SELECT cfv.payment_id, cf.id, cf.name, cf.field_type, cfv.value
+            FROM {SCHEMA}.custom_field_values cfv
+            JOIN {SCHEMA}.custom_fields cf ON cfv.custom_field_id = cf.id
+            WHERE cfv.payment_id IN ({ids_placeholder})
+        """, tuple(payment_ids))
+        for cf_row in cur.fetchall():
+            cf = dict(cf_row)
+            pid = cf.pop('payment_id')
+            custom_fields_map.setdefault(pid, []).append(cf)
     
     for payment in payments_data:
         payment_dict = dict(payment)
+        payment_dict['custom_fields'] = custom_fields_map.get(payment['id'], [])
         
         # Получаем историю утверждений
         cur.execute(f"""

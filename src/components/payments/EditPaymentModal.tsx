@@ -25,6 +25,7 @@ interface Payment {
   department_name?: string;
   invoice_number?: string;
   invoice_date?: string;
+  invoice_file_url?: string;
   custom_fields?: Array<{
     id: number;
     name: string;
@@ -86,6 +87,7 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
     department_id: '',
     invoice_number: '',
     invoice_date: '',
+    invoice_file_url: '',
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
@@ -116,6 +118,7 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
       department_id: payment.department_id?.toString() || '',
       invoice_number: payment.invoice_number || '',
       invoice_date: payment.invoice_date || '',
+      invoice_file_url: payment.invoice_file_url || '',
     };
 
     if (payment.custom_fields) {
@@ -184,6 +187,7 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
           department_id: formData.department_id ? parseInt(formData.department_id) : undefined,
           invoice_number: formData.invoice_number,
           invoice_date: formData.invoice_date,
+          invoice_file_url: formData.invoice_file_url || null,
           custom_fields: customFieldsData,
         }),
       });

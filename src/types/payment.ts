@@ -28,9 +28,12 @@ export interface Payment {
   department_id?: number;
   invoice_number?: string;
   invoice_date?: string;
+  invoice_file_url?: string;
   created_at?: string;
   submitted_at?: string;
   is_planned?: boolean;
+  rejection_comment?: string;
+  rejected_at?: string;
   custom_fields?: CustomField[];
   [key: string]: string | number | boolean | undefined | CustomField[] | null;
 }

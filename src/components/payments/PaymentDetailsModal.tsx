@@ -283,15 +283,35 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
                   <div key={field.id}>
                     <p className="text-sm text-muted-foreground mb-1">{field.name}</p>
                     {field.field_type === 'file' && field.value ? (
-                      <a 
-                        href={field.value} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="font-medium text-primary hover:underline flex items-center gap-2"
-                      >
-                        <Icon name="Download" size={16} />
-                        Скачать файл
-                      </a>
+                      <div className="rounded-lg border border-white/10 p-3 bg-primary/5">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
+                            <span className="text-sm font-medium truncate">
+                              {field.value.split('/').pop()?.split('_').slice(2).join('_') || 'Файл'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <a
+                              href={field.value}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-primary hover:underline"
+                            >
+                              <Icon name="Eye" size={14} />
+                              Просмотр
+                            </a>
+                            <a
+                              href={field.value}
+                              download
+                              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              <Icon name="Download" size={14} />
+                              Скачать
+                            </a>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       <p className="font-medium">{field.value}</p>
                     )}
