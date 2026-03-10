@@ -1986,17 +1986,29 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             if error:
                 return error
             
-            body_data = json.loads(event.get('body', '{}'))
-            field_id = body_data.get('id')
+            params = event.get('queryStringParameters', {}) or {}
+            field_id = params.get('id')
             
-            cur.execute(f"DELETE FROM {SCHEMA}.custom_fields WHERE id = %s RETURNING id", (field_id,))
-            row = cur.fetchone()
+            if not field_id:
+                body_data = json.loads(event.get('body', '{}') or '{}')
+                field_id = body_data.get('id')
             
-            if not row:
+            if not field_id:
+                return response(400, {'error': 'ID is required'})
+            
+            try:
+                field_id_int = int(field_id)
+            except (ValueError, TypeError):
+                return response(400, {'error': 'Invalid ID format'})
+            
+            cur.execute(f"SELECT id FROM {SCHEMA}.custom_fields WHERE id = %s", (field_id_int,))
+            if not cur.fetchone():
                 return response(404, {'error': 'Custom field not found'})
             
+            cur.execute(f"DELETE FROM {SCHEMA}.custom_field_values WHERE custom_field_id = %s", (field_id_int,))
+            cur.execute(f"DELETE FROM {SCHEMA}.custom_fields WHERE id = %s", (field_id_int,))
             conn.commit()
-            return response(200, {'message': 'Custom field deleted'})
+            return response(200, {'success': True})
         
         return response(405, {'error': 'Method not allowed'})
     
