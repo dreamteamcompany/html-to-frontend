@@ -59,7 +59,7 @@ const BarChart = ({ data, isMobile, isLight }: BarChartProps) => {
 
         return (
           <div
-            key={i}
+            key={item.name}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
             style={{

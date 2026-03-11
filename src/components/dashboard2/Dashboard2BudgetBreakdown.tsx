@@ -134,7 +134,7 @@ const Dashboard2BudgetBreakdown = () => {
           {categories.map((category, idx) => {
             const color = colorMap[category.name] || getColorForCategory(idx);
             return (
-            <div key={idx} style={{ 
+            <div key={category.category_id} style={{ 
               background: `linear-gradient(135deg, ${color}15 0%, ${color}08 100%)`,
               padding: '16px',
               borderRadius: '14px',
@@ -208,7 +208,7 @@ const Dashboard2BudgetBreakdown = () => {
                   border: '1px solid rgba(255, 255, 255, 0.05)'
                 }}>
                   {category.payments.map((payment, pidx) => (
-                    <div key={pidx} style={{ 
+                    <div key={`${category.category_id}-pay-${payment.service}-${pidx}`} style={{ 
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',

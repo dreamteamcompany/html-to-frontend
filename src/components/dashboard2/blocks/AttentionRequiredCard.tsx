@@ -79,8 +79,8 @@ const AttentionRequiredCard = () => {
         </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }} className="sm:gap-3">
-          {items.map((item, idx) => (
-            <div key={idx} style={{
+          {items.map((item) => (
+            <div key={item.icon} style={{
               background: 'rgba(255, 107, 107, 0.05)', padding: '10px', borderRadius: '8px',
               border: '1px solid rgba(255, 107, 107, 0.2)',
               display: 'flex', alignItems: 'center', gap: '10px'

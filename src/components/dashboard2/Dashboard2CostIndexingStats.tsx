@@ -62,8 +62,8 @@ const Dashboard2CostIndexingStats = ({
         gap: '12px',
         marginBottom: '16px'
       }} className="sm:grid-cols-2 lg:grid-cols-4 sm:gap-4 sm:mb-6">
-        {stats.map((stat, idx) => (
-          <div key={idx} style={{ 
+        {stats.map((stat) => (
+          <div key={stat.label} style={{ 
             background: `linear-gradient(135deg, ${stat.bgGradient} 0%, ${stat.bgGradient}80 100%)`,
             padding: '12px',
             borderRadius: '10px',

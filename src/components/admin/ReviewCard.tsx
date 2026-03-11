@@ -30,7 +30,7 @@ const ReviewCard = ({ review, REVIEWS_API_URL, loadReviews, toast }: ReviewCardP
             <div className="flex items-center gap-4 mb-4">
               <div className="flex items-center gap-1">
                 {[...Array(review.rating)].map((_, i) => (
-                  <Icon key={i} name="Star" className="text-secondary fill-secondary" size={18} />
+                  <Icon key={`star-${i}`} name="Star" className="text-secondary fill-secondary" size={18} />
                 ))}
               </div>
               <span className={`px-3 py-1 rounded-lg text-sm font-bold ${

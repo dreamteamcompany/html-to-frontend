@@ -116,8 +116,8 @@ const CriticalAlertsCard = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }} className="sm:gap-3.5">
-            {alerts.map((alert, idx) => (
-              <div key={idx} style={{
+            {alerts.map((alert) => (
+              <div key={`${alert.icon}-${alert.text}`} style={{
                 background: alert.urgent ? 'rgba(255, 107, 107, 0.1)' : `rgba(255,255,255,0.04)`,
                 padding: '10px', borderRadius: '10px',
                 border: `1px solid ${alert.urgent ? 'rgba(255, 107, 107, 0.3)' : 'rgba(255,255,255,0.08)'}`,

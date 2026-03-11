@@ -64,8 +64,8 @@ const ExpensesGrowthChart = ({ monthlyData }: ExpensesGrowthChartProps) => {
               
               return (
                 <>
-                  {gridLines.map((line, idx) => (
-                    <g key={idx}>
+                  {gridLines.map((line) => (
+                    <g key={`grid-${line.value}`}>
                       <line
                         x1="70"
                         y1={line.y}

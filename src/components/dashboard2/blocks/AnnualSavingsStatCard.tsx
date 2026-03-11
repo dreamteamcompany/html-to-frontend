@@ -93,7 +93,7 @@ const AnnualSavingsStatCard = () => {
             <div className="flex flex-col gap-1.5">
               {savingsData.top_departments.slice(0, 3).map((dept, index) => (
                 <div
-                  key={index}
+                  key={dept.department_name}
                   className={`flex justify-between items-center ${dashboardTypography.cardSmall}`}
                 >
                   <div className="flex items-center gap-1.5 text-foreground min-w-0 flex-1">

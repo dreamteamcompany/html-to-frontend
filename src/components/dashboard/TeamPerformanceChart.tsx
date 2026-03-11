@@ -49,9 +49,9 @@ const TeamPerformanceChart = ({ teamData }: TeamPerformanceChartProps) => {
             </defs>
 
             {/* Центральные круги */}
-            {[100, 80, 60, 40, 20].map((radius, idx) => (
+            {[100, 80, 60, 40, 20].map((radius) => (
               <circle
-                key={idx}
+                key={`circle-${radius}`}
                 cx="200"
                 cy="160"
                 r={radius}
@@ -63,14 +63,14 @@ const TeamPerformanceChart = ({ teamData }: TeamPerformanceChartProps) => {
             ))}
 
             {/* Лучи из центра */}
-            {teamData.map((_, index) => {
+            {teamData.map((member, index) => {
               const angle = (index / teamData.length) * Math.PI * 2 - Math.PI / 2;
               const x = 200 + Math.cos(angle) * 100;
               const y = 160 + Math.sin(angle) * 100;
               
               return (
                 <line
-                  key={`ray-${index}`}
+                  key={`ray-${member.name}`}
                   x1="200"
                   y1="160"
                   x2={x}
@@ -108,7 +108,7 @@ const TeamPerformanceChart = ({ teamData }: TeamPerformanceChartProps) => {
                       filter="url(#glow2)"
                     />
                     {points.map((point, index) => (
-                      <g key={`point-${index}`}>
+                      <g key={`point-${teamData[index]?.name ?? index}`}>
                         <circle
                           cx={point.x}
                           cy={point.y}
@@ -137,7 +137,7 @@ const TeamPerformanceChart = ({ teamData }: TeamPerformanceChartProps) => {
               const y = 160 + Math.sin(angle) * labelRadius;
               
               return (
-                <g key={`label-${index}`}>
+                <g key={`label-${member.name}`}>
                   <text
                     x={x}
                     y={y}
