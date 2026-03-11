@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import Logo from '@/components/ui/Logo';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
+import BiometricSettingsPanel from '@/components/auth/BiometricSettingsPanel';
 
 interface PaymentsSidebarProps {
   menuOpen: boolean;
@@ -267,6 +268,7 @@ const PaymentsSidebar = ({
             <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
           </div>
         </div>
+        <BiometricSettingsPanel />
         <Button
           variant="outline"
           size="sm"

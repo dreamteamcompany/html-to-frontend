@@ -30,6 +30,12 @@
       "method": "GET",
       "path": "/?endpoint=ticket-dictionaries-api",
       "expectedStatus": 401
+    },
+    {
+      "name": "WebAuthn Credentials Unauthorized",
+      "method": "GET",
+      "path": "/?endpoint=webauthn-credentials",
+      "expectedStatus": 401
     }
   ]
 }

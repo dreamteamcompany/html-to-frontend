@@ -9,10 +9,15 @@ from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from pydantic import BaseModel, Field
-# Deploy version: v2.5.2 - fixed approvers endpoint handlers
+import hashlib
+import hmac
+import base64
+import secrets
+import struct
+# Deploy version: v2.6.0 - WebAuthn/Passkeys support
 
 SCHEMA = 't_p61788166_html_to_frontend'
-VERSION = '2.5.2'
+VERSION = '2.6.0'
 
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
@@ -359,6 +364,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif endpoint == 'me':
             return handle_me(event, conn)
         
+        # WebAuthn endpoints
+        elif endpoint == 'webauthn-register-challenge':
+            return handle_webauthn_register_challenge(event, conn)
+        elif endpoint == 'webauthn-register':
+            return handle_webauthn_register(event, conn)
+        elif endpoint == 'webauthn-auth-challenge':
+            return handle_webauthn_auth_challenge(event, conn)
+        elif endpoint == 'webauthn-auth':
+            return handle_webauthn_auth(event, conn)
+        elif endpoint == 'webauthn-credentials':
+            return handle_webauthn_credentials(method, event, conn)
+        
         # User management
         elif endpoint == 'users':
             return handle_users(method, event, conn)
@@ -546,6 +563,280 @@ def handle_me(event: Dict[str, Any], conn) -> Dict[str, Any]:
         return response(404, {'error': 'Пользователь не найден'})
     
     return response(200, user_data)
+
+# ============================================================
+# WebAuthn / Passkeys handlers
+# ============================================================
+
+RP_ID = 'procurement.poehali.dev'
+RP_NAME = 'Procurement System'
+ORIGIN = 'https://procurement.poehali.dev'
+
+def _webauthn_b64_decode(data: str) -> bytes:
+    pad = 4 - len(data) % 4
+    if pad != 4:
+        data += '=' * pad
+    return base64.urlsafe_b64decode(data)
+
+def _webauthn_b64_encode(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b'=').decode('ascii')
+
+def _clean_expired_challenges(conn):
+    cur = conn.cursor()
+    cur.execute(f"DELETE FROM {SCHEMA}.webauthn_challenges WHERE expires_at < CURRENT_TIMESTAMP")
+    conn.commit()
+    cur.close()
+
+def handle_webauthn_register_challenge(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Генерация challenge для регистрации Passkey"""
+    token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+    if not token:
+        return response(401, {'error': 'Требуется авторизация'})
+    payload = verify_jwt_token(token)
+    if not payload:
+        return response(401, {'error': 'Недействительный токен'})
+    
+    user = get_user_with_permissions(conn, payload['user_id'])
+    if not user:
+        return response(404, {'error': 'Пользователь не найден'})
+    
+    _clean_expired_challenges(conn)
+    
+    challenge_bytes = secrets.token_bytes(32)
+    challenge_b64 = _webauthn_b64_encode(challenge_bytes)
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(f"""
+        INSERT INTO {SCHEMA}.webauthn_challenges (challenge, user_id, challenge_type)
+        VALUES (%s, %s, 'registration')
+        RETURNING id
+    """, (challenge_b64, payload['user_id']))
+    conn.commit()
+    cur.close()
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(f"SELECT credential_id FROM {SCHEMA}.webauthn_credentials WHERE user_id = %s", (payload['user_id'],))
+    existing = [row['credential_id'] for row in cur.fetchall()]
+    cur.close()
+    
+    return response(200, {
+        'challenge': challenge_b64,
+        'rp': {'id': RP_ID, 'name': RP_NAME},
+        'user': {
+            'id': _webauthn_b64_encode(str(payload['user_id']).encode()),
+            'name': user['username'],
+            'displayName': user['full_name']
+        },
+        'pubKeyCredParams': [
+            {'type': 'public-key', 'alg': -7},
+            {'type': 'public-key', 'alg': -257}
+        ],
+        'timeout': 60000,
+        'attestation': 'none',
+        'authenticatorSelection': {
+            'authenticatorAttachment': 'platform',
+            'userVerification': 'required',
+            'residentKey': 'preferred'
+        },
+        'excludeCredentials': [{'type': 'public-key', 'id': cid} for cid in existing]
+    })
+
+def handle_webauthn_register(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Завершение регистрации Passkey — сохранение публичного ключа"""
+    token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+    if not token:
+        return response(401, {'error': 'Требуется авторизация'})
+    payload = verify_jwt_token(token)
+    if not payload:
+        return response(401, {'error': 'Недействительный токен'})
+    
+    body = json.loads(event.get('body', '{}'))
+    credential_id = body.get('id', '')
+    attestation_b64 = body.get('response', {}).get('attestationObject', '')
+    client_data_b64 = body.get('response', {}).get('clientDataJSON', '')
+    device_name = body.get('device_name', 'Устройство')
+    
+    if not credential_id or not attestation_b64 or not client_data_b64:
+        return response(400, {'error': 'Неполные данные регистрации'})
+    
+    try:
+        client_data = json.loads(_webauthn_b64_decode(client_data_b64).decode('utf-8'))
+        challenge_from_client = client_data.get('challenge', '')
+    except Exception:
+        return response(400, {'error': 'Неверный clientDataJSON'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(f"""
+        SELECT id FROM {SCHEMA}.webauthn_challenges
+        WHERE challenge = %s AND user_id = %s AND challenge_type = 'registration'
+        AND expires_at > CURRENT_TIMESTAMP
+    """, (challenge_from_client, payload['user_id']))
+    ch = cur.fetchone()
+    cur.close()
+    
+    if not ch:
+        return response(400, {'error': 'Challenge не найден или истёк'})
+    
+    cur = conn.cursor()
+    cur.execute(f"DELETE FROM {SCHEMA}.webauthn_challenges WHERE id = %s", (ch['id'],))
+    conn.commit()
+    cur.close()
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(f"""
+        INSERT INTO {SCHEMA}.webauthn_credentials (user_id, credential_id, public_key, sign_count, device_name)
+        VALUES (%s, %s, %s, 0, %s)
+        ON CONFLICT (credential_id) DO NOTHING
+        RETURNING id
+    """, (payload['user_id'], credential_id, attestation_b64, device_name))
+    conn.commit()
+    result = cur.fetchone()
+    cur.close()
+    
+    if not result:
+        return response(409, {'error': 'Credential уже зарегистрирован'})
+    
+    return response(200, {'success': True, 'message': 'Биометрия успешно подключена'})
+
+def handle_webauthn_auth_challenge(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Генерация challenge для входа через Passkey"""
+    _clean_expired_challenges(conn)
+    
+    challenge_bytes = secrets.token_bytes(32)
+    challenge_b64 = _webauthn_b64_encode(challenge_bytes)
+    
+    cur = conn.cursor()
+    cur.execute(f"""
+        INSERT INTO {SCHEMA}.webauthn_challenges (challenge, user_id, challenge_type)
+        VALUES (%s, NULL, 'authentication')
+    """, (challenge_b64,))
+    conn.commit()
+    cur.close()
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(f"SELECT credential_id FROM {SCHEMA}.webauthn_credentials LIMIT 100")
+    all_creds = [{'type': 'public-key', 'id': row['credential_id']} for row in cur.fetchall()]
+    cur.close()
+    
+    return response(200, {
+        'challenge': challenge_b64,
+        'rpId': RP_ID,
+        'timeout': 60000,
+        'userVerification': 'required',
+        'allowCredentials': all_creds
+    })
+
+def handle_webauthn_auth(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Аутентификация через Passkey — выдача JWT без пароля"""
+    body = json.loads(event.get('body', '{}'))
+    credential_id = body.get('id', '')
+    auth_response = body.get('response', {})
+    client_data_b64 = auth_response.get('clientDataJSON', '')
+    
+    if not credential_id or not client_data_b64:
+        return response(400, {'error': 'Неполные данные аутентификации'})
+    
+    try:
+        client_data = json.loads(_webauthn_b64_decode(client_data_b64).decode('utf-8'))
+        challenge_from_client = client_data.get('challenge', '')
+    except Exception:
+        return response(400, {'error': 'Неверный clientDataJSON'})
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(f"""
+        SELECT id FROM {SCHEMA}.webauthn_challenges
+        WHERE challenge = %s AND challenge_type = 'authentication'
+        AND expires_at > CURRENT_TIMESTAMP
+    """, (challenge_from_client,))
+    ch = cur.fetchone()
+    cur.close()
+    
+    if not ch:
+        return response(400, {'error': 'Challenge не найден или истёк'})
+    
+    cur = conn.cursor()
+    cur.execute(f"DELETE FROM {SCHEMA}.webauthn_challenges WHERE id = %s", (ch['id'],))
+    conn.commit()
+    cur.close()
+    
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(f"""
+        SELECT wc.user_id, wc.sign_count, u.email, u.is_active
+        FROM {SCHEMA}.webauthn_credentials wc
+        JOIN {SCHEMA}.users u ON u.id = wc.user_id
+        WHERE wc.credential_id = %s
+    """, (credential_id,))
+    cred = cur.fetchone()
+    cur.close()
+    
+    if not cred:
+        return response(401, {'error': 'Биометрия не зарегистрирована'})
+    
+    if not cred['is_active']:
+        return response(403, {'error': 'Пользователь деактивирован'})
+    
+    cur = conn.cursor()
+    cur.execute(f"""
+        UPDATE {SCHEMA}.webauthn_credentials SET last_used_at = CURRENT_TIMESTAMP
+        WHERE credential_id = %s
+    """, (credential_id,))
+    cur.execute(f"""
+        UPDATE {SCHEMA}.users SET last_login = CURRENT_TIMESTAMP WHERE id = %s
+    """, (cred['user_id'],))
+    conn.commit()
+    cur.close()
+    
+    jwt_token = create_jwt_token(cred['user_id'], cred['email'])
+    user_data = get_user_with_permissions(conn, cred['user_id'])
+    
+    return response(200, {
+        'token': jwt_token,
+        'user': user_data
+    })
+
+def handle_webauthn_credentials(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Список и удаление зарегистрированных Passkeys пользователя"""
+    token = event.get('headers', {}).get('X-Auth-Token') or event.get('headers', {}).get('x-auth-token')
+    if not token:
+        return response(401, {'error': 'Требуется авторизация'})
+    payload = verify_jwt_token(token)
+    if not payload:
+        return response(401, {'error': 'Недействительный токен'})
+    
+    if method == 'GET':
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(f"""
+            SELECT id, credential_id, device_name, created_at, last_used_at
+            FROM {SCHEMA}.webauthn_credentials
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+        """, (payload['user_id'],))
+        creds = [dict(r) for r in cur.fetchall()]
+        cur.close()
+        return response(200, {'credentials': creds})
+    
+    elif method == 'DELETE':
+        params = event.get('queryStringParameters') or {}
+        cred_id = params.get('id')
+        if not cred_id:
+            return response(400, {'error': 'ID credentials обязателен'})
+        
+        cur = conn.cursor()
+        cur.execute(f"""
+            DELETE FROM {SCHEMA}.webauthn_credentials
+            WHERE id = %s AND user_id = %s
+        """, (int(cred_id), payload['user_id']))
+        deleted = cur.rowcount
+        conn.commit()
+        cur.close()
+        
+        if deleted == 0:
+            return response(404, {'error': 'Credential не найден'})
+        
+        return response(200, {'success': True, 'message': 'Биометрия отключена'})
+    
+    return response(405, {'error': 'Метод не поддерживается'})
+
 
 def handle_approvers(event: Dict[str, Any], conn) -> Dict[str, Any]:
     """Получить список пользователей для выбора согласующих - доступно всем авторизованным"""

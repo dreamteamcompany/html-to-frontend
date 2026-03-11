@@ -32,6 +32,8 @@ interface AuthContextType {
   hasPermission: (resource: string, action: string) => boolean;
   checkAuth: () => Promise<void>;
   refreshToken: () => Promise<void>;
+  setToken: (token: string) => void;
+  setUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -250,7 +252,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, hasPermission, checkAuth, refreshToken }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, hasPermission, checkAuth, refreshToken, setToken, setUser }}>
       {children}
     </AuthContext.Provider>
   );
