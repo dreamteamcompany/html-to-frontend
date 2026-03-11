@@ -102,6 +102,7 @@ class SavingRequest(BaseModel):
     currency: str = Field(default='RUB')
     employee_id: int = Field(..., gt=0)
     saving_reason_id: Optional[int] = None
+    customer_department_id: Optional[int] = None
 
 class SavingReasonRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -2933,15 +2934,17 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             cur.execute(f"""
                 SELECT 
                     s.id, s.service_id, s.description, s.amount, s.frequency, 
-                    s.currency, s.employee_id, s.saving_reason_id, s.created_at,
+                    s.currency, s.employee_id, s.saving_reason_id, s.customer_department_id, s.created_at,
                     srv.name as service_name,
                     u.full_name as employee_name,
                     sr.name as saving_reason_name,
-                    sr.icon as saving_reason_icon
+                    sr.icon as saving_reason_icon,
+                    cd.name as customer_department_name
                 FROM {SCHEMA}.savings s
                 LEFT JOIN {SCHEMA}.services srv ON s.service_id = srv.id
                 LEFT JOIN {SCHEMA}.users u ON s.employee_id = u.id
                 LEFT JOIN {SCHEMA}.saving_reasons sr ON s.saving_reason_id = sr.id
+                LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
                 ORDER BY s.created_at DESC
             """)
             
@@ -2958,11 +2961,12 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             cur.execute(
                 f"""INSERT INTO {SCHEMA}.savings 
-                   (service_id, description, amount, frequency, currency, employee_id, saving_reason_id) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s) 
-                   RETURNING id, service_id, description, amount, frequency, currency, employee_id, saving_reason_id, created_at""",
+                   (service_id, description, amount, frequency, currency, employee_id, saving_reason_id, customer_department_id) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s) 
+                   RETURNING id, service_id, description, amount, frequency, currency, employee_id, saving_reason_id, customer_department_id, created_at""",
                 (saving_req.service_id, saving_req.description, saving_req.amount, 
-                 saving_req.frequency, saving_req.currency, saving_req.employee_id, saving_req.saving_reason_id)
+                 saving_req.frequency, saving_req.currency, saving_req.employee_id, saving_req.saving_reason_id,
+                 saving_req.customer_department_id)
             )
             
             row = cur.fetchone()
@@ -4752,34 +4756,50 @@ def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: 
     start_date = qp.get('startDate')
     end_date = qp.get('endDate')
 
-    date_filter = ''
-    if start_date and end_date:
-        date_filter = f"WHERE created_at >= '{start_date}' AND created_at <= '{end_date}'"
-
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     try:
-        cur.execute(f"""
-            SELECT
-                COUNT(*) as count,
-                COALESCE(SUM(amount), 0) as total_amount
-            FROM {SCHEMA}.savings
-            {date_filter}
-        """)
+        if start_date and end_date:
+            cur.execute(f"""
+                SELECT
+                    COUNT(*) as count,
+                    COALESCE(SUM(amount), 0) as total_amount
+                FROM {SCHEMA}.savings
+                WHERE created_at >= %s AND created_at <= %s
+            """, (start_date, end_date))
+        else:
+            cur.execute(f"""
+                SELECT
+                    COUNT(*) as count,
+                    COALESCE(SUM(amount), 0) as total_amount
+                FROM {SCHEMA}.savings
+            """)
 
         stats = cur.fetchone()
 
-        cur.execute(f"""
-            SELECT
-                cd.name as department_name,
-                SUM(s.amount) as total_saved
-            FROM {SCHEMA}.savings s
-            LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
-            {date_filter}
-            GROUP BY cd.name
-            ORDER BY total_saved DESC
-            LIMIT 3
-        """)
+        if start_date and end_date:
+            cur.execute(f"""
+                SELECT
+                    cd.name as department_name,
+                    SUM(s.amount) as total_saved
+                FROM {SCHEMA}.savings s
+                LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
+                WHERE s.created_at >= %s AND s.created_at <= %s
+                GROUP BY cd.name
+                ORDER BY total_saved DESC
+                LIMIT 3
+            """, (start_date, end_date))
+        else:
+            cur.execute(f"""
+                SELECT
+                    cd.name as department_name,
+                    SUM(s.amount) as total_saved
+                FROM {SCHEMA}.savings s
+                LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
+                GROUP BY cd.name
+                ORDER BY total_saved DESC
+                LIMIT 3
+            """)
 
         top_departments = [dict(row) for row in cur.fetchall()]
 

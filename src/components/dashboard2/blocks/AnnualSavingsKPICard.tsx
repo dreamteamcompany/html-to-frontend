@@ -1,39 +1,47 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
+import { usePeriod } from '@/contexts/PeriodContext';
 
 interface SavingsData {
-  total_annual: number;
   total_amount: number;
   count: number;
 }
 
 const AnnualSavingsKPICard = () => {
   const { token } = useAuth();
+  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [data, setData] = useState<SavingsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!token) return;
-    const load = async () => {
-      try {
-        const res = await fetch(`${API_ENDPOINTS.main}?endpoint=savings-dashboard`, {
-          headers: { 'X-Auth-Token': token },
-        });
-        if (res.ok) {
-          const json = await res.json();
-          setData(json);
-        }
-      } catch {
-        // silent
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    try {
+      const { from, to } = getDateRange();
+      const params = new URLSearchParams({
+        startDate: from.toISOString(),
+        endDate: to.toISOString(),
+      });
+      const res = await fetch(`${API_ENDPOINTS.main}?endpoint=savings-dashboard&${params}`, {
+        headers: { 'X-Auth-Token': token },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
       }
-    };
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
+  }, [token, period, dateFrom, dateTo]);
+
+  useEffect(() => {
     load();
-  }, [token]);
+  }, [load]);
 
   const fmt = (v: number) => {
     if (v >= 1_000_000) return `₽${(v / 1_000_000).toFixed(1)}М`;
@@ -41,9 +49,10 @@ const AnnualSavingsKPICard = () => {
     return `₽${Math.round(v)}`;
   };
 
-  const annual = data?.total_annual ?? 0;
+  const total = data?.total_amount ?? 0;
+  const count = data?.count ?? 0;
   const goal = 1_000_000;
-  const progress = Math.min(Math.round((annual / goal) * 100), 100);
+  const progress = Math.min(Math.round((total / goal) * 100), 100);
 
   return (
     <Card style={{
@@ -61,17 +70,17 @@ const AnnualSavingsKPICard = () => {
         </div>
 
         <h3 className="text-[15px] font-bold text-foreground mb-3 sm:text-lg sm:mb-4">
-          Годовая Экономия
+          Экономия за период
         </h3>
 
         <div style={{
           color: '#01b574', fontSize: '32px', fontWeight: '900', marginBottom: '8px'
         }} className="sm:text-[42px] sm:mb-3">
-          {loading ? '—' : fmt(annual)}
+          {loading ? '—' : fmt(total)}
         </div>
 
         <div className="text-muted-foreground text-xs mb-[14px] sm:text-sm sm:mb-5">
-          {loading ? 'Загрузка...' : data ? `${data.count} ${data.count === 1 ? 'запись' : data.count < 5 ? 'записи' : 'записей'} в реестре экономии` : 'Нет данных'}
+          {loading ? 'Загрузка...' : `${count} ${count === 1 ? 'запись' : count < 5 ? 'записи' : 'записей'} в реестре экономии`}
         </div>
 
         <div style={{
