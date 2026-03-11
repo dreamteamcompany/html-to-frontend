@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,15 @@ import { API_ENDPOINTS } from '@/config/api';
 interface Notification {
   id: number;
   ticket_id: number | null;
+  payment_id: number | null;
   type: string;
   message: string;
   is_read: boolean;
   created_at: string;
   ticket_title?: string;
 }
+
+const POLL_INTERVAL = 15_000;
 
 const NotificationBell = () => {
   const { token, user } = useAuth();
@@ -26,78 +29,73 @@ const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const prevUnreadRef = useRef(0);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     if (!token || !user) return;
-
     try {
-      const response = await fetch(
-        `${API_ENDPOINTS.main}?endpoint=notifications`,
-        {
-          headers: {
-            'X-Auth-Token': token,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
+      const res = await fetch(`${API_ENDPOINTS.main}?endpoint=notifications`, {
+        headers: { 'X-Auth-Token': token },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newCount: number = data.unread_count || 0;
         setNotifications(data.notifications || []);
-        setUnreadCount(data.unread_count || 0);
+        setUnreadCount(newCount);
+
+        if (newCount > prevUnreadRef.current && prevUnreadRef.current >= 0) {
+          const latest = (data.notifications || []).find((n: Notification) => !n.is_read);
+          if (latest && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification('Новый счёт на согласование', {
+              body: latest.message,
+              icon: '/favicon.ico',
+            });
+          }
+        }
+        prevUnreadRef.current = newCount;
       }
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
+    } catch {
+      // silent
     }
-  };
+  }, [token, user]);
 
   useEffect(() => {
     loadNotifications();
-    const interval = setInterval(loadNotifications, 30000);
+    const interval = setInterval(loadNotifications, POLL_INTERVAL);
     return () => clearInterval(interval);
-  }, [token, user]);
+  }, [loadNotifications]);
 
-  const handleMarkAsRead = async (notificationId: number) => {
-    if (!token || !user) return;
-
+  const handleMarkAsRead = useCallback(async (notificationId: number) => {
+    if (!token) return;
     try {
-      await fetch(
-        `${API_ENDPOINTS.main}?endpoint=notifications`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Auth-Token': token,
-          },
-          body: JSON.stringify({ notification_ids: [notificationId] }),
-        }
+      await fetch(`${API_ENDPOINTS.main}?endpoint=notifications`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
+        body: JSON.stringify({ notification_ids: [notificationId] }),
+      });
+      setNotifications(prev =>
+        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
-
-      loadNotifications();
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch {
+      // silent
     }
-  };
+  }, [token]);
 
   const handleMarkAllAsRead = async () => {
-    if (!token || !user || unreadCount === 0) return;
-
+    if (!token || unreadCount === 0) return;
     setLoading(true);
     try {
-      await fetch(
-        `${API_ENDPOINTS.main}?endpoint=notifications`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Auth-Token': token,
-          },
-          body: JSON.stringify({ mark_all: true }),
-        }
-      );
-
-      await loadNotifications();
-    } catch (error) {
-      console.error('Failed to mark all as read:', error);
+      await fetch(`${API_ENDPOINTS.main}?endpoint=notifications`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
+        body: JSON.stringify({ mark_all: true }),
+      });
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+      prevUnreadRef.current = 0;
+    } catch {
+      // silent
     } finally {
       setLoading(false);
     }
@@ -107,9 +105,12 @@ const NotificationBell = () => {
     if (!notification.is_read) {
       handleMarkAsRead(notification.id);
     }
-    
-    // Removed ticket navigation as tickets pages are deleted
+
     setOpen(false);
+
+    if (notification.payment_id) {
+      navigate(`/payments?payment_id=${notification.payment_id}`);
+    }
   };
 
   const getNotificationIcon = (type: string) => {
@@ -176,19 +177,20 @@ const NotificationBell = () => {
                     onClick={() => handleNotificationClick(notification)}
                     className={`w-full p-4 text-left hover:bg-accent transition-colors ${
                       !notification.is_read ? 'bg-blue-50 dark:bg-blue-950/20' : ''
-                    }`}
+                    } ${notification.payment_id ? 'cursor-pointer' : ''}`}
                   >
                     <div className="flex gap-3">
-                      <div className={`mt-1 ${icon.color}`}>
+                      <div className={`mt-1 flex-shrink-0 ${icon.color}`}>
                         <Icon name={icon.name} size={20} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm ${!notification.is_read ? 'font-semibold' : ''}`}>
+                        <p className={`text-sm leading-snug ${!notification.is_read ? 'font-semibold' : ''}`}>
                           {notification.message}
                         </p>
-                        {notification.ticket_title && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {notification.ticket_title}
+                        {notification.payment_id && (
+                          <p className="text-xs text-primary mt-1 flex items-center gap-1">
+                            <Icon name="ExternalLink" size={11} />
+                            Открыть платёж
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground mt-1">

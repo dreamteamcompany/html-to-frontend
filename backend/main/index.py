@@ -4817,6 +4817,7 @@ def handle_notifications(method: str, event: Dict[str, Any], conn, payload: Dict
                 SELECT 
                     n.id,
                     n.ticket_id,
+                    n.payment_id,
                     n.type,
                     n.message,
                     n.is_read,

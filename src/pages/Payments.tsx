@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,6 +9,7 @@ import ApprovedPaymentsTab from '@/components/payments/tabs/ApprovedPaymentsTab'
 import RejectedPaymentsTab from '@/components/payments/tabs/RejectedPaymentsTab';
 import { useAuth } from '@/contexts/AuthContext';
 import { AllPaymentsCacheProvider, useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
+import { useSearchParams } from 'react-router-dom';
 
 const PaymentsInner = () => {
   const { user } = useAuth();
@@ -17,6 +18,20 @@ const PaymentsInner = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState(isCEO ? 'pending' : 'my');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [openPaymentId, setOpenPaymentId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const pid = searchParams.get('payment_id');
+    if (pid) {
+      const id = parseInt(pid, 10);
+      if (!isNaN(id)) {
+        setOpenPaymentId(id);
+        setActiveTab('pending');
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, []);
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
 
@@ -158,7 +173,7 @@ const PaymentsInner = () => {
             )}
 
             <TabsContent value="pending" className="mt-0">
-              <PendingApprovalsTab />
+              <PendingApprovalsTab openPaymentId={openPaymentId} onOpenPaymentIdHandled={() => setOpenPaymentId(null)} />
             </TabsContent>
 
             <TabsContent value="approved" className="mt-0">

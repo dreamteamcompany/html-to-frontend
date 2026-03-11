@@ -217,6 +217,95 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
     cur.close()
     return response(200, {'payments': payments})
 
+def create_approval_notifications(conn, payment_id: int, action: str, actor_id: int):
+    """Создаёт уведомления согласующим при изменении статуса платежа"""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute(f"""
+        SELECT
+            p.id, p.description, p.amount, p.payment_date, p.service_id, p.created_by,
+            s.name AS service_name, s.intermediate_approver_id, s.final_approver_id,
+            u.full_name AS creator_name
+        FROM {SCHEMA}.payments p
+        LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+        LEFT JOIN {SCHEMA}.users u ON p.created_by = u.id
+        WHERE p.id = %s
+    """, (payment_id,))
+    payment = cur.fetchone()
+    cur.close()
+
+    if not payment:
+        return
+
+    service_name = payment['service_name'] or payment['description'] or f'Платёж #{payment_id}'
+    amount = payment['amount']
+    payment_date = payment['payment_date']
+    creator_name = payment['creator_name'] or 'Пользователь'
+
+    try:
+        amount_fmt = f"{float(amount):,.0f}".replace(',', ' ') + ' ₽'
+    except Exception:
+        amount_fmt = str(amount) + ' ₽'
+
+    if payment_date:
+        try:
+            if hasattr(payment_date, 'strftime'):
+                date_fmt = payment_date.strftime('%d.%m.%Y')
+            else:
+                date_fmt = str(payment_date)[:10]
+        except Exception:
+            date_fmt = str(payment_date)[:10]
+    else:
+        date_fmt = '—'
+
+    recipients = []
+
+    if action == 'submit':
+        if payment['final_approver_id'] and payment['final_approver_id'] != actor_id:
+            recipients.append(payment['final_approver_id'])
+        if payment['intermediate_approver_id'] and payment['intermediate_approver_id'] != actor_id:
+            recipients.append(payment['intermediate_approver_id'])
+        message = (
+            f"Новый счёт на согласование: {service_name} — {amount_fmt} "
+            f"(дата: {date_fmt}), от {creator_name}"
+        )
+        notif_type = 'approval_request'
+
+    elif action == 'approve':
+        if payment['created_by'] and payment['created_by'] != actor_id:
+            recipients.append(payment['created_by'])
+        message = (
+            f"Счёт согласован: {service_name} — {amount_fmt} (дата: {date_fmt})"
+        )
+        notif_type = 'approval_approved'
+
+    elif action == 'reject':
+        if payment['created_by'] and payment['created_by'] != actor_id:
+            recipients.append(payment['created_by'])
+        message = (
+            f"Счёт отклонён: {service_name} — {amount_fmt} (дата: {date_fmt})"
+        )
+        notif_type = 'approval_rejected'
+
+    else:
+        return
+
+    if not recipients:
+        return
+
+    seen = set()
+    unique_recipients = [r for r in recipients if not (r in seen or seen.add(r))]
+
+    cur = conn.cursor()
+    for recipient_id in unique_recipients:
+        cur.execute(f"""
+            INSERT INTO {SCHEMA}.notifications (user_id, payment_id, type, message, is_read)
+            VALUES (%s, %s, %s, %s, false)
+        """, (recipient_id, payment_id, notif_type, message))
+    conn.commit()
+    cur.close()
+
+
 def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[str, Any]:
     """Утверждение или отклонение платежа"""
     try:
@@ -341,7 +430,13 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     
     conn.commit()
     cur.close()
-    
+
+    if approval_action.action in ('submit', 'approve', 'reject'):
+        try:
+            create_approval_notifications(conn, approval_action.payment_id, approval_action.action, user_id)
+        except Exception as e:
+            print(f"[WARN] Notification creation failed: {e}")
+
     return response(200, {'message': 'Действие выполнено успешно', 'new_status': new_status})
 
 def handle_approvers_list(event: Dict[str, Any], conn) -> Dict[str, Any]:

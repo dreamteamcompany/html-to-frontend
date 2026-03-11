@@ -19,7 +19,12 @@ import { usePendingApprovalsData } from '@/hooks/usePendingApprovalsData';
 import { usePendingApprovalsFilters } from '@/hooks/usePendingApprovalsFilters';
 import { Payment } from '@/types/payment';
 
-const PendingApprovalsTab = () => {
+interface PendingApprovalsTabProps {
+  openPaymentId?: number | null;
+  onOpenPaymentIdHandled?: () => void;
+}
+
+const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingApprovalsTabProps = {}) => {
   const { requestNotificationPermission } = usePendingApprovals();
   const { payments, loading, approveProgress, handleApprove, handleApproveAll, handleReject } = usePendingApprovalsData();
   const [approvingAll, setApprovingAll] = useState(false);
@@ -51,6 +56,16 @@ const PendingApprovalsTab = () => {
       setNotificationPermission(Notification.permission);
     }
   }, []);
+
+  useEffect(() => {
+    if (openPaymentId && payments.length > 0) {
+      const found = payments.find(p => p.id === openPaymentId);
+      if (found) {
+        setSelectedPayment(found);
+        onOpenPaymentIdHandled?.();
+      }
+    }
+  }, [openPaymentId, payments]);
 
   const getStatusBadge = (status?: string) => {
     switch (status) {
