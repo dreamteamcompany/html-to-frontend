@@ -1,9 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DictionaryProvider } from "@/contexts/DictionaryContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
@@ -34,6 +34,20 @@ import Monitoring from "./pages/Monitoring";
 
 import NotFound from "./pages/NotFound";
 
+const SwNavigationHandler = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === 'NAVIGATE' && event.data?.url) {
+        navigate(event.data.url);
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', handler);
+    return () => navigator.serviceWorker?.removeEventListener('message', handler);
+  }, [navigate]);
+  return null;
+};
+
 const App = () => {
   const [queryClient] = useState(() => new QueryClient());
   
@@ -47,6 +61,7 @@ const App = () => {
           <Sonner />
           <PushNotificationPrompt />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <SwNavigationHandler />
             <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute><Dashboard2 /></ProtectedRoute>} />

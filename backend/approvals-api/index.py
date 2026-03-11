@@ -2,6 +2,7 @@
 import json
 import os
 import base64
+import urllib.request
 from typing import Dict, Any
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -13,6 +14,8 @@ from pydantic import BaseModel, Field
 # Environment
 SCHEMA = 't_p61788166_html_to_frontend'
 DSN = os.environ['DATABASE_URL']
+
+PUSH_API_URL = 'https://functions.poehali.dev/cc67e884-8946-4bcd-939d-ea3c195a6598'
 
 def response(status: int, body: Any) -> Dict[str, Any]:
     """Формирует HTTP ответ"""
@@ -352,6 +355,35 @@ def create_approval_notifications(conn, payment_id: int, action: str, actor_id: 
         """, (recipient_id, payment_id, notif_type, message))
     conn.commit()
     cur.close()
+
+    # Отправляем Web Push для каждого получателя (работает когда сайт закрыт)
+    push_title = 'Новый счёт на согласование'
+    if action == 'approve':
+        push_title = 'Счёт согласован'
+    elif action == 'reject':
+        push_title = 'Счёт отклонён'
+
+    push_url = f'/payments?payment_id={payment_id}'
+
+    for recipient_id in unique_recipients:
+        try:
+            push_payload = json.dumps({
+                'user_id': recipient_id,
+                'title': push_title,
+                'body': message,
+                'url': push_url,
+                'payment_id': payment_id,
+                'tag': f'payment-{payment_id}',
+            }).encode('utf-8')
+            req = urllib.request.Request(
+                f'{PUSH_API_URL}?endpoint=send-push',
+                data=push_payload,
+                headers={'Content-Type': 'application/json'},
+                method='POST',
+            )
+            urllib.request.urlopen(req, timeout=5)
+        except Exception as e:
+            print(f'[WARN] Push notification failed for user {recipient_id}: {e}')
 
 
 def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[str, Any]:
