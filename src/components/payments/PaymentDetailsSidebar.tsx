@@ -167,7 +167,7 @@ const PaymentDetailsSidebar = ({
                 onEdit(payment);
                 onClose();
               }}
-              className="w-full px-4 py-3 rounded-lg bg-white/5 text-white hover:bg-white/10 font-medium transition-colors flex items-center justify-center gap-2"
+              className="w-full px-4 py-3 rounded-lg bg-accent text-accent-foreground hover:bg-accent/80 font-medium transition-colors flex items-center justify-center gap-2"
             >
               <Icon name="Edit" size={18} />
               Редактировать платёж
@@ -177,7 +177,7 @@ const PaymentDetailsSidebar = ({
           {(!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval && !showConfirmation && (
             <button
               onClick={() => setShowConfirmation(true)}
-              className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 hover:text-blue-200 font-medium transition-colors"
+              className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30 hover:text-blue-800 dark:hover:text-blue-200 font-medium transition-colors"
             >
               {payment.status === 'rejected' ? 'Отправить на повторное согласование' : 'Отправить на согласование'}
             </button>
@@ -191,7 +191,7 @@ const PaymentDetailsSidebar = ({
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConfirmation(false)}
-                  className="flex-1 px-4 py-3 rounded-lg bg-white/5 text-white hover:bg-white/10 font-medium transition-colors"
+                  className="flex-1 px-4 py-3 rounded-lg bg-accent text-accent-foreground hover:bg-accent/80 font-medium transition-colors"
                 >
                   Отмена
                 </button>
@@ -200,7 +200,7 @@ const PaymentDetailsSidebar = ({
                     onSubmitForApproval(payment.id);
                     onClose();
                   }}
-                  className="flex-1 px-4 py-3 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium transition-colors"
+                  className="flex-1 px-4 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30 font-medium transition-colors"
                 >
                   Отправить
                 </button>
