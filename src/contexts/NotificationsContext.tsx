@@ -43,7 +43,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   const load = useCallback(async () => {
     if (!token || !user) return;
     try {
-      const res = await fetch(`${API_ENDPOINTS.main}?endpoint=notifications`, {
+      const res = await fetch(API_ENDPOINTS.notificationsApi, {
         headers: { 'X-Auth-Token': token },
       });
       if (res.ok) {
@@ -81,7 +81,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   const markAsRead = useCallback(async (notificationId: number) => {
     if (!token) return;
     try {
-      await fetch(`${API_ENDPOINTS.main}?endpoint=notifications`, {
+      await fetch(API_ENDPOINTS.notificationsApi, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
         body: JSON.stringify({ notification_ids: [notificationId] }),
@@ -99,7 +99,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     if (!token || unreadCount === 0) return;
     setLoading(true);
     try {
-      await fetch(`${API_ENDPOINTS.main}?endpoint=notifications`, {
+      await fetch(API_ENDPOINTS.notificationsApi, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
         body: JSON.stringify({ mark_all: true }),
