@@ -352,7 +352,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if not payment_id:
                     conn.close()
                     return response(400, {'error': 'Payment ID is required'})
-                
+
+                # Проверяем ownership платежа (только создатель или администратор)
+                is_admin = is_admin_user(conn, payload['user_id'])
+                cur.execute(f'SELECT created_by, status FROM {SCHEMA}.payments WHERE id = %s', (payment_id,))
+                existing_payment = cur.fetchone()
+                if not existing_payment:
+                    cur.close()
+                    conn.close()
+                    return response(404, {'error': 'Платёж не найден'})
+                if not is_admin and existing_payment['created_by'] != payload['user_id']:
+                    cur.close()
+                    conn.close()
+                    return response(403, {'error': 'Вы можете редактировать только свои платежи'})
+
                 # Если передан только статус, обновляем только его
                 if 'status' in body and len(body) <= 2:  # payment_id/id + status
                     new_status = body.get('status')
@@ -364,7 +377,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     cur.close()
                     conn.close()
                     return response(200, {'success': True, 'payment_id': payment_id})
-                
+
                 # Полное обновление платежа
                 pay_req = PaymentRequest(**body)
             except Exception as e:
@@ -488,9 +501,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
     except Exception as e:
         import traceback
-        error_details = traceback.format_exc()
-        log(f"Error: {str(e)}")
-        log(f"Traceback: {error_details}")
-        if conn:
+        log(f"[payments-api] Error: {str(e)}")
+        log(f"[payments-api] Traceback: {traceback.format_exc()}")
+        try:
             conn.close()
-        return response(500, {'error': str(e), 'details': error_details})
+        except Exception:
+            pass
+        return response(500, {'error': 'Внутренняя ошибка сервера'})

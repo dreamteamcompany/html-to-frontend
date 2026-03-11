@@ -79,10 +79,43 @@ class ApprovalActionRequest(BaseModel):
     action: str = Field(..., pattern='^(approve|reject|submit|revoke)$')
     comment: str = Field(default='')
 
-def handle_payment_history(event: Dict[str, Any], conn, payment_id: int) -> Dict[str, Any]:
+def handle_payment_history(event: Dict[str, Any], conn, payment_id: int, user_id: int) -> Dict[str, Any]:
     """Получение истории согласования платежа"""
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    
+
+    # Проверяем права доступа к конкретному платежу:
+    # пользователь должен быть создателем, согласующим или администратором
+    cur.execute(f"""
+        SELECT
+            p.created_by,
+            s.intermediate_approver_id,
+            s.final_approver_id
+        FROM {SCHEMA}.payments p
+        LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+        WHERE p.id = %s
+    """, (payment_id,))
+    payment_row = cur.fetchone()
+    if not payment_row:
+        cur.close()
+        return response(404, {'error': 'Платёж не найден'})
+
+    # Проверяем роли пользователя
+    cur.execute(f"""
+        SELECT r.name
+        FROM {SCHEMA}.roles r
+        JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
+        WHERE ur.user_id = %s
+    """, (user_id,))
+    user_roles = {row['name'] for row in cur.fetchall()}
+    is_admin_or_ceo = bool(user_roles & {'Администратор', 'Admin', 'CEO', 'Генеральный директор'})
+
+    is_creator = payment_row['created_by'] == user_id
+    is_approver = user_id in (payment_row['intermediate_approver_id'], payment_row['final_approver_id'])
+
+    if not is_creator and not is_approver and not is_admin_or_ceo:
+        cur.close()
+        return response(403, {'error': 'Нет доступа к истории этого платежа'})
+
     cur.execute(f"""
         SELECT 
             a.id,
@@ -99,10 +132,10 @@ def handle_payment_history(event: Dict[str, Any], conn, payment_id: int) -> Dict
         WHERE a.payment_id = %s
         ORDER BY a.created_at DESC
     """, (payment_id,))
-    
+
     history = [dict(row) for row in cur.fetchall()]
     cur.close()
-    
+
     return response(200, {'history': history})
 
 def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str, Any]:
@@ -519,7 +552,7 @@ def handler(event: dict, context) -> dict:
                 query_params = event.get('queryStringParameters') or {}
                 if query_params.get('history') == 'true' and query_params.get('payment_id'):
                     payment_id = int(query_params.get('payment_id'))
-                    return handle_payment_history(event, conn, payment_id)
+                    return handle_payment_history(event, conn, payment_id, user_id)
                 return handle_approvals_list(event, conn, user_id)
             elif method == 'POST' or method == 'PUT':
                 return handle_approval_action(event, conn, user_id)
