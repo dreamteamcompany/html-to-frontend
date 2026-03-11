@@ -215,20 +215,12 @@ const MonthlyDynamicsChart = () => {
     },
   };
 
-  const titleMap: Record<string, string> = {
-    today: 'Динамика Расходов за Сегодня',
-    week: 'Динамика Расходов за Неделю',
-    month: 'Динамика Расходов по Дням',
-    year: 'Динамика Расходов по Месяцам',
-    custom: 'Динамика Расходов за Период',
-  };
-
   return (
     <>
       <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(117, 81, 233, 0.4)' }}>
         <CardContent className="p-3 sm:p-6 flex flex-col flex-1">
           <div style={{ marginBottom: '12px' }} className="sm:mb-4">
-            <h3 className={dashboardTypography.cardTitle}>{titleMap[period] || 'Динамика Расходов'}</h3>
+            <h3 className={dashboardTypography.cardTitle}>Динамика расходов</h3>
           </div>
           {loading ? (
             <div className="flex items-center justify-center flex-1 min-h-[200px]">
