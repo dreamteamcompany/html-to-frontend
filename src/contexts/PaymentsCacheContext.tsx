@@ -36,6 +36,11 @@ let globalCache: PaymentRecord[] | null = null;
 let globalCacheTime = 0;
 const CACHE_TTL_MS = 30_000;
 
+export const invalidatePaymentsCache = () => {
+  globalCache = null;
+  globalCacheTime = 0;
+};
+
 export const PaymentsCacheProvider = ({ children }: { children: ReactNode }) => {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);

@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
+import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface AllPaymentsCacheState {
   payments: Payment[];
@@ -63,6 +64,7 @@ export const AllPaymentsCacheProvider = ({ children }: { children: ReactNode }) 
 
   const refresh = useCallback(() => {
     globalCache = null;
+    invalidatePaymentsCache();
     load(true);
   }, [load]);
 

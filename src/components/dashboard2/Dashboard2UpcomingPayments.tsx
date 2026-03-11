@@ -67,9 +67,8 @@ const groupByDay = (payments: PaymentRecord[]): DayGroup[] => {
     }
 
     const total = items.reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
-    const diffDays = (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
 
-    groups.push({ dateKey, label, sublabel, payments: items, total, isToday, isTomorrow, isUrgent: diffDays <= 1 });
+    groups.push({ dateKey, label, sublabel, payments: items, total, isToday, isTomorrow, isUrgent: isToday });
   }
 
   return groups.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
@@ -105,10 +104,17 @@ const PaymentCard = ({ payment, accentColor }: { payment: PaymentRecord; accentC
           fontSize: '12px', fontWeight: 700, color: 'hsl(var(--foreground))',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
-          {payment.description || payment.contractor_name || payment.service_name || 'Платёж'}
+          {payment.description || payment.service_name || 'Платёж'}
         </div>
+        {(payment.legal_entity_name || payment.contractor_name) && (
+          <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', marginTop: '2px',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {payment.legal_entity_name || payment.contractor_name}
+          </div>
+        )}
         {(payment.category_name || payment.department_name) && (
-          <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>
+          <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', marginTop: '1px',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {payment.category_name || payment.department_name}
           </div>
         )}
@@ -178,7 +184,7 @@ const Dashboard2UpcomingPayments = () => {
   const { upcoming, weekTotal } = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const sevenDaysLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const sevenDaysLater = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000);
     sevenDaysLater.setHours(23, 59, 59, 999);
 
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
