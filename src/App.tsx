@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DictionaryProvider } from "@/contexts/DictionaryContext";
+import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PushNotificationPrompt from "@/components/notifications/PushNotificationPrompt";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -41,6 +42,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <DictionaryProvider>
+          <NotificationsProvider>
           <Toaster />
           <Sonner />
           <PushNotificationPrompt />
@@ -71,6 +73,7 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+          </NotificationsProvider>
         </DictionaryProvider>
       </AuthProvider>
     </QueryClientProvider>

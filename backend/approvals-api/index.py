@@ -265,6 +265,21 @@ def create_approval_notifications(conn, payment_id: int, action: str, actor_id: 
             recipients.append(payment['final_approver_id'])
         if payment['intermediate_approver_id'] and payment['intermediate_approver_id'] != actor_id:
             recipients.append(payment['intermediate_approver_id'])
+
+        # Фоллбэк: если у сервиса не назначены согласующие — уведомляем CEO и Администраторов
+        if not recipients:
+            cur2 = conn.cursor(cursor_factory=RealDictCursor)
+            cur2.execute(f"""
+                SELECT DISTINCT ur.user_id
+                FROM {SCHEMA}.user_roles ur
+                JOIN {SCHEMA}.roles r ON ur.role_id = r.id
+                WHERE r.name IN ('CEO', 'Администратор', 'Admin', 'Генеральный директор')
+                  AND ur.user_id != %s
+            """, (actor_id,))
+            for row in cur2.fetchall():
+                recipients.append(row['user_id'])
+            cur2.close()
+
         message = (
             f"Новый счёт на согласование: {service_name} — {amount_fmt} "
             f"(дата: {date_fmt}), от {creator_name}"

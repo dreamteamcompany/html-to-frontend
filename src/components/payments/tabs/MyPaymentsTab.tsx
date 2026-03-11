@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePaymentsData } from '@/hooks/usePaymentsData';
 import { usePaymentForm } from '@/hooks/usePaymentForm';
 import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
+import { useNotifications } from '@/contexts/NotificationsContext';
 import PaymentForm from '@/components/payments/PaymentForm';
 import CashPaymentForm from '@/components/payments/CashPaymentForm';
 import PlannedPaymentsModal from '@/components/payments/PlannedPaymentsModal';
@@ -17,6 +18,7 @@ const MyPaymentsTab = () => {
   const { toast } = useToast();
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const { refresh } = useAllPaymentsCache();
+  const { refresh: refreshNotifications } = useNotifications();
 
   const {
     payments,
@@ -114,6 +116,7 @@ const MyPaymentsTab = () => {
           description: 'Платёж отправлен на согласование',
         });
         loadPayments();
+        setTimeout(refreshNotifications, 1500);
       } else {
         const error = await response.json();
         toast({

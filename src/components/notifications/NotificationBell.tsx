@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,7 +6,7 @@ import Icon from '@/components/ui/icon';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
-import { API_ENDPOINTS } from '@/config/api';
+import { useNotifications } from '@/contexts/NotificationsContext';
 
 interface Notification {
   id: number;
@@ -20,94 +19,16 @@ interface Notification {
   ticket_title?: string;
 }
 
-const POLL_INTERVAL = 15_000;
-
 const NotificationBell = () => {
-  const { token, user } = useAuth();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const prevUnreadRef = useRef(0);
-
-  const loadNotifications = useCallback(async () => {
-    if (!token || !user) return;
-    try {
-      const res = await fetch(`${API_ENDPOINTS.main}?endpoint=notifications`, {
-        headers: { 'X-Auth-Token': token },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const newCount: number = data.unread_count || 0;
-        setNotifications(data.notifications || []);
-        setUnreadCount(newCount);
-
-        if (newCount > prevUnreadRef.current && prevUnreadRef.current >= 0) {
-          const latest = (data.notifications || []).find((n: Notification) => !n.is_read);
-          if (latest && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification('Новый счёт на согласование', {
-              body: latest.message,
-              icon: '/favicon.ico',
-            });
-          }
-        }
-        prevUnreadRef.current = newCount;
-      }
-    } catch {
-      // silent
-    }
-  }, [token, user]);
-
-  useEffect(() => {
-    loadNotifications();
-    const interval = setInterval(loadNotifications, POLL_INTERVAL);
-    return () => clearInterval(interval);
-  }, [loadNotifications]);
-
-  const handleMarkAsRead = useCallback(async (notificationId: number) => {
-    if (!token) return;
-    try {
-      await fetch(`${API_ENDPOINTS.main}?endpoint=notifications`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
-        body: JSON.stringify({ notification_ids: [notificationId] }),
-      });
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch {
-      // silent
-    }
-  }, [token]);
-
-  const handleMarkAllAsRead = async () => {
-    if (!token || unreadCount === 0) return;
-    setLoading(true);
-    try {
-      await fetch(`${API_ENDPOINTS.main}?endpoint=notifications`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
-        body: JSON.stringify({ mark_all: true }),
-      });
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-      prevUnreadRef.current = 0;
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.is_read) {
-      handleMarkAsRead(notification.id);
+      markAsRead(notification.id);
     }
-
     setOpen(false);
-
     if (notification.payment_id) {
       navigate(`/payments?payment_id=${notification.payment_id}`);
     }
@@ -153,7 +74,7 @@ const NotificationBell = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleMarkAllAsRead}
+              onClick={markAllAsRead}
               disabled={loading}
               className="text-xs"
             >
