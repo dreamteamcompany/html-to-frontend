@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { usePeriod } from '@/contexts/PeriodContext';
@@ -12,31 +12,55 @@ interface PaymentRecord {
   description?: string;
   category_name?: string;
   service_name?: string;
+  department_name?: string;
   [key: string]: unknown;
 }
+
+type GroupBy = 'services' | 'departments' | 'categories';
+
+const TABS: { key: GroupBy; label: string }[] = [
+  { key: 'services', label: 'Сервисы' },
+  { key: 'departments', label: 'Отделы' },
+  { key: 'categories', label: 'Категории' },
+];
+
+const getGroupKey = (p: PaymentRecord, groupBy: GroupBy): string => {
+  if (groupBy === 'services') return (p.service_name as string) || 'Без сервиса';
+  if (groupBy === 'departments') return (p.department_name as string) || 'Без отдела';
+  return (p.category_name as string) || 'Без категории';
+};
+
+const getColor = (index: number) => {
+  const colors = ['#7551e9', '#3965ff', '#01b574', '#ffb547', '#ff6b6b'];
+  return colors[index] || '#7551e9';
+};
 
 const TopPaymentsCard = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
+  const [groupBy, setGroupBy] = useState<GroupBy>('services');
 
-  const payments = useMemo(() => {
+  const grouped = useMemo(() => {
     const { from, to } = getDateRange();
-    return (Array.isArray(allPayments) ? allPayments : [])
-      .filter((p: PaymentRecord) => {
-        if (p.status !== 'approved') return false;
-        const d = new Date(p.payment_date);
-        return d >= from && d <= to;
-      })
-      .sort((a: PaymentRecord, b: PaymentRecord) => b.amount - a.amount)
-      .slice(0, 5);
-  }, [allPayments, period, dateFrom, dateTo]);
+    const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
+      if (p.status !== 'approved') return false;
+      const d = new Date(p.payment_date);
+      return d >= from && d <= to;
+    });
 
-  const getColor = (index: number) => {
-    const colors = ['#7551e9', '#3965ff', '#01b574', '#ffb547', '#ff6b6b'];
-    return colors[index] || '#7551e9';
-  };
+    const map = new Map<string, number>();
+    for (const p of filtered) {
+      const key = getGroupKey(p, groupBy);
+      map.set(key, (map.get(key) || 0) + p.amount);
+    }
 
-  const maxAmount = payments.length > 0 ? Math.max(...payments.map(p => p.amount)) : 1;
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, total]) => ({ name, total }));
+  }, [allPayments, period, dateFrom, dateTo, groupBy]);
+
+  const maxAmount = grouped.length > 0 ? grouped[0].total : 1;
 
   if (loading) {
     return (
@@ -61,29 +85,66 @@ const TopPaymentsCard = () => {
       overflow: 'hidden'
     }}>
       <CardContent className="p-4 sm:p-6 flex flex-col flex-1" style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }} className="sm:gap-3 sm:mb-6">
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }} className="sm:gap-3">
           <div style={{
             background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
             padding: '8px',
             borderRadius: '10px',
-            boxShadow: '0 2px 8px rgba(117, 81, 233, 0.3)'
+            boxShadow: '0 2px 8px rgba(117, 81, 233, 0.3)',
+            flexShrink: 0
           }} className="sm:p-3">
             <Icon name="TrendingUp" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
           </div>
           <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'hsl(var(--foreground))' }} className="sm:text-base">Топ-5 Платежей</h3>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="sm:gap-4">
-          {payments.length === 0 ? (
+
+        {/* Tabs */}
+        <div style={{
+          display: 'flex',
+          gap: '4px',
+          background: 'hsl(var(--muted))',
+          borderRadius: '8px',
+          padding: '3px',
+          marginBottom: '14px'
+        }}>
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setGroupBy(tab.key)}
+              style={{
+                flex: 1,
+                padding: '5px 0',
+                fontSize: '11px',
+                fontWeight: groupBy === tab.key ? '700' : '500',
+                color: groupBy === tab.key ? '#fff' : 'hsl(var(--muted-foreground))',
+                background: groupBy === tab.key ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'transparent',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: groupBy === tab.key ? '0 1px 4px rgba(117,81,233,0.4)' : 'none',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }} className="sm:gap-3">
+          {grouped.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Нет данных за выбранный период
             </div>
           ) : (
-            payments.map((payment, idx) => {
+            grouped.map(({ name, total }, idx) => {
               const color = getColor(idx);
-              const percent = (payment.amount / maxAmount) * 100;
+              const percent = (total / maxAmount) * 100;
 
               return (
-                <div key={payment.id} style={{
+                <div key={name} style={{
                   background: 'hsl(var(--muted))',
                   padding: '10px',
                   borderRadius: '10px',
@@ -99,23 +160,27 @@ const TopPaymentsCard = () => {
                   e.currentTarget.style.borderColor = 'hsl(var(--border))';
                   e.currentTarget.style.boxShadow = 'none';
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start' }} className="sm:mb-2">
-                    <div style={{ flex: 1 }}>
-                      <div style={{ color: 'hsl(var(--foreground))', fontSize: '15px', fontWeight: '600', marginBottom: '2px' }} className="sm:text-lg">
-                        {payment.service_name || 'Без сервиса'}
-                      </div>
-                      <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '13px', fontWeight: '500' }} className="sm:text-sm">
-                        {payment.category_name || 'Без категории'}
-                      </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'center' }}>
+                    <div style={{
+                      color: 'hsl(var(--foreground))',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      flex: 1,
+                      marginRight: '8px'
+                    }}>
+                      {name}
                     </div>
-                    <span style={{ color: color, fontSize: '15px', fontWeight: '700', marginLeft: '8px', whiteSpace: 'nowrap' }} className="sm:text-lg">
-                      {new Intl.NumberFormat('ru-RU').format(payment.amount)} ₽
+                    <span style={{ color: color, fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      {new Intl.NumberFormat('ru-RU').format(total)} ₽
                     </span>
                   </div>
                   <div style={{
                     width: '100%',
                     height: '5px',
-                    background: 'hsl(var(--muted))',
+                    background: 'hsl(var(--background))',
                     borderRadius: '10px',
                     overflow: 'hidden'
                   }}>
