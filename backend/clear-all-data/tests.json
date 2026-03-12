@@ -1,14 +1,14 @@
 {
   "tests": [
     {
-      "name": "Очистка данных",
+      "name": "Очистка платежей",
       "method": "POST",
       "path": "/",
       "expectedStatus": 200,
       "expectedBody": {
         "success": true,
-        "tables_cleared": "number",
-        "message": "string"
+        "mode": "payments",
+        "tables_cleared": 15
       },
       "bodyMatcher": "partial"
     }

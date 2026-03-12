@@ -5,12 +5,12 @@ import psycopg2
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Очистка всех данных проекта: удаляет содержимое всех таблиц, 
-    кроме системных (users, roles, permissions).
+    Очистка данных проекта.
+    POST /          — удаляет только платежи и историю (справочники не трогает)
+    POST /?mode=all — удаляет всё включая справочники (старое поведение)
     """
     method: str = event.get('httpMethod', 'POST')
-    
-    # CORS OPTIONS
+
     if method == 'OPTIONS':
         return {
             'statusCode': 200,
@@ -23,7 +23,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': '',
             'isBase64Encoded': False
         }
-    
+
     if method != 'POST':
         return {
             'statusCode': 405,
@@ -31,59 +31,88 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({'error': 'Only POST allowed'}),
             'isBase64Encoded': False
         }
-    
-    conn = psycopg2.connect(os.environ['DATABASE_URL'])
-    
-    try:
-        # Список таблиц для очистки (все кроме системных)
+
+    params = event.get('queryStringParameters') or {}
+    mode = params.get('mode', 'payments')
+
+    if mode == 'all':
         tables_to_clear = [
-            'payments',
+            'payment_custom_field_values',
+            'payment_custom_values',
+            'planned_payment_custom_field_values',
+            'planned_payments',
+            'comment_attachments',
+            'comment_likes',
+            'comment_reactions',
+            'payment_comments',
+            'payment_documents',
+            'payment_views',
+            'custom_field_values',
             'approvals',
+            'notifications',
             'audit_logs',
+            'payments',
             'savings',
+            'saving_reasons',
             'legal_entities',
             'categories',
             'custom_fields',
-            'custom_field_values',
-            'payment_custom_field_values',
-            'payment_custom_values',
             'contractors',
             'customer_departments',
             'services',
-            'saving_reasons',
             'payment_comments',
-            'comment_likes',
             'log_files',
             'log_entries',
             'log_statistics',
-            'dashboard_layouts'
+            'dashboard_layouts',
         ]
-        
+    else:
+        # Только платежи и история — справочники сохраняются
+        tables_to_clear = [
+            'payment_custom_field_values',
+            'payment_custom_values',
+            'planned_payment_custom_field_values',
+            'planned_payments',
+            'comment_attachments',
+            'comment_likes',
+            'comment_reactions',
+            'payment_comments',
+            'payment_documents',
+            'payment_views',
+            'custom_field_values',
+            'approvals',
+            'notifications',
+            'audit_logs',
+            'payments',
+        ]
+
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+
+    try:
         cleared_count = 0
-        
+
         with conn.cursor() as cur:
             for table in tables_to_clear:
                 try:
-                    # TRUNCATE быстрее чем DELETE и сбрасывает счётчики
                     cur.execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE")
                     cleared_count += 1
                 except Exception as e:
-                    # Если таблица не существует, пропускаем
                     print(f"Failed to clear {table}: {e}")
-            
+
             conn.commit()
-        
+
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
             'body': json.dumps({
                 'success': True,
+                'mode': mode,
                 'tables_cleared': cleared_count,
-                'message': 'Все данные успешно удалены'
+                'message': 'Платежи и история успешно удалены' if mode != 'all' else 'Все данные успешно удалены'
             }),
             'isBase64Encoded': False
         }
-    
+
     except Exception as e:
         conn.rollback()
         return {
@@ -92,6 +121,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({'error': str(e)}),
             'isBase64Encoded': False
         }
-    
+
     finally:
         conn.close()
