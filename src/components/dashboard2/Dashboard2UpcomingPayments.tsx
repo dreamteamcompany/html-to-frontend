@@ -289,7 +289,7 @@ const Dashboard2UpcomingPayments = () => {
             </div>
           </div>
 
-          {!loading && count > 0 && (
+          {!isLoading && count > 0 && (
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '16px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>
                 {formatAmount(weekTotal)}
