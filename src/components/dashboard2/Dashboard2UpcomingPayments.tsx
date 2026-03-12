@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useState, useMemo, useEffect } from 'react';
 import { dashboardTypography, dashboardColors } from './dashboardStyles';
-import { usePaymentsCache, PaymentRecord } from '@/contexts/PaymentsCacheContext';
+import { PaymentRecord } from '@/contexts/PaymentsCacheContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 
@@ -190,7 +190,6 @@ const DayColumn = ({ group }: { group: DayGroup }) => {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 const Dashboard2UpcomingPayments = () => {
-  const { payments: allPayments, loading } = usePaymentsCache();
   const { token } = useAuth();
   const [activeIndex, setActiveIndex] = useState(0);
   const [plannedPayments, setPlannedPayments] = useState<PaymentRecord[]>([]);
@@ -242,14 +241,9 @@ const Dashboard2UpcomingPayments = () => {
       return d >= today && d <= sevenDaysLater;
     };
 
-    const filteredRegular = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
-      if (p.status === 'paid' || p.status === 'cancelled' || p.status === 'rejected') return false;
-      return filterByDateRange(p);
-    });
-
     const filteredPlanned = plannedPayments.filter(filterByDateRange);
 
-    const merged = [...filteredRegular, ...filteredPlanned];
+    const merged = [...filteredPlanned];
 
     const sorted = merged.sort((a, b) => {
       const da = new Date(String(a.payment_date).includes('T') ? String(a.payment_date) : String(a.payment_date) + 'T00:00:00');
@@ -259,11 +253,11 @@ const Dashboard2UpcomingPayments = () => {
 
     const total = sorted.reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
     return { upcoming: sorted, weekTotal: total };
-  }, [allPayments, plannedPayments]);
+  }, [plannedPayments]);
 
   const groups = useMemo(() => groupByDay(upcoming), [upcoming]);
 
-  const isLoading = loading || plannedLoading;
+  const isLoading = plannedLoading;
   const count = upcoming.length;
   const countLabel = count === 1 ? 'платёж' : count < 5 ? 'платежа' : 'платежей';
 

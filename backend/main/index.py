@@ -1665,6 +1665,9 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                 LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
                 LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
                 WHERE pp.created_by = %s
+                  AND pp.is_active = true
+                  AND pp.converted_to_payment_id IS NULL
+                  AND pp.planned_date >= CURRENT_DATE
                 ORDER BY pp.planned_date ASC
             """, (payload['user_id'],))
 
