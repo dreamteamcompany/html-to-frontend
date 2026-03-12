@@ -60,6 +60,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                 <thead>
                   <tr className="border-b border-white/10">
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Категория</th>
+                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сервис</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Юр. лицо</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Назначение</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
@@ -82,6 +83,9 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           </div>
                           <span className="font-medium">{payment.category_name}</span>
                         </div>
+                      </td>
+                      <td className="p-4 text-muted-foreground">
+                        {payment.service_name || <span className="text-muted-foreground/50">—</span>}
                       </td>
                       <td className="p-4 text-muted-foreground">
                         {payment.legal_entity_name || <span className="text-muted-foreground/50">—</span>}
@@ -186,6 +190,12 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       </div>
                       <span className="font-bold text-lg">{payment.amount.toLocaleString('ru-RU')} ₽</span>
                     </div>
+                    {payment.service_name && (
+                      <div className="text-sm">
+                        <span className="text-muted-foreground/70">Сервис: </span>
+                        <span className="text-muted-foreground">{payment.service_name}</span>
+                      </div>
+                    )}
                     {payment.legal_entity_name && (
                       <div className="text-sm">
                         <span className="text-muted-foreground/70">Юр. лицо: </span>
