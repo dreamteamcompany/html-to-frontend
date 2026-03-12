@@ -220,23 +220,23 @@ interface LegendProps {
 const Legend = ({ slices, onItemClick }: LegendProps) => {
   const isLight = document.documentElement.classList.contains('light');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', width: '100%' }}>
       {slices.map((s) => (
         <div
           key={s.name}
           onClick={() => onItemClick?.(s.name)}
-          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '4px 6px', borderRadius: '6px', transition: 'background 0.15s' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '3px 4px', borderRadius: '6px', transition: 'background 0.15s' }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
         >
-          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: '13px', fontWeight: 500, color: 'hsl(var(--foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+            <span style={{ fontSize: '12px', fontWeight: 500, color: 'hsl(var(--foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
               {s.name}
             </span>
           </div>
-          <span style={{ fontSize: '13px', fontWeight: 700, color: s.color, flexShrink: 0 }}>{s.pct}%</span>
-          <span style={{ fontSize: '12px', color: isLight ? 'rgba(20,20,40,0.5)' : 'rgba(255,255,255,0.4)', flexShrink: 0, minWidth: '80px', textAlign: 'right' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: s.color, flexShrink: 0 }}>{s.pct}%</span>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: isLight ? 'rgba(20,20,40,0.65)' : 'rgba(255,255,255,0.7)', flexShrink: 0, minWidth: '72px', textAlign: 'right' }}>
             {fmt(s.amount)}
           </span>
         </div>
@@ -258,10 +258,10 @@ const tabActiveStyle: React.CSSProperties = {
   background: '#7551e9',
   border: 'none',
   color: 'white',
-  padding: '7px 14px',
-  borderRadius: '8px',
+  padding: '5px 12px',
+  borderRadius: '6px',
   cursor: 'pointer',
-  fontSize: '13px',
+  fontSize: '12px',
   fontWeight: 600,
   boxShadow: '0 2px 8px rgba(117,81,233,0.3)',
   transition: 'all 0.18s',
@@ -270,10 +270,10 @@ const tabInactiveStyle: React.CSSProperties = {
   background: 'transparent',
   border: 'none',
   color: 'hsl(var(--muted-foreground))',
-  padding: '7px 14px',
-  borderRadius: '8px',
+  padding: '5px 12px',
+  borderRadius: '6px',
   cursor: 'pointer',
-  fontSize: '13px',
+  fontSize: '12px',
   fontWeight: 600,
   transition: 'all 0.18s',
 };
@@ -379,47 +379,45 @@ const ExpenseShareChart = () => {
     }
   };
 
-  const size = isMobile ? 200 : 240;
+  const size = isMobile ? 180 : 220;
 
   return (
     <>
     <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-      <CardContent className="p-6 flex flex-col flex-1">
+      <CardContent className="p-4 sm:p-5 flex flex-col flex-1">
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'hsl(var(--foreground))' }}>Доля расходов</h3>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: '4px', background: 'hsl(var(--muted))', padding: '4px', borderRadius: '10px' }}>
-              {TABS.map((tab) => (
-                <button key={tab} style={groupBy === tab ? tabActiveStyle : tabInactiveStyle} onClick={() => setGroupBy(tab)}>
-                  {TAB_LABELS[tab]}
-                </button>
-              ))}
-            </div>
-
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'hsl(var(--foreground))' }}>Доля расходов</h3>
+          <div style={{ display: 'flex', gap: '4px', background: 'hsl(var(--muted))', padding: '3px', borderRadius: '8px' }}>
+            {TABS.map((tab) => (
+              <button key={tab} style={groupBy === tab ? tabActiveStyle : tabInactiveStyle} onClick={() => setGroupBy(tab)}>
+                {TAB_LABELS[tab]}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Body */}
         {loading ? (
-          <div className="flex items-center justify-center flex-1 min-h-[250px]">
+          <div className="flex items-center justify-center flex-1 min-h-[200px]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500" />
           </div>
         ) : slices.length === 0 ? (
-          <div className="flex items-center justify-center flex-1 min-h-[250px]">
+          <div className="flex items-center justify-center flex-1 min-h-[200px]">
             <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <div className="flex-1 flex items-center" style={{
+          <div style={{
             display: 'flex',
             flexDirection: isMobile ? 'column' : 'row',
-            alignItems: isMobile ? 'center' : 'center',
-            gap: isMobile ? '24px' : '32px',
+            alignItems: 'center',
+            gap: isMobile ? '16px' : '20px',
+            flex: 1,
           }}>
             <div style={{ flexShrink: 0 }}>
               <Donut slices={slices} total={total} size={size} onSegmentClick={handleSegmentClick} />
             </div>
-            <div style={{ flex: 1, minWidth: 0, alignSelf: 'center' }}>
+            <div style={{ flex: 1, minWidth: 0, alignSelf: 'center', width: isMobile ? '100%' : undefined }}>
               <Legend slices={slices} onItemClick={handleSegmentClick} />
             </div>
           </div>
