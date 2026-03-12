@@ -6,6 +6,7 @@ import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { useDrillDown } from '../useDrillDown';
 import DrillDownModal from '../DrillDownModal';
+import { parsePaymentDate } from '../dashboardUtils';
 
 interface PaymentRecord {
   status: string;
@@ -21,85 +22,106 @@ const WEEK_DAYS_RU = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 
 const fmtWeekLabel = (d: Date) => `${WEEK_DAYS_RU[d.getDay()]}, ${String(d.getDate()).padStart(2, '0')}`;
 
-const getChartConfig = (period: string, from: Date, to: Date) => {
+// Формирует уникальный ключ YYYY-MM-DD для однозначной идентификации дня
+const fmtDateKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+interface ChartConfig {
+  labels: string[];
+  keys: string[];
+  unit: 'hour' | 'week_day' | 'month_day' | 'custom_day' | 'month';
+}
+
+const getChartConfig = (period: string, from: Date, to: Date): ChartConfig => {
   if (period === 'today') {
     const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
-    return { labels: hours, unit: 'hour' as const };
+    return { labels: hours, keys: hours, unit: 'hour' };
   }
   if (period === 'week') {
-    const days: string[] = [];
+    const labels: string[] = [];
+    const keys: string[] = [];
     const cur = new Date(from);
     while (cur <= to) {
-      days.push(fmtWeekLabel(cur));
+      labels.push(fmtWeekLabel(cur));
+      keys.push(fmtDateKey(cur));
       cur.setDate(cur.getDate() + 1);
     }
-    return { labels: days, unit: 'week_day' as const };
+    return { labels, keys, unit: 'week_day' };
   }
   if (period === 'month') {
-    const days: string[] = [];
+    const labels: string[] = [];
+    const keys: string[] = [];
     const cur = new Date(from);
     while (cur <= to) {
-      days.push(cur.getDate().toString());
+      labels.push(cur.getDate().toString());
+      keys.push(fmtDateKey(cur));
       cur.setDate(cur.getDate() + 1);
     }
-    return { labels: days, unit: 'month_day' as const };
+    return { labels, keys, unit: 'month_day' };
   }
   if (period === 'year') {
-    return { labels: MONTHS, unit: 'month' as const };
+    const keys = Array.from({ length: 12 }, (_, i) =>
+      `${from.getFullYear()}-${String(i + 1).padStart(2, '0')}`
+    );
+    return { labels: MONTHS, keys, unit: 'month' };
   }
   const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
   if (diffDays <= 1) {
     const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
-    return { labels: hours, unit: 'hour' as const };
+    return { labels: hours, keys: hours, unit: 'hour' };
   }
   if (diffDays <= 7) {
-    const days: string[] = [];
+    const labels: string[] = [];
+    const keys: string[] = [];
     const cur = new Date(from);
     while (cur <= to) {
-      days.push(fmtWeekLabel(cur));
+      labels.push(fmtWeekLabel(cur));
+      keys.push(fmtDateKey(cur));
       cur.setDate(cur.getDate() + 1);
     }
-    return { labels: days, unit: 'week_day' as const };
+    return { labels, keys, unit: 'week_day' };
   }
   if (diffDays <= 31) {
-    const days: string[] = [];
+    const labels: string[] = [];
+    const keys: string[] = [];
     const cur = new Date(from);
     while (cur <= to) {
-      days.push(cur.getDate().toString());
+      labels.push(cur.getDate().toString());
+      keys.push(fmtDateKey(cur));
       cur.setDate(cur.getDate() + 1);
     }
-    return { labels: days, unit: 'custom_day' as const };
+    return { labels, keys, unit: 'custom_day' };
   }
-  return { labels: MONTHS, unit: 'month' as const };
+  // Для длинных custom-периодов — по месяцам
+  const keys = Array.from({ length: 12 }, (_, i) =>
+    `${from.getFullYear()}-${String(i + 1).padStart(2, '0')}`
+  );
+  return { labels: MONTHS, keys, unit: 'month' };
 };
 
 type UnitType = 'hour' | 'week_day' | 'month_day' | 'custom_day' | 'month';
 
-const buildData = (payments: PaymentRecord[], labels: string[], unit: UnitType, from: Date) => {
+const buildData = (payments: PaymentRecord[], keys: string[], unit: UnitType) => {
   const map: { [key: string]: number } = {};
 
   payments.forEach((p) => {
-    const d = new Date(p.payment_date);
+    const d = parsePaymentDate(p.payment_date);
     let key: string;
 
     if (unit === 'hour') {
       key = `${String(d.getHours()).padStart(2, '0')}:00`;
     } else if (unit === 'month') {
-      key = MONTHS[d.getMonth()];
-    } else if (unit === 'month_day') {
-      key = d.getDate().toString();
-    } else if (unit === 'custom_day') {
-      key = d.getDate().toString();
-    } else if (unit === 'week_day') {
-      key = fmtWeekLabel(d);
+      key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    } else if (unit === 'week_day' || unit === 'month_day' || unit === 'custom_day') {
+      key = fmtDateKey(d);
     } else {
-      key = d.getDate().toString();
+      key = fmtDateKey(d);
     }
 
     map[key] = (map[key] || 0) + p.amount;
   });
 
-  return labels.map((label) => map[label] || 0);
+  return keys.map((key) => map[key] || 0);
 };
 
 const MonthlyDynamicsChart = () => {
@@ -126,15 +148,15 @@ const MonthlyDynamicsChart = () => {
 
   const { chartData, labels, chartUnit } = useMemo(() => {
     const { from, to } = getDateRange();
-    const { labels: newLabels, unit } = getChartConfig(period, from, to);
+    const { labels: newLabels, keys: newKeys, unit } = getChartConfig(period, from, to);
 
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
       if (p.status !== 'approved') return false;
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(p.payment_date);
       return d >= from && d <= to;
     });
 
-    const values = buildData(filtered, newLabels, unit, from);
+    const values = buildData(filtered, newKeys, unit);
     return { chartData: values, labels: newLabels, chartUnit: unit };
   }, [allPayments, period, dateFrom, dateTo]);
 

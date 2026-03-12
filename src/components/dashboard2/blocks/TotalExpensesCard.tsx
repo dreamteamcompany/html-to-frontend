@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { parsePaymentDate, getPreviousPeriodRange } from '../dashboardUtils';
 
 interface PaymentRecord {
   status: string;
@@ -21,17 +22,15 @@ const TotalExpensesCard = () => {
     const payments: PaymentRecord[] = (Array.isArray(allPayments) ? allPayments : []).filter(
       (p: PaymentRecord) => p.status === 'approved'
     );
-    const periodMs = to.getTime() - from.getTime();
 
     const current = payments.filter((p) => {
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(p.payment_date);
       return d >= from && d <= to;
     });
 
-    const prevTo = new Date(from.getTime() - 1);
-    const prevFrom = new Date(prevTo.getTime() - periodMs);
+    const { prevFrom, prevTo } = getPreviousPeriodRange(period, from, to);
     const previous = payments.filter((p) => {
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(p.payment_date);
       return d >= prevFrom && d <= prevTo;
     });
 

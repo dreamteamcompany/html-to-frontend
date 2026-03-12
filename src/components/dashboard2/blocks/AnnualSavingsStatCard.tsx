@@ -19,11 +19,13 @@ interface SavingsData {
 
 const AnnualSavingsStatCard = () => {
   const [savingsData, setSavingsData] = useState<SavingsData | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const { token } = useAuth();
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
 
   const loadSavingsData = useCallback(async () => {
     if (!token) return;
+    setLoadError(false);
     try {
       const { from, to } = getDateRange();
       const params = new URLSearchParams({
@@ -36,9 +38,11 @@ const AnnualSavingsStatCard = () => {
       );
       if (res.ok) {
         setSavingsData(await res.json());
+      } else {
+        setLoadError(true);
       }
     } catch {
-      // silent
+      setLoadError(true);
     }
   }, [token, period, dateFrom, dateTo]);
 
@@ -76,13 +80,16 @@ const AnnualSavingsStatCard = () => {
           </div>
         </div>
 
+        {loadError && (
+          <div className="text-xs text-red-400 mb-2">Не удалось загрузить данные</div>
+        )}
         <div className={`${dashboardTypography.cardValue} mb-2`} style={{ color: '#01b574' }}>
           {savingsData ? formatAmount(savingsData.total_amount) : '—'}
         </div>
         <div className={`${dashboardTypography.cardSecondary} mb-3`}>
           {savingsData
             ? `${savingsData.count} ${countLabel(savingsData.count)} в реестре`
-            : 'Загрузка...'}
+            : loadError ? 'Ошибка загрузки' : 'Загрузка...'}
         </div>
 
         {savingsData && savingsData.top_departments && savingsData.top_departments.length > 0 && (

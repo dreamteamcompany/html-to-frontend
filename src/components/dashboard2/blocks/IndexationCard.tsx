@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
-import type { PeriodType } from '@/contexts/PeriodContext';
+import { parsePaymentDate, getPreviousPeriodRange } from '../dashboardUtils';
 
 interface PaymentRecord {
   status: string;
@@ -23,63 +23,6 @@ interface ServiceIndexation {
   percent: number;
 }
 
-const parsePaymentDate = (raw: string): Date => {
-  // Если дата без времени (YYYY-MM-DD), парсим как локальное время,
-  // чтобы избежать сдвига UTC в браузерах
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-    return new Date(raw + 'T00:00:00');
-  }
-  return new Date(raw);
-};
-
-const getPreviousPeriodRange = (
-  period: PeriodType,
-  from: Date,
-  to: Date,
-  dateFrom?: Date,
-  dateTo?: Date
-): { prevFrom: Date; prevTo: Date } => {
-  switch (period) {
-    case 'today': {
-      const prevDay = new Date(from);
-      prevDay.setDate(prevDay.getDate() - 1);
-      const prevFrom = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 0, 0, 0, 0);
-      const prevTo = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 23, 59, 59, 999);
-      return { prevFrom, prevTo };
-    }
-    case 'week': {
-      const prevFrom = new Date(from);
-      prevFrom.setDate(prevFrom.getDate() - 7);
-      const prevTo = new Date(to);
-      prevTo.setDate(prevTo.getDate() - 7);
-      return { prevFrom, prevTo };
-    }
-    case 'month': {
-      // Предыдущий календарный месяц
-      const prevFrom = new Date(from.getFullYear(), from.getMonth() - 1, 1, 0, 0, 0, 0);
-      const prevTo = new Date(from.getFullYear(), from.getMonth(), 0, 23, 59, 59, 999);
-      return { prevFrom, prevTo };
-    }
-    case 'year': {
-      const prevFrom = new Date(from.getFullYear() - 1, 0, 1, 0, 0, 0, 0);
-      const prevTo = new Date(from.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
-      return { prevFrom, prevTo };
-    }
-    case 'custom': {
-      // Для произвольного периода сдвигаем на такое же количество дней
-      const periodMs = to.getTime() - from.getTime();
-      const prevTo = new Date(from.getTime() - 1);
-      const prevFrom = new Date(prevTo.getTime() - periodMs);
-      return { prevFrom, prevTo };
-    }
-    default: {
-      const periodMs = to.getTime() - from.getTime();
-      const prevTo = new Date(from.getTime() - 1);
-      const prevFrom = new Date(prevTo.getTime() - periodMs);
-      return { prevFrom, prevTo };
-    }
-  }
-};
 
 const IndexationCard = () => {
   const { getDateRange, period, dateFrom, dateTo } = usePeriod();
@@ -92,7 +35,7 @@ const IndexationCard = () => {
       (p: PaymentRecord) => p.status === 'approved'
     );
 
-    const { prevFrom, prevTo } = getPreviousPeriodRange(period, from, to, dateFrom, dateTo);
+    const { prevFrom, prevTo } = getPreviousPeriodRange(period, from, to);
 
     const currentPayments = approvedPayments.filter((p: PaymentRecord) => {
       const d = parsePaymentDate(String(p.payment_date));
