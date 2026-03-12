@@ -35,8 +35,9 @@ const fmtDate = (s: string) => {
 };
 
 const PAYMENT_TYPE_LABEL: Record<string, string> = {
-  cash: 'Наличные',
-  legal: 'Безналичные',
+  cash: 'Наличный',
+  bank_transfer: 'Безналичный',
+  legal: 'Безналичный',
   card: 'Карта',
 };
 
@@ -392,16 +393,25 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
           ) : (
             /* ═══ DESKTOP: таблица ═══ */
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '640px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px', tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col style={{ width: '22%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '12%' }} />
+                  <col style={{ width: '16%' }} />
+                </colgroup>
                 <thead>
                   <tr style={{ borderBottom: '1px solid hsl(var(--border))', position: 'sticky', top: 0, background: 'hsl(var(--card))', zIndex: 1 }}>
                     {['Описание / Сервис', 'Категория', 'Отдел', 'Тип расчёта', 'Дата', 'Сумма', 'Статус'].map(h => (
                       <th key={h} style={{
-                        padding: '10px 14px', textAlign: 'left',
+                        padding: '10px 12px', textAlign: 'left',
                         fontSize: '11px', fontWeight: 600,
                         color: 'hsl(var(--muted-foreground))',
                         textTransform: 'uppercase', letterSpacing: '0.4px',
-                        whiteSpace: 'nowrap',
+                        whiteSpace: 'nowrap', overflow: 'hidden',
                       }}>{h}</th>
                     ))}
                   </tr>
@@ -416,34 +426,37 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.03)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                       >
-                        <td style={{ padding: '12px 14px', maxWidth: '200px' }}>
+                        <td style={{ padding: '11px 12px', overflow: 'hidden' }}>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {p.description || p.service_name || p.contractor_name || '—'}
                           </div>
                           {p.service_name && p.description && (
-                            <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>{p.service_name}</div>
+                            <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</div>
                           )}
                         </td>
-                        <td style={{ padding: '12px 14px', fontSize: '12px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {p.category_name || '—'}
                         </td>
-                        <td style={{ padding: '12px 14px', fontSize: '12px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {p.department_name || '—'}
                         </td>
-                        <td style={{ padding: '12px 14px', fontSize: '12px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {PAYMENT_TYPE_LABEL[p.payment_type || ''] || p.payment_type || '—'}
                         </td>
-                        <td style={{ padding: '12px 14px', fontSize: '12px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                           {p.payment_date ? fmtDate(String(p.payment_date)) : '—'}
                         </td>
-                        <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: 700, color: '#7551e9', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '11px 12px', fontSize: '13px', fontWeight: 700, color: '#7551e9', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                           {fmt(p.amount)}
                         </td>
-                        <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '11px 12px', overflow: 'hidden' }}>
                           <span style={{
-                            display: 'inline-block', padding: '3px 8px', borderRadius: '6px',
+                            display: 'inline-flex', alignItems: 'center',
+                            padding: '3px 8px', borderRadius: '6px',
                             fontSize: '11px', fontWeight: 600,
                             background: `${st.color}20`, color: st.color,
+                            whiteSpace: 'nowrap', maxWidth: '100%',
+                            overflow: 'hidden', textOverflow: 'ellipsis',
                           }}>
                             {st.label}
                           </span>
