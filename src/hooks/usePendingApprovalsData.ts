@@ -20,7 +20,6 @@ export const usePendingApprovalsData = () => {
   }, [allPayments, user]);
 
   const handleApprove = useCallback(async (paymentId: number, approveComment?: string) => {
-    console.log('[handleApprove] Called with paymentId:', paymentId, 'comment:', approveComment);
     try {
       const response = await fetch(`${API_ENDPOINTS.approvalsApi}`, {
         method: 'PUT',
@@ -103,7 +102,6 @@ export const usePendingApprovalsData = () => {
   }, [token, toast, removePayment, refresh]);
 
   const handleReject = useCallback(async (paymentId: number, rejectComment?: string) => {
-    console.log('[handleReject] Called with paymentId:', paymentId, 'comment:', rejectComment);
     try {
       const response = await fetch(`${API_ENDPOINTS.approvalsApi}`, {
         method: 'PUT',

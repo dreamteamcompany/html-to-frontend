@@ -43,6 +43,7 @@ const Admin = () => {
         password={auth.password}
         setPassword={auth.setPassword}
         handleLogin={auth.handleLogin}
+        isLoading={auth.isLoading}
       />
     );
   }

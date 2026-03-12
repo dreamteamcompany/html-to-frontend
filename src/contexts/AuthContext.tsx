@@ -60,10 +60,7 @@ const getStorageToken = (): string | null => {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(() => {
-    const token = getStorageToken();
-    const rememberMe = localStorage.getItem('remember_me') === 'true';
-    console.log('[Auth Init] rememberMe:', rememberMe, 'token:', token ? 'exists' : 'null');
-    return token;
+    return getStorageToken();
   });
   const [loading, setLoading] = useState(true);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -106,25 +103,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           sessionStorage.setItem('auth_token', data.token);
         }
       }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
+    } catch {
+      // silent: network error during token refresh, will retry on next interval
     }
   }, []);
 
   const checkAuth = async () => {
     const savedToken = getStorageToken();
-    const rememberMe = localStorage.getItem('remember_me') === 'true';
-    
-    console.log('[checkAuth] rememberMe:', rememberMe, 'savedToken:', savedToken ? 'exists' : 'null');
-    
+
     if (!savedToken) {
-      console.log('[checkAuth] No token found, skipping auth check');
       setLoading(false);
       return;
     }
 
     try {
-      console.log('[checkAuth] Verifying token with backend...');
       const response = await fetch('https://functions.poehali.dev/cc3b9628-07ec-420e-b340-1c20cad986da?endpoint=me', {
         headers: {
           'X-Auth-Token': savedToken,
@@ -133,19 +125,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (response.ok) {
         const userData = await response.json();
-        console.log('[checkAuth] Token valid, user:', userData.username);
         setUser(userData);
         setToken(savedToken);
       } else {
-        console.log('[checkAuth] Token invalid, status:', response.status);
         localStorage.removeItem('auth_token');
         sessionStorage.removeItem('auth_token');
         localStorage.removeItem('remember_me');
         setToken(null);
         setUser(null);
       }
-    } catch (error) {
-      console.error('[checkAuth] Auth check failed:', error);
+    } catch {
       localStorage.removeItem('auth_token');
       sessionStorage.removeItem('auth_token');
       localStorage.removeItem('remember_me');
@@ -190,8 +179,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               sessionStorage.setItem('auth_token', data.token);
             }
           }
-        } catch (error) {
-          console.error('Token refresh failed:', error);
+        } catch {
+          // silent: network error during token refresh
         }
       };
       

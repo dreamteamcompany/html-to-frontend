@@ -10,9 +10,10 @@ interface AdminLoginFormProps {
   password: string;
   setPassword: (v: string) => void;
   handleLogin: (e: React.FormEvent) => void;
+  isLoading?: boolean;
 }
 
-const AdminLoginForm = ({ login, setLogin, password, setPassword, handleLogin }: AdminLoginFormProps) => {
+const AdminLoginForm = ({ login, setLogin, password, setPassword, handleLogin, isLoading = false }: AdminLoginFormProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center p-4">
       <Card className="w-full max-w-md rounded-3xl shadow-2xl">
@@ -47,9 +48,9 @@ const AdminLoginForm = ({ login, setLogin, password, setPassword, handleLogin }:
                 className="rounded-xl border-2 focus:border-primary"
               />
             </div>
-            <Button type="submit" className="w-full rounded-xl bg-primary hover:bg-primary/90 text-lg py-6">
-              <Icon name="LogIn" className="mr-2" />
-              Войти
+            <Button type="submit" disabled={isLoading} className="w-full rounded-xl bg-primary hover:bg-primary/90 text-lg py-6">
+              <Icon name={isLoading ? "Loader2" : "LogIn"} className={`mr-2 ${isLoading ? "animate-spin" : ""}`} />
+              {isLoading ? "Вход..." : "Войти"}
             </Button>
           </form>
         </CardContent>
