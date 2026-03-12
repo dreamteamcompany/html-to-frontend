@@ -1,8 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { dashboardTypography, dashboardColors } from './dashboardStyles';
 import { usePaymentsCache, PaymentRecord } from '@/contexts/PaymentsCacheContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface DayGroup {
   dateKey: string;
@@ -100,11 +102,21 @@ const PaymentCard = ({ payment, accentColor }: { payment: PaymentRecord; accentC
         <Icon name={icon} size={14} style={{ color: accentColor }} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: '12px', fontWeight: 700, color: 'hsl(var(--foreground))',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {payment.description || payment.service_name || 'Платёж'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{
+            fontSize: '12px', fontWeight: 700, color: 'hsl(var(--foreground))',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+          }}>
+            {payment.description || payment.service_name || 'Платёж'}
+          </div>
+          {payment._isPlanned && (
+            <div style={{
+              fontSize: '9px', fontWeight: 700, color: '#fff',
+              background: '#6366f1', borderRadius: '4px', padding: '1px 4px', flexShrink: 0,
+            }}>
+              план
+            </div>
+          )}
         </div>
         {(payment.legal_entity_name || payment.contractor_name) && (
           <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', marginTop: '2px',
@@ -179,7 +191,43 @@ const DayColumn = ({ group }: { group: DayGroup }) => {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 const Dashboard2UpcomingPayments = () => {
   const { payments: allPayments, loading } = usePaymentsCache();
+  const { token } = useAuth();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [plannedPayments, setPlannedPayments] = useState<PaymentRecord[]>([]);
+  const [plannedLoading, setPlannedLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) return;
+    setPlannedLoading(true);
+    fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments`, {
+      headers: { 'X-Auth-Token': token },
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        const mapped: PaymentRecord[] = list.map((pp: Record<string, unknown>) => ({
+          id: pp.id as number,
+          status: 'scheduled',
+          payment_date: String(pp.planned_date as string).slice(0, 10),
+          amount: pp.amount as number,
+          description: pp.description as string,
+          category_id: pp.category_id as number,
+          category_name: pp.category_name as string,
+          category_icon: pp.category_icon as string,
+          service_id: pp.service_id as number,
+          service_name: pp.service_name as string,
+          department_id: pp.department_id as number,
+          department_name: pp.department_name as string,
+          contractor_name: pp.contractor_name as string,
+          legal_entity_name: pp.legal_entity_name as string,
+          payment_type: 'planned',
+          _isPlanned: true,
+        }));
+        setPlannedPayments(mapped);
+      })
+      .catch(() => setPlannedPayments([]))
+      .finally(() => setPlannedLoading(false));
+  }, [token]);
 
   const { upcoming, weekTotal } = useMemo(() => {
     const today = new Date();
@@ -187,15 +235,23 @@ const Dashboard2UpcomingPayments = () => {
     const sevenDaysLater = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000);
     sevenDaysLater.setHours(23, 59, 59, 999);
 
-    const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
+    const filterByDateRange = (p: PaymentRecord) => {
       if (!p.payment_date) return false;
-      if (p.status === 'paid' || p.status === 'cancelled' || p.status === 'rejected') return false;
       const raw = String(p.payment_date);
       const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
       return d >= today && d <= sevenDaysLater;
+    };
+
+    const filteredRegular = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
+      if (p.status === 'paid' || p.status === 'cancelled' || p.status === 'rejected') return false;
+      return filterByDateRange(p);
     });
 
-    const sorted = [...filtered].sort((a, b) => {
+    const filteredPlanned = plannedPayments.filter(filterByDateRange);
+
+    const merged = [...filteredRegular, ...filteredPlanned];
+
+    const sorted = merged.sort((a, b) => {
       const da = new Date(String(a.payment_date).includes('T') ? String(a.payment_date) : String(a.payment_date) + 'T00:00:00');
       const db = new Date(String(b.payment_date).includes('T') ? String(b.payment_date) : String(b.payment_date) + 'T00:00:00');
       return da.getTime() - db.getTime();
@@ -203,10 +259,11 @@ const Dashboard2UpcomingPayments = () => {
 
     const total = sorted.reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
     return { upcoming: sorted, weekTotal: total };
-  }, [allPayments]);
+  }, [allPayments, plannedPayments]);
 
   const groups = useMemo(() => groupByDay(upcoming), [upcoming]);
 
+  const isLoading = loading || plannedLoading;
   const count = upcoming.length;
   const countLabel = count === 1 ? 'платёж' : count < 5 ? 'платежа' : 'платежей';
 
@@ -251,7 +308,7 @@ const Dashboard2UpcomingPayments = () => {
         </div>
 
         {/* Состояния */}
-        {loading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500" />
           </div>

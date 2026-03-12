@@ -3774,7 +3774,7 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                 LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
                 LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
                 LEFT JOIN {SCHEMA}.users u ON pp.created_by = u.id
-                WHERE pp.is_active = true
+                WHERE pp.is_active = true AND pp.planned_date >= NOW()
                 ORDER BY pp.planned_date ASC
             """)
             
@@ -3810,14 +3810,35 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     contractor_id, department_id, service_id, invoice_number, invoice_date,
                     recurrence_type, recurrence_end_date, created_by, is_active) 
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, true) 
-                   RETURNING id, category_id, amount, description, planned_date, created_at""",
+                   RETURNING id""",
                 (category_id, amount, description, planned_date, legal_entity_id,
                  contractor_id, department_id, service_id, invoice_number, invoice_date,
                  recurrence_type, recurrence_end_date, payload['user_id'])
             )
             
-            row = cur.fetchone()
+            new_id = cur.fetchone()['id']
             conn.commit()
+            
+            cur.execute(f"""
+                SELECT pp.id, pp.category_id, c.name as category_name, c.icon as category_icon,
+                    pp.amount, pp.description, pp.planned_date,
+                    pp.legal_entity_id, le.name as legal_entity_name,
+                    pp.contractor_id, con.name as contractor_name,
+                    pp.department_id, cd.name as department_name,
+                    pp.service_id, s.name as service_name, s.description as service_description,
+                    pp.invoice_number, pp.invoice_date, pp.recurrence_type, pp.recurrence_end_date,
+                    pp.is_active, pp.created_by, u.full_name as created_by_name,
+                    pp.created_at, pp.converted_to_payment_id, pp.converted_at
+                FROM {SCHEMA}.planned_payments pp
+                LEFT JOIN {SCHEMA}.categories c ON pp.category_id = c.id
+                LEFT JOIN {SCHEMA}.legal_entities le ON pp.legal_entity_id = le.id
+                LEFT JOIN {SCHEMA}.contractors con ON pp.contractor_id = con.id
+                LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
+                LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
+                LEFT JOIN {SCHEMA}.users u ON pp.created_by = u.id
+                WHERE pp.id = %s
+            """, (new_id,))
+            row = cur.fetchone()
             
             return response(201, dict(row))
         
@@ -3855,7 +3876,7 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     category_id = %s, amount = %s, description = %s, planned_date = %s,
                     legal_entity_id = %s, contractor_id = %s, department_id = %s, service_id = %s,
                     invoice_number = %s, invoice_date = %s, recurrence_type = %s, recurrence_end_date = %s
-                WHERE id = %s RETURNING id, category_id, amount, description, planned_date""",
+                WHERE id = %s RETURNING id""",
                 (category_id, amount, description, planned_date, legal_entity_id,
                  contractor_id, department_id, service_id, invoice_number, invoice_date,
                  recurrence_type, recurrence_end_date, planned_payment_id)
@@ -3866,7 +3887,29 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                 return response(404, {'error': 'Planned payment not found'})
             
             conn.commit()
-            return response(200, dict(row))
+            
+            cur.execute(f"""
+                SELECT pp.id, pp.category_id, c.name as category_name, c.icon as category_icon,
+                    pp.amount, pp.description, pp.planned_date,
+                    pp.legal_entity_id, le.name as legal_entity_name,
+                    pp.contractor_id, con.name as contractor_name,
+                    pp.department_id, cd.name as department_name,
+                    pp.service_id, s.name as service_name, s.description as service_description,
+                    pp.invoice_number, pp.invoice_date, pp.recurrence_type, pp.recurrence_end_date,
+                    pp.is_active, pp.created_by, u.full_name as created_by_name,
+                    pp.created_at, pp.converted_to_payment_id, pp.converted_at
+                FROM {SCHEMA}.planned_payments pp
+                LEFT JOIN {SCHEMA}.categories c ON pp.category_id = c.id
+                LEFT JOIN {SCHEMA}.legal_entities le ON pp.legal_entity_id = le.id
+                LEFT JOIN {SCHEMA}.contractors con ON pp.contractor_id = con.id
+                LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
+                LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
+                LEFT JOIN {SCHEMA}.users u ON pp.created_by = u.id
+                WHERE pp.id = %s
+            """, (planned_payment_id,))
+            updated_row = cur.fetchone()
+            
+            return response(200, dict(updated_row))
         
         elif method == 'DELETE':
             payload, error = verify_token_and_permission(event, conn, 'payments.delete')
