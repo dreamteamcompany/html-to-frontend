@@ -220,7 +220,7 @@ interface LegendProps {
 const Legend = ({ slices, onItemClick }: LegendProps) => {
   const isLight = document.documentElement.classList.contains('light');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
       {slices.map((s) => (
         <div
           key={s.name}
@@ -379,14 +379,14 @@ const ExpenseShareChart = () => {
     }
   };
 
-  const size = isMobile ? 180 : 220;
+  const size = isMobile ? 190 : 250;
 
   return (
     <>
     <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-      <CardContent className="p-4 sm:p-5 flex flex-col flex-1">
+      <CardContent className="p-4 flex flex-col flex-1">
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'hsl(var(--foreground))' }}>Доля расходов</h3>
           <div style={{ display: 'flex', gap: '4px', background: 'hsl(var(--muted))', padding: '3px', borderRadius: '8px' }}>
             {TABS.map((tab) => (
@@ -411,13 +411,14 @@ const ExpenseShareChart = () => {
             display: 'flex',
             flexDirection: isMobile ? 'column' : 'row',
             alignItems: 'center',
-            gap: isMobile ? '16px' : '20px',
+            justifyContent: 'center',
+            gap: isMobile ? '14px' : '16px',
             flex: 1,
           }}>
             <div style={{ flexShrink: 0 }}>
               <Donut slices={slices} total={total} size={size} onSegmentClick={handleSegmentClick} />
             </div>
-            <div style={{ flex: 1, minWidth: 0, alignSelf: 'center', width: isMobile ? '100%' : undefined }}>
+            <div style={{ flexShrink: 0, minWidth: 0, alignSelf: 'center', width: isMobile ? '100%' : 'auto' }}>
               <Legend slices={slices} onItemClick={handleSegmentClick} />
             </div>
           </div>
