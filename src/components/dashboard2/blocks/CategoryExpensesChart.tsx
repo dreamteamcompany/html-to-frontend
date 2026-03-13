@@ -97,12 +97,20 @@ const CategoryExpensesChart = () => {
       categoryMap[category][key] = (categoryMap[category][key] || 0) + payment.amount;
     });
 
-    const result: { [category: string]: number[] } = {};
-    Object.keys(categoryMap).forEach((category) => {
-      result[category] = labels.map((label) => categoryMap[category][label] || 0);
+    const allKeys = new Set<string>();
+    Object.values(categoryMap).forEach((keyMap) => {
+      Object.keys(keyMap).forEach((k) => allKeys.add(k));
     });
 
-    return { categoryData: result, xLabels: labels };
+    const activeLabels = labels.filter((label) => allKeys.has(label));
+    const finalLabels = activeLabels.length > 0 ? activeLabels : labels;
+
+    const result: { [category: string]: number[] } = {};
+    Object.keys(categoryMap).forEach((category) => {
+      result[category] = finalLabels.map((label) => categoryMap[category][label] || 0);
+    });
+
+    return { categoryData: result, xLabels: finalLabels };
   }, [allPayments, period, dateFrom, dateTo]);
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
