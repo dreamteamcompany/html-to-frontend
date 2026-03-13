@@ -111,7 +111,7 @@ const CategoryExpensesChart = () => {
     backgroundColor: colors[index % colors.length],
     borderRadius: isMobile ? 5 : 10,
     borderSkipped: false as const,
-    maxBarThickness: isMobile ? 18 : 28,
+    maxBarThickness: isMobile ? 28 : 48,
   }));
 
   const handleChartClick = (_event: unknown, elements: { datasetIndex: number }[]) => {
@@ -125,8 +125,8 @@ const CategoryExpensesChart = () => {
   return (
     <>
       <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
-        <CardContent className="p-6 flex flex-col flex-1">
-          <div style={{ marginBottom: '16px' }}>
+        <CardContent className="p-3 sm:p-4 flex flex-col flex-1">
+          <div style={{ marginBottom: '12px' }}>
             <h3 className="text-base sm:text-lg" style={{ fontWeight: '700', color: 'hsl(var(--foreground))' }}>IT Расходы по Категориям</h3>
           </div>
           {loading ? (
@@ -134,7 +134,7 @@ const CategoryExpensesChart = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
             </div>
           ) : (
-            <div className="flex-1 min-h-[200px] sm:min-h-[300px]" style={{ position: 'relative', cursor: 'pointer' }}>
+            <div className="flex-1 min-h-[260px] sm:min-h-[360px]" style={{ position: 'relative', cursor: 'pointer' }}>
               <Bar
                 data={{ labels: xLabels, datasets }}
                 options={{
