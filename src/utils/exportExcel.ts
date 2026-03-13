@@ -9,9 +9,17 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const PAYMENT_TYPE_LABEL: Record<string, string> = {
-  cash: 'Наличные',
-  legal: 'Безналичные',
+  cash: 'Наличный',
+  legal: 'Безналичный',
+  bank_transfer: 'Безналичный',
   card: 'Карта',
+};
+
+const fmtAmount = (value: number): string => {
+  const parts = value.toFixed(2).replace('.', ',').split(',');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+  const decimal = parts[1] === '00' ? '' : ',' + parts[1];
+  return parts[0] + decimal;
 };
 
 const fmtDate = (s: string) => {
@@ -62,14 +70,14 @@ export const exportDrillDownToExcel = (
       ${cell(p.department_name || '—')}
       ${cell(PAYMENT_TYPE_LABEL[p.payment_type || ''] || p.payment_type || '—')}
       ${cell(p.payment_date ? fmtDate(String(p.payment_date)) : '—')}
-      ${cell(p.amount, true)}
+      ${cell(fmtAmount(p.amount))}
     </row>`;
   });
 
   const totalRow = `<row r="${payments.length + 2}">
     ${cell('ИТОГО')}
     ${cell('')}${cell('')}${cell('')}${cell('')}
-    ${cell(payments.reduce((s, p) => s + p.amount, 0), true)}
+    ${cell(fmtAmount(payments.reduce((s, p) => s + p.amount, 0)))}
   </row>`;
 
   const sheetData = [headerRow, ...dataRows, totalRow].join('\n');
@@ -204,7 +212,7 @@ export const exportPaymentsToExcel = (
       ${cell(p.contractor_name || '—')}
       ${cell(p.legal_entity_name || '—')}
       ${cell(PAYMENT_TYPE_LABEL[p.payment_type || ''] || p.payment_type || '—')}
-      ${cell(p.amount, true)}
+      ${cell(fmtAmount(p.amount))}
       ${cell(STATUS_LABEL[p.status || ''] || p.status || '—')}
     </row>`;
   });
@@ -212,7 +220,7 @@ export const exportPaymentsToExcel = (
   const totalRow = `<row r="${sorted.length + 2}">
     ${cell('ИТОГО')}
     ${cell('')}${cell('')}${cell('')}${cell('')}${cell('')}${cell('')}
-    ${cell(sorted.reduce((s, p) => s + p.amount, 0), true)}
+    ${cell(fmtAmount(sorted.reduce((s, p) => s + p.amount, 0)))}
     ${cell('')}
   </row>`;
 
