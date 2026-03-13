@@ -48,31 +48,31 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1729] to-[#1b254b] p-4">
-      <Card className="w-full max-w-md border-white/10 bg-card/50 backdrop-blur-xl">
+      <Card className="w-full max-w-md border-purple-500/30 bg-[#4a1d96] backdrop-blur-xl shadow-2xl shadow-purple-900/50">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto mb-4 flex items-center justify-center">
             <Logo className="h-12 w-auto text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold">Вход в систему</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold text-white">Вход в систему</CardTitle>
+          <CardDescription className="text-purple-200">
             Введите логин и пароль для доступа
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {(error) && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm flex items-center gap-2">
+              <div className="p-3 rounded-lg bg-red-500/20 border border-red-400/40 text-red-200 text-sm flex items-center gap-2">
                 <Icon name="AlertCircle" size={16} />
                 {error}
               </div>
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="username">Логин</Label>
+              <Label htmlFor="username" className="text-purple-100">Логин</Label>
               <Input
                 id="username"
                 type="text"
-                placeholder="admin"
+                placeholder="Логин"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -80,19 +80,21 @@ const Login = () => {
                 autoCorrect="off"
                 autoCapitalize="off"
                 spellCheck={false}
+                className="bg-purple-900/50 border-purple-400/40 text-white placeholder:text-purple-300/60 focus:border-purple-300 focus:ring-purple-300/30"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Пароль</Label>
+              <Label htmlFor="password" className="text-purple-100">Пароль</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
+                className="bg-purple-900/50 border-purple-400/40 text-white placeholder:text-purple-300/60 focus:border-purple-300 focus:ring-purple-300/30"
               />
             </div>
 
@@ -102,16 +104,16 @@ const Login = () => {
                 id="remember"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0"
+                className="w-4 h-4 rounded border-purple-400/40 bg-purple-900/50 text-purple-400 focus:ring-purple-300 focus:ring-offset-0"
               />
-              <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
+              <Label htmlFor="remember" className="text-sm font-normal cursor-pointer text-purple-100">
                 Запомнить меня
               </Label>
             </div>
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-white text-purple-900 hover:bg-purple-100 font-semibold"
               disabled={loading}
             >
               {loading ? (
