@@ -18,9 +18,12 @@ interface PaymentRecord {
 
 const fmt = (v: number) => {
   if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн ₽';
-  if (v >= 1_000) return Math.round(v / 1_000) + ' тыс ₽';
+  if (v >= 1_000) return Math.round(v / 1_000) + ' тыс. ₽';
   return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
 };
+
+const isCash = (type?: string) => type === 'cash';
+const isLegal = (type?: string) => type === 'bank_transfer' || type === 'legal' || (!!type && type !== 'cash');
 
 const PaymentTypeChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
@@ -33,17 +36,18 @@ const PaymentTypeChart = () => {
 
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
       if (p.status !== 'approved') return false;
-      const d = new Date(p.payment_date);
+      const raw = String(p.payment_date);
+      const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
       return d >= from && d <= to;
     });
 
     let cash = 0, cashCnt = 0, legal = 0, legalCnt = 0;
 
     filtered.forEach((p: PaymentRecord) => {
-      if (p.payment_type === 'cash') {
+      if (isCash(p.payment_type)) {
         cash += p.amount;
         cashCnt++;
-      } else {
+      } else if (isLegal(p.payment_type)) {
         legal += p.amount;
         legalCnt++;
       }
