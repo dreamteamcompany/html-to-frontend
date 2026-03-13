@@ -63,7 +63,7 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                         )}
                       </td>
                       <td className="p-4 font-semibold text-green-500">
-                        {saving.amount.toLocaleString('ru-RU')} {saving.currency}
+                        {new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(saving.amount).replace(/,/g, '.')} {saving.currency || 'RUB'}
                       </td>
                       <td className="p-4 text-muted-foreground">{frequencyLabels[saving.frequency]}</td>
                       <td className="p-4 text-muted-foreground">{saving.employee_name}</td>
@@ -104,7 +104,7 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                     </Button>
                   </div>
                   <div className="text-xl font-bold text-green-500">
-                    {saving.amount.toLocaleString('ru-RU')} {saving.currency}
+                    {new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(saving.amount).replace(/,/g, '.')} {saving.currency || 'RUB'}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {frequencyLabels[saving.frequency]}
