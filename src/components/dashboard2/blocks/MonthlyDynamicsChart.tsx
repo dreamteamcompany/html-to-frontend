@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Bar, Line } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import { useState, useEffect, useMemo } from 'react';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
@@ -161,7 +161,6 @@ const MonthlyDynamicsChart = () => {
   }, [allPayments, period, dateFrom, dateTo]);
 
   const chartLabels = isMobile && labels.length === MONTHS.length && labels[0] === MONTHS[0] ? MONTHS_SHORT : labels;
-  const isBarChart = period === 'today' || period === 'week';
 
   const handleChartClick = (_event: unknown, elements: { index: number }[]) => {
     if (!elements.length) return;
@@ -180,8 +179,7 @@ const MonthlyDynamicsChart = () => {
     label: 'Расходы',
     data: chartData,
     borderColor: 'rgb(117, 81, 233)',
-    backgroundColor: isBarChart ? 'rgba(117, 81, 233, 0.7)' : 'rgba(117, 81, 233, 0.1)',
-    borderRadius: isMobile ? 4 : 8,
+    backgroundColor: 'rgba(117, 81, 233, 0.1)',
     borderWidth: isMobile ? 1.5 : 3,
     fill: true,
     tension: 0.4,
@@ -250,17 +248,10 @@ const MonthlyDynamicsChart = () => {
             </div>
           ) : (
             <div className="flex-1 min-h-[200px] sm:min-h-[300px]" style={{ position: 'relative', cursor: 'pointer' }}>
-              {isBarChart ? (
-                <Bar
-                  data={{ labels: chartLabels, datasets: [{ ...commonDataset }] }}
-                  options={commonOptions}
-                />
-              ) : (
-                <Line
-                  data={{ labels: chartLabels, datasets: [{ ...commonDataset }] }}
-                  options={commonOptions}
-                />
-              )}
+              <Line
+                data={{ labels: chartLabels, datasets: [{ ...commonDataset }] }}
+                options={commonOptions}
+              />
             </div>
           )}
         </CardContent>
