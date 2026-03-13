@@ -33,10 +33,10 @@ const escXml = (v: string) =>
 
 const cell = (value: string | number, isNum = false): string => {
   if (isNum) {
-    return `<c t="n"><v>${value}</v></c>`;
+    return `<c t="n" s="2"><v>${value}</v></c>`;
   }
   const safe = escXml(String(value ?? ''));
-  return `<c t="inlineStr"><is><t>${safe}</t></is></c>`;
+  return `<c t="inlineStr" s="2"><is><t>${safe}</t></is></c>`;
 };
 
 const headerCell = (value: string): string => {
@@ -111,10 +111,13 @@ ${sheetData}
   <cellStyleXfs count="1">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
   </cellStyleXfs>
-  <cellXfs count="2">
+  <cellXfs count="3">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
     <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1">
       <alignment horizontal="center" vertical="center" wrapText="1"/>
+    </xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1">
+      <alignment vertical="top" wrapText="1"/>
     </xf>
   </cellXfs>
 </styleSheet>`;
@@ -255,10 +258,13 @@ ${sheetData}
   <cellStyleXfs count="1">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
   </cellStyleXfs>
-  <cellXfs count="2">
+  <cellXfs count="3">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
     <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1">
       <alignment horizontal="center" vertical="center" wrapText="1"/>
+    </xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1">
+      <alignment vertical="top" wrapText="1"/>
     </xf>
   </cellXfs>
 </styleSheet>`;
