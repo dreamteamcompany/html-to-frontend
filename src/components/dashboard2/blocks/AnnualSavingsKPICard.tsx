@@ -43,11 +43,8 @@ const AnnualSavingsKPICard = () => {
     load();
   }, [load]);
 
-  const fmt = (v: number) => {
-    if (v >= 1_000_000) return `₽${(v / 1_000_000).toFixed(1)}М`;
-    if (v >= 1_000) return `₽${Math.round(v / 1_000)}К`;
-    return `₽${Math.round(v)}`;
-  };
+  const fmt = (v: number) =>
+    new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(v).replace(/,/g, '.') + ' RUB';
 
   const total = data?.total_amount ?? 0;
   const count = data?.count ?? 0;
