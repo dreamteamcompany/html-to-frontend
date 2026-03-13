@@ -40,7 +40,7 @@ export const useDashboardData = () => {
             timestamp: new Date(alert.timestamp),
             action: alert.action ? {
               label: alert.action.label,
-              onClick: () => navigate(alert.action.link || '/pending-approvals'),
+              onClick: () => navigate(alert.action.link || '/'),
             } : undefined,
           })),
         };

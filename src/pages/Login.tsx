@@ -17,18 +17,8 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const navigateAfterLogin = (userData: { roles?: { name: string }[]; permissions?: { resource: string; action: string }[] }) => {
-    const isCEO = userData.roles?.some((role) =>
-      role.name === 'CEO' || role.name === 'Генеральный директор'
-    );
-    const hasPaymentsAccess = userData.permissions?.some(
-      (p) => p.resource === 'payments' && p.action === 'read'
-    );
-    if (isCEO && hasPaymentsAccess) {
-      navigate('/pending-approvals');
-    } else {
-      navigate('/');
-    }
+  const navigateAfterLogin = (_userData: { roles?: { name: string }[]; permissions?: { resource: string; action: string }[] }) => {
+    navigate('/');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
