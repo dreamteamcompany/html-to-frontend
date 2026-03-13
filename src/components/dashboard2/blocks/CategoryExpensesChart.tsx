@@ -182,7 +182,7 @@ const CategoryExpensesChart = () => {
                         callback: (value) => {
                           const v = value as number;
                           if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн';
-                          if (v >= 1000) return (v / 1000).toFixed(0) + 'k';
+                          if (v >= 1000) return Math.round(v / 1000) + ' тыс.';
                           return String(v);
                         }
                       },

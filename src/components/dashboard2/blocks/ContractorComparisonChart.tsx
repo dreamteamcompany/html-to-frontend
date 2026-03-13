@@ -173,7 +173,7 @@ const ContractorComparisonChart = () => {
           callback: (value: unknown) => {
             const v = value as number;
             if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн';
-            if (v >= 1_000) return Math.round(v / 1_000) + 'k';
+            if (v >= 1_000) return Math.round(v / 1_000) + ' тыс.';
             return String(v);
           },
         },

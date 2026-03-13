@@ -52,7 +52,7 @@ const Dashboard2PaymentCalendar = () => {
           paymentsByDay[day] = { amount: 0, payments: [] };
         }
         paymentsByDay[day].amount += payment.amount;
-        const paymentLabel = `${payment.service_name || payment.category_name || 'Платеж'}: ${(payment.amount / 1000).toFixed(1)}K ₽`;
+        const paymentLabel = `${payment.service_name || payment.category_name || 'Платеж'}: ${payment.amount >= 1000 ? (payment.amount / 1000).toFixed(1) + ' тыс.' : payment.amount} ₽`;
         paymentsByDay[day].payments.push(paymentLabel);
       }
     });

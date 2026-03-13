@@ -215,8 +215,9 @@ const MonthlyDynamicsChart = () => {
           maxTicksLimit: isMobile ? 4 : 8,
           callback: (value: unknown) => {
             const v = value as number;
-            if (isMobile && v >= 1000) return (v / 1000).toFixed(0) + 'k';
-            return new Intl.NumberFormat('ru-RU', { notation: 'compact' }).format(v);
+            if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн';
+            if (v >= 1_000) return Math.round(v / 1_000) + ' тыс.';
+            return String(v);
           },
         },
         grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255, 255, 255, 0.06)', lineWidth: isMobile ? 0.5 : 1 },

@@ -55,8 +55,8 @@ const LiveMetricsCard = () => {
   const { todayCount, pendingCount, periodTotal, approvedRate, avgAmount } = metrics;
 
   const fmtAmount = (v: number) => {
-    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}м ₽`;
-    if (v >= 1_000) return `${Math.round(v / 1_000)}к ₽`;
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)} млн ₽`;
+    if (v >= 1_000) return `${Math.round(v / 1_000)} тыс. ₽`;
     return `${v} ₽`;
   };
 

@@ -17,7 +17,9 @@ const RussiaCitiesMap = ({ citiesData }: RussiaCitiesMapProps) => {
   const maxAmount = Math.max(...citiesData.map(c => c.amount));
   
   const formatAmount = (amount: number) => {
-    return (amount / 1000).toFixed(0) + ' k';
+    if (amount >= 1_000_000) return (amount / 1_000_000).toFixed(1) + ' млн';
+    if (amount >= 1_000) return Math.round(amount / 1_000) + ' тыс.';
+    return String(amount);
   };
 
   const getHexagonPath = (cx: number, cy: number, size: number) => {
