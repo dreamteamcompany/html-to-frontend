@@ -10,7 +10,7 @@ const Dashboard2ChartsSection = () => {
       <div className="min-w-0 max-w-full overflow-hidden">
         <MonthlyDynamicsChart />
       </div>
-      <div className="min-w-0 max-w-full overflow-hidden">
+      <div className="min-w-0 max-w-full overflow-hidden lg:col-span-2">
         <CategoryExpensesChart />
       </div>
       <div className="min-w-0 max-w-full overflow-hidden">
