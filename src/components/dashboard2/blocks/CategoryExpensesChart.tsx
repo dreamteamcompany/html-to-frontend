@@ -109,9 +109,10 @@ const CategoryExpensesChart = () => {
     label: category,
     data: categoryData[category],
     backgroundColor: colors[index % colors.length],
-    borderRadius: isMobile ? 5 : 10,
+    borderRadius: isMobile ? 4 : 8,
     borderSkipped: false as const,
-    maxBarThickness: isMobile ? 28 : 48,
+    barPercentage: 0.85,
+    categoryPercentage: 0.9,
   }));
 
   const handleChartClick = (_event: unknown, elements: { datasetIndex: number }[]) => {
