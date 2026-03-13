@@ -43,7 +43,36 @@ const getStatusBadge = (status?: string) => {
   return null;
 };
 
+const hasActionsForPayment = (
+  payment: Payment,
+  isPlannedPayments: boolean,
+  showApproveReject: boolean,
+  showRevoke: boolean,
+  showResubmit: boolean,
+  onSubmitForApproval?: (id: number) => void,
+  onDelete?: (id: number) => void,
+  onApprove?: (id: number) => void,
+  onReject?: (id: number) => void,
+  onRevoke?: (id: number) => void,
+  onResubmit?: (id: number) => void,
+  onPaymentClick?: (p: Payment) => void,
+): boolean => {
+  if (isPlannedPayments && onSubmitForApproval) return true;
+  if (!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status === 'pending_approval') && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit) return true;
+  if (!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit) return true;
+  if (showApproveReject && onApprove) return true;
+  if (showApproveReject && onReject) return true;
+  if (showRevoke && onRevoke) return true;
+  if (showResubmit && onResubmit) return true;
+  if (onPaymentClick) return true;
+  return false;
+};
+
 const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForApproval, onRevoke, onResubmit, onDelete, onPaymentClick, isPlannedPayments = false, showApproveReject = false, showRevoke = false, showResubmit = false }: PaymentsListProps) => {
+  const showActionsColumn = payments.some(p =>
+    hasActionsForPayment(p, isPlannedPayments, showApproveReject, showRevoke, showResubmit, onSubmitForApproval, onDelete, onApprove, onReject, onRevoke, onResubmit, onPaymentClick)
+  );
+
   return (
     <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
       <CardContent className="p-0">
@@ -66,7 +95,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Статус</th>
                     <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Дата</th>
-                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Действия</th>
+                    {showActionsColumn && <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Действия</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -104,69 +133,80 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           year: 'numeric'
                         })}
                       </td>
-                      <td className="p-4">
-                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                          {isPlannedPayments && onSubmitForApproval && (
-                            <button
-                              onClick={() => onSubmitForApproval(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30"
-                            >
-                              Создать платёж
-                            </button>
-                          )}
-                          {!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status === 'pending_approval') && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit && (
-                            <button
-                              onClick={() => onSubmitForApproval(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700"
-                              style={{ color: '#000000' }}
-                            >
-                              Отправить на согласование
-                            </button>
-                          )}
-                          {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (
-                            <button
-                              onClick={() => onDelete(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 flex items-center gap-1"
-                              title="Удалить черновик"
-                            >
-                              <Icon name="Trash2" size={14} />
-                              Удалить
-                            </button>
-                          )}
-                          {showApproveReject && onApprove && (
-                            <button
-                              onClick={() => onApprove(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700"
-                            >
-                              Одобрить
-                            </button>
-                          )}
-                          {showApproveReject && onReject && (
-                            <button
-                              onClick={() => onReject(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
-                            >
-                              Отклонить
-                            </button>
-                          )}
-                          {showRevoke && onRevoke && (
-                            <button
-                              onClick={() => onRevoke(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-orange-600 text-white hover:bg-orange-700"
-                            >
-                              Отозвать согласование
-                            </button>
-                          )}
-                          {showResubmit && onResubmit && (
-                            <button
-                              onClick={() => onResubmit(payment.id)}
-                              className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
-                            >
-                              Отправить на повторное согласование
-                            </button>
-                          )}
-                        </div>
-                      </td>
+                      {showActionsColumn && (
+                        <td className="p-4">
+                          <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                            {isPlannedPayments && onSubmitForApproval && (
+                              <button
+                                onClick={() => onSubmitForApproval(payment.id)}
+                                className="px-3 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                              >
+                                Создать платёж
+                              </button>
+                            )}
+                            {!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status === 'pending_approval') && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit && (
+                              <button
+                                onClick={() => onSubmitForApproval(payment.id)}
+                                className="px-3 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700"
+                                style={{ color: '#000000' }}
+                              >
+                                Отправить на согласование
+                              </button>
+                            )}
+                            {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (
+                              <button
+                                onClick={() => onDelete(payment.id)}
+                                className="px-3 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 flex items-center gap-1"
+                                title="Удалить черновик"
+                              >
+                                <Icon name="Trash2" size={14} />
+                                Удалить
+                              </button>
+                            )}
+                            {showApproveReject && onApprove && (
+                              <button
+                                onClick={() => onApprove(payment.id)}
+                                className="px-3 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700"
+                              >
+                                Одобрить
+                              </button>
+                            )}
+                            {showApproveReject && onReject && (
+                              <button
+                                onClick={() => onReject(payment.id)}
+                                className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
+                              >
+                                Отклонить
+                              </button>
+                            )}
+                            {showRevoke && onRevoke && (
+                              <button
+                                onClick={() => onRevoke(payment.id)}
+                                className="px-3 py-1 text-xs rounded bg-orange-600 text-white hover:bg-orange-700"
+                              >
+                                Отозвать согласование
+                              </button>
+                            )}
+                            {showResubmit && onResubmit && (
+                              <button
+                                onClick={() => onResubmit(payment.id)}
+                                className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                              >
+                                Повторное согласование
+                              </button>
+                            )}
+                            {!isPlannedPayments && !showApproveReject && !showRevoke && !showResubmit && payment.status !== 'draft' && payment.status !== 'pending_approval' && !(!payment.status) && onPaymentClick && (
+                              <button
+                                onClick={() => onPaymentClick(payment)}
+                                className="px-3 py-1 text-xs rounded bg-white/10 text-muted-foreground hover:bg-white/20 flex items-center gap-1"
+                              >
+                                <Icon name="Eye" size={14} />
+                                Детали
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
