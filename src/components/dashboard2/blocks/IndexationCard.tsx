@@ -5,6 +5,8 @@ import { dashboardTypography } from '../dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { parsePaymentDate, getPreviousPeriodRange } from '../dashboardUtils';
+import { useDrillDown } from '../useDrillDown';
+import DrillDownModal from '../DrillDownModal';
 
 interface PaymentRecord {
   status: string;
@@ -27,6 +29,7 @@ interface ServiceIndexation {
 const IndexationCard = () => {
   const { getDateRange, period, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
+  const { drillFilter, openDrill, closeDrill } = useDrillDown();
 
   const indexationData = useMemo(() => {
     const { from, to } = getDateRange();
@@ -98,7 +101,12 @@ const IndexationCard = () => {
   const { indexationPercent, serviceDetails, hasPreviousData } = indexationData;
 
   return (
-    <Card className="h-full" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547' }}>
+    <>
+    <Card
+      className="h-full"
+      style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255, 181, 71, 0.4)', borderTop: '4px solid #ffb547', cursor: loading ? 'default' : 'pointer' }}
+      onClick={() => !loading && openDrill({ type: 'all', value: '', label: 'Индексация — платежи за период' })}
+    >
       <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
         <div className="flex justify-between items-start mb-4 sm:mb-5">
           <div>
@@ -174,6 +182,8 @@ const IndexationCard = () => {
         )}
       </CardContent>
     </Card>
+    <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    </>
   );
 };
 

@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { useDrillDown } from '../useDrillDown';
+import DrillDownModal from '../DrillDownModal';
 
 interface SavingsData {
   total_amount: number;
@@ -15,6 +17,7 @@ const AnnualSavingsKPICard = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const [data, setData] = useState<SavingsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { drillFilter, openDrill, closeDrill } = useDrillDown();
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -52,11 +55,11 @@ const AnnualSavingsKPICard = () => {
   const progress = Math.min(Math.round((total / goal) * 100), 100);
 
   return (
-    <Card style={{
-      background: 'hsl(var(--card))',
-      border: '1px solid rgba(1, 181, 116, 0.3)',
-      position: 'relative', overflow: 'hidden'
-    }}>
+    <>
+    <Card
+      style={{ background: 'hsl(var(--card))', border: '1px solid rgba(1, 181, 116, 0.3)', position: 'relative', overflow: 'hidden', cursor: loading ? 'default' : 'pointer' }}
+      onClick={() => !loading && openDrill({ type: 'all', value: '', label: 'Экономия за период' })}
+    >
       <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{
           background: 'linear-gradient(135deg, #01b574 0%, #018c5a 100%)',
@@ -107,6 +110,8 @@ const AnnualSavingsKPICard = () => {
         </div>
       </CardContent>
     </Card>
+    <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    </>
   );
 };
 

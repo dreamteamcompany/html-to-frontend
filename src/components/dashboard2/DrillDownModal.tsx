@@ -5,7 +5,7 @@ import Icon from '@/components/ui/icon';
 import { exportDrillDownToExcel } from '@/utils/exportExcel';
 
 export interface DrillDownFilter {
-  type: 'category' | 'contractor' | 'department' | 'legal_entity' | 'payment_type' | 'date' | 'service';
+  type: 'category' | 'contractor' | 'department' | 'legal_entity' | 'payment_type' | 'date' | 'service' | 'all';
   value: string;
   label: string;
 }
@@ -106,6 +106,8 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
           const dateKey = raw.slice(0, 10);
           return dateKey === filter.value || raw.startsWith(filter.value);
         }
+        case 'all':
+          return true;
         default:
           return true;
       }
