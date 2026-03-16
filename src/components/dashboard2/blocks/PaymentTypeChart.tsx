@@ -17,7 +17,7 @@ interface PaymentRecord {
 }
 
 const fmt = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Math.round(v)) + ' ₽';
+  new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v).replace(/,/g, '.') + ' ₽';
 
 const isCash = (type?: string, legalEntityName?: string) =>
   type === 'cash' || legalEntityName === 'Наличные';

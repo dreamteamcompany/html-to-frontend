@@ -53,7 +53,7 @@ const TotalExpensesCard = () => {
   }, [allPayments, period, dateFrom, dateTo]);
 
   const formatAmount = (amount: number) =>
-    amount.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' ₽';
+    new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount).replace(/,/g, '.') + ' ₽';
 
   return (
     <>

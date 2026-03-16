@@ -54,7 +54,7 @@ const AnnualSavingsStatCard = () => {
   }, [loadSavingsData]);
 
   const formatAmount = (amount: number) =>
-    new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(amount).replace(/,/g, '.') + ' RUB';
+    new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount).replace(/,/g, '.') + ' ₽';
 
   const countLabel = (n: number) =>
     n === 1 ? 'запись' : n < 5 ? 'записи' : 'записей';
