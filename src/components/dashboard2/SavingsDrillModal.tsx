@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { API_ENDPOINTS } from '@/config/api';
+import { exportSavingsToExcel } from '@/utils/exportExcel';
 
 interface SavingsItem {
   id: number;
@@ -33,12 +34,12 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
   const { token } = useAuth();
   const { getDateRange } = usePeriod();
   const [items, setItems] = useState<SavingsItem[]>([]);
-  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [isMobile, setIsMobile] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -65,7 +66,6 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
       .then(r => r.ok ? r.json() : { items: [], total: 0 })
       .then(data => {
         setItems(Array.isArray(data.items) ? data.items : []);
-        setTotal(data.total ?? 0);
       })
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
@@ -103,6 +103,16 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortField(field); setSortDir('asc'); }
+  };
+
+  const handleExport = () => {
+    if (exporting || sorted.length === 0) return;
+    setExporting(true);
+    try {
+      exportSavingsToExcel(sorted, 'Реестр_экономии');
+    } finally {
+      setTimeout(() => setExporting(false), 800);
+    }
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -163,17 +173,38 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: '34px', height: '34px', borderRadius: '8px',
-              border: '1px solid hsl(var(--border))', background: 'transparent',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'hsl(var(--muted-foreground))', flexShrink: 0,
-            }}
-          >
-            <Icon name="X" size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            {!loading && sorted.length > 0 && (
+              <button
+                onClick={handleExport}
+                disabled={exporting}
+                title="Экспорт в Excel"
+                style={{
+                  height: '34px', borderRadius: '8px', padding: '0 12px',
+                  border: '1px solid rgba(1,181,116,0.4)',
+                  background: exporting ? 'rgba(1,181,116,0.1)' : 'rgba(1,181,116,0.08)',
+                  cursor: exporting ? 'default' : 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  color: '#01b574', fontSize: '12px', fontWeight: 600,
+                  transition: 'all 0.2s',
+                }}
+              >
+                <Icon name={exporting ? 'Loader2' : 'Download'} size={14} />
+                {!isMobile && (exporting ? 'Экспорт...' : 'Excel')}
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              style={{
+                width: '34px', height: '34px', borderRadius: '8px',
+                border: '1px solid hsl(var(--border))', background: 'transparent',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'hsl(var(--muted-foreground))',
+              }}
+            >
+              <Icon name="X" size={16} />
+            </button>
+          </div>
         </div>
 
         {/* SEARCH */}
