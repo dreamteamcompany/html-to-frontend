@@ -26,28 +26,27 @@ const LiveMetricsCard = () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const todayPayments = all.filter(p => {
-      if (p.status === 'cancelled') return false;
+      if (p.status !== 'approved') return false;
       const d = new Date(p.payment_date || p.created_at || '');
       return d >= today && d < tomorrow;
     });
 
-    const periodPayments = all.filter(p => {
+    const periodApproved = all.filter(p => {
+      if (p.status !== 'approved') return false;
       const d = new Date(p.payment_date);
       return d >= from && d <= to;
     });
-    const approved = periodPayments.filter(p => p.status === 'approved');
-    const rate = periodPayments.length > 0 ? Math.round((approved.length / periodPayments.length) * 100) : 0;
 
-    const totalAmount = approved.reduce((s, p) => s + Number(p.amount), 0);
-    const avg = approved.length > 0 ? Math.round(totalAmount / approved.length) : 0;
+    const totalAmount = periodApproved.reduce((s, p) => s + Number(p.amount), 0);
+    const avg = periodApproved.length > 0 ? Math.round(totalAmount / periodApproved.length) : 0;
 
-    const pendingInPeriod = periodPayments.filter(p => p.status === 'pending_approval');
+    const pendingInPeriod = all.filter(p => p.status === 'pending_approval');
 
     return {
       todayCount: todayPayments.length,
       pendingCount: pendingInPeriod.length,
-      periodTotal: periodPayments.length,
-      approvedRate: rate,
+      periodTotal: periodApproved.length,
+      approvedRate: periodApproved.length,
       avgAmount: avg,
     };
   }, [allPayments, period, dateFrom, dateTo]);
@@ -125,9 +124,9 @@ const LiveMetricsCard = () => {
             }}>
               <Icon name="CheckCircle2" size={16} style={{ color: '#7551e9', marginBottom: '6px' }} className="sm:w-5 sm:h-5" />
               <div style={{ color: '#7551e9', fontSize: '18px', fontWeight: '700' }} className="sm:text-2xl">
-                {loading ? '—' : `${approvedRate}%`}
+                {loading ? '—' : approvedRate}
               </div>
-              <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', marginTop: '2px' }} className="sm:text-xs sm:mt-1">Согласовано</div>
+              <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', marginTop: '2px' }} className="sm:text-xs sm:mt-1">За период</div>
             </div>
           </div>
 
