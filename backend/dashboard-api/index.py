@@ -1,7 +1,27 @@
 import json
 import os
+import jwt
 import psycopg2
 from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
+
+def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    headers = event.get('headers', {})
+    token = (headers.get('X-Auth-Token') or
+             headers.get('x-auth-token') or
+             headers.get('X-Authorization') or
+             headers.get('x-authorization', ''))
+    if token:
+        token = token.replace('Bearer ', '').strip()
+    if not token:
+        return None
+    try:
+        secret = os.environ.get('JWT_SECRET')
+        if not secret:
+            return None
+        return jwt.decode(token, secret, algorithms=['HS256'])
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+        return None
 
 def handler(event: dict, context) -> dict:
     '''API для получения данных дашборда с реальной статистикой из БД'''
@@ -24,6 +44,14 @@ def handler(event: dict, context) -> dict:
             'statusCode': 405,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
             'body': json.dumps({'error': 'Method not allowed'})
+        }
+
+    payload = verify_token(event)
+    if not payload:
+        return {
+            'statusCode': 401,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Требуется авторизация'})
         }
     
     conn = None
@@ -216,7 +244,6 @@ def handler(event: dict, context) -> dict:
                 'Access-Control-Allow-Origin': '*'
             },
             'body': json.dumps({
-                'error': 'Failed to load dashboard data',
-                'details': str(e)
+                'error': 'Ошибка загрузки данных дашборда'
             })
         }

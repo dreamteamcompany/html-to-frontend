@@ -1,16 +1,11 @@
 {
   "tests": [
     {
-      "name": "Get dashboard data successfully",
+      "name": "Reject unauthenticated request",
       "method": "GET",
       "path": "/",
-      "expectedStatus": 200,
-      "expectedBody": {
-        "state": "ready",
-        "kpis": "array",
-        "activity": "array",
-        "recentEvents": "array"
-      },
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     },
     {

@@ -3,6 +3,7 @@ import { DashboardData, DashboardDataState } from '@/types/dashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import FUNC_URLS from '@/../backend/func2url.json';
+import { apiFetch } from '@/utils/api';
 
 export const useDashboardData = () => {
   const [data, setData] = useState<DashboardData>({
@@ -20,7 +21,7 @@ export const useDashboardData = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetch(FUNC_URLS['dashboard-api']);
+        const response = await apiFetch(FUNC_URLS['dashboard-api']);
         
         if (!response.ok) {
           throw new Error('Failed to fetch dashboard data');

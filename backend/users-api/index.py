@@ -197,9 +197,29 @@ def handle_users_endpoint(event: Dict[str, Any], conn, method: str, path: str) -
             update_values.append(body['is_active'])
         
         if 'role_ids' in body:
+            raw_role_ids = body['role_ids']
+            if not isinstance(raw_role_ids, list):
+                cur.close()
+                return response(400, {'error': 'role_ids должен быть списком'})
+            try:
+                validated_role_ids = [int(rid) for rid in raw_role_ids]
+            except (TypeError, ValueError):
+                cur.close()
+                return response(400, {'error': 'role_ids содержит недопустимые значения'})
+            if validated_role_ids:
+                placeholders = ','.join(['%s'] * len(validated_role_ids))
+                cur.execute(
+                    f"SELECT id FROM {SCHEMA}.roles WHERE id IN ({placeholders})",
+                    validated_role_ids
+                )
+                existing_ids = {row['id'] for row in cur.fetchall()}
+                invalid_ids = [rid for rid in validated_role_ids if rid not in existing_ids]
+                if invalid_ids:
+                    cur.close()
+                    return response(400, {'error': f'Роли не найдены: {invalid_ids}'})
             # Обновляем роли пользователя
             cur.execute(f"DELETE FROM {SCHEMA}.user_roles WHERE user_id = %s", (user_id,))
-            for role_id in body['role_ids']:
+            for role_id in validated_role_ids:
                 cur.execute(f"""
                     INSERT INTO {SCHEMA}.user_roles (user_id, role_id)
                     VALUES (%s, %s)

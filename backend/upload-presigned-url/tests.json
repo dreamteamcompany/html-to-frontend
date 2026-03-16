@@ -1,48 +1,22 @@
 {
   "tests": [
     {
-      "name": "Upload file via base64",
+      "name": "Reject unauthenticated upload",
       "method": "POST",
       "path": "/",
       "body": {
         "file_name": "test_image.jpg",
-        "file_type": "image/jpeg",
-        "file_data": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k="
-      },
-      "expectedStatus": 200,
-      "expectedBody": {
-        "file_url": "string",
-        "file_key": "string"
-      },
-      "bodyMatcher": "partial"
-    },
-    {
-      "name": "Get presigned URL without file_data",
-      "method": "POST",
-      "path": "/",
-      "body": {
-        "file_name": "test_document.pdf",
-        "file_type": "application/pdf"
-      },
-      "expectedStatus": 200,
-      "expectedBody": {
-        "presigned_url": "string",
-        "file_url": "string"
-      },
-      "bodyMatcher": "partial"
-    },
-    {
-      "name": "Missing file_name",
-      "method": "POST",
-      "path": "/",
-      "body": {
         "file_type": "image/jpeg"
       },
-      "expectedStatus": 400,
-      "expectedBody": {
-        "error": "string"
-      },
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Handle OPTIONS request",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
     }
   ]
 }

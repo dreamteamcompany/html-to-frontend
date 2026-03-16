@@ -1,15 +1,11 @@
 {
   "tests": [
     {
-      "name": "Очистка платежей",
+      "name": "Reject unauthenticated request",
       "method": "POST",
       "path": "/",
-      "expectedStatus": 200,
-      "expectedBody": {
-        "success": true,
-        "mode": "payments",
-        "tables_cleared": 15
-      },
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     }
   ]

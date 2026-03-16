@@ -40,9 +40,13 @@ def get_db_connection():
 
 def create_jwt_token(user_id: int) -> str:
     secret = os.environ.get('JWT_SECRET')
+    if not secret:
+        raise ValueError('JWT_SECRET not configured')
+    now = datetime.utcnow()
     payload = {
         'user_id': user_id,
-        'exp': datetime.utcnow() + timedelta(hours=24),
+        'iat': now,
+        'exp': now + timedelta(hours=24),
     }
     return jwt.encode(payload, secret, algorithm='HS256')
 

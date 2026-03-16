@@ -2,13 +2,42 @@ import json
 import os
 import base64
 import boto3
+import jwt
 from datetime import datetime
+from typing import Optional, Dict, Any
 
 CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, Authorization, X-Authorization',
 }
+
+def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    headers = event.get('headers', {})
+    token = (headers.get('X-Auth-Token') or
+             headers.get('x-auth-token') or
+             headers.get('X-Authorization') or
+             headers.get('x-authorization', ''))
+    if token:
+        token = token.replace('Bearer ', '').strip()
+    if not token:
+        return None
+    try:
+        secret = os.environ.get('JWT_SECRET')
+        if not secret:
+            return None
+        return jwt.decode(token, secret, algorithms=['HS256'])
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+        return None
+
+ALLOWED_TYPES = {
+    'application/pdf', 'image/jpeg', 'image/jpg', 'image/png',
+    'image/gif', 'image/webp', 'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+}
+MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 def handler(event: dict, context) -> dict:
     '''Загрузка файла в S3. Принимает base64-encoded файл, сохраняет в хранилище, возвращает публичный URL.'''
@@ -25,6 +54,14 @@ def handler(event: dict, context) -> dict:
             'body': json.dumps({'error': 'Method not allowed'})
         }
 
+    payload = verify_token(event)
+    if not payload:
+        return {
+            'statusCode': 401,
+            'headers': {'Content-Type': 'application/json', **CORS_HEADERS},
+            'body': json.dumps({'error': 'Требуется авторизация'})
+        }
+
     try:
         body = json.loads(event.get('body', '{}'))
 
@@ -39,6 +76,16 @@ def handler(event: dict, context) -> dict:
                 'body': json.dumps({'error': 'file_name and file_type are required'})
             }
 
+        if file_type not in ALLOWED_TYPES:
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', **CORS_HEADERS},
+                'body': json.dumps({'error': 'Недопустимый тип файла'})
+            }
+
+        import re
+        safe_name = re.sub(r'[^\w.\-]', '_', os.path.basename(file_name))[:100]
+
         aws_access_key = os.environ.get('AWS_ACCESS_KEY_ID')
         aws_secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
 
@@ -49,7 +96,7 @@ def handler(event: dict, context) -> dict:
         )
 
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        unique_file_name = f"{timestamp}_{file_name}"
+        unique_file_name = f"{timestamp}_{safe_name}"
         file_key = f'invoices/{unique_file_name}'
 
         if file_data:
@@ -57,6 +104,12 @@ def handler(event: dict, context) -> dict:
             if ',' in file_data:
                 file_data = file_data.split(',')[1]
             file_bytes = base64.b64decode(file_data)
+            if len(file_bytes) > MAX_FILE_SIZE_BYTES:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', **CORS_HEADERS},
+                    'body': json.dumps({'error': 'Файл слишком большой (максимум 10 МБ)'})
+                }
             s3.put_object(Bucket='files', Key=file_key, Body=file_bytes, ContentType=file_type)
             cdn_url = f"https://cdn.poehali.dev/projects/{aws_access_key}/bucket/{file_key}"
             return {
@@ -84,5 +137,5 @@ def handler(event: dict, context) -> dict:
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', **CORS_HEADERS},
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps({'error': 'Ошибка загрузки файла'})
         }
