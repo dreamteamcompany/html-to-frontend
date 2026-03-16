@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Line } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import { useState, useEffect, useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
 import Icon from '@/components/ui/icon';
@@ -81,6 +81,8 @@ const LegalEntityComparisonChart = () => {
   const displayData = showAll ? legalEntityData : legalEntityData.slice(0, 5);
   const total = legalEntityData.reduce((s, c) => s + c.amount, 0);
 
+  const isSingleItem = displayData.length <= 2;
+
   const tickColor = isLight ? 'rgba(30,30,50,0.6)' : 'rgba(180,190,220,0.65)';
   const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)';
 
@@ -107,6 +109,81 @@ const LegalEntityComparisonChart = () => {
       tension: 0.38,
       borderWidth: 2.5,
     }],
+  };
+
+  const barData = {
+    labels: displayData.map(d => d.name),
+    datasets: [{
+      label: 'Расходы',
+      data: displayData.map(d => d.amount),
+      backgroundColor: displayData.map((_, i) => LINE_COLORS[i % LINE_COLORS.length].fill.replace('0.12)', '0.7)').replace('0.10)', '0.7)')),
+      borderColor: displayData.map((_, i) => LINE_COLORS[i % LINE_COLORS.length].line),
+      borderRadius: 10,
+      borderSkipped: false as const,
+      maxBarThickness: isMobile ? 60 : 90,
+      borderWidth: 2,
+    }],
+  };
+
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    onClick: (_event: unknown, elements: { index: number }[]) => {
+      if (!elements.length) return;
+      const name = displayData[elements[0].index]?.name;
+      if (name) openDrill({ type: 'legal_entity', value: name, label: name });
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        enabled: !isMobile,
+        backgroundColor: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(18,20,45,0.96)',
+        titleColor: isLight ? 'rgba(30,30,50,0.9)' : 'rgba(200,210,235,0.95)',
+        bodyColor: isLight ? 'rgba(30,30,50,0.72)' : 'rgba(170,185,215,0.85)',
+        borderColor: isLight ? 'rgba(57,101,255,0.2)' : 'rgba(57,101,255,0.3)',
+        borderWidth: 1,
+        padding: 12,
+        cornerRadius: 12,
+        callbacks: {
+          title: (items: { dataIndex: number }[]) => displayData[items[0]?.dataIndex ?? 0]?.name ?? '',
+          label: (context: { raw: unknown }) => `  ${fmt(context.raw as number)}`,
+          footer: () => 'Нажмите для детализации',
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: tickColor,
+          font: { size: isMobile ? 10 : 12, family: 'Plus Jakarta Sans, sans-serif' as const },
+          padding: 6,
+          callback: (_val: unknown, index: number) => {
+            const name = displayData[index]?.name ?? '';
+            if (isMobile) return name.length > 10 ? name.slice(0, 9) + '…' : name;
+            return name.length > 18 ? name.slice(0, 17) + '…' : name;
+          },
+        },
+        grid: { display: false },
+        border: { display: false },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          color: tickColor,
+          font: { size: isMobile ? 10 : 11, family: 'Plus Jakarta Sans, sans-serif' as const },
+          maxTicksLimit: isMobile ? 4 : 6,
+          padding: 8,
+          callback: (value: unknown) => {
+            const v = value as number;
+            if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн';
+            if (v >= 1_000) return Math.round(v / 1_000) + ' тыс.';
+            return String(v);
+          },
+        },
+        grid: { color: gridColor, lineWidth: 1 },
+        border: { dash: [4, 4], display: false },
+      },
+    },
   };
 
   const chartOptions = {
@@ -287,8 +364,25 @@ const LegalEntityComparisonChart = () => {
               </div>
             )}
 
-            <div className="flex-1 min-h-[200px] sm:min-h-[280px]" style={{ position: 'relative', cursor: 'pointer' }}>
-              <Line data={areaData} options={chartOptions} />
+            <div
+              className="flex-1 min-h-[200px] sm:min-h-[280px]"
+              style={{ position: 'relative', display: 'flex', alignItems: 'stretch', justifyContent: 'center' }}
+            >
+              <div style={{
+                position: 'relative',
+                width: isSingleItem
+                  ? (displayData.length === 1
+                    ? (isMobile ? '55%' : '35%')
+                    : (isMobile ? '75%' : '55%'))
+                  : '100%',
+                minWidth: isSingleItem ? (isMobile ? '140px' : '180px') : undefined,
+                cursor: 'pointer',
+              }}>
+                {isSingleItem
+                  ? <Bar data={barData} options={barOptions} />
+                  : <Line data={areaData} options={chartOptions} />
+                }
+              </div>
             </div>
 
             {/* Мобильный список */}
