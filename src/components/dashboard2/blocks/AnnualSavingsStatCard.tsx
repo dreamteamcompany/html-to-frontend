@@ -5,8 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
-import { useDrillDown } from '../useDrillDown';
-import DrillDownModal from '../DrillDownModal';
+import SavingsDrillModal from '../SavingsDrillModal';
 
 interface TopDepartment {
   department_name: string;
@@ -24,7 +23,7 @@ const AnnualSavingsStatCard = () => {
   const [loadError, setLoadError] = useState(false);
   const { token } = useAuth();
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
-  const { drillFilter, openDrill, closeDrill } = useDrillDown();
+  const [savingsOpen, setSavingsOpen] = useState(false);
 
   const loadSavingsData = useCallback(async () => {
     if (!token) return;
@@ -64,7 +63,7 @@ const AnnualSavingsStatCard = () => {
     <Card
       className="h-full"
       style={{ background: 'hsl(var(--card))', border: '1px solid rgba(1, 181, 116, 0.4)', borderTop: '4px solid #01b574', position: 'relative', overflow: 'hidden', cursor: !savingsData ? 'default' : 'pointer' }}
-      onClick={() => savingsData && openDrill({ type: 'all', value: '', label: 'Экономия' })}
+      onClick={() => savingsData && setSavingsOpen(true)}
     >
       <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between" style={{ position: 'relative', zIndex: 1 }}>
         <div className="flex justify-between items-start mb-4 sm:mb-5">
@@ -122,7 +121,7 @@ const AnnualSavingsStatCard = () => {
         )}
       </CardContent>
     </Card>
-    <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    <SavingsDrillModal open={savingsOpen} onClose={() => setSavingsOpen(false)} />
     </>
   );
 };

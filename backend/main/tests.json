@@ -36,6 +36,12 @@
       "method": "GET",
       "path": "/?endpoint=webauthn-credentials",
       "expectedStatus": 401
+    },
+    {
+      "name": "Savings List Unauthorized",
+      "method": "GET",
+      "path": "/?endpoint=savings-list",
+      "expectedStatus": 401
     }
   ]
 }

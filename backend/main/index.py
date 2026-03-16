@@ -428,6 +428,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'dashboard-stats': lambda p, u: handle_dashboard_stats(method, event, conn, p),
             'budget-breakdown': lambda p, u: handle_budget_breakdown(method, event, conn, p),
             'savings-dashboard': lambda p, u: handle_savings_dashboard(method, event, conn, p),
+            'savings-list': lambda p, u: handle_savings_list(method, event, conn, p),
         }
         
         if endpoint in auth_endpoints:
@@ -5152,5 +5153,67 @@ def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: 
 
     except Exception as e:
         return response(500, {'error': str(e)})
+    finally:
+        cur.close()
+
+
+def handle_savings_list(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Список записей реестра экономии для детализации с фильтрацией по периоду"""
+    if method != 'GET':
+        return response(405, {'error': 'Метод не поддерживается'})
+
+    qp = event.get('queryStringParameters') or {}
+    start_date = qp.get('startDate')
+    end_date = qp.get('endDate')
+
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    try:
+        if start_date and end_date:
+            cur.execute(f"""
+                SELECT
+                    s.id,
+                    s.created_at,
+                    s.amount,
+                    s.description,
+                    COALESCE(cd.name, 'Не указан') as department_name,
+                    COALESCE(srv.name, '') as service_name
+                FROM {SCHEMA}.savings s
+                LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
+                LEFT JOIN {SCHEMA}.services srv ON s.service_id = srv.id
+                WHERE s.created_at >= %s AND s.created_at <= %s
+                ORDER BY s.created_at DESC
+            """, (start_date, end_date))
+        else:
+            cur.execute(f"""
+                SELECT
+                    s.id,
+                    s.created_at,
+                    s.amount,
+                    s.description,
+                    COALESCE(cd.name, 'Не указан') as department_name,
+                    COALESCE(srv.name, '') as service_name
+                FROM {SCHEMA}.savings s
+                LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
+                LEFT JOIN {SCHEMA}.services srv ON s.service_id = srv.id
+                ORDER BY s.created_at DESC
+            """)
+
+        rows = cur.fetchall()
+        return response(200, {
+            'items': [{
+                'id': row['id'],
+                'created_at': row['created_at'].isoformat() if row['created_at'] else None,
+                'amount': float(row['amount']),
+                'description': row['description'] or '',
+                'department_name': row['department_name'],
+                'service_name': row['service_name'],
+            } for row in rows],
+            'total': float(sum(row['amount'] for row in rows)),
+            'count': len(rows),
+        })
+
+    except Exception as e_savings:
+        return response(500, {'error': str(e_savings)})
     finally:
         cur.close()
