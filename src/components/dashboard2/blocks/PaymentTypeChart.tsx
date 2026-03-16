@@ -16,11 +16,8 @@ interface PaymentRecord {
   [key: string]: unknown;
 }
 
-const fmt = (v: number) => {
-  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн ₽';
-  if (v >= 1_000) return Math.round(v / 1_000) + ' тыс. ₽';
-  return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
-};
+const fmt = (v: number) =>
+  new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Math.round(v)) + ' ₽';
 
 const isCash = (type?: string, legalEntityName?: string) =>
   type === 'cash' || legalEntityName === 'Наличные';
