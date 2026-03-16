@@ -95,8 +95,9 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
         case 'legal_entity':
           return (p.legal_entity_name || 'Без юр. лица') === filter.value;
         case 'payment_type': {
-          if (filter.value === 'cash') return p.payment_type === 'cash';
-          return p.payment_type !== 'cash';
+          const isCashPayment = p.payment_type === 'cash' || p.legal_entity_name === 'Наличные';
+          if (filter.value === 'cash') return isCashPayment;
+          return !isCashPayment;
         }
         case 'date': {
           const dateKey = raw.slice(0, 10);

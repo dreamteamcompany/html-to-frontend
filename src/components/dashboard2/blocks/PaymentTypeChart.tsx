@@ -22,8 +22,10 @@ const fmt = (v: number) => {
   return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
 };
 
-const isCash = (type?: string) => type === 'cash';
-const isLegal = (type?: string) => type === 'bank_transfer' || type === 'legal' || (!!type && type !== 'cash');
+const isCash = (type?: string, legalEntityName?: string) =>
+  type === 'cash' || legalEntityName === 'Наличные';
+const isLegal = (type?: string, legalEntityName?: string) =>
+  !isCash(type, legalEntityName) && !!type;
 
 const PaymentTypeChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
@@ -44,10 +46,10 @@ const PaymentTypeChart = () => {
     let cash = 0, cashCnt = 0, legal = 0, legalCnt = 0;
 
     filtered.forEach((p: PaymentRecord) => {
-      if (isCash(p.payment_type)) {
+      if (isCash(p.payment_type, p.legal_entity_name)) {
         cash += p.amount;
         cashCnt++;
-      } else if (isLegal(p.payment_type)) {
+      } else if (isLegal(p.payment_type, p.legal_entity_name)) {
         legal += p.amount;
         legalCnt++;
       }
