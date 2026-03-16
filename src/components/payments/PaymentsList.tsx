@@ -58,7 +58,7 @@ const hasActionsForPayment = (
   onPaymentClick?: (p: Payment) => void,
 ): boolean => {
   if (isPlannedPayments && onSubmitForApproval) return true;
-  if (!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status === 'pending_approval') && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit) return true;
+  if (!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status?.startsWith('pending_')) && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit) return true;
   if (!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit) return true;
   if (showApproveReject && onApprove) return true;
   if (showApproveReject && onReject) return true;

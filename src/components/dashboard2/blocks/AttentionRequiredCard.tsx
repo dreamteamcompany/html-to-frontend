@@ -29,7 +29,7 @@ const AttentionRequiredCard = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        setOverdue(all.filter(p => p.status === 'pending' && new Date(p.payment_date) < today).length);
+        setOverdue(all.filter(p => p.status?.startsWith('pending_') && new Date(p.payment_date) < today).length);
         setRejected(all.filter(p => p.status === 'rejected').length);
       } catch {
         // silent

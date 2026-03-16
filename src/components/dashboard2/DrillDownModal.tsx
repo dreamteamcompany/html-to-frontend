@@ -19,11 +19,13 @@ type SortField = 'payment_date' | 'amount';
 type SortDir = 'asc' | 'desc';
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
+  draft: { label: 'Черновик', color: '#9ca3af' },
+  pending_ib: { label: 'На согласовании (ИБ)', color: '#ffb547' },
+  pending_cfo: { label: 'На согласовании (CFO)', color: '#ffb547' },
+  pending_ceo: { label: 'На согласовании (CEO)', color: '#ffb547' },
   approved: { label: 'Согласован', color: '#00c951' },
-  pending: { label: 'На согласовании', color: '#ffb547' },
   rejected: { label: 'Отклонён', color: '#ff4d6d' },
-  paid: { label: 'Оплачен', color: '#7551e9' },
-  cancelled: { label: 'Отменён', color: '#9ca3af' },
+  revoked: { label: 'Отозван', color: '#9ca3af' },
 };
 
 const fmt = (v: number) =>

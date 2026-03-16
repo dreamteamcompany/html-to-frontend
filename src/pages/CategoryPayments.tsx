@@ -77,18 +77,22 @@ const CategoryPayments = () => {
 
   const statusColors: Record<string, string> = {
     draft: '#6c757d',
-    pending: '#ffc107',
+    pending_ib: '#ffc107',
+    pending_cfo: '#ffc107',
+    pending_ceo: '#ffc107',
     approved: '#28a745',
     rejected: '#dc3545',
-    paid: '#17a2b8'
+    revoked: '#6c757d',
   };
 
   const statusLabels: Record<string, string> = {
     draft: 'Черновик',
-    pending: 'На согласовании',
+    pending_ib: 'На согласовании (ИБ)',
+    pending_cfo: 'На согласовании (CFO)',
+    pending_ceo: 'На согласовании (CEO)',
     approved: 'Одобрено',
     rejected: 'Отклонено',
-    paid: 'Оплачено'
+    revoked: 'Отозвано',
   };
 
   return (
@@ -177,8 +181,8 @@ const CategoryPayments = () => {
                             {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(payment.amount)}
                           </div>
                           <div style={{
-                            background: statusColors[payment.status] + '20',
-                            color: statusColors[payment.status]
+                            background: (statusColors[payment.status] || '#6c757d') + '20',
+                            color: statusColors[payment.status] || '#6c757d'
                           }} className="inline-block px-2 py-1 rounded-md text-[10px] sm:text-xs font-semibold whitespace-nowrap">
                             {statusLabels[payment.status] || payment.status}
                           </div>

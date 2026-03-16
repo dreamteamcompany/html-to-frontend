@@ -38,13 +38,13 @@ const IndexationCard = () => {
     const { prevFrom, prevTo } = getPreviousPeriodRange(period, from, to);
 
     const currentPayments = approvedPayments.filter((p: PaymentRecord) => {
-      const d = parsePaymentDate(String(p.payment_date));
-      return d >= from && d <= to;
+      const d = parsePaymentDate(p.payment_date);
+      return !isNaN(d.getTime()) && d >= from && d <= to;
     });
 
     const previousPayments = approvedPayments.filter((p: PaymentRecord) => {
-      const d = parsePaymentDate(String(p.payment_date));
-      return d >= prevFrom && d <= prevTo;
+      const d = parsePaymentDate(p.payment_date);
+      return !isNaN(d.getTime()) && d >= prevFrom && d <= prevTo;
     });
 
     // Суммарные расходы по периодам

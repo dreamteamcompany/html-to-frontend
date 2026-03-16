@@ -29,14 +29,14 @@ const CriticalAlertsCard = () => {
     today.setHours(0, 0, 0, 0);
 
     const overdue = all.filter(p => {
-      if (p.status !== 'pending_approval') return false;
+      if (!p.status?.startsWith('pending_')) return false;
       const d = new Date(p.payment_date);
       return d < today;
     });
 
     const rejected = all.filter(p => p.status === 'rejected');
 
-    const pending = all.filter(p => p.status === 'pending_approval');
+    const pending = all.filter(p => p.status?.startsWith('pending_'));
 
     const built: Alert[] = [];
 
