@@ -114,7 +114,10 @@ const CategoryExpensesChart = () => {
   }, [allPayments, period, dateFrom, dateTo]);
 
   const labelCount = xLabels.length;
-  const maxBarThickness = labelCount <= 2 ? (isMobile ? 40 : 60) : labelCount <= 5 ? (isMobile ? 28 : 48) : undefined;
+  const datasetCount = Object.keys(categoryData).length || 1;
+  const minColWidth = isMobile ? 32 : 48;
+  const minChartWidth = labelCount * datasetCount * minColWidth;
+  const maxBarThickness = labelCount <= 2 ? (isMobile ? 40 : 60) : labelCount <= 5 ? (isMobile ? 28 : 48) : (isMobile ? 18 : 28);
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,
@@ -124,7 +127,7 @@ const CategoryExpensesChart = () => {
     borderSkipped: false as const,
     barPercentage: 0.85,
     categoryPercentage: 0.9,
-    ...(maxBarThickness !== undefined ? { maxBarThickness } : {}),
+    maxBarThickness,
   }));
 
   const handleChartClick = (_event: unknown, elements: { datasetIndex: number }[]) => {
@@ -147,11 +150,16 @@ const CategoryExpensesChart = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
             </div>
           ) : (
-            <div className="flex-1 min-h-[260px] sm:min-h-[360px] flex items-stretch justify-center" style={{ position: 'relative' }}>
+            <div
+              className="flex-1 min-h-[260px] sm:min-h-[360px]"
+              style={{ position: 'relative', overflowX: 'auto', overflowY: 'hidden' }}
+            >
               <div style={{
                 position: 'relative',
-                width: labelCount <= 2 ? (isMobile ? '60%' : '40%') : labelCount <= 5 ? (isMobile ? '80%' : '65%') : '100%',
-                minWidth: labelCount <= 2 ? (isMobile ? '160px' : '220px') : undefined,
+                width: '100%',
+                minWidth: `${minChartWidth}px`,
+                height: '100%',
+                minHeight: isMobile ? '260px' : '360px',
                 cursor: 'pointer',
               }}>
               <Bar
@@ -203,10 +211,9 @@ const CategoryExpensesChart = () => {
                       ticks: {
                         color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.75)',
                         font: { size: isMobile ? 9 : 11 },
-                        maxRotation: isMobile ? 45 : 0,
-                        minRotation: isMobile ? 45 : 0,
-                        autoSkip: true,
-                        maxTicksLimit: isMobile ? 6 : (period === 'year' ? 12 : period === 'today' ? 12 : 16),
+                        maxRotation: labelCount > 12 ? 45 : 0,
+                        minRotation: 0,
+                        autoSkip: false,
                         padding: 4,
                       },
                       grid: { display: false }
