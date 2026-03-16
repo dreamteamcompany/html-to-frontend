@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { useDrillDown } from './useDrillDown';
+import DrillDownModal from './DrillDownModal';
 
 interface PaymentRecord {
   status: string;
@@ -33,9 +35,10 @@ interface BarChartProps {
   data: { name: string; amount: number }[];
   isMobile: boolean;
   isLight: boolean;
+  onItemClick: (name: string) => void;
 }
 
-const BarChart = ({ data, isMobile, isLight }: BarChartProps) => {
+const BarChart = ({ data, isMobile, isLight, onItemClick }: BarChartProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -62,13 +65,14 @@ const BarChart = ({ data, isMobile, isLight }: BarChartProps) => {
             key={item.name}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
+            onClick={() => onItemClick(item.name)}
             style={{
               padding: isMobile ? '10px 12px' : '13px 16px',
               borderRadius: '12px',
               background: isHov ? color.light : isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.03)',
               border: `1px solid ${isHov ? color.solid : isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)'}`,
               transition: 'all 0.2s ease',
-              cursor: 'default',
+              cursor: 'pointer',
             }}
           >
             {/* Заголовок строки */}
@@ -147,6 +151,7 @@ const BarChart = ({ data, isMobile, isLight }: BarChartProps) => {
 
 const Dashboard2TeamPerformance = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const { drillFilter, openDrill, closeDrill } = useDrillDown();
   const [currentData, setCurrentData] = useState<{ name: string; amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -187,7 +192,7 @@ const Dashboard2TeamPerformance = () => {
 
         const map: Record<string, number> = {};
         filtered.forEach(p => {
-          const dept = p.department_name || 'Не указан';
+          const dept = p.department_name || 'Без отдела';
           map[dept] = (map[dept] || 0) + Number(p.amount);
         });
 
@@ -209,6 +214,7 @@ const Dashboard2TeamPerformance = () => {
   const total = currentData.reduce((s, d) => s + d.amount, 0);
 
   return (
+    <>
     <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(255,255,255,0.07)' }}>
       <CardContent className="flex flex-col flex-1" style={{ padding: isMobile ? '16px' : '24px' }}>
         {/* Заголовок */}
@@ -245,10 +251,17 @@ const Dashboard2TeamPerformance = () => {
             <p style={{ color: 'hsl(var(--muted-foreground))' }}>Нет данных за выбранный период</p>
           </div>
         ) : (
-          <BarChart data={currentData} isMobile={isMobile} isLight={isLight} />
+          <BarChart
+            data={currentData}
+            isMobile={isMobile}
+            isLight={isLight}
+            onItemClick={(name) => openDrill({ type: 'department', value: name, label: name })}
+          />
         )}
       </CardContent>
     </Card>
+    <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+    </>
   );
 };
 
