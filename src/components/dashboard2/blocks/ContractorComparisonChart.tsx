@@ -143,7 +143,10 @@ const ContractorComparisonChart = () => {
             const idx = items[0]?.dataIndex ?? 0;
             return displayData[idx]?.name ?? '';
           },
-          label: (context: { raw: unknown }) => `  ${fmt(context.raw as number)}`,
+          label: (context: { raw: unknown }) => {
+            const v = context.raw as number;
+            return '  ' + new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v).replace(/,/g, '.') + ' ₽';
+          },
           footer: () => 'Нажмите для детализации',
         },
       },
