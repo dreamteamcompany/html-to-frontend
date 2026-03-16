@@ -113,6 +113,9 @@ const CategoryExpensesChart = () => {
     return { categoryData: result, xLabels: finalLabels };
   }, [allPayments, period, dateFrom, dateTo]);
 
+  const labelCount = xLabels.length;
+  const maxBarThickness = labelCount <= 2 ? (isMobile ? 40 : 60) : labelCount <= 5 ? (isMobile ? 28 : 48) : undefined;
+
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,
     data: categoryData[category],
@@ -121,6 +124,7 @@ const CategoryExpensesChart = () => {
     borderSkipped: false as const,
     barPercentage: 0.85,
     categoryPercentage: 0.9,
+    ...(maxBarThickness !== undefined ? { maxBarThickness } : {}),
   }));
 
   const handleChartClick = (_event: unknown, elements: { datasetIndex: number }[]) => {
@@ -143,7 +147,13 @@ const CategoryExpensesChart = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
             </div>
           ) : (
-            <div className="flex-1 min-h-[260px] sm:min-h-[360px]" style={{ position: 'relative', cursor: 'pointer' }}>
+            <div className="flex-1 min-h-[260px] sm:min-h-[360px] flex items-stretch justify-center" style={{ position: 'relative' }}>
+              <div style={{
+                position: 'relative',
+                width: labelCount <= 2 ? (isMobile ? '60%' : '40%') : labelCount <= 5 ? (isMobile ? '80%' : '65%') : '100%',
+                minWidth: labelCount <= 2 ? (isMobile ? '160px' : '220px') : undefined,
+                cursor: 'pointer',
+              }}>
               <Bar
                 data={{ labels: xLabels, datasets }}
                 options={{
@@ -204,6 +214,7 @@ const CategoryExpensesChart = () => {
                   }
                 }}
               />
+              </div>
             </div>
           )}
         </CardContent>
