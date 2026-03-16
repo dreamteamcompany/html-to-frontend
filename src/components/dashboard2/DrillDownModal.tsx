@@ -80,6 +80,7 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
     const { from, to } = getDateRange();
 
     return (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
+      if (p.status !== 'approved') return false;
       if (!p.payment_date) return false;
       const raw = String(p.payment_date);
       const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
