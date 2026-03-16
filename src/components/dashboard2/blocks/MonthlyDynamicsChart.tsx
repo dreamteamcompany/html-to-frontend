@@ -34,8 +34,10 @@ interface ChartConfig {
 
 const getChartConfig = (period: string, from: Date, to: Date): ChartConfig => {
   if (period === 'today') {
+    const datePrefix = fmtDateKey(from);
     const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
-    return { labels: hours, keys: hours, unit: 'hour' };
+    const keys = hours.map(h => `${datePrefix}T${h}`);
+    return { labels: hours, keys, unit: 'hour' };
   }
   if (period === 'week') {
     const labels: string[] = [];
@@ -67,8 +69,10 @@ const getChartConfig = (period: string, from: Date, to: Date): ChartConfig => {
   }
   const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
   if (diffDays <= 1) {
+    const datePrefix = fmtDateKey(from);
     const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
-    return { labels: hours, keys: hours, unit: 'hour' };
+    const keys = hours.map(h => `${datePrefix}T${h}`);
+    return { labels: hours, keys, unit: 'hour' };
   }
   if (diffDays <= 7) {
     const labels: string[] = [];
@@ -109,11 +113,9 @@ const buildData = (payments: PaymentRecord[], keys: string[], unit: UnitType) =>
     let key: string;
 
     if (unit === 'hour') {
-      key = `${String(d.getHours()).padStart(2, '0')}:00`;
+      key = `${fmtDateKey(d)}T${String(d.getHours()).padStart(2, '0')}:00`;
     } else if (unit === 'month') {
       key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    } else if (unit === 'week_day' || unit === 'month_day' || unit === 'custom_day') {
-      key = fmtDateKey(d);
     } else {
       key = fmtDateKey(d);
     }
@@ -146,7 +148,7 @@ const MonthlyDynamicsChart = () => {
     return () => observer.disconnect();
   }, []);
 
-  const { chartData, labels, chartUnit } = useMemo(() => {
+  const { chartData, labels, chartUnit, chartKeys } = useMemo(() => {
     const { from, to } = getDateRange();
     const { labels: newLabels, keys: newKeys, unit } = getChartConfig(period, from, to);
 
@@ -157,7 +159,7 @@ const MonthlyDynamicsChart = () => {
     });
 
     const values = buildData(filtered, newKeys, unit);
-    return { chartData: values, labels: newLabels, chartUnit: unit };
+    return { chartData: values, labels: newLabels, chartUnit: unit, chartKeys: newKeys };
   }, [allPayments, period, dateFrom, dateTo]);
 
   const chartLabels = isMobile && labels.length === MONTHS.length && labels[0] === MONTHS[0] ? MONTHS_SHORT : labels;
@@ -166,13 +168,9 @@ const MonthlyDynamicsChart = () => {
     if (!elements.length) return;
     const idx = elements[0].index;
     const label = chartLabels[idx];
-    if (!label) return;
-    let filterValue = label;
-    if (chartUnit === 'month') {
-      const monthIdx = MONTHS.indexOf(label);
-      filterValue = monthIdx >= 0 ? String(monthIdx + 1).padStart(2, '0') : label;
-    }
-    openDrill({ type: 'date', value: filterValue, label: `Период: ${label}` });
+    const key = chartKeys[idx];
+    if (!label || !key) return;
+    openDrill({ type: 'date', value: key, label: `Период: ${label}` });
   };
 
   const commonDataset = {

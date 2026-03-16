@@ -104,7 +104,16 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
         }
         case 'date': {
           const dateKey = raw.slice(0, 10);
-          return dateKey === filter.value || raw.startsWith(filter.value);
+          const fv = filter.value;
+          if (fv.includes('T')) {
+            // Формат YYYY-MM-DDThh:00 — сравниваем дату и час платежа
+            const [datePart, timePart] = fv.split('T');
+            const hour = timePart.slice(0, 2);
+            const pHour = String(d.getHours()).padStart(2, '0');
+            return dateKey === datePart && pHour === hour;
+          }
+          // Формат YYYY-MM (месяц) или YYYY-MM-DD (день)
+          return dateKey === fv || dateKey.startsWith(fv);
         }
         case 'all':
           return true;
