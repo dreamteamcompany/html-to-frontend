@@ -956,6 +956,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             created_user = cur.fetchone()
             cur.close()
+            create_audit_log(conn, 'user', new_user['id'], 'created', user_payload['user_id'], user_payload.get('username', user_payload.get('email', 'unknown')), new_values={'username': new_user['username'], 'full_name': full_name, 'role_ids': role_ids})
             
             return response(201, dict(created_user))
         except psycopg2.IntegrityError as e:
@@ -1039,6 +1040,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             updated_user = cur.fetchone()
             cur.close()
+            create_audit_log(conn, 'user', int(user_id), 'updated', user_payload['user_id'], user_payload.get('username', user_payload.get('email', 'unknown')), new_values={'username': username, 'full_name': full_name, 'role_ids': role_ids})
             
             return response(200, dict(updated_user))
             
@@ -1073,6 +1075,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             conn.commit()
             cur.close()
+            create_audit_log(conn, 'user', deleted_user['id'], 'deleted', user_payload['user_id'], user_payload.get('username', user_payload.get('email', 'unknown')), old_values={'username': deleted_user['username']})
             
             return response(200, {'message': 'Пользователь удалён', 'id': deleted_user['id']})
         except Exception as e:
@@ -1827,6 +1830,7 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
             )
             row = cur.fetchone()
             conn.commit()
+            create_audit_log(conn, 'category', row[0], 'created', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'icon': row[2]})
             
             return response(201, {
                 'id': row[0],
@@ -1857,6 +1861,7 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
                 return response(404, {'error': 'Category not found'})
             
             conn.commit()
+            create_audit_log(conn, 'category', row[0], 'updated', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'icon': row[2]})
             
             return response(200, {
                 'id': row[0],
@@ -1876,8 +1881,11 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
             if not category_id:
                 return response(400, {'error': 'ID is required'})
             
+            cur.execute(f"SELECT name FROM {SCHEMA}.categories WHERE id = %s", (category_id,))
+            cat_row = cur.fetchone()
             cur.execute(f'DELETE FROM {SCHEMA}.categories WHERE id = %s', (category_id,))
             conn.commit()
+            create_audit_log(conn, 'category', int(category_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'name': cat_row[0] if cat_row else None})
             
             return response(200, {'success': True})
         
@@ -1924,6 +1932,7 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             )
             row = cur.fetchone()
             conn.commit()
+            create_audit_log(conn, 'contractor', row[0], 'created', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'inn': row[2], 'kpp': row[3]})
             
             return response(201, {
                 'id': row[0],
@@ -1955,6 +1964,7 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
                 return response(404, {'error': 'Contractor not found'})
             
             conn.commit()
+            create_audit_log(conn, 'contractor', row[0], 'updated', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'inn': row[2], 'kpp': row[3]})
             
             return response(200, {
                 'id': row[0],
@@ -1975,8 +1985,11 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             if not contractor_id:
                 return response(400, {'error': 'ID is required'})
             
+            cur.execute(f"SELECT name FROM {SCHEMA}.contractors WHERE id = %s", (contractor_id,))
+            ctr_row = cur.fetchone()
             cur.execute(f'DELETE FROM {SCHEMA}.contractors WHERE id = %s', (contractor_id,))
             conn.commit()
+            create_audit_log(conn, 'contractor', int(contractor_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'name': ctr_row[0] if ctr_row else None})
             
             return response(200, {'success': True})
         
@@ -2124,6 +2137,7 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             )
             row = cur.fetchone()
             conn.commit()
+            create_audit_log(conn, 'legal_entity', row[0], 'created', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'inn': row[2], 'kpp': row[3]})
             
             return response(201, {
                 'id': row[0],
@@ -2156,6 +2170,7 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
                 return response(404, {'error': 'Legal entity not found'})
             
             conn.commit()
+            create_audit_log(conn, 'legal_entity', row[0], 'updated', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'inn': row[2], 'kpp': row[3]})
             
             return response(200, {
                 'id': row[0],
@@ -2178,6 +2193,8 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
                 return response(400, {'error': 'ID обязателен'})
             
             try:
+                cur.execute(f"SELECT name FROM {SCHEMA}.legal_entities WHERE id = %s", (entity_id,))
+                le_row = cur.fetchone()
                 # Обнуляем legal_entity_id в связанных платежах
                 cur.execute(f"UPDATE {SCHEMA}.payments SET legal_entity_id = NULL WHERE legal_entity_id = %s", (entity_id,))
                 
@@ -2189,6 +2206,7 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
                     return response(404, {'error': 'Юридическое лицо не найдено'})
                 
                 conn.commit()
+                create_audit_log(conn, 'legal_entity', int(entity_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'name': le_row[0] if le_row else None})
                 return response(200, {'message': 'Юридическое лицо удалено'})
             except Exception as e:
                 conn.rollback()
@@ -2902,6 +2920,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
         
         conn.commit()
         cur.close()
+        create_audit_log(conn, 'payment', int(payment_id), 'submitted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), changed_fields={'status': {'old': 'draft', 'new': 'pending_ceo'}})
         
         return response(200, {'message': 'Платеж отправлен на согласование', 'status': 'pending_ceo'})
     
@@ -3070,6 +3089,7 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             )
             row = cur.fetchone()
             conn.commit()
+            create_audit_log(conn, 'service', row['id'], 'created', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'description': row['description']})
             
             return response(201, {
                 'id': row['id'],
@@ -3114,6 +3134,7 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 return response(404, {'error': 'Service not found'})
             
             conn.commit()
+            create_audit_log(conn, 'service', row['id'], 'updated', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'description': row['description']})
             
             return response(200, {
                 'id': row['id'],
@@ -3266,6 +3287,7 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             
             row = cur.fetchone()
             conn.commit()
+            create_audit_log(conn, 'saving', row['id'], 'created', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'description': row['description'], 'amount': str(row['amount'])})
             
             return response(201, dict(row))
         
@@ -3280,6 +3302,8 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if not saving_id:
                 return response(400, {'error': 'ID is required'})
             
+            cur.execute(f"SELECT description FROM {SCHEMA}.savings WHERE id = %s", (saving_id,))
+            sv_row = cur.fetchone()
             cur.execute(f"DELETE FROM {SCHEMA}.savings WHERE id = %s RETURNING id", (saving_id,))
             row = cur.fetchone()
             
@@ -3287,6 +3311,7 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 return response(404, {'error': 'Saving not found'})
             
             conn.commit()
+            create_audit_log(conn, 'saving', int(saving_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'description': sv_row['description'] if sv_row else None})
             return response(200, {'message': 'Saving deleted'})
         
         return response(405, {'error': 'Method not allowed'})
