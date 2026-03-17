@@ -69,7 +69,7 @@ export const exportDrillDownToExcel = (
       ${cell(description)}
       ${cell(p.category_name || '—')}
       ${cell(p.department_name || '—')}
-      ${cell(PAYMENT_TYPE_LABEL[p.payment_type || ''] || p.payment_type || '—')}
+      ${cell(p.payment_type === 'cash' || p.legal_entity_name === 'Наличные' ? 'Наличный' : (PAYMENT_TYPE_LABEL[p.payment_type || ''] || p.payment_type || '—'))}
       ${cell(p.payment_date ? fmtDate(String(p.payment_date)) : '—')}
       ${cell(fmtAmount(p.amount))}
     </row>`;

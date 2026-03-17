@@ -22,7 +22,7 @@ const fmt = (v: number) =>
 const isCash = (type?: string, legalEntityName?: string) =>
   type === 'cash' || legalEntityName === 'Наличные';
 const isLegal = (type?: string, legalEntityName?: string) =>
-  !isCash(type, legalEntityName) && !!type;
+  !isCash(type, legalEntityName);
 
 const PaymentTypeChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();

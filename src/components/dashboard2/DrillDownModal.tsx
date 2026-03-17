@@ -43,6 +43,13 @@ const PAYMENT_TYPE_LABEL: Record<string, string> = {
   card: 'Карта',
 };
 
+const resolvePaymentType = (payment_type?: string, legal_entity_name?: string): string => {
+  if (payment_type === 'cash' || legal_entity_name === 'Наличные') return 'Наличный';
+  if (payment_type && PAYMENT_TYPE_LABEL[payment_type]) return PAYMENT_TYPE_LABEL[payment_type];
+  if (payment_type) return payment_type;
+  return '—';
+};
+
 const DrillDownModal = ({ filter, onClose }: Props) => {
   const { payments: allPayments } = usePaymentsCache();
   const { getDateRange } = usePeriod();
@@ -387,9 +394,9 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
                         <span style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}>
                           {p.payment_date ? fmtDate(String(p.payment_date)) : '—'}
                         </span>
-                        {p.payment_type && (
+                        {(p.payment_type || p.legal_entity_name === 'Наличные') && (
                           <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}>
-                            · {PAYMENT_TYPE_LABEL[p.payment_type] || p.payment_type}
+                            · {resolvePaymentType(p.payment_type, p.legal_entity_name)}
                           </span>
                         )}
                       </div>
@@ -456,7 +463,7 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
                           {p.department_name || '—'}
                         </td>
                         <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {PAYMENT_TYPE_LABEL[p.payment_type || ''] || p.payment_type || '—'}
+                          {resolvePaymentType(p.payment_type, p.legal_entity_name)}
                         </td>
                         <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                           {p.payment_date ? fmtDate(String(p.payment_date)) : '—'}
