@@ -32,7 +32,7 @@ const fmtDate = (s: string) => {
 
 const SavingsDrillModal = ({ open, onClose }: Props) => {
   const { token } = useAuth();
-  const { getDateRange } = usePeriod();
+  const { getDateRange, period, dateFrom, dateTo } = usePeriod();
   const [items, setItems] = useState<SavingsItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -69,7 +69,7 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
       })
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
-  }, [open, token]);
+  }, [open, token, period, dateFrom, dateTo]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose();

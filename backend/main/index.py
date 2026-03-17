@@ -5158,7 +5158,7 @@ def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: 
 
 
 def handle_savings_list(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Список записей реестра экономии для детализации с фильтрацией по периоду"""
+    """Список записей реестра экономии для детализации с фильтрацией по периоду. v2"""
     if method != 'GET':
         return response(405, {'error': 'Метод не поддерживается'})
 
