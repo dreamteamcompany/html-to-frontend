@@ -152,8 +152,12 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
         return;
       }
       const result = await response.json();
-      const list = Array.isArray(result) ? result : (result[key] ?? result[Object.keys(result)[0]] ?? []);
-      setData(prev => ({ ...prev, [key]: Array.isArray(list) ? list : [] }));
+      let list = Array.isArray(result) ? result : (result[key] ?? result[Object.keys(result)[0]] ?? []);
+      if (!Array.isArray(list)) list = [];
+      if (key === 'departments') {
+        list = list.filter((item: Department) => !item.name?.startsWith('_ARCHIVE_'));
+      }
+      setData(prev => ({ ...prev, [key]: list }));
     } catch (error) {
       console.error(`Failed to load ${key}:`, error);
     } finally {
