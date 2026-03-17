@@ -12,6 +12,10 @@ interface SavingsItem {
   description: string;
   department_name: string;
   service_name: string;
+  frequency: string;
+  currency: string;
+  saving_reason_name: string;
+  employee_name: string;
 }
 
 interface Props {
@@ -21,6 +25,13 @@ interface Props {
 
 type SortField = 'created_at' | 'amount';
 type SortDir = 'asc' | 'desc';
+
+const FREQUENCY_LABEL: Record<string, string> = {
+  once: 'Единоразово',
+  monthly: 'Ежемесячно',
+  yearly: 'Ежегодно',
+  quarterly: 'Ежеквартально',
+};
 
 const fmt = (v: number) =>
   new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v).replace(/,/g, '.') + ' ₽';
@@ -84,7 +95,7 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
     const q = search.toLowerCase();
     const base = q
       ? items.filter(p =>
-          [p.description, p.department_name, p.service_name]
+          [p.description, p.department_name, p.service_name, p.saving_reason_name, p.employee_name]
             .some(v => v?.toLowerCase().includes(q))
         )
       : items;
@@ -122,6 +133,8 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
 
   if (!open) return null;
 
+  const DESKTOP_COLS = '1fr 1.4fr 1fr 1fr 110px 110px 1fr';
+
   return (
     <div
       style={{
@@ -137,7 +150,7 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
         border: '1px solid hsl(var(--border))',
         borderRadius: isMobile ? '20px 20px 0 0' : '20px',
         width: '100%',
-        maxWidth: isMobile ? '100%' : '860px',
+        maxWidth: isMobile ? '100%' : '1100px',
         maxHeight: isMobile ? '92vh' : '90vh',
         display: 'flex', flexDirection: 'column',
         boxShadow: '0 24px 60px rgba(0,0,0,0.35)',
@@ -214,7 +227,7 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Поиск по описанию, отделу..."
+              placeholder="Поиск по описанию, отделу, сервису, причине, автору..."
               style={{
                 width: '100%', paddingLeft: '32px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px',
                 borderRadius: '8px', border: '1px solid hsl(var(--border))',
@@ -225,19 +238,22 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
           </div>
         </div>
 
-        {/* TABLE HEADER */}
+        {/* TABLE HEADER — desktop only */}
         {!isMobile && (
           <div style={{
-            display: 'grid', gridTemplateColumns: '130px 1fr 1fr 140px',
+            display: 'grid', gridTemplateColumns: DESKTOP_COLS,
             padding: '8px 24px', gap: '12px', flexShrink: 0,
             borderBottom: '1px solid hsl(var(--border))',
             background: 'hsl(var(--muted))',
           }}>
             {[
-              { label: 'Дата', field: 'created_at' as SortField },
+              { label: 'Сервис', field: null },
               { label: 'Описание', field: null },
               { label: 'Отдел', field: null },
+              { label: 'Причина', field: null },
               { label: 'Сумма', field: 'amount' as SortField },
+              { label: 'Эквивалент', field: null },
+              { label: 'Автор', field: null },
             ].map(col => (
               <div
                 key={col.label}
@@ -269,30 +285,50 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
               <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px' }}>Нет записей за выбранный период</div>
             </div>
           ) : isMobile ? (
+            /* MOBILE: карточки */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px' }}>
               {sorted.map(item => (
                 <div key={item.id} style={{
                   background: 'hsl(var(--muted))', borderRadius: '12px',
                   padding: '12px', border: '1px solid hsl(var(--border))',
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}>{fmtDate(item.created_at)}</span>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#01b574' }}>{fmt(item.amount)}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start', gap: '8px' }}>
+                    <div style={{ minWidth: 0 }}>
+                      {item.service_name && (
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.service_name}</div>
+                      )}
+                      {item.description && (
+                        <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}>{item.description}</div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#01b574', flexShrink: 0 }}>{fmt(item.amount)}</span>
                   </div>
-                  {item.description && (
-                    <div style={{ fontSize: '12px', color: 'hsl(var(--foreground))', marginBottom: '4px' }}>{item.description}</div>
-                  )}
-                  <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}>{item.department_name}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                    {item.department_name && item.department_name !== 'Не указан' && (
+                      <span style={{ fontSize: '11px', padding: '2px 7px', borderRadius: '5px', background: 'rgba(1,181,116,0.1)', color: '#01b574' }}>{item.department_name}</span>
+                    )}
+                    {item.saving_reason_name && (
+                      <span style={{ fontSize: '11px', padding: '2px 7px', borderRadius: '5px', background: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }}>{item.saving_reason_name}</span>
+                    )}
+                    {item.frequency && (
+                      <span style={{ fontSize: '11px', padding: '2px 7px', borderRadius: '5px', background: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}>{FREQUENCY_LABEL[item.frequency] || item.frequency}</span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                    <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}>{item.employee_name}</span>
+                    <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}>{fmtDate(item.created_at)}</span>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
+            /* DESKTOP: таблица */
             <div>
               {sorted.map((item, idx) => (
                 <div
                   key={item.id}
                   style={{
-                    display: 'grid', gridTemplateColumns: '130px 1fr 1fr 140px',
+                    display: 'grid', gridTemplateColumns: DESKTOP_COLS,
                     padding: '12px 24px', gap: '12px', alignItems: 'center',
                     borderBottom: '1px solid hsl(var(--border))',
                     background: idx % 2 === 0 ? 'transparent' : 'rgba(1,181,116,0.02)',
@@ -301,17 +337,33 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(1,181,116,0.05)')}
                   onMouseLeave={e => (e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : 'rgba(1,181,116,0.02)')}
                 >
-                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}>
-                    {fmtDate(item.created_at)}
+                  {/* Сервис */}
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.service_name || <span style={{ color: 'hsl(var(--muted-foreground))' }}>—</span>}
                   </div>
-                  <div style={{ fontSize: '13px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {item.description || <span style={{ color: 'hsl(var(--muted-foreground))' }}>—</span>}
-                  </div>
+                  {/* Описание */}
                   <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {item.department_name}
+                    {item.description || <span>—</span>}
                   </div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#01b574', textAlign: 'right' }}>
+                  {/* Отдел */}
+                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.department_name && item.department_name !== 'Не указан' ? item.department_name : <span style={{ opacity: 0.4 }}>—</span>}
+                  </div>
+                  {/* Причина */}
+                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.saving_reason_name || <span style={{ opacity: 0.4 }}>—</span>}
+                  </div>
+                  {/* Сумма */}
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#01b574', textAlign: 'right', whiteSpace: 'nowrap' }}>
                     {fmt(item.amount)}
+                  </div>
+                  {/* Эквивалент */}
+                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', whiteSpace: 'nowrap' }}>
+                    {FREQUENCY_LABEL[item.frequency] || item.frequency || <span style={{ opacity: 0.4 }}>—</span>}
+                  </div>
+                  {/* Автор */}
+                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.employee_name || <span style={{ opacity: 0.4 }}>—</span>}
                   </div>
                 </div>
               ))}

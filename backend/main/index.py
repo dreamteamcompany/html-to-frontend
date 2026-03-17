@@ -5158,7 +5158,7 @@ def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: 
 
 
 def handle_savings_list(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Список записей реестра экономии для детализации с фильтрацией по периоду. v2"""
+    """Список записей реестра экономии для детализации с фильтрацией по периоду. v3"""
     if method != 'GET':
         return response(405, {'error': 'Метод не поддерживается'})
 
@@ -5168,36 +5168,30 @@ def handle_savings_list(method: str, event: Dict[str, Any], conn, payload: Dict[
 
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
+    base_select = f"""
+        SELECT
+            s.id,
+            s.created_at,
+            s.amount,
+            s.description,
+            s.frequency,
+            s.currency,
+            COALESCE(cd.name, 'Не указан') as department_name,
+            COALESCE(srv.name, '') as service_name,
+            COALESCE(sr.name, '') as saving_reason_name,
+            COALESCE(u.full_name, '') as employee_name
+        FROM {SCHEMA}.savings s
+        LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
+        LEFT JOIN {SCHEMA}.services srv ON s.service_id = srv.id
+        LEFT JOIN {SCHEMA}.saving_reasons sr ON s.saving_reason_id = sr.id
+        LEFT JOIN {SCHEMA}.users u ON s.employee_id = u.id
+    """
+
     try:
         if start_date and end_date:
-            cur.execute(f"""
-                SELECT
-                    s.id,
-                    s.created_at,
-                    s.amount,
-                    s.description,
-                    COALESCE(cd.name, 'Не указан') as department_name,
-                    COALESCE(srv.name, '') as service_name
-                FROM {SCHEMA}.savings s
-                LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
-                LEFT JOIN {SCHEMA}.services srv ON s.service_id = srv.id
-                WHERE s.created_at >= %s AND s.created_at <= %s
-                ORDER BY s.created_at DESC
-            """, (start_date, end_date))
+            cur.execute(base_select + "WHERE s.created_at >= %s AND s.created_at <= %s ORDER BY s.created_at DESC", (start_date, end_date))
         else:
-            cur.execute(f"""
-                SELECT
-                    s.id,
-                    s.created_at,
-                    s.amount,
-                    s.description,
-                    COALESCE(cd.name, 'Не указан') as department_name,
-                    COALESCE(srv.name, '') as service_name
-                FROM {SCHEMA}.savings s
-                LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
-                LEFT JOIN {SCHEMA}.services srv ON s.service_id = srv.id
-                ORDER BY s.created_at DESC
-            """)
+            cur.execute(base_select + "ORDER BY s.created_at DESC")
 
         rows = cur.fetchall()
         return response(200, {
@@ -5206,8 +5200,12 @@ def handle_savings_list(method: str, event: Dict[str, Any], conn, payload: Dict[
                 'created_at': row['created_at'].isoformat() if row['created_at'] else None,
                 'amount': float(row['amount']),
                 'description': row['description'] or '',
+                'frequency': row['frequency'] or '',
+                'currency': row['currency'] or 'RUB',
                 'department_name': row['department_name'],
                 'service_name': row['service_name'],
+                'saving_reason_name': row['saving_reason_name'],
+                'employee_name': row['employee_name'],
             } for row in rows],
             'total': float(sum(row['amount'] for row in rows)),
             'count': len(rows),
