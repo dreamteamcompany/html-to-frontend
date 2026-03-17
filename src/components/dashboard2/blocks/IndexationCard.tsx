@@ -1,12 +1,11 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { parsePaymentDate, getPreviousPeriodRange } from '../dashboardUtils';
-import { useDrillDown } from '../useDrillDown';
-import DrillDownModal from '../DrillDownModal';
+import IndexationDrillModal from '../IndexationDrillModal';
 
 interface PaymentRecord {
   status: string;
@@ -28,7 +27,7 @@ interface ServiceIndexation {
 const IndexationCard = () => {
   const { getDateRange, period, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
-  const { drillFilter, openDrill, closeDrill } = useDrillDown();
+  const [drillOpen, setDrillOpen] = useState(false);
 
   const indexationData = useMemo(() => {
     const { from, to } = getDateRange();
@@ -56,7 +55,6 @@ const IndexationCard = () => {
     const hasCurrentData = currentPayments.length > 0;
 
     // Индексация = ((текущий - прошлый) / прошлый) * 100%
-    // null означает "невозможно рассчитать" (нет данных за прошлый период)
     const overallPercent: number | null = hasPreviousData
       ? parseFloat((((currentTotal - previousTotal) / previousTotal) * 100).toFixed(1))
       : null;
@@ -126,7 +124,7 @@ const IndexationCard = () => {
           borderTop: '4px solid #ffb547',
           cursor: loading ? 'default' : 'pointer',
         }}
-        onClick={() => !loading && openDrill({ type: 'all', value: '', label: 'Индексация — платежи за период' })}
+        onClick={() => !loading && setDrillOpen(true)}
       >
         <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
           <div className="flex justify-between items-start mb-4 sm:mb-5">
@@ -224,7 +222,8 @@ const IndexationCard = () => {
           )}
         </CardContent>
       </Card>
-      <DrillDownModal filter={drillFilter} onClose={closeDrill} />
+
+      <IndexationDrillModal open={drillOpen} onClose={() => setDrillOpen(false)} />
     </>
   );
 };
