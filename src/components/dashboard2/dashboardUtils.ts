@@ -57,7 +57,9 @@ export const getPreviousPeriodRange = (
     default: {
       const periodMs = to.getTime() - from.getTime();
       const prevTo = new Date(from.getTime() - 1);
-      const prevFrom = new Date(prevTo.getTime() - periodMs);
+      // если период нулевой (from === to) — берём предыдущие сутки
+      const safeMs = periodMs > 0 ? periodMs : 86_400_000;
+      const prevFrom = new Date(prevTo.getTime() - safeMs);
       return { prevFrom, prevTo };
     }
   }

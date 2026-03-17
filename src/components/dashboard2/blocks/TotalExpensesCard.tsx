@@ -40,15 +40,16 @@ const TotalExpensesCard = () => {
     const currentTotal = current.reduce((sum, p) => sum + p.amount, 0);
     const previousTotal = previous.reduce((sum, p) => sum + p.amount, 0);
 
-    const diff = previousTotal > 0
+    const hasPrevious = previous.length > 0 && previousTotal > 0;
+    const diff = hasPrevious
       ? parseFloat((((currentTotal - previousTotal) / previousTotal) * 100).toFixed(1))
-      : 0;
+      : null;
 
     return {
       total: currentTotal,
       count: current.length,
-      changePercent: Math.abs(diff),
-      isIncrease: diff >= 0,
+      changePercent: diff === null ? null : Math.abs(diff),
+      isIncrease: diff === null ? null : diff >= 0,
     };
   }, [allPayments, period, dateFrom, dateTo]);
 
@@ -79,10 +80,17 @@ const TotalExpensesCard = () => {
           </div>
           <div className={`${dashboardTypography.cardSecondary} mb-3`}>Общая сумма расходов</div>
           {!loading && (
-            <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5`} style={{ color: stats.isIncrease ? '#e31a1a' : '#01b574' }}>
-              <Icon name={stats.isIncrease ? "ArrowUp" : "ArrowDown"} size={14} />
-              {stats.isIncrease ? '+' : '-'}{stats.changePercent}% к предыдущему периоду
-            </div>
+            stats.changePercent === null ? (
+              <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5`} style={{ color: 'hsl(var(--muted-foreground))' }}>
+                <Icon name="Info" size={14} />
+                Нет данных за прошлый период
+              </div>
+            ) : (
+              <div className={`flex items-center ${dashboardTypography.cardBadge} gap-1.5`} style={{ color: stats.isIncrease ? '#e31a1a' : '#01b574' }}>
+                <Icon name={stats.isIncrease ? "ArrowUp" : "ArrowDown"} size={14} />
+                {stats.isIncrease ? '+' : '-'}{stats.changePercent}% к предыдущему периоду
+              </div>
+            )
           )}
         </CardContent>
       </Card>
