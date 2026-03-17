@@ -9,6 +9,7 @@ import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
 import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 import { invalidateMyPaymentsCache } from '@/hooks/usePaymentsData';
+import { exportTabPaymentsToExcel } from '@/utils/exportExcel';
 
 interface ExtendedPayment extends Payment {
   rejected_at?: string;
@@ -73,14 +74,25 @@ const RejectedPaymentsTab = () => {
 
   return (
     <div className="space-y-6">
-      <div className="relative">
-        <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Поиск по описанию, категории, сумме..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 bg-background border-white/10"
-        />
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Поиск по описанию, категории, сумме..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-background border-white/10"
+          />
+        </div>
+        {!loading && filteredPayments.length > 0 && (
+          <button
+            onClick={() => exportTabPaymentsToExcel(filteredPayments, 'Отклонённые платежи', 'Отклонённые_платежи')}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium whitespace-nowrap"
+          >
+            <Icon name="Download" size={16} />
+            Выгрузить Excel
+          </button>
+        )}
       </div>
 
       {loading ? (

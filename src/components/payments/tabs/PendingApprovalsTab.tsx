@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
+import { exportTabPaymentsToExcel } from '@/utils/exportExcel';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -120,6 +121,15 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
             </span>
           )}
         </button>
+        {!loading && filteredPayments.length > 0 && (
+          <button
+            onClick={() => exportTabPaymentsToExcel(filteredPayments, 'На согласовании', 'На_согласовании')}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium whitespace-nowrap"
+          >
+            <Icon name="Download" size={16} />
+            Выгрузить Excel
+          </button>
+        )}
       </div>
 
       {showFilters && (

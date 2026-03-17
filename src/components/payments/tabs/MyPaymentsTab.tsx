@@ -12,6 +12,8 @@ import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
+import Icon from '@/components/ui/icon';
+import { exportTabPaymentsToExcel } from '@/utils/exportExcel';
 
 const MyPaymentsTab = () => {
   const { token } = useAuth();
@@ -177,7 +179,7 @@ const MyPaymentsTab = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <PaymentForm
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}
@@ -208,6 +210,15 @@ const MyPaymentsTab = () => {
         />
 
         <PlannedPaymentsModal />
+        {!loading && payments.length > 0 && (
+          <button
+            onClick={() => exportTabPaymentsToExcel(payments, 'Мои платежи', 'Мои_платежи')}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium whitespace-nowrap"
+          >
+            <Icon name="Download" size={16} />
+            Выгрузить Excel
+          </button>
+        )}
       </div>
 
       <PaymentsList 

@@ -1,4 +1,5 @@
 import { PaymentRecord } from '@/contexts/PaymentsCacheContext';
+import type { Payment } from '@/types/payment';
 
 const STATUS_LABEL: Record<string, string> = {
   approved: 'Согласован',
@@ -422,6 +423,126 @@ export const exportSavingsToExcel = (items: SavingsItem[], periodLabel: string):
   a.href = url;
   const dateStr = new Date().toISOString().slice(0, 10);
   a.download = `Экономия_${periodLabel}_${dateStr}.xlsx`;
+  a.style.position = 'fixed'; a.style.top = '-9999px'; a.style.left = '-9999px';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { try { if (a.parentNode) a.parentNode.removeChild(a); } catch (e) { void e; } URL.revokeObjectURL(url); }, 500);
+};
+
+// ─── Универсальный экспорт для вкладок платежей ──────────────────────────────
+
+const TAB_STATUS_LABEL: Record<string, string> = {
+  draft: 'Черновик',
+  pending_ib: 'На согласовании (ИБ)',
+  pending_cfo: 'На согласовании (CFO)',
+  pending_ceo: 'На согласовании (CEO)',
+  approved: 'Одобрен',
+  rejected: 'Отклонён',
+  revoked: 'Отозван',
+};
+
+export const exportTabPaymentsToExcel = (payments: Payment[], sheetLabel: string, fileName: string): void => {
+  const HEADERS = [
+    'Дата платежа',
+    'Категория',
+    'Сервис',
+    'Отдел-заказчик',
+    'Контрагент',
+    'Юридическое лицо',
+    'Назначение',
+    'Сумма (₽)',
+    'Статус',
+  ];
+
+  const headerRow = `<row r="1">${HEADERS.map(h => headerCell(h)).join('')}</row>`;
+
+  const dataRows = payments.map((p, i) => {
+    const rowNum = i + 2;
+    const dateVal = p.payment_date || p.planned_date || '';
+    return `<row r="${rowNum}">
+      ${cell(dateVal ? fmtDate(dateVal) : '—')}
+      ${cell(p.category_name || '—')}
+      ${cell(p.service_name || '—')}
+      ${cell(p.department_name || '—')}
+      ${cell(p.contractor_name || '—')}
+      ${cell(p.legal_entity_name || '—')}
+      ${cell(p.description || '—')}
+      ${cell(fmtAmount(p.amount))}
+      ${cell(TAB_STATUS_LABEL[p.status || ''] || p.status || '—')}
+    </row>`;
+  });
+
+  const totalRow = `<row r="${payments.length + 2}">
+    ${cell('ИТОГО')}${cell('')}${cell('')}${cell('')}${cell('')}${cell('')}${cell('')}
+    ${cell(fmtAmount(payments.reduce((s, p) => s + p.amount, 0)))}
+    ${cell('')}
+  </row>`;
+
+  const sheetData = [headerRow, ...dataRows, totalRow].join('\n');
+  const colWidths = [16, 20, 22, 22, 22, 22, 32, 16, 18]
+    .map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`)
+    .join('');
+
+  const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <cols>${colWidths}</cols>
+  <sheetData>${sheetData}</sheetData>
+</worksheet>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
+  <fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF7551E9"/></patternFill></fill></fills>
+  <borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="3">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
+  </cellXfs>
+</styleSheet>`;
+
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets><sheet name="${escXml(sheetLabel)}" sheetId="1" r:id="rId1"/></sheets>
+</workbook>`;
+
+  const workbookRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`;
+
+  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+  const files: Record<string, string> = {
+    '[Content_Types].xml': contentTypes,
+    '_rels/.rels': rootRels,
+    'xl/workbook.xml': workbookXml,
+    'xl/_rels/workbook.xml.rels': workbookRels,
+    'xl/worksheets/sheet1.xml': sheetXml,
+    'xl/styles.xml': stylesXml,
+  };
+
+  const zipBytes = buildZip(files);
+  const blob = new Blob([zipBytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.download = `${fileName}_${dateStr}.xlsx`;
   a.style.position = 'fixed'; a.style.top = '-9999px'; a.style.left = '-9999px';
   document.body.appendChild(a);
   a.click();
