@@ -8,6 +8,7 @@ import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { API_ENDPOINTS } from '@/config/api';
+import PaymentApprovalHistoryModal from '@/components/approvals/PaymentApprovalHistoryModal';
 
 interface Approval {
   id: number;
@@ -30,6 +31,7 @@ const ApprovalsHistory = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<{ payment_id: number; amount?: number; description?: string } | null>(null);
 
   const {
     menuOpen,
@@ -176,7 +178,8 @@ const ApprovalsHistory = () => {
                 {approvals.map((approval) => (
                   <div
                     key={approval.id}
-                    className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors group"
+                    className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors group cursor-pointer"
+                    onClick={() => setSelectedPayment({ payment_id: approval.payment_id, amount: approval.amount, description: approval.description })}
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex-1">
@@ -185,9 +188,10 @@ const ApprovalsHistory = () => {
                             <Icon name="FileCheck" size={20} />
                           </div>
                           <div>
-                            <div className="font-semibold">
+                            <div className="font-semibold flex items-center gap-2">
                               Платеж #{approval.payment_id}
                               {approval.amount && ` — ${approval.amount.toLocaleString('ru-RU')} ₽`}
+                              <Icon name="ChevronRight" size={14} className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
                             </div>
                             {approval.description && (
                               <div className="text-sm text-muted-foreground line-clamp-1">
@@ -227,7 +231,7 @@ const ApprovalsHistory = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteApproval(approval.id)}
+                          onClick={(e) => { e.stopPropagation(); handleDeleteApproval(approval.id); }}
                           disabled={deletingId === approval.id}
                           className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-500"
                         >
@@ -246,6 +250,11 @@ const ApprovalsHistory = () => {
           </CardContent>
         </Card>
       </main>
+
+      <PaymentApprovalHistoryModal
+        paymentInfo={selectedPayment}
+        onClose={() => setSelectedPayment(null)}
+      />
     </div>
   );
 };
