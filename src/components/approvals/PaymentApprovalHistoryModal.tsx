@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/icon';
 import { API_ENDPOINTS } from '@/config/api';
@@ -75,8 +76,15 @@ const getRoleName = (role: string) => {
 
 const PaymentApprovalHistoryModal = ({ paymentInfo, onClose }: PaymentApprovalHistoryModalProps) => {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleOpenPayment = () => {
+    if (!paymentInfo) return;
+    onClose();
+    navigate(`/payments?payment_id=${paymentInfo.payment_id}`);
+  };
 
   useEffect(() => {
     if (!paymentInfo || !token) return;
@@ -140,12 +148,22 @@ const PaymentApprovalHistoryModal = ({ paymentInfo, onClose }: PaymentApprovalHi
               )}
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors flex-shrink-0"
-          >
-            <Icon name="X" size={18} />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleOpenPayment}
+              className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors flex-shrink-0"
+              title="Открыть карточку платежа"
+            >
+              <Icon name="ExternalLink" size={14} />
+              <span className="hidden sm:inline">Открыть платёж</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors flex-shrink-0"
+            >
+              <Icon name="X" size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Подзаголовок */}
