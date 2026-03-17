@@ -25,11 +25,8 @@ const PALETTE = [
   { solid: '#34d399', light: 'rgba(52,211,153,0.18)',  mid: 'rgba(52,211,153,0.55)'  },
 ];
 
-const formatAmount = (amount: number): string => {
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} млн ₽`;
-  if (amount >= 1_000) return `${Math.round(amount / 1_000)} тыс ₽`;
-  return `${Math.round(amount)} ₽`;
-};
+const formatAmount = (amount: number): string =>
+  amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽';
 
 interface BarChartProps {
   data: { name: string; amount: number }[];
