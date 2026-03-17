@@ -4052,6 +4052,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_budget_breakdown(method, event, conn, payload)
         elif endpoint == 'savings-dashboard':
             result = handle_savings_dashboard(method, event, conn, payload)
+        elif endpoint == 'savings-list':
+            result = handle_savings_list(method, event, conn, payload)
         elif endpoint == 'planned-payments':
             result = handle_planned_payments(method, event, conn)
         elif endpoint == 'payment-views':
