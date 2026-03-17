@@ -94,12 +94,17 @@ const ApprovalsHistory = () => {
 
   const getActionBadge = (action: string) => {
     switch (action) {
+      case 'submit':
       case 'submitted':
-        return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300">Отправлен</span>;
+        return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300">Отправлен на согласование</span>;
       case 'approve':
-        return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300">Одобрен</span>;
+      case 'approved':
+        return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300">Согласован</span>;
       case 'reject':
-        return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-300">Отклонен</span>;
+      case 'rejected':
+        return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-300">Отклонён</span>;
+      case 'revoke':
+        return <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">Отозван</span>;
       default:
         return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-gray-300">{action}</span>;
     }
@@ -112,7 +117,14 @@ const ApprovalsHistory = () => {
       case 'ceo':
         return 'CEO';
       case 'creator':
-        return 'Создатель';
+      case 'submitter':
+        return 'Инициатор';
+      case 'intermediate_approver':
+        return 'Согласующий';
+      case 'final_approver':
+        return 'Финальный согласующий';
+      case 'admin':
+        return 'Администратор';
       default:
         return role;
     }

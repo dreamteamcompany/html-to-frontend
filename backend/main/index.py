@@ -3612,7 +3612,7 @@ def handle_comment_likes(method: str, event: Dict[str, Any], conn, current_user:
     
     return response(405, {'error': 'Method not allowed'})
 
-def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
+def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any] = None) -> Dict[str, Any]:
     '''Обработка запросов к истории согласований'''
     if method == 'GET':
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -3622,17 +3622,18 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
                     a.id,
                     a.payment_id,
                     a.approver_id,
-                    u.username as approver_name,
-                    'unknown' as approver_role,
+                    COALESCE(u.full_name, u.username, 'Неизвестный') as approver_name,
+                    a.approver_role,
                     a.action,
                     a.comment,
                     a.created_at,
                     p.amount,
                     p.description
-                FROM {SCHEMA}.payment_approval_history a
+                FROM {SCHEMA}.approvals a
                 LEFT JOIN {SCHEMA}.users u ON a.approver_id = u.id
                 LEFT JOIN {SCHEMA}.payments p ON a.payment_id = p.id
                 ORDER BY a.created_at DESC
+                LIMIT 500
             ''')
             approvals = cur.fetchall()
             result = [dict(row) for row in approvals]
@@ -3652,7 +3653,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
         
         cur = conn.cursor()
         try:
-            cur.execute(f'DELETE FROM {SCHEMA}.payment_approval_history WHERE id = %s', (int(approval_id),))
+            cur.execute(f'DELETE FROM {SCHEMA}.approvals WHERE id = %s', (int(approval_id),))
             conn.commit()
             cur.close()
             return response(200, {'success': True})
