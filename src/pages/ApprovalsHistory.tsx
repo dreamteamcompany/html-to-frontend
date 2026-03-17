@@ -98,17 +98,17 @@ const ApprovalsHistory = () => {
     switch (action) {
       case 'submit':
       case 'submitted':
-        return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300">Отправлен на согласование</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">Отправлен на согласование</span>;
       case 'approve':
       case 'approved':
-        return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300">Согласован</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200 dark:bg-green-500/20 dark:text-green-300 dark:border-green-500/30">Согласован</span>;
       case 'reject':
       case 'rejected':
-        return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-300">Отклонён</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30">Отклонён</span>;
       case 'revoke':
-        return <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">Отозван</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30">Отозван</span>;
       default:
-        return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-gray-300">{action}</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-500/20 dark:text-gray-300 dark:border-gray-500/30">{action}</span>;
     }
   };
 
@@ -165,7 +165,7 @@ const ApprovalsHistory = () => {
           <p className="text-sm md:text-base text-muted-foreground">Все действия по согласованию платежей</p>
         </div>
 
-        <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
+        <Card className="border border-border bg-card shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] dark:border-white/5">
           <CardContent className="p-6">
             {loading ? (
               <div className="text-center text-muted-foreground py-8">Загрузка...</div>
@@ -174,41 +174,48 @@ const ApprovalsHistory = () => {
                 Пока нет истории согласований
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {approvals.map((approval) => (
                   <div
                     key={approval.id}
-                    className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors group cursor-pointer"
+                    className="rounded-xl p-4 cursor-pointer group transition-all
+                      border border-border bg-background shadow-sm
+                      hover:border-primary/30 hover:shadow-md hover:bg-accent/30
+                      dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06] dark:shadow-none"
                     onClick={() => setSelectedPayment({ payment_id: approval.payment_id, amount: approval.amount, description: approval.description })}
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
                             <Icon name="FileCheck" size={20} />
                           </div>
-                          <div>
-                            <div className="font-semibold flex items-center gap-2">
-                              Платеж #{approval.payment_id}
-                              {approval.amount && ` — ${approval.amount.toLocaleString('ru-RU')} ₽`}
-                              <Icon name="ChevronRight" size={14} className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+                          <div className="min-w-0">
+                            <div className="font-semibold text-foreground flex items-center gap-2">
+                              <span>Платеж #{approval.payment_id}</span>
+                              {approval.amount && (
+                                <span className="font-bold text-foreground">
+                                  — {approval.amount.toLocaleString('ru-RU')} ₽
+                                </span>
+                              )}
+                              <Icon name="ChevronRight" size={14} className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
                             </div>
                             {approval.description && (
-                              <div className="text-sm text-muted-foreground line-clamp-1">
+                              <div className="text-sm text-muted-foreground line-clamp-1 mt-0.5">
                                 {approval.description}
                               </div>
                             )}
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Icon name="User" size={14} className="text-muted-foreground" />
+                          <div className="flex items-center gap-1.5">
+                            <Icon name="User" size={13} className="text-muted-foreground/60" />
                             <span className="text-muted-foreground">{approval.approver_name}</span>
-                            <span className="text-muted-foreground/70">({getRoleName(approval.approver_role)})</span>
+                            <span className="text-muted-foreground/60 text-xs">({getRoleName(approval.approver_role)})</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Icon name="Clock" size={14} className="text-muted-foreground" />
-                            <span className="text-muted-foreground">
+                          <div className="flex items-center gap-1.5">
+                            <Icon name="Clock" size={13} className="text-muted-foreground/60" />
+                            <span className="text-muted-foreground text-xs">
                               {new Date(approval.created_at).toLocaleDateString('ru-RU', {
                                 day: '2-digit',
                                 month: 'long',
@@ -220,13 +227,13 @@ const ApprovalsHistory = () => {
                           </div>
                         </div>
                         {approval.comment && (
-                          <div className="mt-2 p-2 bg-white/5 rounded text-sm">
-                            <span className="text-muted-foreground/70">Комментарий: </span>
-                            <span>{approval.comment}</span>
+                          <div className="mt-2 p-2 bg-muted/50 rounded-lg text-sm border border-border/50">
+                            <span className="text-muted-foreground/70 text-xs">Комментарий: </span>
+                            <span className="text-foreground/80">{approval.comment}</span>
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         {getActionBadge(approval.action)}
                         <Button
                           variant="ghost"
