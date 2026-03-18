@@ -272,45 +272,7 @@ const ContractorComparisonChart = () => {
           </div>
         ) : (
           <>
-            {!isMobile && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '18px' }}>
-                {displayData.map((item, i) => {
-                  const col = LINE_COLORS[i % LINE_COLORS.length];
-                  return (
-                    <div key={`${item.name}-${i}`} style={{
-                      display: 'flex', alignItems: 'center', gap: '6px',
-                      padding: '4px 10px 4px 7px', borderRadius: '10px',
-                      background: isLight ? `${col.line.replace('1)', '0.08)')}` : `${col.line.replace('1)', '0.12)')}`,
-                      border: `1px solid ${col.line.replace('1)', '0.25)')}`,
-                    }}>
-                      <div style={{
-                        width: '8px', height: '8px', borderRadius: '50%',
-                        background: col.line, flexShrink: 0,
-                        boxShadow: `0 0 5px ${col.line.replace('1)', '0.6)')}`,
-                      }} />
-                      <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '140px' }}>
-                        <span style={{
-                          fontSize: '11px', fontWeight: 600,
-                          color: isLight ? 'rgba(25,25,45,0.82)' : 'rgba(210,220,240,0.88)',
-                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        }}>
-                          {item.name}
-                        </span>
-                        {item.service && (
-                          <span style={{
-                            fontSize: '10px', fontWeight: 400,
-                            color: isLight ? 'rgba(25,25,45,0.48)' : 'rgba(210,220,240,0.45)',
-                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                          }}>
-                            {item.service}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+
 
             <div className="flex-1 min-h-[200px] sm:min-h-[280px]" style={{ position: 'relative', cursor: 'pointer' }}>
               <Bar key={chartKey} data={areaData} options={chartOptions} />
