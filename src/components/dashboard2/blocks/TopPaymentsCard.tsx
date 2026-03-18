@@ -174,7 +174,7 @@ const TopPaymentsCard = () => {
                       {name}
                     </div>
                     <span style={{ color: color, fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      {new Intl.NumberFormat('ru-RU').format(total)} ₽
+                      {new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)} ₽
                     </span>
                   </div>
                   <div style={{
