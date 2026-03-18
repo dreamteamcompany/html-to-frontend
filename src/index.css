@@ -134,20 +134,6 @@
   scrollbar-color: transparent transparent;
 }
 
-/* Period switcher (TabsList) border in light theme */
-:root.light [role="tablist"] {
-  border: 1px solid hsl(240 5.9% 82%);
-}
-
-:root.light [role="tab"][data-state="inactive"] {
-  border: 1px solid transparent;
-  border-radius: 0.125rem;
-}
-
-:root.light [role="tab"][data-state="active"] {
-  border-color: hsl(240 5.9% 75%) !important;
-}
-
 /* Vertical scroll in dropdowns (Payments page) */
 [data-radix-popper-content-wrapper] .overflow-y-auto::-webkit-scrollbar,
 [cmdk-list]::-webkit-scrollbar {
