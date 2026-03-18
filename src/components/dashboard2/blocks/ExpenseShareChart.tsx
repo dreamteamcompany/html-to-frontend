@@ -32,11 +32,8 @@ interface SliceData {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const fmt = (v: number) => {
-  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн ₽';
-  if (v >= 1_000) return Math.round(v / 1_000) + ' тыс ₽';
-  return new Intl.NumberFormat('ru-RU').format(v) + ' ₽';
-};
+const fmt = (v: number) =>
+  new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v) + ' ₽';
 
 const toRad = (d: number) => (d * Math.PI) / 180;
 
@@ -236,7 +233,7 @@ const Legend = ({ slices, onItemClick }: LegendProps) => {
             </span>
           </div>
           <span style={{ fontSize: '12px', fontWeight: 700, color: s.color, flexShrink: 0 }}>{s.pct}%</span>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: isLight ? 'rgba(20,20,40,0.65)' : 'rgba(255,255,255,0.7)', flexShrink: 0, minWidth: '72px', textAlign: 'right' }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: isLight ? 'rgba(20,20,40,0.65)' : 'rgba(255,255,255,0.7)', flexShrink: 0, minWidth: '130px', textAlign: 'right', whiteSpace: 'nowrap' }}>
             {fmt(s.amount)}
           </span>
         </div>
