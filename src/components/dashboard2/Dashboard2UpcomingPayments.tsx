@@ -5,6 +5,15 @@ import { dashboardTypography, dashboardColors } from './dashboardStyles';
 import { PaymentRecord } from '@/contexts/PaymentsCacheContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
+import { usePeriod } from '@/contexts/PeriodContext';
+
+const PERIOD_LABEL: Record<string, string> = {
+  today: 'Сегодня',
+  week: 'Ближайшая неделя',
+  month: 'Текущий месяц',
+  year: 'Текущий год',
+  custom: 'Выбранный период',
+};
 
 interface DayGroup {
   dateKey: string;
@@ -191,6 +200,7 @@ const DayColumn = ({ group }: { group: DayGroup }) => {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 const Dashboard2UpcomingPayments = () => {
   const { token } = useAuth();
+  const { period, getDateRange } = usePeriod();
   const [activeIndex, setActiveIndex] = useState(0);
   const [plannedPayments, setPlannedPayments] = useState<PaymentRecord[]>([]);
   const [plannedLoading, setPlannedLoading] = useState(true);
@@ -229,23 +239,18 @@ const Dashboard2UpcomingPayments = () => {
   }, [token]);
 
   const { upcoming, weekTotal } = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const sevenDaysLater = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000);
-    sevenDaysLater.setHours(23, 59, 59, 999);
+    const { from, to } = getDateRange();
 
     const filterByDateRange = (p: PaymentRecord) => {
       if (!p.payment_date) return false;
       const raw = String(p.payment_date);
       const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
-      return d >= today && d <= sevenDaysLater;
+      return d >= from && d <= to;
     };
 
     const filteredPlanned = plannedPayments.filter(filterByDateRange);
 
-    const merged = [...filteredPlanned];
-
-    const sorted = merged.sort((a, b) => {
+    const sorted = [...filteredPlanned].sort((a, b) => {
       const da = new Date(String(a.payment_date).includes('T') ? String(a.payment_date) : String(a.payment_date) + 'T00:00:00');
       const db = new Date(String(b.payment_date).includes('T') ? String(b.payment_date) : String(b.payment_date) + 'T00:00:00');
       return da.getTime() - db.getTime();
@@ -253,9 +258,11 @@ const Dashboard2UpcomingPayments = () => {
 
     const total = sorted.reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
     return { upcoming: sorted, weekTotal: total };
-  }, [plannedPayments]);
+  }, [plannedPayments, getDateRange]);
 
   const groups = useMemo(() => groupByDay(upcoming), [upcoming]);
+
+  useEffect(() => { setActiveIndex(0); }, [period]);
 
   const isLoading = plannedLoading;
   const count = upcoming.length;
@@ -284,7 +291,7 @@ const Dashboard2UpcomingPayments = () => {
                 Предстоящие платежи
               </h3>
               <p className={`${dashboardTypography.cardSmall} mt-0.5`} style={{ color: 'hsl(var(--muted-foreground))' }}>
-                Ближайшие 7 дней
+                {PERIOD_LABEL[period] ?? 'Выбранный период'}
               </p>
             </div>
           </div>
@@ -310,7 +317,7 @@ const Dashboard2UpcomingPayments = () => {
           <div className="text-center py-12">
             <Icon name="CheckCircle" size={44} style={{ color: dashboardColors.green, margin: '0 auto 14px' }} />
             <p className={dashboardTypography.cardSmall} style={{ color: 'hsl(var(--muted-foreground))' }}>
-              Нет предстоящих платежей на ближайшие 7 дней
+              Нет запланированных платежей: {(PERIOD_LABEL[period] ?? 'выбранный период').toLowerCase()}
             </p>
           </div>
         ) : (
