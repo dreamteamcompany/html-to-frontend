@@ -227,7 +227,7 @@ const ContractorComparisonChart = () => {
             </div>
             {!loading && total > 0 && (
               <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginLeft: '44px' }}>
-                Итого: <span style={{ color: '#7551e9', fontWeight: 700 }}>{fmt(total)}</span>
+                Итого: <span style={{ color: '#7551e9', fontWeight: 700 }}>{new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)} ₽</span>
                 <span style={{ marginLeft: '6px', opacity: 0.7 }}>· {contractorData.length} контрагентов</span>
               </div>
             )}
