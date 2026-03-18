@@ -8,6 +8,7 @@ import UserFormDialog from '@/components/users/UserFormDialog';
 import UsersTable from '@/components/users/UsersTable';
 import UsersMobileList from '@/components/users/UsersMobileList';
 import { API_ENDPOINTS } from '@/config/api';
+import { translateApiError } from '@/utils/api';
 
 interface User {
   id: number;
@@ -149,7 +150,7 @@ const Users = () => {
         loadUsers();
       } else {
         const error = await response.json();
-        alert(error.error || 'Ошибка при сохранении пользователя');
+        alert(translateApiError(error.error) || 'Ошибка при сохранении пользователя');
       }
     } catch (err) {
       console.error('Failed to save user:', err);
@@ -193,7 +194,7 @@ const Users = () => {
         loadUsers();
       } else {
         const error = await response.json();
-        alert(error.error || 'Ошибка при удалении пользователя');
+        alert(translateApiError(error.error) || 'Ошибка при удалении пользователя');
       }
     } catch (err) {
       console.error('Failed to delete user:', err);

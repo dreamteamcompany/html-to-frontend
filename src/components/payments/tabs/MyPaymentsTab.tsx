@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { translateApiError } from '@/utils/api';
 import { usePaymentsData } from '@/hooks/usePaymentsData';
 import { usePaymentForm } from '@/hooks/usePaymentForm';
 import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
@@ -72,7 +73,7 @@ const MyPaymentsTab = () => {
         loadPayments();
       } else {
         const error = await response.json();
-        toast({ title: 'Ошибка', description: error.error || 'Не удалось одобрить', variant: 'destructive' });
+        toast({ title: 'Ошибка', description: translateApiError(error.error) || 'Не удалось одобрить', variant: 'destructive' });
       }
     } catch {
       toast({ title: 'Ошибка сети', description: 'Проверьте подключение к интернету', variant: 'destructive' });
@@ -94,7 +95,7 @@ const MyPaymentsTab = () => {
         loadPayments();
       } else {
         const error = await response.json();
-        toast({ title: 'Ошибка', description: error.error || 'Не удалось отклонить', variant: 'destructive' });
+        toast({ title: 'Ошибка', description: translateApiError(error.error) || 'Не удалось отклонить', variant: 'destructive' });
       }
     } catch {
       toast({ title: 'Ошибка сети', description: 'Проверьте подключение к интернету', variant: 'destructive' });
@@ -123,7 +124,7 @@ const MyPaymentsTab = () => {
         const error = await response.json();
         toast({
           title: 'Ошибка',
-          description: error.error || 'Не удалось отправить на согласование',
+          description: translateApiError(error.error) || 'Не удалось отправить на согласование',
           variant: 'destructive',
         });
       }
@@ -161,7 +162,7 @@ const MyPaymentsTab = () => {
         const error = await response.json();
         toast({
           title: 'Ошибка',
-          description: error.error || 'Не удалось удалить платёж',
+          description: translateApiError(error.error) || 'Не удалось удалить платёж',
           variant: 'destructive',
         });
       }

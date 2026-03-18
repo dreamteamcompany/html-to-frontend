@@ -10,6 +10,7 @@ import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 import Icon from '@/components/ui/icon';
 import { Payment, CustomField } from '@/types/payment';
+import { translateApiError } from '@/utils/api';
 
 const PlannedPayments = () => {
   const { token } = useAuth();
@@ -82,7 +83,7 @@ const PlannedPayments = () => {
         const error = await response.json();
         toast({
           title: 'Ошибка',
-          description: error.error || 'Не удалось конвертировать платёж',
+          description: translateApiError(error.error) || 'Не удалось конвертировать платёж',
           variant: 'destructive',
         });
       }

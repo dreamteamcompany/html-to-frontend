@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { translateApiError } from '@/utils/api';
 
 const ScheduledPaymentsSettings = () => {
   const { token } = useAuth();
@@ -32,7 +33,7 @@ const ScheduledPaymentsSettings = () => {
         const error = await response.json();
         toast({
           title: 'Ошибка',
-          description: error.error || 'Не удалось обработать платежи',
+          description: translateApiError(error.error) || 'Не удалось обработать платежи',
           variant: 'destructive',
         });
       }

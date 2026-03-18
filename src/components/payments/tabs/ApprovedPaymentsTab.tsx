@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { translateApiError } from '@/utils/api';
 import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 import { exportTabPaymentsToExcel } from '@/utils/exportExcel';
 
@@ -55,7 +56,7 @@ const ApprovedPaymentsTab = () => {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Не удалось отозвать платёж');
+        throw new Error(translateApiError(error.error) || 'Не удалось отозвать платёж');
       }
       toast({ title: 'Успешно', description: 'Платёж отозван и возвращён в черновики' });
       setRevokePaymentId(null);

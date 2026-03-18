@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@/hooks/use-toast';
+import { translateApiError } from '@/utils/api';
 
 interface CustomField {
   id: number;
@@ -108,7 +109,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Не удалось отозвать платёж');
+        throw new Error(translateApiError(error.error) || 'Не удалось отозвать платёж');
       }
 
       toast({

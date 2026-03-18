@@ -7,6 +7,7 @@ import SavingFormDialog from './Savings/SavingFormDialog';
 import SavingsTable from './Savings/SavingsTable';
 import { Saving, Service, Employee, SavingReason, SavingFormData, CustomerDepartment } from './Savings/types';
 import { API_ENDPOINTS } from '@/config/api';
+import { translateApiError } from '@/utils/api';
 
 const Savings = () => {
   const [savings, setSavings] = useState<Saving[]>([]);
@@ -176,7 +177,7 @@ const Savings = () => {
         loadSavings();
       } else {
         const error = await response.json();
-        alert(error.error || 'Ошибка при сохранении экономии');
+        alert(translateApiError(error.error) || 'Ошибка при сохранении экономии');
       }
     } catch (err) {
       console.error('Failed to save saving:', err);
@@ -199,7 +200,7 @@ const Savings = () => {
         loadSavings();
       } else {
         const error = await response.json();
-        alert(error.error || 'Ошибка при удалении');
+        alert(translateApiError(error.error) || 'Ошибка при удалении');
       }
     } catch (err) {
       console.error('Failed to delete saving:', err);

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
+import { translateApiError } from '@/utils/api';
 
 interface CustomField {
   id: number;
@@ -131,7 +132,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Не удалось отозвать платёж');
+        throw new Error(translateApiError(error.error) || 'Не удалось отозвать платёж');
       }
 
       toast({
