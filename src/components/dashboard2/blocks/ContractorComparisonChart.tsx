@@ -61,18 +61,24 @@ const ContractorComparisonChart = () => {
   const contractorData = useMemo(() => {
     const { from, to } = getDateRange();
 
-    const contractorMap: { [key: string]: number } = {};
+    const contractorMap: { [key: string]: { amount: number; services: { [s: string]: number } } } = {};
 
     (Array.isArray(allPayments) ? allPayments : []).forEach((p: PaymentRecord) => {
       if (p.status !== 'approved') return;
       const d = new Date(p.payment_date);
       if (d < from || d > to) return;
       const name = p.contractor_name || 'Без контрагента';
-      contractorMap[name] = (contractorMap[name] || 0) + p.amount;
+      const svc = (p.service_name as string) || '';
+      if (!contractorMap[name]) contractorMap[name] = { amount: 0, services: {} };
+      contractorMap[name].amount += p.amount;
+      if (svc) contractorMap[name].services[svc] = (contractorMap[name].services[svc] || 0) + p.amount;
     });
 
     return Object.entries(contractorMap)
-      .map(([name, amount]) => ({ name, amount }))
+      .map(([name, { amount, services }]) => {
+        const topService = Object.entries(services).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+        return { name, amount, service: topService };
+      })
       .sort((a, b) => b.amount - a.amount);
   }, [allPayments, period, dateFrom, dateTo]);
 
@@ -273,7 +279,7 @@ const ContractorComparisonChart = () => {
                   return (
                     <div key={`${item.name}-${i}`} style={{
                       display: 'flex', alignItems: 'center', gap: '6px',
-                      padding: '3px 10px 3px 7px', borderRadius: '99px',
+                      padding: '4px 10px 4px 7px', borderRadius: '10px',
                       background: isLight ? `${col.line.replace('1)', '0.08)')}` : `${col.line.replace('1)', '0.12)')}`,
                       border: `1px solid ${col.line.replace('1)', '0.25)')}`,
                     }}>
@@ -282,14 +288,24 @@ const ContractorComparisonChart = () => {
                         background: col.line, flexShrink: 0,
                         boxShadow: `0 0 5px ${col.line.replace('1)', '0.6)')}`,
                       }} />
-                      <span style={{
-                        fontSize: '11px', fontWeight: 600,
-                        color: isLight ? 'rgba(25,25,45,0.82)' : 'rgba(210,220,240,0.88)',
-                        whiteSpace: 'nowrap', maxWidth: '130px',
-                        overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>
-                        {item.name}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '140px' }}>
+                        <span style={{
+                          fontSize: '11px', fontWeight: 600,
+                          color: isLight ? 'rgba(25,25,45,0.82)' : 'rgba(210,220,240,0.88)',
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>
+                          {item.name}
+                        </span>
+                        {item.service && (
+                          <span style={{
+                            fontSize: '10px', fontWeight: 400,
+                            color: isLight ? 'rgba(25,25,45,0.48)' : 'rgba(210,220,240,0.45)',
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                          }}>
+                            {item.service}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -308,7 +324,12 @@ const ContractorComparisonChart = () => {
                   return (
                     <div key={`${item.name}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: col.line, flexShrink: 0 }} />
-                      <span style={{ flex: 1, fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                        {item.service && (
+                          <span style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.service}</span>
+                        )}
+                      </div>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: col.line, flexShrink: 0 }}>{pct}%</span>
                       <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', flexShrink: 0 }}>{fmt(item.amount)}</span>
                     </div>
