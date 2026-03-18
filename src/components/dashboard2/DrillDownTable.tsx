@@ -42,6 +42,9 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                     {p.service_name && p.description && (
                       <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>{p.service_name}</div>
                     )}
+                    {p.contractor_name && (
+                      <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>{p.contractor_name}</div>
+                    )}
                   </div>
                   <div style={{ fontSize: '15px', fontWeight: 800, color: '#7551e9', flexShrink: 0 }}>
                     {fmt(p.amount)}
@@ -134,6 +137,11 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                       </div>
                       {p.service_name && p.description && (
                         <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</div>
+                      )}
+                      {p.contractor_name && (
+                        <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {p.contractor_name}
+                        </div>
                       )}
                     </td>
                     <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
