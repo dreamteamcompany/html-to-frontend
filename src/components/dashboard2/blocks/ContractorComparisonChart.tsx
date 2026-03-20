@@ -1,12 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Bar } from 'react-chartjs-2';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
 import Icon from '@/components/ui/icon';
 import { dashboardTypography } from '../dashboardStyles';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { useDrillDown } from '../useDrillDown';
 import DrillDownModal from '../DrillDownModal';
+import { Chart as ChartJS } from 'chart.js';
 
 interface PaymentRecord {
   status: string;
@@ -37,6 +38,8 @@ const ContractorComparisonChart = () => {
   const [showAll, setShowAll] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isLight, setIsLight] = useState(false);
+  const [labelTooltip, setLabelTooltip] = useState<{ x: number; y: number; name: string; service: string } | null>(null);
+  const chartRef = useRef<ChartJS | null>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -98,7 +101,66 @@ const ContractorComparisonChart = () => {
   );
 
   const tickColor = isLight ? 'rgba(30,30,50,0.6)' : 'rgba(180,190,220,0.65)';
+  const svcTickColor = isLight ? 'rgba(117,81,233,0.7)' : 'rgba(167,139,250,0.75)';
   const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)';
+
+  const handleChartMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const chart = chartRef.current;
+    if (!chart) { setLabelTooltip(null); return; }
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const xScale = (chart as ChartJS).scales?.['x'];
+    if (!xScale) { setLabelTooltip(null); return; }
+    const bottom = (chart as ChartJS).chartArea?.bottom ?? 0;
+    if (mouseY < bottom) { setLabelTooltip(null); return; }
+    const halfBand = xScale.width / Math.max(displayData.length, 1) / 2;
+    for (let i = 0; i < displayData.length; i++) {
+      const px = xScale.getPixelForValue(i);
+      if (mouseX >= px - halfBand && mouseX <= px + halfBand) {
+        const item = displayData[i];
+        if (item.name) {
+          setLabelTooltip({ x: mouseX, y: mouseY, name: item.name, service: item.service || '' });
+          return;
+        }
+      }
+    }
+    setLabelTooltip(null);
+  }, [displayData]);
+
+  const xAxisLabelsPlugin = useMemo(() => ({
+    id: 'xAxisLabels',
+    afterDraw(chart: ChartJS) {
+      const ctx = chart.ctx;
+      const xScale = chart.scales['x'];
+      const bottom = chart.chartArea?.bottom ?? 0;
+      if (!xScale) return;
+      const maxLen = isMobile ? 9 : 13;
+      const trunc = (s: string) => s.length > maxLen ? s.slice(0, maxLen - 1) + '…' : s;
+      const font = `"Plus Jakarta Sans", sans-serif`;
+      for (let i = 0; i < displayData.length; i++) {
+        const item = displayData[i];
+        const px = xScale.getPixelForValue(i);
+        const nameStr = trunc(item.name ?? '');
+        const svcStr = item.service ? trunc(item.service) : '';
+        const lineH = isMobile ? 13 : 14;
+        const y1 = bottom + (isMobile ? 10 : 12);
+        const y2 = y1 + lineH;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.font = `600 ${isMobile ? 10 : 11}px ${font}`;
+        ctx.fillStyle = tickColor;
+        ctx.fillText(nameStr, px, y1);
+        if (svcStr) {
+          ctx.font = `500 ${isMobile ? 9 : 10}px ${font}`;
+          ctx.fillStyle = svcTickColor;
+          ctx.fillText(svcStr, px, y2);
+        }
+        ctx.restore();
+      }
+    },
+  }), [displayData, isMobile, tickColor, svcTickColor]);
 
   const areaData = useMemo(() => ({
     labels: displayData.map(d => d.name),
@@ -164,23 +226,12 @@ const ContractorComparisonChart = () => {
     },
     scales: {
       x: {
-        ticks: {
-          color: tickColor,
-          font: { size: isMobile ? 10 : 11, family: 'Plus Jakarta Sans, sans-serif' as const },
-          padding: 8,
-          maxRotation: 0,
-          callback: (_val: unknown, index: number) => {
-            const item = displayData[index];
-            const name = item?.name ?? '';
-            const svc = item?.service ?? '';
-            const maxLen = isMobile ? 8 : 14;
-            const truncName = name.length > maxLen ? name.slice(0, maxLen - 1) + '…' : name;
-            const truncSvc = svc ? (svc.length > maxLen ? svc.slice(0, maxLen - 1) + '…' : svc) : '';
-            return truncSvc ? [truncName, truncSvc] : truncName;
-          },
-        },
+        ticks: { display: false },
         grid: { display: false },
         border: { display: false },
+        afterFit(scale: { paddingBottom: number }) {
+          scale.paddingBottom = isMobile ? 36 : 42;
+        },
       },
       y: {
         beginAtZero: true,
@@ -289,8 +340,34 @@ const ContractorComparisonChart = () => {
           <>
 
 
-            <div className="flex-1 min-h-[200px] sm:min-h-[280px]" style={{ position: 'relative', cursor: 'pointer' }}>
-              <Bar key={chartKey} data={areaData} options={chartOptions} />
+            <div
+              className="flex-1 min-h-[200px] sm:min-h-[280px]"
+              style={{ position: 'relative', cursor: 'pointer' }}
+              onMouseMove={handleChartMouseMove}
+              onMouseLeave={() => setLabelTooltip(null)}
+            >
+              <Bar key={chartKey} data={areaData} options={chartOptions} plugins={[xAxisLabelsPlugin]} ref={chartRef} />
+              {labelTooltip && (
+                <div style={{
+                  position: 'absolute',
+                  left: labelTooltip.x,
+                  top: labelTooltip.y - 8,
+                  transform: 'translate(-50%, -100%)',
+                  background: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(18,20,45,0.96)',
+                  border: '1px solid rgba(117,81,233,0.3)',
+                  borderRadius: '8px',
+                  padding: '7px 10px',
+                  pointerEvents: 'none',
+                  zIndex: 10,
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+                }}>
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: isLight ? 'rgba(30,30,50,0.9)' : 'rgba(200,210,235,0.95)' }}>{labelTooltip.name}</div>
+                  {labelTooltip.service && (
+                    <div style={{ fontSize: '11px', color: isLight ? 'rgba(117,81,233,0.85)' : 'rgba(167,139,250,0.9)', marginTop: '2px' }}>Сервис: {labelTooltip.service}</div>
+                  )}
+                </div>
+              )}
             </div>
 
             {isMobile && (
