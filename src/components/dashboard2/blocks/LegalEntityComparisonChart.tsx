@@ -287,9 +287,14 @@ const LegalEntityComparisonChart = () => {
               </h3>
             </div>
             {!loading && total > 0 && (
-              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginLeft: '44px' }}>
+              <div
+                onClick={() => openDrill({ type: 'all', value: 'all', label: 'Все расходы' })}
+                style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginLeft: '44px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '4px', padding: '2px 4px', transition: 'background 0.15s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(57,101,255,0.10)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
                 Итого: <span style={{ color: 'rgba(57,101,255,1)', fontWeight: 700 }}>{new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)} ₽</span>
-                <span style={{ marginLeft: '6px', opacity: 0.7 }}>· {legalEntityData.length} юр. лиц</span>
+                <span style={{ marginLeft: '2px', opacity: 0.7 }}>· {legalEntityData.length} юр. лиц</span>
               </div>
             )}
           </div>

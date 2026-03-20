@@ -57,9 +57,10 @@ interface DonutProps {
   total: number;
   size: number;
   onSegmentClick?: (name: string) => void;
+  onTotalClick?: () => void;
 }
 
-const Donut = ({ slices, total, size, onSegmentClick }: DonutProps) => {
+const Donut = ({ slices, total, size, onSegmentClick, onTotalClick }: DonutProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number } | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -168,7 +169,8 @@ const Donut = ({ slices, total, size, onSegmentClick }: DonutProps) => {
             </text>
           </>
         ) : (
-          <>
+          <g onClick={onTotalClick} style={{ cursor: onTotalClick ? 'pointer' : 'default' }}>
+            <circle cx={cx} cy={cy} r={innerR - 4} fill="transparent" />
             <text x={cx} y={cy - 12} textAnchor="middle" dominantBaseline="middle"
               style={{ fontSize: '10px', fontWeight: 600, fill: isLight ? 'rgba(20,20,40,0.4)' : 'rgba(255,255,255,0.3)', letterSpacing: '0.8px' }}>
               ИТОГО
@@ -177,7 +179,7 @@ const Donut = ({ slices, total, size, onSegmentClick }: DonutProps) => {
               style={{ fontSize: '14px', fontWeight: 900, fill: isLight ? '#1a1a2e' : '#fff' }}>
               {fmt(total)}
             </text>
-          </>
+          </g>
         )}
       </svg>
 
@@ -413,7 +415,7 @@ const ExpenseShareChart = () => {
             flex: 1,
           }}>
             <div style={{ flexShrink: 0 }}>
-              <Donut slices={slices} total={total} size={size} onSegmentClick={handleSegmentClick} />
+              <Donut slices={slices} total={total} size={size} onSegmentClick={handleSegmentClick} onTotalClick={() => openDrill({ type: 'all', value: 'all', label: 'Все расходы' })} />
             </div>
             <div style={{ flexShrink: 0, minWidth: 0, alignSelf: 'center', width: isMobile ? '100%' : 'auto' }}>
               <Legend slices={slices} onItemClick={handleSegmentClick} />
