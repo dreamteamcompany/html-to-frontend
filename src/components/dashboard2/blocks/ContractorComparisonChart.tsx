@@ -129,8 +129,8 @@ const ContractorComparisonChart = () => {
     interaction: { mode: 'nearest' as const, intersect: true },
     onClick: (_event: unknown, elements: { index: number }[]) => {
       if (!elements.length) return;
-      const name = displayData[elements[0].index]?.name;
-      if (name) openDrill({ type: 'contractor', value: name, label: name });
+      const item = displayData[elements[0].index];
+      if (item?.name) openDrill({ type: 'contractor', value: item.name, label: item.name, serviceLabel: item.service || undefined });
     },
     plugins: {
       legend: { display: false },
@@ -149,6 +149,11 @@ const ContractorComparisonChart = () => {
             const idx = items[0]?.dataIndex ?? 0;
             return displayData[idx]?.name ?? '';
           },
+          afterTitle: (items: { dataIndex: number }[]) => {
+            const idx = items[0]?.dataIndex ?? 0;
+            const svc = displayData[idx]?.service;
+            return svc ? `Сервис: ${svc}` : '';
+          },
           label: (context: { raw: unknown }) => {
             const v = context.raw as number;
             return '  ' + new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v).replace(/,/g, '.') + ' ₽';
@@ -162,11 +167,16 @@ const ContractorComparisonChart = () => {
         ticks: {
           color: tickColor,
           font: { size: isMobile ? 10 : 11, family: 'Plus Jakarta Sans, sans-serif' as const },
-          padding: 6,
+          padding: 8,
+          maxRotation: 0,
           callback: (_val: unknown, index: number) => {
-            const name = displayData[index]?.name ?? '';
-            if (isMobile) return name.length > 8 ? name.slice(0, 7) + '…' : name;
-            return name.length > 14 ? name.slice(0, 13) + '…' : name;
+            const item = displayData[index];
+            const name = item?.name ?? '';
+            const svc = item?.service ?? '';
+            const maxLen = isMobile ? 8 : 14;
+            const truncName = name.length > maxLen ? name.slice(0, maxLen - 1) + '…' : name;
+            const truncSvc = svc ? (svc.length > maxLen ? svc.slice(0, maxLen - 1) + '…' : svc) : '';
+            return truncSvc ? [truncName, truncSvc] : truncName;
           },
         },
         grid: { display: false },

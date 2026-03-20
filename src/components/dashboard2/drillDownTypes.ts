@@ -4,6 +4,7 @@ export interface DrillDownFilter {
   type: 'category' | 'contractor' | 'department' | 'legal_entity' | 'payment_type' | 'date' | 'service' | 'all';
   value: string;
   label: string;
+  serviceLabel?: string;
 }
 
 export type SortField = 'payment_date' | 'amount';

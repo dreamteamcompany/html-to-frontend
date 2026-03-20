@@ -157,6 +157,7 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
       }}>
         <DrillDownHeader
           label={filter.label}
+          serviceLabel={filter.serviceLabel}
           count={sorted.length}
           total={total}
           isMobile={isMobile}

@@ -3,13 +3,14 @@ import { fmt } from './drillDownTypes';
 
 interface DrillDownHeaderProps {
   label: string;
+  serviceLabel?: string;
   count: number;
   total: number;
   isMobile: boolean;
   onClose: () => void;
 }
 
-const DrillDownHeader = ({ label, count, total, isMobile, onClose }: DrillDownHeaderProps) => (
+const DrillDownHeader = ({ label, serviceLabel, count, total, isMobile, onClose }: DrillDownHeaderProps) => (
   <div style={{
     padding: isMobile ? '16px' : '20px 24px',
     borderBottom: '1px solid hsl(var(--border))',
@@ -37,7 +38,13 @@ const DrillDownHeader = ({ label, count, total, isMobile, onClose }: DrillDownHe
         }}>
           Детализация: <span style={{ color: '#7551e9' }}>{label}</span>
         </div>
-        <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>
+        {serviceLabel && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+            <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Сервис</span>
+            <span style={{ fontSize: '11px', color: '#7551e9', fontWeight: 600 }}>{serviceLabel}</span>
+          </div>
+        )}
+        <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: serviceLabel ? '2px' : '2px' }}>
           {count} платежей · Итого: <span style={{ color: '#7551e9', fontWeight: 700 }}>{fmt(total)}</span>
         </div>
       </div>

@@ -37,13 +37,19 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '10px' }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.3 }}>
-                      {p.description || p.service_name || p.contractor_name || '—'}
+                      {p.description || '—'}
                     </div>
-                    {p.service_name && p.description && (
-                      <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>{p.service_name}</div>
-                    )}
                     {p.contractor_name && (
-                      <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>{p.contractor_name}</div>
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'baseline' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Контрагент</span>
+                        <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.contractor_name}</span>
+                      </div>
+                    )}
+                    {p.service_name && (
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Сервис</span>
+                        <span style={{ fontSize: '11px', color: '#7551e9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</span>
+                      </div>
                     )}
                   </div>
                   <div style={{ fontSize: '15px', fontWeight: 800, color: '#7551e9', flexShrink: 0 }}>
@@ -110,7 +116,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
             </colgroup>
             <thead>
               <tr style={{ borderBottom: '1px solid hsl(var(--border))', position: 'sticky', top: 0, background: 'hsl(var(--card))', zIndex: 1 }}>
-                {['Описание / Сервис', 'Категория', 'Отдел', 'Тип расчёта', 'Дата', 'Сумма', 'Статус'].map(h => (
+                {['Описание', 'Категория', 'Отдел', 'Тип расчёта', 'Дата', 'Сумма', 'Статус'].map(h => (
                   <th key={h} style={{
                     padding: '10px 12px', textAlign: 'left',
                     fontSize: '11px', fontWeight: 600,
@@ -133,14 +139,18 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                   >
                     <td style={{ padding: '11px 12px', overflow: 'hidden' }}>
                       <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {p.description || p.service_name || p.contractor_name || '—'}
+                        {p.description || '—'}
                       </div>
-                      {p.service_name && p.description && (
-                        <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</div>
-                      )}
                       {p.contractor_name && (
-                        <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {p.contractor_name}
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '3px', alignItems: 'baseline', overflow: 'hidden' }}>
+                          <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Контрагент</span>
+                          <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.contractor_name}</span>
+                        </div>
+                      )}
+                      {p.service_name && (
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline', overflow: 'hidden' }}>
+                          <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Сервис</span>
+                          <span style={{ fontSize: '11px', color: '#7551e9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</span>
                         </div>
                       )}
                     </td>
