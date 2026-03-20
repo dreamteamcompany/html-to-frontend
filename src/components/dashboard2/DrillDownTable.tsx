@@ -57,7 +57,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                   </div>
                 </div>
 
-                {/* Строка 2: категория + отдел */}
+                {/* Строка 2: категория + отдел + юр. лицо */}
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
                   {p.category_name && (
                     <span style={{
@@ -73,6 +73,14 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                       background: 'hsl(var(--border))', color: 'hsl(var(--foreground))', fontWeight: 500,
                     }}>
                       {p.department_name}
+                    </span>
+                  )}
+                  {p.legal_entity_name && (
+                    <span style={{
+                      fontSize: '11px', padding: '3px 8px', borderRadius: '6px',
+                      background: 'rgba(1,181,116,0.10)', color: 'rgba(1,181,116,1)', fontWeight: 500,
+                    }}>
+                      {p.legal_entity_name}
                     </span>
                   )}
                 </div>
@@ -106,17 +114,18 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px', tableLayout: 'fixed' }}>
             <colgroup>
-              <col style={{ width: '22%' }} />
-              <col style={{ width: '14%' }} />
-              <col style={{ width: '14%' }} />
-              <col style={{ width: '11%' }} />
-              <col style={{ width: '11%' }} />
+              <col style={{ width: '20%' }} />
               <col style={{ width: '12%' }} />
-              <col style={{ width: '16%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '13%' }} />
             </colgroup>
             <thead>
               <tr style={{ borderBottom: '1px solid hsl(var(--border))', position: 'sticky', top: 0, background: 'hsl(var(--card))', zIndex: 1 }}>
-                {['Описание', 'Категория', 'Отдел', 'Тип расчёта', 'Дата', 'Сумма', 'Статус'].map(h => (
+                {['Описание', 'Категория', 'Отдел', 'Юр. лицо', 'Тип расчёта', 'Дата', 'Сумма', 'Статус'].map(h => (
                   <th key={h} style={{
                     padding: '10px 12px', textAlign: 'left',
                     fontSize: '11px', fontWeight: 600,
@@ -159,6 +168,9 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                     </td>
                     <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {p.department_name || '—'}
+                    </td>
+                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {p.legal_entity_name || '—'}
                     </td>
                     <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {resolvePaymentType(p.payment_type, p.legal_entity_name)}
