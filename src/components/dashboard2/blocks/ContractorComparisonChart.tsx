@@ -133,35 +133,70 @@ const ContractorComparisonChart = () => {
     afterDraw(chart: ChartJS) {
       const ctx = chart.ctx;
       const xScale = chart.scales['x'];
-      const bottom = chart.chartArea?.bottom ?? 0;
-      if (!xScale) return;
-      const maxLen = isMobile ? 9 : 13;
-      const trunc = (s: string) => s.length > maxLen ? s.slice(0, maxLen - 1) + '…' : s;
+      const chartArea = chart.chartArea;
+      if (!xScale || !chartArea) return;
+      const bottom = chartArea.bottom;
+      const top = chartArea.top;
       const font = `"Plus Jakarta Sans", sans-serif`;
       const meta = chart.getDatasetMeta(0);
-      for (let i = 0; i < displayData.length; i++) {
+      const count = displayData.length;
+      if (count === 0) return;
+
+      // Ширина слота для каждого столбца
+      const slotWidth = xScale.width / count;
+      // Доступная ширина текста с отступами по 3px с каждой стороны
+      const maxTextWidth = Math.max(slotWidth - 6, 8);
+
+      // Обрезка текста по пикселям с «…»
+      const fitText = (text: string, maxW: number, fsz: number, weight: string): string => {
+        ctx.font = `${weight} ${fsz}px ${font}`;
+        if (ctx.measureText(text).width <= maxW) return text;
+        let lo = 0, hi = text.length;
+        while (lo < hi - 1) {
+          const mid = Math.floor((lo + hi) / 2);
+          if (ctx.measureText(text.slice(0, mid) + '…').width <= maxW) lo = mid;
+          else hi = mid;
+        }
+        return lo > 0 ? text.slice(0, lo) + '…' : '';
+      };
+
+      // Адаптивный размер шрифта: уменьшаем при узких слотах, минимум 8px
+      const baseFontSize = isMobile ? 10 : 11;
+      const fontSize = Math.max(8, Math.min(baseFontSize, Math.floor(slotWidth / 6)));
+      const svcFontSize = Math.max(7, fontSize - 1);
+
+      for (let i = 0; i < count; i++) {
         const item = displayData[i];
         const px = xScale.getPixelForValue(i);
-        const nameStr = trunc(item.name ?? '');
-        const svcStr = item.service ? trunc(item.service) : '';
+
         ctx.save();
         ctx.textAlign = 'center';
 
         // Название контрагента — под осью X
-        ctx.textBaseline = 'top';
-        ctx.font = `600 ${isMobile ? 10 : 11}px ${font}`;
-        ctx.fillStyle = tickColor;
-        ctx.fillText(nameStr, px, bottom + (isMobile ? 10 : 12));
+        const nameStr = fitText(item.name ?? '', maxTextWidth, fontSize, '600');
+        if (nameStr) {
+          ctx.textBaseline = 'top';
+          ctx.font = `600 ${fontSize}px ${font}`;
+          ctx.fillStyle = tickColor;
+          ctx.fillText(nameStr, px, bottom + (isMobile ? 8 : 10));
+        }
 
-        // Название сервиса — над верхушкой столбца
-        if (svcStr && meta?.data?.[i]) {
+        // Название сервиса — над верхушкой столбца, только если влезает
+        if (item.service && meta?.data?.[i]) {
           const bar = meta.data[i] as { y: number };
           const barTop = bar.y;
-          ctx.textBaseline = 'bottom';
-          ctx.font = `600 ${isMobile ? 9 : 10}px ${font}`;
-          ctx.fillStyle = svcTickColor;
-          ctx.fillText(svcStr, px, barTop - (isMobile ? 3 : 4));
+          const spaceAbove = barTop - top;
+          if (spaceAbove >= svcFontSize + 4) {
+            const svcStr = fitText(item.service, maxTextWidth, svcFontSize, '600');
+            if (svcStr) {
+              ctx.textBaseline = 'bottom';
+              ctx.font = `600 ${svcFontSize}px ${font}`;
+              ctx.fillStyle = svcTickColor;
+              ctx.fillText(svcStr, px, barTop - (isMobile ? 3 : 4));
+            }
+          }
         }
+
         ctx.restore();
       }
     },
