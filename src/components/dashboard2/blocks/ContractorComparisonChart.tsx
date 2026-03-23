@@ -138,24 +138,29 @@ const ContractorComparisonChart = () => {
       const maxLen = isMobile ? 9 : 13;
       const trunc = (s: string) => s.length > maxLen ? s.slice(0, maxLen - 1) + '…' : s;
       const font = `"Plus Jakarta Sans", sans-serif`;
+      const meta = chart.getDatasetMeta(0);
       for (let i = 0; i < displayData.length; i++) {
         const item = displayData[i];
         const px = xScale.getPixelForValue(i);
         const nameStr = trunc(item.name ?? '');
         const svcStr = item.service ? trunc(item.service) : '';
-        const lineH = isMobile ? 13 : 14;
-        const y1 = bottom + (isMobile ? 10 : 12);
-        const y2 = y1 + lineH;
         ctx.save();
         ctx.textAlign = 'center';
+
+        // Название контрагента — под осью X
         ctx.textBaseline = 'top';
         ctx.font = `600 ${isMobile ? 10 : 11}px ${font}`;
         ctx.fillStyle = tickColor;
-        ctx.fillText(nameStr, px, y1);
-        if (svcStr) {
-          ctx.font = `500 ${isMobile ? 9 : 10}px ${font}`;
+        ctx.fillText(nameStr, px, bottom + (isMobile ? 10 : 12));
+
+        // Название сервиса — над верхушкой столбца
+        if (svcStr && meta?.data?.[i]) {
+          const bar = meta.data[i] as { y: number };
+          const barTop = bar.y;
+          ctx.textBaseline = 'bottom';
+          ctx.font = `600 ${isMobile ? 9 : 10}px ${font}`;
           ctx.fillStyle = svcTickColor;
-          ctx.fillText(svcStr, px, y2);
+          ctx.fillText(svcStr, px, barTop - (isMobile ? 3 : 4));
         }
         ctx.restore();
       }
