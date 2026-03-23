@@ -458,7 +458,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return response(200, result)
         
         elif method == 'PATCH':
-            # Изменение отдела-заказчика у согласованного платежа (только для администраторов)
+            # Редактирование разрешённых полей согласованного платежа (только для администраторов)
             if not is_admin_user(conn, payload['user_id']):
                 conn.close()
                 return response(403, {'error': 'Доступ разрешён только администраторам'})
@@ -471,13 +471,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
             payment_id = body.get('payment_id')
             new_department_id = body.get('department_id')
+            new_legal_entity_id = body.get('legal_entity_id')
+            new_invoice_number = body.get('invoice_number')
 
             if not payment_id:
                 conn.close()
                 return response(400, {'error': 'Не указан payment_id'})
 
             cur.execute(
-                f'SELECT id, department_id, status FROM {SCHEMA}.payments WHERE id = %s',
+                f'SELECT id, department_id, legal_entity_id, invoice_number, status FROM {SCHEMA}.payments WHERE id = %s',
                 (payment_id,)
             )
             existing = cur.fetchone()
@@ -486,31 +488,74 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 conn.close()
                 return response(404, {'error': 'Платёж не найден'})
 
-            old_department_id = existing['department_id']
+            # Собираем изменения только для переданных полей
+            update_parts = []
+            update_values = []
+            audit_changes = []
 
-            # Получаем имена отделов для журнала
-            old_dept_name = None
-            new_dept_name = None
+            # Обновление отдела-заказчика
+            if 'department_id' in body:
+                old_department_id = existing['department_id']
+                old_dept_name = None
+                new_dept_name = None
+                if old_department_id:
+                    cur.execute(f'SELECT name FROM {SCHEMA}.customer_departments WHERE id = %s', (old_department_id,))
+                    row = cur.fetchone()
+                    if row:
+                        old_dept_name = row['name']
+                if new_department_id:
+                    cur.execute(f'SELECT name FROM {SCHEMA}.customer_departments WHERE id = %s', (new_department_id,))
+                    row = cur.fetchone()
+                    if row:
+                        new_dept_name = row['name']
+                update_parts.append('department_id = %s')
+                update_values.append(new_department_id)
+                audit_changes.append(
+                    f'Отдел-заказчик: «{old_dept_name or "не указан"}» → «{new_dept_name or "не указан"}»'
+                )
 
-            if old_department_id:
-                cur.execute(f'SELECT name FROM {SCHEMA}.customer_departments WHERE id = %s', (old_department_id,))
-                row = cur.fetchone()
-                if row:
-                    old_dept_name = row['name']
+            # Обновление юридического лица
+            if 'legal_entity_id' in body:
+                old_le_id = existing['legal_entity_id']
+                old_le_name = None
+                new_le_name = None
+                if old_le_id:
+                    cur.execute(f'SELECT name FROM {SCHEMA}.legal_entities WHERE id = %s', (old_le_id,))
+                    row = cur.fetchone()
+                    if row:
+                        old_le_name = row['name']
+                if new_legal_entity_id:
+                    cur.execute(f'SELECT name FROM {SCHEMA}.legal_entities WHERE id = %s', (new_legal_entity_id,))
+                    row = cur.fetchone()
+                    if row:
+                        new_le_name = row['name']
+                update_parts.append('legal_entity_id = %s')
+                update_values.append(new_legal_entity_id)
+                audit_changes.append(
+                    f'Юридическое лицо: «{old_le_name or "не указано"}» → «{new_le_name or "не указано"}»'
+                )
 
-            if new_department_id:
-                cur.execute(f'SELECT name FROM {SCHEMA}.customer_departments WHERE id = %s', (new_department_id,))
-                row = cur.fetchone()
-                if row:
-                    new_dept_name = row['name']
-            
-            # Обновляем department_id в платеже (статус не меняется)
+            # Обновление номера счёта
+            if 'invoice_number' in body:
+                old_invoice_number = existing['invoice_number']
+                update_parts.append('invoice_number = %s')
+                update_values.append(new_invoice_number)
+                audit_changes.append(
+                    f'Номер счёта: «{old_invoice_number or "не указан"}» → «{new_invoice_number or "не указан"}»'
+                )
+
+            if not update_parts:
+                cur.close()
+                conn.close()
+                return response(400, {'error': 'Нет полей для обновления'})
+
+            update_values.append(payment_id)
             cur.execute(
-                f'UPDATE {SCHEMA}.payments SET department_id = %s WHERE id = %s',
-                (new_department_id, payment_id)
+                f'UPDATE {SCHEMA}.payments SET {", ".join(update_parts)} WHERE id = %s',
+                tuple(update_values)
             )
 
-            # Получаем данные пользователя для журнала
+            # Получаем данные администратора
             cur.execute(
                 f'SELECT username, full_name FROM {SCHEMA}.users WHERE id = %s',
                 (payload['user_id'],)
@@ -518,7 +563,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             admin_row = cur.fetchone()
             admin_name = (admin_row['full_name'] or admin_row['username']) if admin_row else str(payload['user_id'])
 
-            # Получаем роли администратора для записи в approvals
+            # Получаем роль для записи в журнал
             cur.execute(f"""
                 SELECT r.name FROM {SCHEMA}.roles r
                 JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
@@ -527,22 +572,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             role_row = cur.fetchone()
             approver_role = role_row['name'] if role_row else 'Администратор'
 
-            # Записываем в журнал аудита (таблица approvals)
-            from datetime import timezone
             import pytz
             moscow_tz = pytz.timezone('Europe/Moscow')
             now_moscow = datetime.now(moscow_tz)
 
-            comment_parts = []
-            if old_dept_name:
-                comment_parts.append(f'Было: {old_dept_name}')
-            else:
-                comment_parts.append('Было: не указан')
-            if new_dept_name:
-                comment_parts.append(f'Стало: {new_dept_name}')
-            else:
-                comment_parts.append('Стало: не указан')
-            audit_comment = f'Изменён отдел-заказчик. {", ".join(comment_parts)}. Изменено администратором: {admin_name}'
+            audit_comment = f'Редактирование согласованного платежа администратором {admin_name}. ' + '; '.join(audit_changes)
 
             cur.execute(
                 f"""INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, created_at)
@@ -551,13 +585,27 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             )
 
             conn.commit()
+
+            # Возвращаем актуальные данные платежа
+            cur.execute(
+                f'''SELECT p.*, le.name as legal_entity_name, cd.name as department_name
+                    FROM {SCHEMA}.payments p
+                    LEFT JOIN {SCHEMA}.legal_entities le ON p.legal_entity_id = le.id
+                    LEFT JOIN {SCHEMA}.customer_departments cd ON p.department_id = cd.id
+                    WHERE p.id = %s''',
+                (payment_id,)
+            )
+            updated = cur.fetchone()
             cur.close()
             conn.close()
             return response(200, {
                 'success': True,
                 'payment_id': payment_id,
-                'department_id': new_department_id,
-                'department_name': new_dept_name,
+                'department_id': updated['department_id'] if updated else new_department_id,
+                'department_name': updated['department_name'] if updated else None,
+                'legal_entity_id': updated['legal_entity_id'] if updated else new_legal_entity_id,
+                'legal_entity_name': updated['legal_entity_name'] if updated else None,
+                'invoice_number': updated['invoice_number'] if updated else new_invoice_number,
             })
 
         elif method == 'DELETE':

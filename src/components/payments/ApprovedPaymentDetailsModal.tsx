@@ -8,6 +8,7 @@ import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import ApprovedPaymentInfo, { Payment, Department } from './ApprovedPaymentInfo';
 import ApprovedPaymentSidebar from './ApprovedPaymentSidebar';
 import ApprovedPaymentRevokeDialog from './ApprovedPaymentRevokeDialog';
+import ApprovedPaymentEditModal from './ApprovedPaymentEditModal';
 
 interface ApprovedPaymentDetailsModalProps {
   payment: Payment | null;
@@ -21,8 +22,16 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
   const [revokeComment, setRevokeComment] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  // Состояние редактирования отдела
+  // Локальное состояние полей, которые могут быть изменены через редактирование
+  const [localPayment, setLocalPayment] = useState<Payment | null>(payment);
+
+  useEffect(() => {
+    setLocalPayment(payment);
+  }, [payment]);
+
+  // Состояние редактирования отдела (inline, в шапке поля)
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isEditingDept, setIsEditingDept] = useState(false);
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
@@ -32,7 +41,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
 
   const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin');
 
-  // Загрузка списка отделов (только для админа)
+  // Загрузка списка отделов (только для админа, для inline-редактирования)
   const loadDepartments = useCallback(async () => {
     if (!isAdmin || departments.length > 0) return;
     try {
@@ -52,14 +61,14 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
     if (isEditingDept) loadDepartments();
   }, [isEditingDept, loadDepartments]);
 
-  if (!payment) return null;
+  if (!localPayment) return null;
 
-  const isCreator = user?.id === payment.created_by;
+  const isCreator = user?.id === localPayment.created_by;
   const isCEO = user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор');
   const canRevoke = isCreator || isAdmin || isCEO;
 
   const handleStartEditDept = () => {
-    setSelectedDeptId(payment.department_id ? String(payment.department_id) : 'none');
+    setSelectedDeptId(localPayment.department_id ? String(localPayment.department_id) : 'none');
     setIsEditingDept(true);
   };
 
@@ -78,7 +87,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
           'Content-Type': 'application/json',
           'X-Auth-Token': token || '',
         },
-        body: JSON.stringify({ payment_id: payment.id, department_id: newDeptId }),
+        body: JSON.stringify({ payment_id: localPayment.id, department_id: newDeptId }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -86,6 +95,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
       }
       const result = await res.json();
       setCurrentDeptName(result.department_name ?? undefined);
+      setLocalPayment(prev => prev ? { ...prev, department_id: result.department_id, department_name: result.department_name } : prev);
       setIsEditingDept(false);
       setAuditKey(k => k + 1);
       invalidatePaymentsCache();
@@ -125,7 +135,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
           'X-Auth-Token': token || '',
         },
         body: JSON.stringify({
-          payment_id: payment.id,
+          payment_id: localPayment.id,
           action: 'revoke',
           comment: revokeComment.trim(),
         }),
@@ -157,25 +167,45 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
     }
   };
 
+  const handleEditSaved = (updates: Partial<Payment>) => {
+    setLocalPayment(prev => prev ? { ...prev, ...updates } : prev);
+    if (updates.department_name !== undefined) {
+      setCurrentDeptName(updates.department_name);
+    }
+    setAuditKey(k => k + 1);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
       <div className="bg-card border border-white/10 rounded-xl w-full max-w-[1200px] max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         <div className="bg-card border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg sm:text-xl font-semibold">Детали платежа #{payment.id}</h2>
+            <h2 className="text-lg sm:text-xl font-semibold">Детали платежа #{localPayment.id}</h2>
             <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-300">✓ Одобрено CEO</span>
           </div>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-white transition-colors"
-          >
-            <Icon name="X" size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                title="Редактировать платёж"
+              >
+                <Icon name="Pencil" size={14} />
+                Редактировать
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-muted-foreground hover:text-white transition-colors"
+            >
+              <Icon name="X" size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           <ApprovedPaymentInfo
-            payment={payment}
+            payment={localPayment}
             isAdmin={!!isAdmin}
             canRevoke={!!canRevoke}
             currentDeptName={currentDeptName}
@@ -190,7 +220,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
             onRevokeClick={handleRevokeClick}
           />
           <ApprovedPaymentSidebar
-            payment={payment}
+            payment={localPayment}
             auditKey={auditKey}
           />
         </div>
@@ -204,6 +234,15 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
         onConfirm={handleRevokeConfirm}
         onCancel={handleRevokeCancel}
       />
+
+      {showEditModal && (
+        <ApprovedPaymentEditModal
+          open={showEditModal}
+          payment={localPayment}
+          onClose={() => setShowEditModal(false)}
+          onSaved={handleEditSaved}
+        />
+      )}
     </div>
   );
 };
