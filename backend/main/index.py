@@ -1730,8 +1730,8 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     LATERAL (
                         SELECT (b.planned_date + (n || ' months')::interval)::date AS occurrence_date
                         FROM generate_series(
-                            FLOOR(EXTRACT(EPOCH FROM ({date_from_expr}::date - b.planned_date::date)) / 2592000.0)::int - 1,
-                            CEIL(EXTRACT(EPOCH FROM ({date_to_expr}::date - b.planned_date::date)) / 2592000.0)::int + 1
+                            FLOOR(EXTRACT(EPOCH FROM make_interval(days => {date_from_expr}::date - b.planned_date::date)) / 2592000.0)::int - 1,
+                            CEIL(EXTRACT(EPOCH FROM make_interval(days => {date_to_expr}::date - b.planned_date::date)) / 2592000.0)::int + 1
                         ) AS n
                         WHERE (b.planned_date + (n || ' months')::interval)::date
                               BETWEEN {date_from_expr}::date AND {date_to_expr}::date
@@ -1754,8 +1754,8 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     LATERAL (
                         SELECT (b.planned_date + (n || ' years')::interval)::date AS occurrence_date
                         FROM generate_series(
-                            FLOOR(EXTRACT(EPOCH FROM ({date_from_expr}::date - b.planned_date::date)) / 31536000.0)::int - 1,
-                            CEIL(EXTRACT(EPOCH FROM ({date_to_expr}::date - b.planned_date::date)) / 31536000.0)::int + 1
+                            FLOOR(EXTRACT(EPOCH FROM make_interval(days => {date_from_expr}::date - b.planned_date::date)) / 31536000.0)::int - 1,
+                            CEIL(EXTRACT(EPOCH FROM make_interval(days => {date_to_expr}::date - b.planned_date::date)) / 31536000.0)::int + 1
                         ) AS n
                         WHERE (b.planned_date + (n || ' years')::interval)::date
                               BETWEEN {date_from_expr}::date AND {date_to_expr}::date
@@ -1778,8 +1778,8 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     LATERAL (
                         SELECT (b.planned_date + (n * 7 || ' days')::interval)::date AS occurrence_date
                         FROM generate_series(
-                            FLOOR(EXTRACT(EPOCH FROM ({date_from_expr}::date - b.planned_date::date)) / 604800.0)::int - 1,
-                            CEIL(EXTRACT(EPOCH FROM ({date_to_expr}::date - b.planned_date::date)) / 604800.0)::int + 1
+                            FLOOR(EXTRACT(EPOCH FROM make_interval(days => {date_from_expr}::date - b.planned_date::date)) / 604800.0)::int - 1,
+                            CEIL(EXTRACT(EPOCH FROM make_interval(days => {date_to_expr}::date - b.planned_date::date)) / 604800.0)::int + 1
                         ) AS n
                         WHERE (b.planned_date + (n * 7 || ' days')::interval)::date
                               BETWEEN {date_from_expr}::date AND {date_to_expr}::date
