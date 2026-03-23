@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Icon from '@/components/ui/icon';
 import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@/hooks/use-toast';
 import { translateApiError } from '@/utils/api';
+import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface CustomField {
   id: number;
@@ -63,6 +65,12 @@ interface ApprovedPaymentDetailsModalProps {
   onRevoked?: () => void;
 }
 
+interface Department {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPaymentDetailsModalProps) => {
   const { token, user } = useAuth();
   const { toast } = useToast();
@@ -71,12 +79,80 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
   const [isRevoking, setIsRevoking] = useState(false);
   const [showDocsPanel, setShowDocsPanel] = useState(false);
 
+  // Состояние редактирования отдела
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isEditingDept, setIsEditingDept] = useState(false);
+  const [selectedDeptId, setSelectedDeptId] = useState<string>('');
+  const [isSavingDept, setIsSavingDept] = useState(false);
+  const [currentDeptName, setCurrentDeptName] = useState<string | undefined>(payment?.department_name);
+  const [auditKey, setAuditKey] = useState(0);
+
+  const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin');
+
+  // Загрузка списка отделов (только для админа)
+  const loadDepartments = useCallback(async () => {
+    if (!isAdmin || departments.length > 0) return;
+    try {
+      const res = await fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=customer-departments`, {
+        headers: { 'X-Auth-Token': token || '' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDepartments(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // не критично
+    }
+  }, [isAdmin, token, departments.length]);
+
+  useEffect(() => {
+    if (isEditingDept) loadDepartments();
+  }, [isEditingDept, loadDepartments]);
+
   if (!payment) return null;
 
   const isCreator = user?.id === payment.created_by;
-  const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin');
   const isCEO = user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор');
   const canRevoke = isCreator || isAdmin || isCEO;
+
+  const handleStartEditDept = () => {
+    setSelectedDeptId(payment.department_id ? String(payment.department_id) : 'none');
+    setIsEditingDept(true);
+  };
+
+  const handleCancelEditDept = () => {
+    setIsEditingDept(false);
+    setSelectedDeptId('');
+  };
+
+  const handleSaveDept = async () => {
+    setIsSavingDept(true);
+    try {
+      const newDeptId = selectedDeptId === 'none' ? null : Number(selectedDeptId);
+      const res = await fetch(API_ENDPOINTS.paymentsApi, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({ payment_id: payment.id, department_id: newDeptId }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Не удалось сохранить');
+      }
+      const result = await res.json();
+      setCurrentDeptName(result.department_name ?? undefined);
+      setIsEditingDept(false);
+      setAuditKey(k => k + 1);
+      invalidatePaymentsCache();
+      toast({ title: 'Сохранено', description: 'Отдел-заказчик обновлён' });
+    } catch (e) {
+      toast({ title: 'Ошибка', description: e instanceof Error ? e.message : 'Ошибка', variant: 'destructive' });
+    } finally {
+      setIsSavingDept(false);
+    }
+  };
 
   const handleRevokeClick = () => {
     setShowRevokeDialog(true);
@@ -192,10 +268,54 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
               </div>
             )}
 
-            {payment.department_name && (
+            {(currentDeptName || isAdmin) && (
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Отдел-заказчик</p>
-                <p className="font-medium">{payment.department_name}</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm text-muted-foreground">Отдел-заказчик</p>
+                  {isAdmin && !isEditingDept && (
+                    <button
+                      onClick={handleStartEditDept}
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <Icon name="Pencil" size={12} />
+                      Изменить
+                    </button>
+                  )}
+                </div>
+                {isEditingDept ? (
+                  <div className="flex items-center gap-2">
+                    <Select value={selectedDeptId} onValueChange={setSelectedDeptId}>
+                      <SelectTrigger className="flex-1 h-8 text-sm">
+                        <SelectValue placeholder="Выберите отдел" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Не указан —</SelectItem>
+                        {departments.map(d => (
+                          <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      className="h-8 px-3"
+                      onClick={handleSaveDept}
+                      disabled={isSavingDept}
+                    >
+                      {isSavingDept ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Check" size={14} />}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-2"
+                      onClick={handleCancelEditDept}
+                      disabled={isSavingDept}
+                    >
+                      <Icon name="X" size={14} />
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="font-medium">{currentDeptName || <span className="text-muted-foreground italic text-sm">Не указан</span>}</p>
+                )}
               </div>
             )}
 
@@ -378,7 +498,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
               </TabsList>
               
               <TabsContent value="history" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
-                <PaymentAuditLog paymentId={payment.id} />
+                <PaymentAuditLog key={auditKey} paymentId={payment.id} />
               </TabsContent>
             </Tabs>
           </div>

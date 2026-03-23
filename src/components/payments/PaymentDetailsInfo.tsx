@@ -1,14 +1,93 @@
+import { useState, useEffect, useCallback } from 'react';
 import Icon from '@/components/ui/icon';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Payment, PaymentView } from './paymentDetailsTypes';
+import { API_ENDPOINTS } from '@/config/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
+
+interface Department {
+  id: number;
+  name: string;
+}
 
 interface PaymentDetailsInfoProps {
   payment: Payment;
   views: PaymentView[];
   isPlannedPayment?: boolean;
   onEdit?: (payment: Payment) => void;
+  onDepartmentChanged?: (departmentId: number | null, departmentName: string | undefined) => void;
 }
 
-const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit }: PaymentDetailsInfoProps) => {
+const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepartmentChanged }: PaymentDetailsInfoProps) => {
+  const { token, user } = useAuth();
+  const { toast } = useToast();
+
+  const isAdmin = user?.roles?.some(r => r.name === 'Администратор' || r.name === 'Admin');
+  const canEditDept = isAdmin && payment.status === 'approved';
+
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isEditingDept, setIsEditingDept] = useState(false);
+  const [selectedDeptId, setSelectedDeptId] = useState<string>('');
+  const [isSavingDept, setIsSavingDept] = useState(false);
+  const [currentDeptName, setCurrentDeptName] = useState<string | undefined>(payment.department_name);
+
+  const loadDepartments = useCallback(async () => {
+    if (departments.length > 0) return;
+    try {
+      const res = await fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=customer-departments`, {
+        headers: { 'X-Auth-Token': token || '' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDepartments(Array.isArray(data) ? data : []);
+      }
+    } catch { /* не критично */ }
+  }, [departments.length, token]);
+
+  useEffect(() => {
+    if (isEditingDept) loadDepartments();
+  }, [isEditingDept, loadDepartments]);
+
+  const handleStartEditDept = () => {
+    setSelectedDeptId(payment.department_id ? String(payment.department_id) : 'none');
+    setIsEditingDept(true);
+  };
+
+  const handleCancelEditDept = () => {
+    setIsEditingDept(false);
+    setSelectedDeptId('');
+  };
+
+  const handleSaveDept = async () => {
+    setIsSavingDept(true);
+    try {
+      const newDeptId = selectedDeptId === 'none' ? null : Number(selectedDeptId);
+      const res = await fetch(API_ENDPOINTS.paymentsApi, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+        body: JSON.stringify({ payment_id: payment.id, department_id: newDeptId }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Не удалось сохранить');
+      }
+      const result = await res.json();
+      const newName: string | undefined = result.department_name ?? undefined;
+      setCurrentDeptName(newName);
+      setIsEditingDept(false);
+      invalidatePaymentsCache();
+      if (onDepartmentChanged) onDepartmentChanged(newDeptId, newName);
+      toast({ title: 'Сохранено', description: 'Отдел-заказчик обновлён' });
+    } catch (e) {
+      toast({ title: 'Ошибка', description: e instanceof Error ? e.message : 'Ошибка', variant: 'destructive' });
+    } finally {
+      setIsSavingDept(false);
+    }
+  };
+
   return (
     <div className="w-full lg:w-1/2 lg:border-r border-white/10 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
       <div className="flex items-start gap-3 sm:gap-4">
@@ -93,10 +172,43 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit }: Paymen
         </div>
       )}
 
-      {payment.department_name && (
+      {(currentDeptName || canEditDept) && (
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Отдел-заказчик</p>
-          <p className="font-medium">{payment.department_name}</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm text-muted-foreground">Отдел-заказчик</p>
+            {canEditDept && !isEditingDept && (
+              <button
+                onClick={handleStartEditDept}
+                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+              >
+                <Icon name="Pencil" size={12} />
+                Изменить
+              </button>
+            )}
+          </div>
+          {isEditingDept ? (
+            <div className="flex items-center gap-2">
+              <Select value={selectedDeptId} onValueChange={setSelectedDeptId}>
+                <SelectTrigger className="flex-1 h-8 text-sm">
+                  <SelectValue placeholder="Выберите отдел" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Не указан —</SelectItem>
+                  {departments.map(d => (
+                    <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button size="sm" className="h-8 px-3" onClick={handleSaveDept} disabled={isSavingDept}>
+                {isSavingDept ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Check" size={14} />}
+              </Button>
+              <Button size="sm" variant="ghost" className="h-8 px-2" onClick={handleCancelEditDept} disabled={isSavingDept}>
+                <Icon name="X" size={14} />
+              </Button>
+            </div>
+          ) : (
+            <p className="font-medium">{currentDeptName || <span className="text-muted-foreground italic text-sm">Не указан</span>}</p>
+          )}
         </div>
       )}
 

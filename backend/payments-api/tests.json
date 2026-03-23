@@ -9,6 +9,16 @@
         "error": "Unauthorized"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test PATCH unauthorized",
+      "method": "PATCH",
+      "path": "/",
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "Unauthorized"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

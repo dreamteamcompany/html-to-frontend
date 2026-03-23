@@ -457,6 +457,109 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             conn.close()
             return response(200, result)
         
+        elif method == 'PATCH':
+            # Изменение отдела-заказчика у согласованного платежа (только для администраторов)
+            if not is_admin_user(conn, payload['user_id']):
+                conn.close()
+                return response(403, {'error': 'Доступ разрешён только администраторам'})
+
+            try:
+                body = json.loads(event.get('body', '{}'))
+            except Exception:
+                conn.close()
+                return response(400, {'error': 'Неверный формат тела запроса'})
+
+            payment_id = body.get('payment_id')
+            new_department_id = body.get('department_id')
+
+            if not payment_id:
+                conn.close()
+                return response(400, {'error': 'Не указан payment_id'})
+
+            cur.execute(
+                f'SELECT id, department_id, status FROM {SCHEMA}.payments WHERE id = %s',
+                (payment_id,)
+            )
+            existing = cur.fetchone()
+            if not existing:
+                cur.close()
+                conn.close()
+                return response(404, {'error': 'Платёж не найден'})
+
+            old_department_id = existing['department_id']
+
+            # Получаем имена отделов для журнала
+            old_dept_name = None
+            new_dept_name = None
+
+            if old_department_id:
+                cur.execute(f'SELECT name FROM {SCHEMA}.customer_departments WHERE id = %s', (old_department_id,))
+                row = cur.fetchone()
+                if row:
+                    old_dept_name = row['name']
+
+            if new_department_id:
+                cur.execute(f'SELECT name FROM {SCHEMA}.customer_departments WHERE id = %s', (new_department_id,))
+                row = cur.fetchone()
+                if row:
+                    new_dept_name = row['name']
+            
+            # Обновляем department_id в платеже (статус не меняется)
+            cur.execute(
+                f'UPDATE {SCHEMA}.payments SET department_id = %s WHERE id = %s',
+                (new_department_id, payment_id)
+            )
+
+            # Получаем данные пользователя для журнала
+            cur.execute(
+                f'SELECT username, full_name FROM {SCHEMA}.users WHERE id = %s',
+                (payload['user_id'],)
+            )
+            admin_row = cur.fetchone()
+            admin_name = (admin_row['full_name'] or admin_row['username']) if admin_row else str(payload['user_id'])
+
+            # Получаем роли администратора для записи в approvals
+            cur.execute(f"""
+                SELECT r.name FROM {SCHEMA}.roles r
+                JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
+                WHERE ur.user_id = %s LIMIT 1
+            """, (payload['user_id'],))
+            role_row = cur.fetchone()
+            approver_role = role_row['name'] if role_row else 'Администратор'
+
+            # Записываем в журнал аудита (таблица approvals)
+            from datetime import timezone
+            import pytz
+            moscow_tz = pytz.timezone('Europe/Moscow')
+            now_moscow = datetime.now(moscow_tz)
+
+            comment_parts = []
+            if old_dept_name:
+                comment_parts.append(f'Было: {old_dept_name}')
+            else:
+                comment_parts.append('Было: не указан')
+            if new_dept_name:
+                comment_parts.append(f'Стало: {new_dept_name}')
+            else:
+                comment_parts.append('Стало: не указан')
+            audit_comment = f'Изменён отдел-заказчик. {", ".join(comment_parts)}. Изменено администратором: {admin_name}'
+
+            cur.execute(
+                f"""INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s)""",
+                (payment_id, payload['user_id'], approver_role, 'updated', audit_comment, now_moscow)
+            )
+
+            conn.commit()
+            cur.close()
+            conn.close()
+            return response(200, {
+                'success': True,
+                'payment_id': payment_id,
+                'department_id': new_department_id,
+                'department_name': new_dept_name,
+            })
+
         elif method == 'DELETE':
             if not check_user_permission(conn, payload['user_id'], 'payments.delete'):
                 conn.close()
