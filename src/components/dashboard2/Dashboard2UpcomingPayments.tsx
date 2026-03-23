@@ -132,6 +132,33 @@ const PaymentCard = ({ payment, accentColor, onClick }: { payment: PaymentRecord
               план
             </div>
           )}
+          {(payment as Record<string, unknown>).recurrence_type === 'monthly' && (
+            <div style={{
+              fontSize: '9px', fontWeight: 700, color: '#0ea5e9',
+              background: '#0ea5e915', border: '1px solid #0ea5e930',
+              borderRadius: '4px', padding: '1px 4px', flexShrink: 0,
+            }}>
+              ежемес.
+            </div>
+          )}
+          {(payment as Record<string, unknown>).recurrence_type === 'yearly' && (
+            <div style={{
+              fontSize: '9px', fontWeight: 700, color: '#f59e0b',
+              background: '#f59e0b15', border: '1px solid #f59e0b30',
+              borderRadius: '4px', padding: '1px 4px', flexShrink: 0,
+            }}>
+              ежегодно
+            </div>
+          )}
+          {(payment as Record<string, unknown>).recurrence_type === 'weekly' && (
+            <div style={{
+              fontSize: '9px', fontWeight: 700, color: '#10b981',
+              background: '#10b98115', border: '1px solid #10b98130',
+              borderRadius: '4px', padding: '1px 4px', flexShrink: 0,
+            }}>
+              еженед.
+            </div>
+          )}
         </div>
         {(payment.legal_entity_name || payment.contractor_name) && (
           <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', marginTop: '2px',
