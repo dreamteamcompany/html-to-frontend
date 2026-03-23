@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface PaymentRecord {
   id: number;
@@ -45,6 +46,8 @@ export const PaymentsCacheProvider = ({ children }: { children: ReactNode }) => 
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { user } = useAuth();
+  const prevUserIdRef = useRef<number | null | undefined>(undefined);
 
   const load = useCallback(async (force = false) => {
     const now = Date.now();
@@ -83,7 +86,17 @@ export const PaymentsCacheProvider = ({ children }: { children: ReactNode }) => 
     load(true);
   }, [load]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const currentUserId = user?.id ?? null;
+    if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== currentUserId) {
+      globalCache = null;
+      globalCacheTime = 0;
+      globalFetchPromise = null;
+      setPayments([]);
+    }
+    prevUserIdRef.current = currentUserId;
+    load();
+  }, [user?.id, load]);
 
   return (
     <PaymentsCacheContext.Provider value={{ payments, loading, error, refresh }}>

@@ -25,22 +25,32 @@ const LiveMetricsCard = () => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    const parseDate = (raw: string | undefined | null): Date | null => {
+      if (!raw) return null;
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
     const todayPayments = all.filter(p => {
       if (p.status !== 'approved') return false;
-      const d = new Date(p.payment_date || p.created_at || '');
-      return d >= today && d < tomorrow;
+      const d = parseDate(p.payment_date) ?? parseDate(p.created_at);
+      return d !== null && d >= today && d < tomorrow;
     });
 
     const periodApproved = all.filter(p => {
       if (p.status !== 'approved') return false;
-      const d = new Date(p.payment_date);
-      return d >= from && d <= to;
+      const d = parseDate(p.payment_date);
+      return d !== null && d >= from && d <= to;
     });
 
     const totalAmount = periodApproved.reduce((s, p) => s + Number(p.amount), 0);
     const avg = periodApproved.length > 0 ? Math.round(totalAmount / periodApproved.length) : 0;
 
-    const pendingInPeriod = all.filter(p => p.status === 'pending_approval');
+    const pendingInPeriod = all.filter(p => {
+      if (p.status !== 'pending_approval') return false;
+      const d = parseDate(p.payment_date);
+      return d !== null && d >= from && d <= to;
+    });
 
     return {
       todayCount: todayPayments.length,
