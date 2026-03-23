@@ -16,6 +16,20 @@ export const translateApiError = (errorText: string | undefined): string => {
   return map[errorText] ?? errorText;
 };
 
+export const translateFetchError = (e: unknown, fallback = 'Произошла ошибка. Попробуйте позже'): string => {
+  if (!(e instanceof Error)) return fallback;
+  if (
+    e.message === 'Failed to fetch' ||
+    e.message.includes('NetworkError') ||
+    e.message.includes('Network request failed') ||
+    e.message.includes('ERR_NETWORK') ||
+    e.message.includes('ERR_INTERNET_DISCONNECTED')
+  ) {
+    return 'Ошибка соединения с сервером. Проверьте интернет и попробуйте позже';
+  }
+  return translateApiError(e.message);
+};
+
 export const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
   const token = getAuthToken();
   

@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
-import { translateApiError } from '@/utils/api';
+import { translateApiError, translateFetchError } from '@/utils/api';
 
 interface CustomField {
   id: number;
@@ -148,7 +148,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
       console.error('Failed to revoke payment:', error);
       toast({
         title: 'Ошибка',
-        description: error instanceof Error ? error.message : 'Не удалось отозвать платёж',
+        description: translateFetchError(error, 'Не удалось отозвать платёж'),
         variant: 'destructive',
       });
     } finally {

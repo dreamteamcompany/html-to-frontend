@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Contest, Application, Result } from "./useAdminData";
+import { translateFetchError } from "@/utils/api";
 
 const API_URL = "https://functions.poehali.dev/616d5c66-54ec-4217-a20e-710cd89e2c87";
 const UPLOAD_URL = "https://functions.poehali.dev/33fdaaa7-5f20-43ee-aebd-ece943eb314b";
@@ -331,7 +332,7 @@ export const useAdminHandlers = ({
       setSubmittingManualApp(false);
     } catch (error) {
       console.error('Ошибка при создании заявки:', error);
-      toast({ title: "Ошибка", description: error instanceof Error ? error.message : "Произошла ошибка при создании заявки", variant: "destructive" });
+      toast({ title: "Ошибка", description: translateFetchError(error, "Произошла ошибка при создании заявки"), variant: "destructive" });
       setSubmittingManualApp(false);
       setManualAppUploadProgress(0);
     }

@@ -7,6 +7,7 @@ import { API_ENDPOINTS } from '@/config/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { translateFetchError } from '@/utils/api';
 
 interface Department {
   id: number;
@@ -82,7 +83,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       if (onDepartmentChanged) onDepartmentChanged(newDeptId, newName);
       toast({ title: 'Сохранено', description: 'Отдел-заказчик обновлён' });
     } catch (e) {
-      toast({ title: 'Ошибка', description: e instanceof Error ? e.message : 'Ошибка', variant: 'destructive' });
+      toast({ title: 'Ошибка', description: translateFetchError(e), variant: 'destructive' });
     } finally {
       setIsSavingDept(false);
     }

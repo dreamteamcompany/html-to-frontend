@@ -3,7 +3,7 @@ import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@/hooks/use-toast';
-import { translateApiError } from '@/utils/api';
+import { translateApiError, translateFetchError } from '@/utils/api';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import ApprovedPaymentInfo, { Payment, Department } from './ApprovedPaymentInfo';
 import ApprovedPaymentSidebar from './ApprovedPaymentSidebar';
@@ -101,7 +101,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
       invalidatePaymentsCache();
       toast({ title: 'Сохранено', description: 'Отдел-заказчик обновлён' });
     } catch (e) {
-      toast({ title: 'Ошибка', description: e instanceof Error ? e.message : 'Ошибка', variant: 'destructive' });
+      toast({ title: 'Ошибка', description: translateFetchError(e), variant: 'destructive' });
     } finally {
       setIsSavingDept(false);
     }
@@ -159,7 +159,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
       console.error('Ошибка отзыва платежа:', error);
       toast({
         title: 'Ошибка',
-        description: error instanceof Error ? error.message : 'Не удалось отозвать платеж',
+        description: translateFetchError(error, 'Не удалось отозвать платёж'),
         variant: 'destructive',
       });
     } finally {

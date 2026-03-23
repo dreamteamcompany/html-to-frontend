@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { apiFetch } from '@/utils/api';
+import { apiFetch, translateFetchError } from '@/utils/api';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
@@ -64,7 +64,7 @@ const ApprovedPaymentsTab = () => {
       fetchApprovedPayments();
     } catch (error) {
       console.error('Failed to revoke payment:', error);
-      toast({ title: 'Ошибка', description: error instanceof Error ? error.message : 'Не удалось отозвать платёж', variant: 'destructive' });
+      toast({ title: 'Ошибка', description: translateFetchError(error, 'Не удалось отозвать платёж'), variant: 'destructive' });
     } finally {
       setIsRevoking(false);
     }

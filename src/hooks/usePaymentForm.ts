@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import * as pdfjsLib from 'pdfjs-dist';
 import FUNC2URL from '@/../backend/func2url.json';
 import { API_ENDPOINTS } from '@/config/api';
+import { translateFetchError } from '@/utils/api';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
@@ -276,7 +277,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
       console.error('Failed to process invoice:', err);
       toast({
         title: 'Ошибка',
-        description: err instanceof Error ? err.message : 'Не удалось распознать счёт',
+        description: translateFetchError(err, 'Не удалось распознать счёт'),
         variant: 'destructive',
       });
     } finally {

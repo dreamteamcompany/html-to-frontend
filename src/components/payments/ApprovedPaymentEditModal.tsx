@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@/hooks/use-toast';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { translateFetchError } from '@/utils/api';
 import { Payment } from './ApprovedPaymentInfo';
 
 interface LegalEntity {
@@ -116,7 +117,7 @@ const ApprovedPaymentEditModal = ({ open, payment, onClose, onSaved }: ApprovedP
     } catch (e) {
       toast({
         title: 'Ошибка',
-        description: e instanceof Error ? e.message : 'Ошибка сохранения',
+        description: translateFetchError(e, 'Ошибка сохранения'),
         variant: 'destructive',
       });
     } finally {
