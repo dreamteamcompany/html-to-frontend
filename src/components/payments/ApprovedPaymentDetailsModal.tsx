@@ -1,74 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import Icon from '@/components/ui/icon';
-import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@/hooks/use-toast';
 import { translateApiError } from '@/utils/api';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
-
-interface CustomField {
-  id: number;
-  name: string;
-  field_type: string;
-  value: string;
-}
-
-interface PaymentDocument {
-  id: number;
-  payment_id: number;
-  file_name: string;
-  file_url: string;
-  document_type: string;
-  uploaded_at: string;
-}
-
-interface Payment {
-  id: number;
-  category_id: number;
-  category_name: string;
-  category_icon: string;
-  description: string;
-  amount: number;
-  payment_date: string;
-  legal_entity_id?: number;
-  legal_entity_name?: string;
-  status?: string;
-  created_by?: number;
-  created_by_name?: string;
-  service_id?: number;
-  service_name?: string;
-  contractor_name?: string;
-  contractor_id?: number;
-  department_name?: string;
-  department_id?: number;
-  invoice_number?: string;
-  invoice_date?: string;
-  invoice_file_url?: string;
-  invoice_file_uploaded_at?: string;
-  created_at?: string;
-  submitted_at?: string;
-  ceo_approved_at?: string;
-  tech_director_approved_at?: string;
-  custom_fields?: CustomField[];
-  documents?: PaymentDocument[];
-}
+import ApprovedPaymentInfo, { Payment, Department } from './ApprovedPaymentInfo';
+import ApprovedPaymentSidebar from './ApprovedPaymentSidebar';
+import ApprovedPaymentRevokeDialog from './ApprovedPaymentRevokeDialog';
 
 interface ApprovedPaymentDetailsModalProps {
   payment: Payment | null;
   onClose: () => void;
   onRevoked?: () => void;
-}
-
-interface Department {
-  id: number;
-  name: string;
-  description?: string;
 }
 
 const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPaymentDetailsModalProps) => {
@@ -77,7 +21,6 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
   const [revokeComment, setRevokeComment] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
-  const [showDocsPanel, setShowDocsPanel] = useState(false);
 
   // Состояние редактирования отдела
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -158,6 +101,11 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
     setShowRevokeDialog(true);
   };
 
+  const handleRevokeCancel = () => {
+    setShowRevokeDialog(false);
+    setRevokeComment('');
+  };
+
   const handleRevokeConfirm = async () => {
     if (!revokeComment.trim()) {
       toast({
@@ -226,330 +174,36 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-          <div className="w-full lg:w-1/2 lg:border-r border-white/10 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="bg-primary/20 p-2 sm:p-3 rounded-lg">
-                <Icon name={payment.category_icon} size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base sm:text-lg font-medium mb-1">{payment.category_name}</h3>
-                <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
-              </div>
-            </div>
-
-            {payment.description && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Описание</p>
-                <p className="font-medium">{payment.description}</p>
-              </div>
-            )}
-
-            {payment.category_name && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Категория</p>
-                <div className="flex items-center gap-2 font-medium">
-                  <Icon name={payment.category_icon || 'Tag'} size={18} />
-                  {payment.category_name}
-                </div>
-              </div>
-            )}
-
-            {payment.legal_entity_name && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Юридическое лицо</p>
-                <p className="font-medium">{payment.legal_entity_name}</p>
-              </div>
-            )}
-
-            {payment.contractor_name && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Контрагент</p>
-                <p className="font-medium">{payment.contractor_name}</p>
-              </div>
-            )}
-
-            {(currentDeptName || isAdmin) && (
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm text-muted-foreground">Отдел-заказчик</p>
-                  {isAdmin && !isEditingDept && (
-                    <button
-                      onClick={handleStartEditDept}
-                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
-                    >
-                      <Icon name="Pencil" size={12} />
-                      Изменить
-                    </button>
-                  )}
-                </div>
-                {isEditingDept ? (
-                  <div className="flex items-center gap-2">
-                    <Select value={selectedDeptId} onValueChange={setSelectedDeptId}>
-                      <SelectTrigger className="flex-1 h-8 text-sm">
-                        <SelectValue placeholder="Выберите отдел" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">— Не указан —</SelectItem>
-                        {departments.map(d => (
-                          <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="sm"
-                      className="h-8 px-3"
-                      onClick={handleSaveDept}
-                      disabled={isSavingDept}
-                    >
-                      {isSavingDept ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Check" size={14} />}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 px-2"
-                      onClick={handleCancelEditDept}
-                      disabled={isSavingDept}
-                    >
-                      <Icon name="X" size={14} />
-                    </Button>
-                  </div>
-                ) : (
-                  <p className="font-medium">{currentDeptName || <span className="text-muted-foreground italic text-sm">Не указан</span>}</p>
-                )}
-              </div>
-            )}
-
-            {payment.service_name && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Сервис</p>
-                <p className="font-medium">{payment.service_name}</p>
-              </div>
-            )}
-
-            {payment.invoice_number && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
-                <p className="font-medium">{payment.invoice_number}</p>
-              </div>
-            )}
-
-            {payment.created_by_name && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Создал заявку</p>
-                <p className="font-medium">{payment.created_by_name}</p>
-              </div>
-            )}
-
-            {payment.custom_fields && payment.custom_fields.length > 0 && (
-              <>
-                {payment.custom_fields.map((field) => (
-                  <div key={field.id}>
-                    <p className="text-sm text-muted-foreground mb-1">{field.name}</p>
-                    {field.field_type === 'file' && field.value ? (
-                      <div className="rounded-lg border border-white/10 p-3 bg-primary/5">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
-                            <span className="text-sm font-medium truncate">
-                              {field.value.split('/').pop()?.split('_').slice(2).join('_') || 'Файл'}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <a
-                              href={field.value}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-xs text-primary hover:underline"
-                            >
-                              <Icon name="Eye" size={14} />
-                              Просмотр
-                            </a>
-                            <a
-                              href={field.value}
-                              download
-                              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                            >
-                              <Icon name="Download" size={14} />
-                              Скачать
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="font-medium">{field.value}</p>
-                    )}
-                  </div>
-                ))}
-              </>
-            )}
-
-            {canRevoke && (
-              <div className="pt-4 border-t border-white/10">
-                <Button 
-                  variant="destructive"
-                  className="w-full"
-                  onClick={handleRevokeClick}
-                >
-                  <Icon name="XCircle" size={18} />
-                  Отозвать платеж
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10 overflow-hidden">
-            <div className="p-4 sm:p-6 border-b border-white/10">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Дата платежа:</span>
-                  <span className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</span>
-                </div>
-                {payment.submitted_at && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Дата отправки:</span>
-                    <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
-                  </div>
-                )}
-                {payment.invoice_date && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Дата счёта:</span>
-                    <span className="font-medium">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
-                  </div>
-                )}
-                {payment.ceo_approved_at && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Одобрено CEO:</span>
-                    <span className="font-medium">{new Date(payment.ceo_approved_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}, {new Date(payment.ceo_approved_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                )}
-                {payment.created_at && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Создана:</span>
-                    <span className="font-medium">{new Date(payment.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}, {new Date(payment.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                )}
-              </div>
-
-              {(() => {
-                const docs: PaymentDocument[] = payment.documents && payment.documents.length > 0
-                  ? payment.documents
-                  : payment.invoice_file_url
-                    ? [{
-                        id: 0,
-                        payment_id: payment.id,
-                        file_name: payment.invoice_file_url.split('/').pop()?.split('_').slice(2).join('_') || 'Счёт',
-                        file_url: payment.invoice_file_url,
-                        document_type: 'invoice',
-                        uploaded_at: payment.invoice_file_uploaded_at || payment.created_at || '',
-                      }]
-                    : [];
-                if (docs.length === 0) return null;
-                return (
-                  <div className="mt-3">
-                    <button
-                      onClick={() => setShowDocsPanel(v => !v)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-medium text-primary w-full"
-                    >
-                      <Icon name="FileText" size={16} />
-                      <span>Счёт</span>
-                      {docs.length > 1 && (
-                        <span className="ml-1 bg-primary text-white text-xs rounded-full px-1.5 py-0.5 leading-none">{docs.length}</span>
-                      )}
-                      <Icon name={showDocsPanel ? 'ChevronUp' : 'ChevronDown'} size={14} className="ml-auto" />
-                    </button>
-                    {showDocsPanel && (
-                      <div className="mt-2 rounded-lg border border-white/10 bg-card divide-y divide-white/5 overflow-hidden">
-                        {docs.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between gap-2 px-3 py-2.5">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Icon name="FileText" size={15} className="text-primary flex-shrink-0" />
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium truncate">{doc.file_name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ru-RU') : ''}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-primary hover:underline">
-                                <Icon name="Eye" size={14} />
-                                Открыть
-                              </a>
-                              <a href={doc.file_url} download className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                                <Icon name="Download" size={14} />
-                                Скачать
-                              </a>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-
-            <Tabs defaultValue="history" className="flex-1 flex flex-col overflow-hidden">
-              <TabsList className="mx-4 mt-2">
-                <TabsTrigger value="history" className="flex items-center gap-2">
-                  <Icon name="History" size={16} />
-                  История согласования
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="history" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
-                <PaymentAuditLog key={auditKey} paymentId={payment.id} />
-              </TabsContent>
-            </Tabs>
-          </div>
+          <ApprovedPaymentInfo
+            payment={payment}
+            isAdmin={!!isAdmin}
+            canRevoke={!!canRevoke}
+            currentDeptName={currentDeptName}
+            isEditingDept={isEditingDept}
+            isSavingDept={isSavingDept}
+            selectedDeptId={selectedDeptId}
+            departments={departments}
+            onStartEditDept={handleStartEditDept}
+            onCancelEditDept={handleCancelEditDept}
+            onSaveDept={handleSaveDept}
+            onSelectDept={setSelectedDeptId}
+            onRevokeClick={handleRevokeClick}
+          />
+          <ApprovedPaymentSidebar
+            payment={payment}
+            auditKey={auditKey}
+          />
         </div>
       </div>
 
-      <Dialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Отзыв платежа</DialogTitle>
-            <DialogDescription>
-              Платёж будет возвращён в черновики. Укажите причину отзыва.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Причина отзыва <span className="text-red-500">*</span>
-              </label>
-              <Textarea
-                value={revokeComment}
-                onChange={(e) => setRevokeComment(e.target.value)}
-                placeholder="Укажите причину отзыва платежа..."
-                rows={4}
-                className="resize-none"
-              />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={() => {
-                setShowRevokeDialog(false);
-                setRevokeComment('');
-              }}
-              variant="outline"
-              className="flex-1"
-              disabled={isRevoking}
-            >
-              Отмена
-            </Button>
-            <Button
-              onClick={handleRevokeConfirm}
-              variant="destructive"
-              className="flex-1"
-              disabled={isRevoking || !revokeComment.trim()}
-            >
-              {isRevoking ? 'Отзываем...' : 'Отозвать'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ApprovedPaymentRevokeDialog
+        open={showRevokeDialog}
+        isRevoking={isRevoking}
+        revokeComment={revokeComment}
+        onCommentChange={setRevokeComment}
+        onConfirm={handleRevokeConfirm}
+        onCancel={handleRevokeCancel}
+      />
     </div>
   );
 };
