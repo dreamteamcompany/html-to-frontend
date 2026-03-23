@@ -1,11 +1,12 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { dashboardTypography, dashboardColors } from './dashboardStyles';
 import { PaymentRecord } from '@/contexts/PaymentsCacheContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { usePeriod } from '@/contexts/PeriodContext';
+import PlannedPaymentDetailModal from './PlannedPaymentDetailModal';
 
 const PERIOD_LABEL: Record<string, string> = {
   today: 'Сегодня',
@@ -86,10 +87,14 @@ const groupByDay = (payments: PaymentRecord[]): DayGroup[] => {
 };
 
 // ─── PaymentCard ─────────────────────────────────────────────────────────────
-const PaymentCard = ({ payment, accentColor }: { payment: PaymentRecord; accentColor: string }) => {
+const PaymentCard = ({ payment, accentColor, onClick }: { payment: PaymentRecord; accentColor: string; onClick: (p: PaymentRecord) => void }) => {
   const icon = getCategoryIcon(payment.category_name);
   return (
     <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onClick(payment)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(payment); }}
       style={{
         background: 'hsl(var(--card))',
         border: '1px solid hsl(var(--border))',
@@ -98,10 +103,11 @@ const PaymentCard = ({ payment, accentColor }: { payment: PaymentRecord; accentC
         display: 'flex',
         alignItems: 'flex-start',
         gap: '10px',
-        transition: 'border-color 0.2s',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+        cursor: 'pointer',
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = accentColor; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'hsl(var(--border))'; }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = accentColor; e.currentTarget.style.boxShadow = `0 2px 8px ${accentColor}30`; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'hsl(var(--border))'; e.currentTarget.style.boxShadow = 'none'; }}
     >
       <div style={{
         width: '30px', height: '30px', borderRadius: '8px',
@@ -148,7 +154,7 @@ const PaymentCard = ({ payment, accentColor }: { payment: PaymentRecord; accentC
 };
 
 // ─── DayColumn ────────────────────────────────────────────────────────────────
-const DayColumn = ({ group }: { group: DayGroup }) => {
+const DayColumn = ({ group, onPaymentClick }: { group: DayGroup; onPaymentClick: (p: PaymentRecord) => void }) => {
   const accentColor = group.isUrgent
     ? dashboardColors.red
     : group.isTomorrow
@@ -190,7 +196,7 @@ const DayColumn = ({ group }: { group: DayGroup }) => {
 
       <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1 }}>
         {group.payments.map((p) => (
-          <PaymentCard key={p.id} payment={p} accentColor={accentColor} />
+          <PaymentCard key={p.id} payment={p} accentColor={accentColor} onClick={onPaymentClick} />
         ))}
       </div>
     </div>
@@ -204,8 +210,9 @@ const Dashboard2UpcomingPayments = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [plannedPayments, setPlannedPayments] = useState<PaymentRecord[]>([]);
   const [plannedLoading, setPlannedLoading] = useState(true);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
 
-  useEffect(() => {
+  const fetchPlanned = useCallback(() => {
     if (!token) return;
     setPlannedLoading(true);
     fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments`, {
@@ -237,6 +244,8 @@ const Dashboard2UpcomingPayments = () => {
       .catch(() => setPlannedPayments([]))
       .finally(() => setPlannedLoading(false));
   }, [token]);
+
+  useEffect(() => { fetchPlanned(); }, [fetchPlanned]);
 
   const { upcoming, weekTotal } = useMemo(() => {
     const { from, to } = getDateRange();
@@ -327,7 +336,7 @@ const Dashboard2UpcomingPayments = () => {
               <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
                 {groups.map((group) => (
                   <div key={group.dateKey} style={{ flex: 1, minWidth: 0 }}>
-                    <DayColumn group={group} />
+                    <DayColumn group={group} onPaymentClick={setSelectedPayment} />
                   </div>
                 ))}
               </div>
@@ -355,7 +364,7 @@ const Dashboard2UpcomingPayments = () => {
                 </div>
               )}
 
-              <DayColumn group={groups[activeIndex] ?? groups[0]} />
+              <DayColumn group={groups[activeIndex] ?? groups[0]} onPaymentClick={setSelectedPayment} />
 
               {groups.length > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', gap: '8px' }}>
@@ -395,6 +404,12 @@ const Dashboard2UpcomingPayments = () => {
           </>
         )}
       </CardContent>
+
+      <PlannedPaymentDetailModal
+        payment={selectedPayment}
+        onClose={() => setSelectedPayment(null)}
+        onActionDone={fetchPlanned}
+      />
     </Card>
   );
 };
