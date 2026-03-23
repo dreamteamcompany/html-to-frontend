@@ -1655,25 +1655,46 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             if error:
                 return error
 
-            cur.execute(f"""
-                SELECT pp.id, pp.category_id, c.name as category_name, c.icon as category_icon,
-                       pp.description, pp.amount, pp.planned_date, pp.legal_entity_id,
-                       le.name as legal_entity_name, pp.contractor_id, co.name as contractor_name,
-                       pp.department_id, cd.name as department_name, pp.service_id, s.name as service_name,
-                       pp.invoice_number, pp.invoice_date, pp.recurrence_type, pp.recurrence_end_date,
-                       pp.is_active, pp.created_by, pp.created_at, pp.converted_to_payment_id, pp.converted_at
-                FROM {SCHEMA}.planned_payments pp
-                LEFT JOIN {SCHEMA}.categories c ON pp.category_id = c.id
-                LEFT JOIN {SCHEMA}.legal_entities le ON pp.legal_entity_id = le.id
-                LEFT JOIN {SCHEMA}.contractors co ON pp.contractor_id = co.id
-                LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
-                LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
-                WHERE pp.created_by = %s
-                  AND pp.is_active = true
-                  AND pp.converted_to_payment_id IS NULL
-                  AND pp.planned_date >= CURRENT_DATE
-                ORDER BY pp.planned_date ASC
-            """, (payload['user_id'],))
+            is_admin = payload.get('is_admin', False)
+            if is_admin:
+                cur.execute(f"""
+                    SELECT pp.id, pp.category_id, c.name as category_name, c.icon as category_icon,
+                           pp.description, pp.amount, pp.planned_date, pp.legal_entity_id,
+                           le.name as legal_entity_name, pp.contractor_id, co.name as contractor_name,
+                           pp.department_id, cd.name as department_name, pp.service_id, s.name as service_name,
+                           pp.invoice_number, pp.invoice_date, pp.recurrence_type, pp.recurrence_end_date,
+                           pp.is_active, pp.created_by, pp.created_at, pp.converted_to_payment_id, pp.converted_at
+                    FROM {SCHEMA}.planned_payments pp
+                    LEFT JOIN {SCHEMA}.categories c ON pp.category_id = c.id
+                    LEFT JOIN {SCHEMA}.legal_entities le ON pp.legal_entity_id = le.id
+                    LEFT JOIN {SCHEMA}.contractors co ON pp.contractor_id = co.id
+                    LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
+                    LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
+                    WHERE pp.is_active = true
+                      AND pp.converted_to_payment_id IS NULL
+                      AND pp.planned_date >= CURRENT_DATE
+                    ORDER BY pp.planned_date ASC
+                """)
+            else:
+                cur.execute(f"""
+                    SELECT pp.id, pp.category_id, c.name as category_name, c.icon as category_icon,
+                           pp.description, pp.amount, pp.planned_date, pp.legal_entity_id,
+                           le.name as legal_entity_name, pp.contractor_id, co.name as contractor_name,
+                           pp.department_id, cd.name as department_name, pp.service_id, s.name as service_name,
+                           pp.invoice_number, pp.invoice_date, pp.recurrence_type, pp.recurrence_end_date,
+                           pp.is_active, pp.created_by, pp.created_at, pp.converted_to_payment_id, pp.converted_at
+                    FROM {SCHEMA}.planned_payments pp
+                    LEFT JOIN {SCHEMA}.categories c ON pp.category_id = c.id
+                    LEFT JOIN {SCHEMA}.legal_entities le ON pp.legal_entity_id = le.id
+                    LEFT JOIN {SCHEMA}.contractors co ON pp.contractor_id = co.id
+                    LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
+                    LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
+                    WHERE pp.created_by = %s
+                      AND pp.is_active = true
+                      AND pp.converted_to_payment_id IS NULL
+                      AND pp.planned_date >= CURRENT_DATE
+                    ORDER BY pp.planned_date ASC
+                """, (payload['user_id'],))
 
             rows = cur.fetchall()
             result = []
