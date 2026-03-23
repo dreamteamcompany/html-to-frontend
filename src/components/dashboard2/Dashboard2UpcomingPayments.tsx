@@ -212,10 +212,16 @@ const Dashboard2UpcomingPayments = () => {
   const [plannedLoading, setPlannedLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
 
+  const { from: periodFrom, to: periodTo } = useMemo(() => getDateRange(), [getDateRange]);
+
+  const toDateStr = (d: Date) => d.toISOString().slice(0, 10);
+
   const fetchPlanned = useCallback(() => {
     if (!token) return;
     setPlannedLoading(true);
-    fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments`, {
+    const dateFrom = toDateStr(periodFrom);
+    const dateTo = toDateStr(periodTo);
+    fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments&date_from=${dateFrom}&date_to=${dateTo}`, {
       headers: { 'X-Auth-Token': token },
     })
       .then(r => r.ok ? r.json() : [])
@@ -238,36 +244,26 @@ const Dashboard2UpcomingPayments = () => {
           legal_entity_name: pp.legal_entity_name as string,
           payment_type: 'planned',
           _isPlanned: true,
+          recurrence_type: pp.recurrence_type as string | undefined,
+          recurrence_end_date: pp.recurrence_end_date as string | undefined,
         }));
         setPlannedPayments(mapped);
       })
       .catch(() => setPlannedPayments([]))
       .finally(() => setPlannedLoading(false));
-  }, [token]);
+  }, [token, periodFrom, periodTo]);
 
   useEffect(() => { fetchPlanned(); }, [fetchPlanned]);
 
   const { upcoming, weekTotal } = useMemo(() => {
-    const { from, to } = getDateRange();
-
-    const filterByDateRange = (p: PaymentRecord) => {
-      if (!p.payment_date) return false;
-      const raw = String(p.payment_date);
-      const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
-      return d >= from && d <= to;
-    };
-
-    const filteredPlanned = plannedPayments.filter(filterByDateRange);
-
-    const sorted = [...filteredPlanned].sort((a, b) => {
+    const sorted = [...plannedPayments].sort((a, b) => {
       const da = new Date(String(a.payment_date).includes('T') ? String(a.payment_date) : String(a.payment_date) + 'T00:00:00');
       const db = new Date(String(b.payment_date).includes('T') ? String(b.payment_date) : String(b.payment_date) + 'T00:00:00');
       return da.getTime() - db.getTime();
     });
-
     const total = sorted.reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
     return { upcoming: sorted, weekTotal: total };
-  }, [plannedPayments, getDateRange]);
+  }, [plannedPayments]);
 
   const groups = useMemo(() => groupByDay(upcoming), [upcoming]);
 

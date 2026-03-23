@@ -1656,14 +1656,40 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                 return error
 
             is_admin = payload.get('is_admin', False)
-            if is_admin:
-                cur.execute(f"""
-                    SELECT pp.id, pp.category_id, c.name as category_name, c.icon as category_icon,
-                           pp.description, pp.amount, pp.planned_date, pp.legal_entity_id,
-                           le.name as legal_entity_name, pp.contractor_id, co.name as contractor_name,
-                           pp.department_id, cd.name as department_name, pp.service_id, s.name as service_name,
-                           pp.invoice_number, pp.invoice_date, pp.recurrence_type, pp.recurrence_end_date,
-                           pp.is_active, pp.created_by, pp.created_at, pp.converted_to_payment_id, pp.converted_at
+            params = event.get('queryStringParameters') or {}
+            date_from = params.get('date_from')
+            date_to = params.get('date_to')
+
+            # Если диапазон не передан — возвращаем ближайшие 31 день
+            if not date_from or not date_to:
+                date_from = 'CURRENT_DATE'
+                date_to = "CURRENT_DATE + INTERVAL '31 days'"
+                use_literal = True
+            else:
+                use_literal = False
+
+            user_filter = "" if is_admin else f"AND pp.created_by = {payload['user_id']}"
+
+            if use_literal:
+                date_from_expr = date_from
+                date_to_expr = date_to
+            else:
+                date_from_expr = f"'{date_from}'"
+                date_to_expr = f"'{date_to}'"
+
+            cur.execute(f"""
+                WITH base AS (
+                    SELECT pp.id,
+                           pp.category_id, c.name AS category_name, c.icon AS category_icon,
+                           pp.description, pp.amount, pp.planned_date,
+                           pp.legal_entity_id, le.name AS legal_entity_name,
+                           pp.contractor_id, co.name AS contractor_name,
+                           pp.department_id, cd.name AS department_name,
+                           pp.service_id, s.name AS service_name,
+                           pp.invoice_number, pp.invoice_date,
+                           pp.recurrence_type, pp.recurrence_end_date,
+                           pp.is_active, pp.created_by, pp.created_at,
+                           pp.converted_to_payment_id, pp.converted_at
                     FROM {SCHEMA}.planned_payments pp
                     LEFT JOIN {SCHEMA}.categories c ON pp.category_id = c.id
                     LEFT JOIN {SCHEMA}.legal_entities le ON pp.legal_entity_id = le.id
@@ -1672,45 +1698,105 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
                     WHERE pp.is_active = true
                       AND pp.converted_to_payment_id IS NULL
-                      AND pp.planned_date >= CURRENT_DATE
-                    ORDER BY pp.planned_date ASC
-                """)
-            else:
-                cur.execute(f"""
-                    SELECT pp.id, pp.category_id, c.name as category_name, c.icon as category_icon,
-                           pp.description, pp.amount, pp.planned_date, pp.legal_entity_id,
-                           le.name as legal_entity_name, pp.contractor_id, co.name as contractor_name,
-                           pp.department_id, cd.name as department_name, pp.service_id, s.name as service_name,
-                           pp.invoice_number, pp.invoice_date, pp.recurrence_type, pp.recurrence_end_date,
-                           pp.is_active, pp.created_by, pp.created_at, pp.converted_to_payment_id, pp.converted_at
-                    FROM {SCHEMA}.planned_payments pp
-                    LEFT JOIN {SCHEMA}.categories c ON pp.category_id = c.id
-                    LEFT JOIN {SCHEMA}.legal_entities le ON pp.legal_entity_id = le.id
-                    LEFT JOIN {SCHEMA}.contractors co ON pp.contractor_id = co.id
-                    LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
-                    LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
-                    WHERE pp.created_by = %s
-                      AND pp.is_active = true
-                      AND pp.converted_to_payment_id IS NULL
-                      AND pp.planned_date >= CURRENT_DATE
-                    ORDER BY pp.planned_date ASC
-                """, (payload['user_id'],))
+                      {user_filter}
+                ),
+                expanded AS (
+                    -- Одиночные платежи (once или без типа): только если дата в диапазоне
+                    SELECT id, category_id, category_name, category_icon,
+                           description, amount, planned_date AS occurrence_date,
+                           legal_entity_id, legal_entity_name, contractor_id, contractor_name,
+                           department_id, department_name, service_id, service_name,
+                           invoice_number, invoice_date, recurrence_type, recurrence_end_date,
+                           is_active, created_by, created_at, converted_to_payment_id, converted_at
+                    FROM base
+                    WHERE (recurrence_type IS NULL OR recurrence_type = 'once')
+                      AND planned_date BETWEEN {date_from_expr}::date AND {date_to_expr}::date
+
+                    UNION ALL
+
+                    -- Ежемесячные: генерируем все вхождения в диапазоне
+                    SELECT b.id, b.category_id, b.category_name, b.category_icon,
+                           b.description, b.amount,
+                           gs.occurrence_date::date AS occurrence_date,
+                           b.legal_entity_id, b.legal_entity_name, b.contractor_id, b.contractor_name,
+                           b.department_id, b.department_name, b.service_id, b.service_name,
+                           b.invoice_number, b.invoice_date, b.recurrence_type, b.recurrence_end_date,
+                           b.is_active, b.created_by, b.created_at, b.converted_to_payment_id, b.converted_at
+                    FROM base b,
+                    LATERAL (
+                        SELECT (b.planned_date + (n || ' months')::interval)::date AS occurrence_date
+                        FROM generate_series(0, 1200) AS n
+                        WHERE (b.planned_date + (n || ' months')::interval)::date
+                              BETWEEN {date_from_expr}::date AND {date_to_expr}::date
+                          AND (b.recurrence_end_date IS NULL
+                               OR (b.planned_date + (n || ' months')::interval)::date <= b.recurrence_end_date)
+                    ) gs
+                    WHERE b.recurrence_type = 'monthly'
+
+                    UNION ALL
+
+                    -- Ежегодные: генерируем все вхождения в диапазоне
+                    SELECT b.id, b.category_id, b.category_name, b.category_icon,
+                           b.description, b.amount,
+                           gs.occurrence_date::date AS occurrence_date,
+                           b.legal_entity_id, b.legal_entity_name, b.contractor_id, b.contractor_name,
+                           b.department_id, b.department_name, b.service_id, b.service_name,
+                           b.invoice_number, b.invoice_date, b.recurrence_type, b.recurrence_end_date,
+                           b.is_active, b.created_by, b.created_at, b.converted_to_payment_id, b.converted_at
+                    FROM base b,
+                    LATERAL (
+                        SELECT (b.planned_date + (n || ' years')::interval)::date AS occurrence_date
+                        FROM generate_series(0, 100) AS n
+                        WHERE (b.planned_date + (n || ' years')::interval)::date
+                              BETWEEN {date_from_expr}::date AND {date_to_expr}::date
+                          AND (b.recurrence_end_date IS NULL
+                               OR (b.planned_date + (n || ' years')::interval)::date <= b.recurrence_end_date)
+                    ) gs
+                    WHERE b.recurrence_type = 'yearly'
+
+                    UNION ALL
+
+                    -- Еженедельные: генерируем все вхождения в диапазоне
+                    SELECT b.id, b.category_id, b.category_name, b.category_icon,
+                           b.description, b.amount,
+                           gs.occurrence_date::date AS occurrence_date,
+                           b.legal_entity_id, b.legal_entity_name, b.contractor_id, b.contractor_name,
+                           b.department_id, b.department_name, b.service_id, b.service_name,
+                           b.invoice_number, b.invoice_date, b.recurrence_type, b.recurrence_end_date,
+                           b.is_active, b.created_by, b.created_at, b.converted_to_payment_id, b.converted_at
+                    FROM base b,
+                    LATERAL (
+                        SELECT (b.planned_date + (n * 7 || ' days')::interval)::date AS occurrence_date
+                        FROM generate_series(0, 5200) AS n
+                        WHERE (b.planned_date + (n * 7 || ' days')::interval)::date
+                              BETWEEN {date_from_expr}::date AND {date_to_expr}::date
+                          AND (b.recurrence_end_date IS NULL
+                               OR (b.planned_date + (n * 7 || ' days')::interval)::date <= b.recurrence_end_date)
+                    ) gs
+                    WHERE b.recurrence_type = 'weekly'
+                )
+                SELECT * FROM expanded
+                ORDER BY occurrence_date ASC
+            """)
 
             rows = cur.fetchall()
             result = []
             for row in rows:
                 d = dict(row)
                 d['amount'] = float(d['amount'])
-                if d.get('planned_date'):
-                    d['planned_date'] = d['planned_date'].isoformat()
+                if d.get('occurrence_date'):
+                    d['planned_date'] = d['occurrence_date'].isoformat() if hasattr(d['occurrence_date'], 'isoformat') else str(d['occurrence_date'])
+                    del d['occurrence_date']
+                elif d.get('planned_date'):
+                    d['planned_date'] = d['planned_date'].isoformat() if hasattr(d['planned_date'], 'isoformat') else str(d['planned_date'])
                 if d.get('invoice_date'):
-                    d['invoice_date'] = d['invoice_date'].isoformat()
+                    d['invoice_date'] = d['invoice_date'].isoformat() if hasattr(d['invoice_date'], 'isoformat') else str(d['invoice_date'])
                 if d.get('recurrence_end_date'):
-                    d['recurrence_end_date'] = d['recurrence_end_date'].isoformat()
+                    d['recurrence_end_date'] = d['recurrence_end_date'].isoformat() if hasattr(d['recurrence_end_date'], 'isoformat') else str(d['recurrence_end_date'])
                 if d.get('created_at'):
-                    d['created_at'] = d['created_at'].isoformat()
+                    d['created_at'] = d['created_at'].isoformat() if hasattr(d['created_at'], 'isoformat') else str(d['created_at'])
                 if d.get('converted_at'):
-                    d['converted_at'] = d['converted_at'].isoformat()
+                    d['converted_at'] = d['converted_at'].isoformat() if hasattr(d['converted_at'], 'isoformat') else str(d['converted_at'])
                 result.append(d)
             return response(200, result)
 
