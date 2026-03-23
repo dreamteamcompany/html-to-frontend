@@ -79,16 +79,23 @@ const groupByDay = (payments: PaymentRecord[]): DayGroup[] => {
     }
 
     const total = items.reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
-
     groups.push({ dateKey, label, sublabel, payments: items, total, isToday, isTomorrow, isUrgent: isToday });
   }
 
   return groups.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 };
 
-// ─── PaymentCard ─────────────────────────────────────────────────────────────
-const PaymentCard = ({ payment, accentColor, onClick }: { payment: PaymentRecord; accentColor: string; onClick: (p: PaymentRecord) => void }) => {
+const RECURRENCE_BADGE: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  monthly:  { label: 'ежемес.',  color: '#0ea5e9', bg: '#0ea5e915', border: '#0ea5e930' },
+  yearly:   { label: 'ежегодно', color: '#f59e0b', bg: '#f59e0b15', border: '#f59e0b30' },
+  weekly:   { label: 'еженед.',  color: '#10b981', bg: '#10b98115', border: '#10b98130' },
+};
+
+// ─── PaymentRow ───────────────────────────────────────────────────────────────
+const PaymentRow = ({ payment, accentColor, onClick }: { payment: PaymentRecord; accentColor: string; onClick: (p: PaymentRecord) => void }) => {
   const icon = getCategoryIcon(payment.category_name);
+  const rec = RECURRENCE_BADGE[(payment as Record<string, unknown>).recurrence_type as string];
+
   return (
     <div
       role="button"
@@ -96,92 +103,74 @@ const PaymentCard = ({ payment, accentColor, onClick }: { payment: PaymentRecord
       onClick={() => onClick(payment)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(payment); }}
       style={{
-        background: 'hsl(var(--card))',
-        border: '1px solid hsl(var(--border))',
-        borderRadius: '10px',
-        padding: '10px',
-        display: 'flex',
-        alignItems: 'flex-start',
+        display: 'grid',
+        gridTemplateColumns: '28px 1fr auto',
+        alignItems: 'center',
         gap: '10px',
-        transition: 'border-color 0.2s, box-shadow 0.2s',
+        padding: '8px 12px',
+        borderRadius: '8px',
         cursor: 'pointer',
+        transition: 'background 0.15s',
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = accentColor; e.currentTarget.style.boxShadow = `0 2px 8px ${accentColor}30`; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'hsl(var(--border))'; e.currentTarget.style.boxShadow = 'none'; }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = `${accentColor}0d`; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
     >
+      {/* Иконка */}
       <div style={{
-        width: '30px', height: '30px', borderRadius: '8px',
+        width: '28px', height: '28px', borderRadius: '7px',
         background: `${accentColor}20`, display: 'flex', alignItems: 'center',
         justifyContent: 'center', flexShrink: 0,
       }}>
-        <Icon name={icon} size={14} style={{ color: accentColor }} />
+        <Icon name={icon} size={13} style={{ color: accentColor }} />
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <div style={{
+
+      {/* Основная информация */}
+      <div style={{ minWidth: 0 }}>
+        {/* Строка 1: название + бейджи */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+          <span style={{
             fontSize: '12px', fontWeight: 700, color: 'hsl(var(--foreground))',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            maxWidth: '240px',
           }}>
             {payment.description || payment.service_name || 'Платёж'}
-          </div>
-          {payment._isPlanned && (
-            <div style={{
-              fontSize: '9px', fontWeight: 700, color: '#fff',
-              background: '#6366f1', borderRadius: '4px', padding: '1px 4px', flexShrink: 0,
+          </span>
+          {rec && (
+            <span style={{
+              fontSize: '9px', fontWeight: 700, color: rec.color,
+              background: rec.bg, border: `1px solid ${rec.border}`,
+              borderRadius: '4px', padding: '1px 4px', whiteSpace: 'nowrap',
             }}>
-              план
-            </div>
-          )}
-          {(payment as Record<string, unknown>).recurrence_type === 'monthly' && (
-            <div style={{
-              fontSize: '9px', fontWeight: 700, color: '#0ea5e9',
-              background: '#0ea5e915', border: '1px solid #0ea5e930',
-              borderRadius: '4px', padding: '1px 4px', flexShrink: 0,
-            }}>
-              ежемес.
-            </div>
-          )}
-          {(payment as Record<string, unknown>).recurrence_type === 'yearly' && (
-            <div style={{
-              fontSize: '9px', fontWeight: 700, color: '#f59e0b',
-              background: '#f59e0b15', border: '1px solid #f59e0b30',
-              borderRadius: '4px', padding: '1px 4px', flexShrink: 0,
-            }}>
-              ежегодно
-            </div>
-          )}
-          {(payment as Record<string, unknown>).recurrence_type === 'weekly' && (
-            <div style={{
-              fontSize: '9px', fontWeight: 700, color: '#10b981',
-              background: '#10b98115', border: '1px solid #10b98130',
-              borderRadius: '4px', padding: '1px 4px', flexShrink: 0,
-            }}>
-              еженед.
-            </div>
+              {rec.label}
+            </span>
           )}
         </div>
-        {(payment.legal_entity_name || payment.contractor_name) && (
-          <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', marginTop: '2px',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {payment.legal_entity_name || payment.contractor_name}
-          </div>
-        )}
-        {(payment.category_name || payment.department_name) && (
-          <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', marginTop: '1px',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {payment.category_name || payment.department_name}
-          </div>
-        )}
-        <div style={{ fontSize: '13px', fontWeight: 800, color: 'hsl(var(--foreground))', marginTop: '4px' }}>
-          {formatAmount(payment.amount)}
+        {/* Строка 2: контрагент / юрлицо · отдел · сервис */}
+        <div style={{
+          fontSize: '10px', color: 'hsl(var(--muted-foreground))',
+          marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {[
+            payment.contractor_name || payment.legal_entity_name,
+            payment.department_name,
+            payment.service_name,
+          ].filter(Boolean).join(' · ') || payment.category_name || ''}
         </div>
+      </div>
+
+      {/* Сумма */}
+      <div style={{
+        fontSize: '13px', fontWeight: 800, color: 'hsl(var(--foreground))',
+        whiteSpace: 'nowrap', flexShrink: 0,
+      }}>
+        {formatAmount(payment.amount)}
       </div>
     </div>
   );
 };
 
-// ─── DayColumn ────────────────────────────────────────────────────────────────
-const DayColumn = ({ group, onPaymentClick }: { group: DayGroup; onPaymentClick: (p: PaymentRecord) => void }) => {
+// ─── DaySection ───────────────────────────────────────────────────────────────
+const DaySection = ({ group, onPaymentClick }: { group: DayGroup; onPaymentClick: (p: PaymentRecord) => void }) => {
   const accentColor = group.isUrgent
     ? dashboardColors.red
     : group.isTomorrow
@@ -189,41 +178,38 @@ const DayColumn = ({ group, onPaymentClick }: { group: DayGroup; onPaymentClick:
     : dashboardColors.green;
 
   return (
-    <div style={{
-      background: `${accentColor}08`,
-      border: `1.5px solid ${accentColor}30`,
-      borderRadius: '14px',
-      overflow: 'hidden',
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
+    <div>
+      {/* Заголовок дня */}
       <div style={{
-        background: `${accentColor}15`,
-        borderBottom: `1px solid ${accentColor}25`,
-        padding: '12px 14px',
-        flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '6px 12px',
+        borderLeft: `3px solid ${accentColor}`,
+        marginBottom: '2px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: accentColor }}>{group.label}</div>
-            <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '1px' }}>{group.sublabel}</div>
-          </div>
-          <div style={{
-            background: accentColor, color: '#fff', borderRadius: '8px',
-            padding: '3px 8px', fontSize: '11px', fontWeight: 700,
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 800, color: accentColor }}>
+            {group.label}
+          </span>
+          <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}>
+            {group.sublabel}
+          </span>
+          <span style={{
+            fontSize: '10px', color: accentColor,
+            background: `${accentColor}18`, borderRadius: '10px',
+            padding: '1px 7px', fontWeight: 700,
           }}>
             {group.payments.length}
-          </div>
+          </span>
         </div>
-        <div style={{ fontSize: '15px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>
+        <span style={{ fontSize: '12px', fontWeight: 700, color: 'hsl(var(--foreground))' }}>
           {formatAmount(group.total)}
-        </div>
+        </span>
       </div>
 
-      <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1 }}>
+      {/* Строки платежей */}
+      <div>
         {group.payments.map((p) => (
-          <PaymentCard key={p.id} payment={p} accentColor={accentColor} onClick={onPaymentClick} />
+          <PaymentRow key={`${p.id}-${p.payment_date}`} payment={p} accentColor={accentColor} onClick={onPaymentClick} />
         ))}
       </div>
     </div>
@@ -234,7 +220,6 @@ const DayColumn = ({ group, onPaymentClick }: { group: DayGroup; onPaymentClick:
 const Dashboard2UpcomingPayments = () => {
   const { token } = useAuth();
   const { period, getDateRange } = usePeriod();
-  const [activeIndex, setActiveIndex] = useState(0);
   const [plannedPayments, setPlannedPayments] = useState<PaymentRecord[]>([]);
   const [plannedLoading, setPlannedLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
@@ -299,9 +284,6 @@ const Dashboard2UpcomingPayments = () => {
 
   const groups = useMemo(() => groupByDay(upcoming), [upcoming]);
 
-  useEffect(() => { setActiveIndex(0); }, [period]);
-
-  const isLoading = plannedLoading;
   const count = upcoming.length;
   const countLabel = count === 1 ? 'платёж' : count < 5 ? 'платежа' : 'платежей';
 
@@ -314,7 +296,7 @@ const Dashboard2UpcomingPayments = () => {
     }}>
       <CardContent className="p-4 sm:p-6">
         {/* Заголовок */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div style={{
               background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)',
@@ -333,7 +315,7 @@ const Dashboard2UpcomingPayments = () => {
             </div>
           </div>
 
-          {!isLoading && count > 0 && (
+          {!plannedLoading && count > 0 && (
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '16px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>
                 {formatAmount(weekTotal)}
@@ -346,90 +328,28 @@ const Dashboard2UpcomingPayments = () => {
         </div>
 
         {/* Состояния */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500" />
+        {plannedLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
           </div>
         ) : count === 0 ? (
-          <div className="text-center py-12">
-            <Icon name="CheckCircle" size={44} style={{ color: dashboardColors.green, margin: '0 auto 14px' }} />
+          <div className="text-center py-10">
+            <Icon name="CheckCircle" size={40} style={{ color: dashboardColors.green, margin: '0 auto 12px' }} />
             <p className={dashboardTypography.cardSmall} style={{ color: 'hsl(var(--muted-foreground))' }}>
               Нет запланированных платежей: {(PERIOD_LABEL[period] ?? 'выбранный период').toLowerCase()}
             </p>
           </div>
         ) : (
-          <>
-            {/* Десктоп: горизонтальный таймлайн */}
-            <div className="hidden sm:block">
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
-                {groups.map((group) => (
-                  <div key={group.dateKey} style={{ flex: 1, minWidth: 0 }}>
-                    <DayColumn group={group} onPaymentClick={setSelectedPayment} />
-                  </div>
-                ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {groups.map((group, i) => (
+              <div key={group.dateKey}>
+                <DaySection group={group} onPaymentClick={setSelectedPayment} />
+                {i < groups.length - 1 && (
+                  <div style={{ height: '1px', background: 'hsl(var(--border))', margin: '10px 0 0' }} />
+                )}
               </div>
-            </div>
-
-            {/* Мобилка: карусель */}
-            <div className="sm:hidden">
-              {groups.length > 1 && (
-                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginBottom: '12px' }}>
-                  {groups.map((group, i) => {
-                    const accentColor = group.isUrgent ? dashboardColors.red : group.isTomorrow ? dashboardColors.orange : dashboardColors.green;
-                    return (
-                      <button
-                        key={group.dateKey}
-                        onClick={() => setActiveIndex(i)}
-                        style={{
-                          width: i === activeIndex ? '24px' : '8px',
-                          height: '8px', borderRadius: '4px',
-                          background: i === activeIndex ? accentColor : 'hsl(var(--border))',
-                          border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0,
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-
-              <DayColumn group={groups[activeIndex] ?? groups[0]} onPaymentClick={setSelectedPayment} />
-
-              {groups.length > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', gap: '8px' }}>
-                  <button
-                    onClick={() => setActiveIndex(i => Math.max(0, i - 1))}
-                    disabled={activeIndex === 0}
-                    style={{
-                      flex: 1, padding: '10px', borderRadius: '10px',
-                      border: '1px solid hsl(var(--border))', background: 'hsl(var(--background))',
-                      color: activeIndex === 0 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
-                      cursor: activeIndex === 0 ? 'not-allowed' : 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                      fontSize: '13px', fontWeight: 600, opacity: activeIndex === 0 ? 0.4 : 1,
-                    }}
-                  >
-                    <Icon name="ChevronLeft" size={16} />
-                    Назад
-                  </button>
-                  <button
-                    onClick={() => setActiveIndex(i => Math.min(groups.length - 1, i + 1))}
-                    disabled={activeIndex === groups.length - 1}
-                    style={{
-                      flex: 1, padding: '10px', borderRadius: '10px',
-                      border: '1px solid hsl(var(--border))', background: 'hsl(var(--background))',
-                      color: activeIndex === groups.length - 1 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
-                      cursor: activeIndex === groups.length - 1 ? 'not-allowed' : 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                      fontSize: '13px', fontWeight: 600, opacity: activeIndex === groups.length - 1 ? 0.4 : 1,
-                    }}
-                  >
-                    Вперёд
-                    <Icon name="ChevronRight" size={16} />
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
+            ))}
+          </div>
         )}
       </CardContent>
 
