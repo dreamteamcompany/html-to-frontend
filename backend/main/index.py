@@ -1662,20 +1662,22 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
 
             # Если диапазон не передан — возвращаем ближайшие 31 день
             if not date_from or not date_to:
-                date_from = 'CURRENT_DATE'
-                date_to = "CURRENT_DATE + INTERVAL '31 days'"
-                use_literal = True
+                date_from_expr = 'CURRENT_DATE'
+                date_to_expr = "CURRENT_DATE + INTERVAL '31 days'"
             else:
-                use_literal = False
-
-            user_filter = "" if is_admin else f"AND pp.created_by = {payload['user_id']}"
-
-            if use_literal:
-                date_from_expr = date_from
-                date_to_expr = date_to
-            else:
+                # Валидация формата дат во избежание ошибок и инъекций
+                from datetime import datetime as _dt
+                try:
+                    _dt.strptime(date_from, '%Y-%m-%d')
+                    _dt.strptime(date_to, '%Y-%m-%d')
+                except (ValueError, TypeError):
+                    return response(400, {'error': 'Неверный формат дат. Ожидается YYYY-MM-DD'})
                 date_from_expr = f"'{date_from}'"
                 date_to_expr = f"'{date_to}'"
+
+            # Защита от инъекций: явное приведение user_id к int
+            user_id_safe = int(payload['user_id'])
+            user_filter = "" if is_admin else f"AND pp.created_by = {user_id_safe}"
 
             cur.execute(f"""
                 WITH base AS (
@@ -1715,6 +1717,8 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     UNION ALL
 
                     -- Ежемесячные: генерируем все вхождения в диапазоне
+                    -- n_start: шаг от planned_date до date_from (может быть отрицательным)
+                    -- n_end:   шаг от planned_date до date_to
                     SELECT b.id, b.category_id, b.category_name, b.category_icon,
                            b.description, b.amount,
                            gs.occurrence_date::date AS occurrence_date,
@@ -1725,7 +1729,10 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     FROM base b,
                     LATERAL (
                         SELECT (b.planned_date + (n || ' months')::interval)::date AS occurrence_date
-                        FROM generate_series(0, 1200) AS n
+                        FROM generate_series(
+                            FLOOR(EXTRACT(EPOCH FROM ({date_from_expr}::date - b.planned_date::date)) / 2592000.0)::int - 1,
+                            CEIL(EXTRACT(EPOCH FROM ({date_to_expr}::date - b.planned_date::date)) / 2592000.0)::int + 1
+                        ) AS n
                         WHERE (b.planned_date + (n || ' months')::interval)::date
                               BETWEEN {date_from_expr}::date AND {date_to_expr}::date
                           AND (b.recurrence_end_date IS NULL
@@ -1746,7 +1753,10 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     FROM base b,
                     LATERAL (
                         SELECT (b.planned_date + (n || ' years')::interval)::date AS occurrence_date
-                        FROM generate_series(0, 100) AS n
+                        FROM generate_series(
+                            FLOOR(EXTRACT(EPOCH FROM ({date_from_expr}::date - b.planned_date::date)) / 31536000.0)::int - 1,
+                            CEIL(EXTRACT(EPOCH FROM ({date_to_expr}::date - b.planned_date::date)) / 31536000.0)::int + 1
+                        ) AS n
                         WHERE (b.planned_date + (n || ' years')::interval)::date
                               BETWEEN {date_from_expr}::date AND {date_to_expr}::date
                           AND (b.recurrence_end_date IS NULL
@@ -1767,7 +1777,10 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     FROM base b,
                     LATERAL (
                         SELECT (b.planned_date + (n * 7 || ' days')::interval)::date AS occurrence_date
-                        FROM generate_series(0, 5200) AS n
+                        FROM generate_series(
+                            FLOOR(EXTRACT(EPOCH FROM ({date_from_expr}::date - b.planned_date::date)) / 604800.0)::int - 1,
+                            CEIL(EXTRACT(EPOCH FROM ({date_to_expr}::date - b.planned_date::date)) / 604800.0)::int + 1
+                        ) AS n
                         WHERE (b.planned_date + (n * 7 || ' days')::interval)::date
                               BETWEEN {date_from_expr}::date AND {date_to_expr}::date
                           AND (b.recurrence_end_date IS NULL

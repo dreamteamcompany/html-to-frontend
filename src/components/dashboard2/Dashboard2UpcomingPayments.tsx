@@ -224,8 +224,6 @@ const Dashboard2UpcomingPayments = () => {
   const [plannedLoading, setPlannedLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
 
-  const { from: periodFrom, to: periodTo } = useMemo(() => getDateRange(), [getDateRange]);
-
   const toDateStr = (d: Date) => {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -233,12 +231,16 @@ const Dashboard2UpcomingPayments = () => {
     return `${y}-${m}-${day}`;
   };
 
+  // Строки вместо Date-объектов — стабильны при сравнении в useCallback
+  const { dateFromStr, dateToStr } = useMemo(() => {
+    const { from, to } = getDateRange();
+    return { dateFromStr: toDateStr(from), dateToStr: toDateStr(to) };
+  }, [getDateRange]);
+
   const fetchPlanned = useCallback(() => {
     if (!token) return;
     setPlannedLoading(true);
-    const dateFrom = toDateStr(periodFrom);
-    const dateTo = toDateStr(periodTo);
-    fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments&date_from=${dateFrom}&date_to=${dateTo}`, {
+    fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments&date_from=${dateFromStr}&date_to=${dateToStr}`, {
       headers: { 'X-Auth-Token': token },
     })
       .then(r => r.ok ? r.json() : [])
@@ -268,7 +270,7 @@ const Dashboard2UpcomingPayments = () => {
       })
       .catch(() => setPlannedPayments([]))
       .finally(() => setPlannedLoading(false));
-  }, [token, periodFrom, periodTo]);
+  }, [token, dateFromStr, dateToStr]);
 
   useEffect(() => { fetchPlanned(); }, [fetchPlanned]);
 
