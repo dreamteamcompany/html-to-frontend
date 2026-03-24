@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { parsePaymentDate } from '../dashboardUtils';
 
 interface PaymentRecord {
   id: number;
@@ -44,7 +45,7 @@ const TopPaymentsCard = () => {
     const { from, to } = getDateRange();
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
       if (p.status !== 'approved') return false;
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(p.payment_date);
       return d >= from && d <= to;
     });
 

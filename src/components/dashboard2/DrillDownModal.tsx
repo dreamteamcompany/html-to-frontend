@@ -6,6 +6,7 @@ import type { SortField, SortDir } from './drillDownTypes';
 import DrillDownHeader from './DrillDownHeader';
 import DrillDownToolbar from './DrillDownToolbar';
 import DrillDownTable from './DrillDownTable';
+import { parsePaymentDate } from './dashboardUtils';
 
 export type { DrillDownFilter } from './drillDownTypes';
 import type { DrillDownFilter } from './drillDownTypes';
@@ -106,8 +107,8 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
       if (sortField === 'amount') {
         return sortDir === 'asc' ? a.amount - b.amount : b.amount - a.amount;
       }
-      const da = new Date(String(a.payment_date)).getTime();
-      const db = new Date(String(b.payment_date)).getTime();
+      const da = parsePaymentDate(a.payment_date).getTime();
+      const db = parsePaymentDate(b.payment_date).getTime();
       return sortDir === 'asc' ? da - db : db - da;
     });
   }, [filtered, sortField, sortDir, search]);
