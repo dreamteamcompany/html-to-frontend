@@ -186,39 +186,46 @@ const ApprovalsHistory = () => {
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                        <div className="flex items-start gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0 mt-0.5">
                             <Icon name="FileCheck" size={20} />
                           </div>
-                          <div className="min-w-0">
-                            <div className="font-semibold text-foreground flex items-center gap-2">
-                              <span>Платеж #{approval.payment_id}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-foreground flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                              <span className="whitespace-nowrap">Платёж #{approval.payment_id}</span>
                               {approval.amount && (
-                                <span className="font-bold text-foreground">
+                                <span className="font-bold text-foreground whitespace-nowrap">
                                   — {approval.amount.toLocaleString('ru-RU')} ₽
                                 </span>
                               )}
-                              <Icon name="ChevronRight" size={14} className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                              <Icon name="ChevronRight" size={14} className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors flex-shrink-0" />
                             </div>
                             {approval.description && (
-                              <div className="text-sm text-muted-foreground line-clamp-1 mt-0.5">
+                              <div className="text-sm text-muted-foreground mt-0.5 overflow-hidden"
+                                style={{
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  wordBreak: 'break-word',
+                                }}
+                              >
                                 {approval.description}
                               </div>
                             )}
                           </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-3 text-sm">
-                          <div className="flex items-center gap-1.5">
-                            <Icon name="User" size={13} className="text-muted-foreground/60" />
-                            <span className="text-muted-foreground">{approval.approver_name}</span>
-                            <span className="text-muted-foreground/60 text-xs">({getRoleName(approval.approver_role)})</span>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Icon name="User" size={13} className="text-muted-foreground/60 flex-shrink-0" />
+                            <span className="text-muted-foreground truncate max-w-[150px] sm:max-w-none">{approval.approver_name}</span>
+                            <span className="text-muted-foreground/60 text-xs whitespace-nowrap">({getRoleName(approval.approver_role)})</span>
                           </div>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
                             <Icon name="Clock" size={13} className="text-muted-foreground/60" />
-                            <span className="text-muted-foreground text-xs">
-                              {new Date(approval.created_at).toLocaleDateString('ru-RU', {
+                            <span className="text-muted-foreground text-xs whitespace-nowrap">
+                              {new Date(approval.created_at).toLocaleString('ru-RU', {
                                 day: '2-digit',
-                                month: 'long',
+                                month: '2-digit',
                                 year: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit',
@@ -233,14 +240,14 @@ const ApprovalsHistory = () => {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {getActionBadge(approval.action)}
+                      <div className="flex items-center gap-2 flex-shrink-0 self-start md:self-center">
+                        <div className="flex-shrink-0">{getActionBadge(approval.action)}</div>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={(e) => { e.stopPropagation(); handleDeleteApproval(approval.id); }}
                           disabled={deletingId === approval.id}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-500"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-500 flex-shrink-0"
                         >
                           {deletingId === approval.id ? (
                             <Icon name="Loader2" size={16} className="animate-spin" />
