@@ -174,14 +174,14 @@ const PlannedPaymentsModal = () => {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="flex-row items-center justify-between space-y-0 pb-2 pr-8">
-            <DialogTitle className="flex items-center gap-2 leading-normal">
-              <Icon name="CalendarClock" size={20} />
+          <DialogHeader className="flex-row items-center justify-between space-y-0 pb-2 pr-10">
+            <DialogTitle className="flex items-center gap-2 leading-normal min-w-0 truncate">
+              <Icon name="CalendarClock" size={20} className="shrink-0" />
               Запланированные платежи
             </DialogTitle>
             <Button
               size="sm"
-              className="bg-blue-500 hover:bg-blue-600 gap-1.5 shrink-0"
+              className="bg-blue-500 hover:bg-blue-600 gap-1.5 shrink-0 mr-1"
               onClick={() => { loadDicts(); setCreateOpen(true); }}
             >
               <Icon name="Plus" size={15} />
@@ -213,18 +213,18 @@ const PlannedPaymentsModal = () => {
               payments.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-start justify-between gap-3 p-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/8 transition-colors"
+                  className="flex items-start justify-between gap-3 p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/60 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="shrink-0 w-9 h-9 rounded-full bg-blue-500/20 flex items-center justify-center">
-                      <Icon name={p.category_icon || 'Calendar'} size={16} className="text-blue-400" />
+                    <div className="shrink-0 w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center">
+                      <Icon name={p.category_icon || 'Calendar'} size={16} className="text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{p.description}</p>
+                      <p className="text-sm font-medium truncate text-foreground">{p.description}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <span className="text-xs text-muted-foreground">{p.category_name}</span>
                         {p.recurrence_type && p.recurrence_type !== 'once' && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-300 font-medium">
                             {recurrenceLabel[p.recurrence_type] ?? p.recurrence_type}
                           </span>
                         )}
@@ -236,7 +236,7 @@ const PlannedPaymentsModal = () => {
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <div className="text-right mr-2">
-                      <p className="text-sm font-semibold text-white">{formatAmount(p.amount)}</p>
+                      <p className="text-sm font-semibold text-foreground">{formatAmount(p.amount)}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{formatDate(p.planned_date)}</p>
                     </div>
                     <button
