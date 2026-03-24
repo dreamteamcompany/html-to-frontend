@@ -42,12 +42,16 @@ interface PlannedPayment {
 
 interface Category { id: number; name: string; icon: string; }
 interface LegalEntity { id: number; name: string; }
+interface Contractor { id: number; name: string; }
+interface Department { id: number; name: string; }
+interface Service { id: number; name: string; }
 
 interface Props {
   plannedPaymentId: number | null;
   open: boolean;
   onClose: () => void;
   onDeleted?: () => void;
+  onUpdated?: () => void;
 }
 
 const recurrenceLabel: Record<string, string> = {
@@ -73,26 +77,58 @@ const InfoRow = ({ label, value }: { label: string; value?: string | number | nu
   );
 };
 
+// ─── Поле выбора из справочника ───────────────────────────────────────────────
+
+const SelectField = ({
+  label, value, onChange, options, placeholder = 'Не выбрано', required = false,
+}: {
+  label: string;
+  value: number | string | undefined;
+  onChange: (val: number | undefined) => void;
+  options: { id: number; name: string }[];
+  placeholder?: string;
+  required?: boolean;
+}) => (
+  <div className="space-y-1.5">
+    <label className="text-sm font-medium">{label}{required ? ' *' : ''}</label>
+    <select
+      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      value={value ?? ''}
+      onChange={(ev) => onChange(ev.target.value ? Number(ev.target.value) : undefined)}
+      required={required}
+    >
+      {!required && <option value="">{placeholder}</option>}
+      {required && <option value="">Выберите...</option>}
+      {options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+    </select>
+  </div>
+);
+
 // ─── Компонент ────────────────────────────────────────────────────────────────
 
-const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted }: Props) => {
+const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted, onUpdated }: Props) => {
   const { token, user } = useAuth();
   const { toast } = useToast();
 
   const isAdmin = user?.roles?.some(r => r.name === 'Администратор' || r.name === 'Admin');
 
-  const [payment, setPayment]       = useState<PlannedPayment | null>(null);
-  const [loading, setLoading]       = useState(false);
-  const [notFound, setNotFound]     = useState(false);
-  const [isEditing, setIsEditing]   = useState(false);
-  const [isSaving, setIsSaving]     = useState(false);
+  const [payment, setPayment]             = useState<PlannedPayment | null>(null);
+  const [loading, setLoading]             = useState(false);
+  const [notFound, setNotFound]           = useState(false);
+  const [isEditing, setIsEditing]         = useState(false);
+  const [isSaving, setIsSaving]           = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleting, setIsDeleting]       = useState(false);
 
   // Справочники для формы
-  const [categories, setCategories]       = useState<Category[]>([]);
+  const [categories, setCategories]     = useState<Category[]>([]);
   const [legalEntities, setLegalEntities] = useState<LegalEntity[]>([]);
-  const [editData, setEditData]           = useState<PlannedPayment | null>(null);
+  const [contractors, setContractors]   = useState<Contractor[]>([]);
+  const [departments, setDepartments]   = useState<Department[]>([]);
+  const [services, setServices]         = useState<Service[]>([]);
+  const [dictsLoaded, setDictsLoaded]   = useState(false);
+
+  const [editData, setEditData] = useState<PlannedPayment | null>(null);
 
   // Загрузка запланированного платежа
   useEffect(() => {
@@ -102,7 +138,6 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
     setPayment(null);
     setIsEditing(false);
 
-    // Получаем список всех planned_payments и фильтруем по ID
     fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments`, {
       headers: { 'X-Auth-Token': token },
     })
@@ -120,15 +155,22 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
       .finally(() => setLoading(false));
   }, [open, plannedPaymentId, token]);
 
-  // Загрузка справочников при входе в режим редактирования
+  // Загрузка всех справочников при входе в режим редактирования
   const loadDicts = async () => {
-    if (!token) return;
-    const [catRes, leRes] = await Promise.all([
+    if (!token || dictsLoaded) return;
+    const [catRes, leRes, contrRes, deptRes, svcRes] = await Promise.all([
       fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=categories`, { headers: { 'X-Auth-Token': token } }),
       fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=legal-entities`, { headers: { 'X-Auth-Token': token } }),
+      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=contractors`, { headers: { 'X-Auth-Token': token } }),
+      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=customer-departments`, { headers: { 'X-Auth-Token': token } }),
+      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=services`, { headers: { 'X-Auth-Token': token } }),
     ]);
-    if (catRes.ok) setCategories(await catRes.json());
-    if (leRes.ok) setLegalEntities(await leRes.json());
+    if (catRes.ok)   setCategories(await catRes.json());
+    if (leRes.ok)    setLegalEntities(await leRes.json());
+    if (contrRes.ok) setContractors(await contrRes.json());
+    if (deptRes.ok)  setDepartments(await deptRes.json());
+    if (svcRes.ok)   setServices(await svcRes.json());
+    setDictsLoaded(true);
   };
 
   const handleEditStart = async () => {
@@ -137,25 +179,25 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
     setIsEditing(true);
   };
 
-  const handleEditSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEditSave = async (ev: React.FormEvent) => {
+    ev.preventDefault();
     if (!editData || !token) return;
     setIsSaving(true);
     try {
       const body = {
-        id: editData.id,
-        category_id:        editData.category_id,
-        amount:             editData.amount,
-        description:        editData.description,
-        planned_date:       editData.planned_date,
-        legal_entity_id:    editData.legal_entity_id || null,
-        contractor_id:      editData.contractor_id || null,
-        department_id:      editData.department_id || null,
-        service_id:         editData.service_id || null,
-        invoice_number:     editData.invoice_number || null,
-        invoice_date:       editData.invoice_date || null,
-        recurrence_type:    editData.recurrence_type || 'once',
-        recurrence_end_date:editData.recurrence_end_date || null,
+        id:                  editData.id,
+        category_id:         editData.category_id,
+        amount:              editData.amount,
+        description:         editData.description,
+        planned_date:        editData.planned_date,
+        legal_entity_id:     editData.legal_entity_id || null,
+        contractor_id:       editData.contractor_id || null,
+        department_id:       editData.department_id || null,
+        service_id:          editData.service_id || null,
+        invoice_number:      editData.invoice_number || null,
+        invoice_date:        editData.invoice_date || null,
+        recurrence_type:     editData.recurrence_type || 'once',
+        recurrence_end_date: editData.recurrence_end_date || null,
       };
       const res = await fetch(
         `${API_ENDPOINTS.main}?endpoint=planned-payments&id=${editData.id}`,
@@ -165,9 +207,20 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
         const err = await res.json();
         throw new Error(err.error || 'Не удалось сохранить');
       }
+      // Обновляем названия из справочников
+      const updatedPayment: PlannedPayment = {
+        ...editData,
+        category_name:     categories.find(c => c.id === editData.category_id)?.name || editData.category_name,
+        category_icon:     categories.find(c => c.id === editData.category_id)?.icon || editData.category_icon,
+        legal_entity_name: editData.legal_entity_id ? legalEntities.find(le => le.id === editData.legal_entity_id)?.name : undefined,
+        contractor_name:   editData.contractor_id ? contractors.find(c => c.id === editData.contractor_id)?.name : undefined,
+        department_name:   editData.department_id ? departments.find(d => d.id === editData.department_id)?.name : undefined,
+        service_name:      editData.service_id ? services.find(s => s.id === editData.service_id)?.name : undefined,
+      };
       toast({ title: 'Сохранено', description: 'Запланированный платёж обновлён' });
-      setPayment({ ...editData });
+      setPayment(updatedPayment);
       setIsEditing(false);
+      onUpdated?.();
     } catch (e: unknown) {
       toast({ title: 'Ошибка', description: e instanceof Error ? e.message : 'Ошибка сохранения', variant: 'destructive' });
     } finally {
@@ -228,7 +281,7 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
             </div>
           )}
 
-          {/* Просмотр */}
+          {/* ── Просмотр ──────────────────────────────────────────────────── */}
           {!loading && !notFound && payment && !isEditing && (
             <div className="space-y-4 mt-1">
               {/* Шапка с суммой */}
@@ -252,18 +305,18 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
 
               {/* Детали */}
               <div className="px-1">
-                <InfoRow label="Дата платежа"        value={fmtDate(payment.planned_date)} />
-                <InfoRow label="Юридическое лицо"    value={payment.legal_entity_name} />
-                <InfoRow label="Контрагент"           value={payment.contractor_name} />
-                <InfoRow label="Отдел-заказчик"      value={payment.department_name} />
-                <InfoRow label="Сервис"               value={payment.service_name} />
-                <InfoRow label="Номер счёта"          value={payment.invoice_number} />
-                <InfoRow label="Дата счёта"           value={payment.invoice_date ? fmtDate(payment.invoice_date) : undefined} />
+                <InfoRow label="Дата платежа"     value={fmtDate(payment.planned_date)} />
+                <InfoRow label="Юридическое лицо" value={payment.legal_entity_name} />
+                <InfoRow label="Контрагент"        value={payment.contractor_name} />
+                <InfoRow label="Отдел-заказчик"   value={payment.department_name} />
+                <InfoRow label="Сервис"            value={payment.service_name} />
+                <InfoRow label="Номер счёта"       value={payment.invoice_number} />
+                <InfoRow label="Дата счёта"        value={payment.invoice_date ? fmtDate(payment.invoice_date) : undefined} />
                 {payment.recurrence_end_date && (
-                  <InfoRow label="Повторять до"       value={fmtDate(payment.recurrence_end_date)} />
+                  <InfoRow label="Повторять до"    value={fmtDate(payment.recurrence_end_date)} />
                 )}
                 {payment.converted_at && (
-                  <InfoRow label="Создан платёж"     value={fmtDate(payment.converted_at)} />
+                  <InfoRow label="Создан платёж"  value={fmtDate(payment.converted_at)} />
                 )}
               </div>
 
@@ -291,22 +344,19 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
             </div>
           )}
 
-          {/* Форма редактирования */}
+          {/* ── Форма редактирования ───────────────────────────────────────── */}
           {!loading && !notFound && isEditing && e && (
             <form onSubmit={handleEditSave} className="space-y-4 mt-1">
+
+              {/* Категория + Сумма */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Категория *</label>
-                  <select
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={e.category_id}
-                    onChange={(ev) => setEditData({ ...e, category_id: Number(ev.target.value) })}
-                    required
-                  >
-                    <option value="">Выберите категорию</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
+                <SelectField
+                  label="Категория"
+                  required
+                  value={e.category_id}
+                  onChange={(val) => setEditData({ ...e, category_id: val ?? e.category_id })}
+                  options={categories}
+                />
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Сумма (₽) *</label>
                   <input
@@ -318,6 +368,7 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
                 </div>
               </div>
 
+              {/* Назначение */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Назначение *</label>
                 <input
@@ -328,6 +379,7 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
                 />
               </div>
 
+              {/* Дата + Юр. лицо */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Дата платежа *</label>
@@ -338,19 +390,39 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
                     onChange={(ev) => setEditData({ ...e, planned_date: ev.target.value })}
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Юридическое лицо</label>
-                  <select
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={e.legal_entity_id || ''}
-                    onChange={(ev) => setEditData({ ...e, legal_entity_id: ev.target.value ? Number(ev.target.value) : undefined })}
-                  >
-                    <option value="">Не выбрано</option>
-                    {legalEntities.map(le => <option key={le.id} value={le.id}>{le.name}</option>)}
-                  </select>
-                </div>
+                <SelectField
+                  label="Юридическое лицо"
+                  value={e.legal_entity_id}
+                  onChange={(val) => setEditData({ ...e, legal_entity_id: val })}
+                  options={legalEntities}
+                />
               </div>
 
+              {/* Контрагент + Отдел */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <SelectField
+                  label="Контрагент"
+                  value={e.contractor_id}
+                  onChange={(val) => setEditData({ ...e, contractor_id: val })}
+                  options={contractors}
+                />
+                <SelectField
+                  label="Отдел-заказчик"
+                  value={e.department_id}
+                  onChange={(val) => setEditData({ ...e, department_id: val })}
+                  options={departments}
+                />
+              </div>
+
+              {/* Сервис */}
+              <SelectField
+                label="Сервис"
+                value={e.service_id}
+                onChange={(val) => setEditData({ ...e, service_id: val })}
+                options={services}
+              />
+
+              {/* Номер счёта + Дата счёта */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Номер счёта</label>
@@ -372,6 +444,7 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
                 </div>
               </div>
 
+              {/* Настройки повторения */}
               <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 space-y-3">
                 <div className="flex items-center gap-2">
                   <Icon name="Repeat" size={15} className="text-blue-400" />
@@ -383,7 +456,11 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
                     <select
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                       value={e.recurrence_type || 'once'}
-                      onChange={(ev) => setEditData({ ...e, recurrence_type: ev.target.value })}
+                      onChange={(ev) => setEditData({
+                        ...e,
+                        recurrence_type: ev.target.value,
+                        recurrence_end_date: ev.target.value === 'once' ? undefined : e.recurrence_end_date,
+                      })}
                     >
                       <option value="once">Однократно</option>
                       <option value="weekly">Еженедельно</option>
@@ -405,6 +482,7 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted 
                 </div>
               </div>
 
+              {/* Кнопки */}
               <div className="flex gap-3 justify-end pt-1">
                 <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
                   Отмена

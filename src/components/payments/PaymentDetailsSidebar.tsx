@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Icon from '@/components/ui/icon';
 import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
 import LinkedPlannedPaymentModal from './LinkedPlannedPaymentModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Payment, PaymentDocument } from './paymentDetailsTypes';
+import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentDetailsSidebarProps {
   payment: Payment;
@@ -27,6 +28,10 @@ const PaymentDetailsSidebar = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showDocsPanel, setShowDocsPanel] = useState(false);
   const [linkedModalOpen, setLinkedModalOpen] = useState(false);
+
+  const handlePlannedUpdated = useCallback(() => {
+    invalidatePaymentsCache();
+  }, []);
 
   const docs: PaymentDocument[] = payment.documents && payment.documents.length > 0
     ? payment.documents
@@ -258,6 +263,7 @@ const PaymentDetailsSidebar = ({
         plannedPaymentId={payment.planned_payment_id ?? null}
         open={linkedModalOpen}
         onClose={() => setLinkedModalOpen(false)}
+        onUpdated={handlePlannedUpdated}
       />
     </div>
   );
