@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { usePeriod } from '@/contexts/PeriodContext';
 import PlannedPaymentDetailModal from './PlannedPaymentDetailModal';
+import PlannedPaymentForm from '@/components/payments/PlannedPaymentForm';
+import { usePlannedPaymentForm } from '@/hooks/usePlannedPaymentForm';
 
 // ─── Константы ────────────────────────────────────────────────────────────────
 
@@ -144,10 +146,9 @@ const PaymentRow = ({
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr auto',
+        display: 'flex',
         alignItems: 'center',
-        gap: '12px',
+        gap: '8px',
         padding: '8px 8px 8px 12px',
         borderRadius: '6px',
         cursor: 'pointer',
@@ -155,11 +156,13 @@ const PaymentRow = ({
         borderBottom: isLast ? 'none' : '1px solid hsl(var(--border) / 0.45)',
         transition: 'background 0.13s',
         outline: 'none',
+        minWidth: 0,
+        overflow: 'hidden',
       }}
     >
       {/* Левая колонка */}
-      <div style={{ minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+      <div style={{ flex: '1 1 0', minWidth: 0, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
           <span style={{
             fontSize: '13px', fontWeight: 600,
             color: 'hsl(var(--foreground))',
@@ -172,7 +175,7 @@ const PaymentRow = ({
             <span style={{
               fontSize: '10px', fontWeight: 600,
               color: rec.color, background: rec.bg,
-              borderRadius: '4px', padding: '1px 6px',
+              borderRadius: '4px', padding: '1px 5px',
               whiteSpace: 'nowrap', flexShrink: 0,
             }}>
               {rec.label}
@@ -191,7 +194,7 @@ const PaymentRow = ({
       </div>
 
       {/* Правая колонка */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
         <span style={{
           fontSize: '13px', fontWeight: 700,
           color: 'hsl(var(--foreground))', whiteSpace: 'nowrap',
@@ -236,9 +239,10 @@ const DaySection = ({
         borderLeft: `3px solid ${accent}`,
         borderRadius: '0 6px 6px 0',
         marginBottom: '3px',
+        minWidth: 0, overflow: 'hidden',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 800, color: accent, letterSpacing: '-0.02em' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0, overflow: 'hidden' }}>
+          <span style={{ fontSize: '13px', fontWeight: 800, color: accent, letterSpacing: '-0.02em', flexShrink: 0 }}>
             {group.label}
           </span>
           {group.sublabel && (
@@ -307,11 +311,43 @@ const EmptyState = ({ period }: { period: string }) => (
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 const Dashboard2UpcomingPayments = () => {
-  const { token } = useAuth();
+  const { token, hasPermission } = useAuth();
   const { period, getDateRange } = usePeriod();
   const [payments, setPayments]   = useState<PaymentRecord[]>([]);
   const [loading, setLoading]     = useState(true);
   const [selected, setSelected]   = useState<PaymentRecord | null>(null);
+  const [dicts, setDicts] = useState<{
+    categories: {id:number;name:string;icon:string}[];
+    legalEntities: {id:number;name:string}[];
+    contractors: {id:number;name:string}[];
+    customerDepartments: {id:number;name:string}[];
+    services: {id:number;name:string;description:string}[];
+    dictsLoaded: boolean;
+  }>({ categories:[], legalEntities:[], contractors:[], customerDepartments:[], services:[], dictsLoaded:false });
+
+  const loadDicts = useCallback(async () => {
+    if (!token || dicts.dictsLoaded) return;
+    const [catR, leR, contrR, deptR, svcR] = await Promise.all([
+      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=categories`, { headers:{'X-Auth-Token':token} }),
+      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=legal-entities`, { headers:{'X-Auth-Token':token} }),
+      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=contractors`, { headers:{'X-Auth-Token':token} }),
+      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=customer-departments`, { headers:{'X-Auth-Token':token} }),
+      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=services`, { headers:{'X-Auth-Token':token} }),
+    ]);
+    setDicts({
+      categories: catR.ok ? await catR.json() : [],
+      legalEntities: leR.ok ? await leR.json() : [],
+      contractors: contrR.ok ? await contrR.json() : [],
+      customerDepartments: deptR.ok ? await deptR.json() : [],
+      services: svcR.ok ? await svcR.json() : [],
+      dictsLoaded: true,
+    });
+  }, [token, dicts.dictsLoaded]);
+
+  const { dialogOpen, setDialogOpen, formData, setFormData, handleSubmit } = usePlannedPaymentForm(
+    [], // customFields не нужны в dashboard-блоке
+    () => { fetchPayments(); }
+  );
 
   // Стабильные строки дат — пересчитываются только при реальной смене диапазона
   const { dateFromStr, dateToStr } = useMemo(() => {
@@ -407,8 +443,10 @@ const Dashboard2UpcomingPayments = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginBottom: '14px', paddingBottom: '12px',
           borderBottom: '1px solid hsl(var(--border))',
+          gap: '8px', minWidth: 0,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Левая часть: иконка + заголовок */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: '1 1 0', overflow: 'hidden' }}>
             <div style={{
               background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)',
               width: '36px', height: '36px', borderRadius: '10px',
@@ -418,34 +456,47 @@ const Dashboard2UpcomingPayments = () => {
             }}>
               <Icon name="CalendarClock" size={17} style={{ color: '#fff' }} />
             </div>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.25 }}>
+            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Предстоящие платежи
               </div>
-              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '1px' }}>
+              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {PERIOD_LABEL[period] ?? 'Выбранный период'}
-                {!loading && (
-                  <span style={{ marginLeft: '6px', color: 'hsl(var(--muted-foreground) / 0.6)' }}>
-                    {dateFromStr} — {dateToStr}
+                {!loading && count > 0 && (
+                  <span style={{ marginLeft: '6px', fontWeight: 700, color: dashboardColors.orange }}>
+                    {count} {cLabel} · {formatAmount(total)}
                   </span>
                 )}
               </div>
             </div>
           </div>
 
-          {!loading && count > 0 && (
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{
-                fontSize: '17px', fontWeight: 800,
-                color: 'hsl(var(--foreground))',
-                fontVariantNumeric: 'tabular-nums', lineHeight: 1.2,
-              }}>
-                {formatAmount(total)}
-              </div>
-              <div style={{ fontSize: '11px', color: dashboardColors.orange, fontWeight: 600, marginTop: '2px' }}>
-                {count} {cLabel}
-              </div>
-            </div>
+          {/* Правая часть: кнопка "+" */}
+          {hasPermission('payments', 'create') && (
+            <button
+              onClick={() => { loadDicts(); setDialogOpen(true); }}
+              title="Создать запланированный платёж"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '30px', height: '30px', borderRadius: '8px', flexShrink: 0,
+                border: '1px solid hsl(var(--border))',
+                background: 'hsl(var(--background))',
+                cursor: 'pointer', color: 'hsl(var(--foreground))',
+                transition: 'background 0.15s, border-color 0.15s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = `${dashboardColors.orange}15`;
+                (e.currentTarget as HTMLButtonElement).style.borderColor = dashboardColors.orange;
+                (e.currentTarget as HTMLButtonElement).style.color = dashboardColors.orange;
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'hsl(var(--background))';
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'hsl(var(--border))';
+                (e.currentTarget as HTMLButtonElement).style.color = 'hsl(var(--foreground))';
+              }}
+            >
+              <Icon name="Plus" size={16} />
+            </button>
           )}
         </div>
 
@@ -475,6 +526,21 @@ const Dashboard2UpcomingPayments = () => {
         payment={selected}
         onClose={() => setSelected(null)}
         onActionDone={fetchPayments}
+      />
+
+      <PlannedPaymentForm
+        dialogOpen={dialogOpen}
+        setDialogOpen={setDialogOpen}
+        formData={formData}
+        setFormData={setFormData}
+        categories={dicts.categories}
+        legalEntities={dicts.legalEntities}
+        contractors={dicts.contractors}
+        customerDepartments={dicts.customerDepartments}
+        customFields={[]}
+        services={dicts.services}
+        handleSubmit={handleSubmit}
+        onDialogOpen={loadDicts}
       />
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
