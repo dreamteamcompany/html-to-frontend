@@ -94,10 +94,12 @@ class ApprovalActionRequest(BaseModel):
 class ServiceRequest(BaseModel):
     name: str = Field(..., min_length=1)
     description: str = Field(default='')
-    intermediate_approver_id: int = Field(..., gt=0)
-    final_approver_id: int = Field(..., gt=0)
+    intermediate_approver_id: Optional[int] = None
+    final_approver_id: Optional[int] = None
     customer_department_id: Optional[int] = None
     category_id: Optional[int] = None
+    legal_entity_id: Optional[int] = None
+    contractor_id: Optional[int] = None
 
 class SavingRequest(BaseModel):
     service_id: int = Field(..., gt=0)
@@ -3176,17 +3178,22 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     s.id, s.name, s.description, 
                     s.intermediate_approver_id, s.final_approver_id,
                     s.customer_department_id, s.category_id,
+                    s.legal_entity_id, s.contractor_id,
                     s.created_at, s.updated_at,
                     u1.full_name as intermediate_approver_name,
                     u2.full_name as final_approver_name,
                     cd.name as customer_department_name,
                     c.name as category_name,
-                    c.icon as category_icon
+                    c.icon as category_icon,
+                    le.name as legal_entity_name,
+                    co.name as contractor_name
                 FROM {SCHEMA}.services s
                 LEFT JOIN {SCHEMA}.users u1 ON s.intermediate_approver_id = u1.id
                 LEFT JOIN {SCHEMA}.users u2 ON s.final_approver_id = u2.id
                 LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
                 LEFT JOIN {SCHEMA}.ticket_service_categories c ON s.category_id = c.id
+                LEFT JOIN {SCHEMA}.legal_entities le ON s.legal_entity_id = le.id
+                LEFT JOIN {SCHEMA}.contractors co ON s.contractor_id = co.id
                 ORDER BY s.created_at DESC
             """)
             rows = cur.fetchall()
@@ -3244,12 +3251,14 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                    SET name = %s, description = %s, 
                        intermediate_approver_id = %s, final_approver_id = %s,
                        customer_department_id = %s, category_id = %s,
+                       legal_entity_id = %s, contractor_id = %s,
                        updated_at = NOW()
                    WHERE id = %s 
-                   RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, updated_at""",
+                   RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id, updated_at""",
                 (service_req.name, service_req.description,
                  service_req.intermediate_approver_id, service_req.final_approver_id,
-                 service_req.customer_department_id, service_req.category_id, service_id)
+                 service_req.customer_department_id, service_req.category_id,
+                 service_req.legal_entity_id, service_req.contractor_id, service_id)
             )
             row = cur.fetchone()
             

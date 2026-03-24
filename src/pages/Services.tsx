@@ -8,6 +8,7 @@ import ServicesHeader from '@/components/services/ServicesHeader';
 import ServiceFormDialog from '@/components/services/ServiceFormDialog';
 import ServicesTable from '@/components/services/ServicesTable';
 import { useDictionaryContext } from '@/contexts/DictionaryContext';
+import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface Service {
   id: number;
@@ -98,6 +99,7 @@ const Services = () => {
     try {
       await handleSubmitBase(e);
       await refreshDictionary('services');
+      invalidatePaymentsCache();
       toast({
         title: 'Успешно',
         description: editingService ? 'Сервис обновлён' : 'Сервис создан',
@@ -130,6 +132,8 @@ const Services = () => {
     if (!confirm('Удалить этот сервис?')) return;
     try {
       await handleDeleteBase(id);
+      await refreshDictionary('services');
+      invalidatePaymentsCache();
       toast({
         title: 'Успешно',
         description: 'Сервис удалён',
