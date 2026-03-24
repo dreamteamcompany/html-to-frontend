@@ -213,7 +213,11 @@ const PlannedPaymentsModal = () => {
               payments.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-start justify-between gap-3 p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/60 transition-colors"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleEditOpen(p as PlannedPayment)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleEditOpen(p as PlannedPayment); }}
+                  className="flex items-start justify-between gap-3 p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/60 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="shrink-0 w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center">
@@ -240,14 +244,14 @@ const PlannedPaymentsModal = () => {
                       <p className="text-xs text-muted-foreground mt-0.5">{formatDate(p.planned_date)}</p>
                     </div>
                     <button
-                      onClick={() => handleEditOpen(p as PlannedPayment)}
+                      onClick={(e) => { e.stopPropagation(); handleEditOpen(p as PlannedPayment); }}
                       className="p-1.5 rounded hover:bg-blue-500/20 text-muted-foreground hover:text-blue-400 transition-colors"
                       title="Редактировать"
                     >
                       <Icon name="Pencil" size={15} />
                     </button>
                     <button
-                      onClick={() => setDeleteTarget(p as PlannedPayment)}
+                      onClick={(e) => { e.stopPropagation(); setDeleteTarget(p as PlannedPayment); }}
                       className="p-1.5 rounded hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
                       title="Удалить"
                     >
@@ -334,6 +338,49 @@ const PlannedPaymentsModal = () => {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Контрагент</label>
+                  <select
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={editTarget.contractor_id || ''}
+                    onChange={(e) => setEditTarget({ ...editTarget, contractor_id: e.target.value ? Number(e.target.value) : undefined })}
+                  >
+                    <option value="">Не выбрано</option>
+                    {contractors.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Отдел-заказчик</label>
+                  <select
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={editTarget.department_id || ''}
+                    onChange={(e) => setEditTarget({ ...editTarget, department_id: e.target.value ? Number(e.target.value) : undefined })}
+                  >
+                    <option value="">Не выбрано</option>
+                    {customerDepartments.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Сервис</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={editTarget.service_id || ''}
+                  onChange={(e) => setEditTarget({ ...editTarget, service_id: e.target.value ? Number(e.target.value) : undefined })}
+                >
+                  <option value="">Не выбрано</option>
+                  {services.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 space-y-4">
