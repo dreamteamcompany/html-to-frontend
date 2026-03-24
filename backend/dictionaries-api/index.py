@@ -112,6 +112,21 @@ def get_db_connection():
         raise ValueError('DATABASE_URL not set')
     return psycopg2.connect(dsn)
 
+def create_audit_log(conn, entity_type, entity_id, action, user_id, username, new_values=None, old_values=None, changed_fields=None):
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.audit_logs (entity_type, entity_id, action, user_id, username, new_values, old_values, changed_fields) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            (entity_type, entity_id, action, user_id, username,
+             json.dumps(new_values) if new_values else None,
+             json.dumps(old_values) if old_values else None,
+             json.dumps(changed_fields) if changed_fields else None)
+        )
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        print(f"Audit log error: {e}", file=sys.stderr)
+
 def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     headers = event.get('headers', {})
     # Try different case variations as cloud functions may normalize headers
@@ -229,6 +244,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 )
                 row = cur.fetchone()
                 conn.commit()
+                create_audit_log(conn, 'category', row['id'], 'created', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'icon': row['icon']})
                 
                 cur.close()
                 conn.close()
@@ -258,6 +274,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return response(404, {'error': 'Category not found'})
                 
                 conn.commit()
+                create_audit_log(conn, 'category', row['id'], 'updated', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'icon': row['icon']})
                 cur.close()
                 conn.close()
                 return response(200, dict(row))
@@ -274,8 +291,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(400, {'error': 'ID is required'})
                 
+                cur.execute(f'SELECT name FROM {SCHEMA}.categories WHERE id = %s', (cat_id,))
+                cat_row = cur.fetchone()
                 cur.execute(f'DELETE FROM {SCHEMA}.categories WHERE id = %s', (cat_id,))
                 conn.commit()
+                create_audit_log(conn, 'category', int(cat_id), 'deleted', user_id, payload.get('username', payload.get('email', 'unknown')), old_values={'name': cat_row['name'] if cat_row else None})
                 
                 cur.close()
                 conn.close()
@@ -309,6 +329,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 )
                 row = cur.fetchone()
                 conn.commit()
+                create_audit_log(conn, 'legal_entity', row['id'], 'created', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'inn': row['inn']})
                 
                 cur.close()
                 conn.close()
@@ -338,6 +359,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return response(404, {'error': 'Legal entity not found'})
                 
                 conn.commit()
+                create_audit_log(conn, 'legal_entity', row['id'], 'updated', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'inn': row['inn']})
                 cur.close()
                 conn.close()
                 return response(200, dict(row))
@@ -354,8 +376,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(400, {'error': 'ID is required'})
                 
+                cur.execute(f'SELECT name FROM {SCHEMA}.legal_entities WHERE id = %s', (le_id,))
+                le_row = cur.fetchone()
                 cur.execute(f'DELETE FROM {SCHEMA}.legal_entities WHERE id = %s', (le_id,))
                 conn.commit()
+                create_audit_log(conn, 'legal_entity', int(le_id), 'deleted', user_id, payload.get('username', payload.get('email', 'unknown')), old_values={'name': le_row['name'] if le_row else None})
                 
                 cur.close()
                 conn.close()
@@ -401,6 +426,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                       cont_req.correspondent_account, cont_req.notes))
                 row = cur.fetchone()
                 conn.commit()
+                create_audit_log(conn, 'contractor', row['id'], 'created', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'inn': row['inn']})
                 
                 cur.close()
                 conn.close()
@@ -438,6 +464,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return response(404, {'error': 'Contractor not found'})
                 
                 conn.commit()
+                create_audit_log(conn, 'contractor', row['id'], 'updated', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'inn': row['inn']})
                 cur.close()
                 conn.close()
                 return response(200, dict(row))
@@ -454,8 +481,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(400, {'error': 'ID is required'})
                 
+                cur.execute(f'SELECT name FROM {SCHEMA}.contractors WHERE id = %s', (cont_id,))
+                cont_row = cur.fetchone()
                 cur.execute(f'DELETE FROM {SCHEMA}.contractors WHERE id = %s', (cont_id,))
                 conn.commit()
+                create_audit_log(conn, 'contractor', int(cont_id), 'deleted', user_id, payload.get('username', payload.get('email', 'unknown')), old_values={'name': cont_row['name'] if cont_row else None})
                 
                 cur.close()
                 conn.close()
@@ -489,6 +519,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 )
                 row = cur.fetchone()
                 conn.commit()
+                create_audit_log(conn, 'customer_department', row['id'], 'created', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name']})
                 
                 cur.close()
                 conn.close()
@@ -518,6 +549,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return response(404, {'error': 'Department not found'})
                 
                 conn.commit()
+                create_audit_log(conn, 'customer_department', row['id'], 'updated', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name']})
                 cur.close()
                 conn.close()
                 return response(200, dict(row))
@@ -534,8 +566,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(400, {'error': 'ID is required'})
                 
+                cur.execute(f'SELECT name FROM {SCHEMA}.customer_departments WHERE id = %s', (dept_id,))
+                dept_row = cur.fetchone()
                 cur.execute(f'DELETE FROM {SCHEMA}.customer_departments WHERE id = %s', (dept_id,))
                 conn.commit()
+                create_audit_log(conn, 'customer_department', int(dept_id), 'deleted', user_id, payload.get('username', payload.get('email', 'unknown')), old_values={'name': dept_row['name'] if dept_row else None})
                 
                 cur.close()
                 conn.close()
@@ -595,6 +630,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                       svc_req.legal_entity_id, svc_req.contractor_id))
                 row = cur.fetchone()
                 conn.commit()
+                create_audit_log(conn, 'service', row['id'], 'created', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'description': row['description']})
                 
                 result = dict(row)
                 if result.get('created_at'):
@@ -643,6 +679,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 """, (svc_req.customer_department_id, svc_id))
                 
                 conn.commit()
+                create_audit_log(conn, 'service', int(svc_id), 'updated', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': svc_req.name, 'description': svc_req.description, 'customer_department_id': svc_req.customer_department_id})
                 
                 cur.execute(f"""
                     SELECT s.id, s.name, s.description, s.intermediate_approver_id, s.final_approver_id,
@@ -680,12 +717,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(400, {'error': 'ID is required'})
                 
+                cur.execute(f'SELECT name FROM {SCHEMA}.services WHERE id = %s', (svc_id,))
+                svc_row = cur.fetchone()
                 cur.execute(f'UPDATE {SCHEMA}.payments SET service_id = NULL WHERE service_id = %s', (svc_id,))
                 cur.execute(f'UPDATE {SCHEMA}.savings SET service_id = NULL WHERE service_id = %s', (svc_id,))
                 cur.execute(f'UPDATE {SCHEMA}.tickets SET service_id = NULL WHERE service_id = %s', (svc_id,))
                 cur.execute(f'UPDATE {SCHEMA}.planned_payments SET service_id = NULL WHERE service_id = %s', (svc_id,))
                 cur.execute(f'DELETE FROM {SCHEMA}.services WHERE id = %s', (svc_id,))
                 conn.commit()
+                create_audit_log(conn, 'service', int(svc_id), 'deleted', user_id, payload.get('username', payload.get('email', 'unknown')), old_values={'name': svc_row['name'] if svc_row else None})
                 
                 cur.close()
                 conn.close()

@@ -2164,6 +2164,7 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             )
             row = cur.fetchone()
             conn.commit()
+            create_audit_log(conn, 'role', row[0], 'created', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'description': row[2] or ''})
             
             return response(201, {
                 'id': row[0],
@@ -2195,6 +2196,7 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 return response(404, {'error': 'Role not found'})
             
             conn.commit()
+            create_audit_log(conn, 'role', row[0], 'updated', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'description': row[2] or ''})
             
             return response(200, {
                 'id': row[0],
@@ -2214,8 +2216,11 @@ def handle_roles(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if not role_id:
                 return response(400, {'error': 'ID is required'})
             
+            cur.execute(f'SELECT name FROM {SCHEMA}.roles WHERE id = %s', (role_id,))
+            role_row = cur.fetchone()
             cur.execute(f'DELETE FROM {SCHEMA}.roles WHERE id = %s', (role_id,))
             conn.commit()
+            create_audit_log(conn, 'role', int(role_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'name': role_row[0] if role_row else None})
             
             return response(200, {'success': True})
         
@@ -2828,6 +2833,7 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             )
             row = cur.fetchone()
             conn.commit()
+            create_audit_log(conn, 'permission', row[0], 'created', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'resource': row[2], 'action': row[3]})
             
             return response(201, {
                 'id': row[0],
@@ -2860,6 +2866,7 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
                 return response(404, {'error': 'Permission not found'})
             
             conn.commit()
+            create_audit_log(conn, 'permission', row[0], 'updated', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'resource': row[2], 'action': row[3]})
             
             return response(200, {
                 'id': row[0],
@@ -2881,6 +2888,8 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             if not perm_id:
                 return response(400, {'error': 'ID is required'})
             
+            cur.execute(f"SELECT name FROM {SCHEMA}.permissions WHERE id = %s", (perm_id,))
+            perm_row = cur.fetchone()
             cur.execute(f"DELETE FROM {SCHEMA}.role_permissions WHERE permission_id = %s", (perm_id,))
             cur.execute(f"DELETE FROM {SCHEMA}.permissions WHERE id = %s RETURNING id", (perm_id,))
             row = cur.fetchone()
@@ -2889,6 +2898,7 @@ def handle_permissions(method: str, event: Dict[str, Any], conn) -> Dict[str, An
                 return response(404, {'error': 'Permission not found'})
             
             conn.commit()
+            create_audit_log(conn, 'permission', int(perm_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'name': perm_row[0] if perm_row else None})
             return response(200, {'message': 'Permission deleted'})
         
         return response(405, {'error': 'Method not allowed'})
@@ -2933,6 +2943,7 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             )
             row = cur.fetchone()
             conn.commit()
+            create_audit_log(conn, 'customer_department', row[0], 'created', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'description': row[2] or ''})
             
             return response(201, {
                 'id': row[0],
@@ -2964,6 +2975,7 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
                 return response(404, {'error': 'Department not found'})
             
             conn.commit()
+            create_audit_log(conn, 'customer_department', row[0], 'updated', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'description': row[2] or ''})
             
             return response(200, {
                 'id': row[0],
@@ -2981,6 +2993,8 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             body_data = json.loads(event.get('body', '{}'))
             dept_id = body_data.get('id')
             
+            cur.execute(f"SELECT name FROM {SCHEMA}.customer_departments WHERE id = %s", (dept_id,))
+            dept_row = cur.fetchone()
             cur.execute(f"DELETE FROM {SCHEMA}.customer_departments WHERE id = %s RETURNING id", (dept_id,))
             row = cur.fetchone()
             
@@ -2988,6 +3002,7 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
                 return response(404, {'error': 'Department not found'})
             
             conn.commit()
+            create_audit_log(conn, 'customer_department', int(dept_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'name': dept_row[0] if dept_row else None})
             return response(200, {'message': 'Department deleted'})
         
         return response(405, {'error': 'Method not allowed'})
@@ -3488,6 +3503,7 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
             )
             row = cur.fetchone()
             conn.commit()
+            create_audit_log(conn, 'saving_reason', row[0], 'created', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'icon': row[2]})
             
             return response(201, {
                 'id': row[0],
@@ -3519,6 +3535,7 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
                 return response(404, {'error': 'Saving reason not found'})
             
             conn.commit()
+            create_audit_log(conn, 'saving_reason', row[0], 'updated', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'icon': row[2]})
             
             return response(200, {
                 'id': row[0],
@@ -3545,6 +3562,8 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if count > 0:
                 return response(400, {'error': f'Невозможно удалить причину экономии, так как она используется в {count} записях'})
             
+            cur.execute(f'SELECT name FROM {SCHEMA}.saving_reasons WHERE id = %s', (reason_id,))
+            sr_row = cur.fetchone()
             cur.execute(f'DELETE FROM {SCHEMA}.saving_reasons WHERE id = %s RETURNING id', (reason_id,))
             row = cur.fetchone()
             
@@ -3552,6 +3571,7 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
                 return response(404, {'error': 'Saving reason not found'})
             
             conn.commit()
+            create_audit_log(conn, 'saving_reason', int(reason_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'name': sr_row[0] if sr_row else None})
             
             return response(200, {'message': 'Saving reason deleted'})
         

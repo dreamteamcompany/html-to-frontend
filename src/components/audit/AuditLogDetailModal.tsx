@@ -25,14 +25,18 @@ interface Props {
 
 /* ─── Справочники ─────────────────────────────────── */
 export const ENTITY_TYPES: { value: string; label: string; icon: string }[] = [
-  { value: 'payment',      label: 'Платёж',        icon: 'CreditCard'  },
-  { value: 'user',         label: 'Пользователь',  icon: 'User'        },
-  { value: 'category',     label: 'Категория',     icon: 'Tag'         },
-  { value: 'service',      label: 'Сервис',        icon: 'Server'      },
-  { value: 'contractor',   label: 'Контрагент',    icon: 'Building2'   },
-  { value: 'legal_entity', label: 'Юр. лицо',     icon: 'Briefcase'   },
-  { value: 'saving',       label: 'Экономия',      icon: 'PiggyBank'   },
-  { value: 'ticket',       label: 'Заявка',        icon: 'Ticket'      },
+  { value: 'payment',             label: 'Платёж',          icon: 'CreditCard'  },
+  { value: 'user',                label: 'Пользователь',    icon: 'User'        },
+  { value: 'category',            label: 'Категория',       icon: 'Tag'         },
+  { value: 'service',             label: 'Сервис',          icon: 'Server'      },
+  { value: 'contractor',          label: 'Контрагент',      icon: 'Building2'   },
+  { value: 'legal_entity',        label: 'Юр. лицо',       icon: 'Briefcase'   },
+  { value: 'customer_department', label: 'Отдел-заказчик',  icon: 'Users'       },
+  { value: 'role',                label: 'Роль',            icon: 'Shield'      },
+  { value: 'permission',          label: 'Разрешение',      icon: 'Key'         },
+  { value: 'saving',              label: 'Экономия',        icon: 'PiggyBank'   },
+  { value: 'saving_reason',       label: 'Причина экономии',icon: 'Lightbulb'   },
+  { value: 'ticket',              label: 'Заявка',          icon: 'Ticket'      },
 ];
 
 export const getEntityTypeInfo = (entityType: string) =>
@@ -63,6 +67,9 @@ export const FIELD_LABELS: Record<string, string> = {
   role_ids: 'Роли', is_active: 'Активен', position: 'Должность',
   address: 'Адрес', comment: 'Комментарий', frequency: 'Частота',
   saving_reason_id: 'Причина экономии', employee_id: 'Сотрудник',
+  icon: 'Иконка', resource: 'Ресурс', action: 'Действие',
+  customer_department_id: 'Отдел-заказчик', intermediate_approver_id: 'Согласующий (1)',
+  final_approver_id: 'Согласующий (2)', ogrn: 'ОГРН', postal_code: 'Почтовый индекс',
 };
 
 export const getFieldLabel = (f: string) => FIELD_LABELS[f] ?? f;
