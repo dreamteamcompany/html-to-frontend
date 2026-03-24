@@ -1660,13 +1660,13 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             date_from = params.get('date_from')
             date_to = params.get('date_to')
 
-            # Если диапазон не передан — возвращаем ближайшие 31 день
+            # Если диапазон не передан — текущий месяц
+            from datetime import datetime as _dt
             if not date_from or not date_to:
-                date_from_expr = 'CURRENT_DATE'
-                date_to_expr = "CURRENT_DATE + INTERVAL '31 days'"
+                date_from_expr = "DATE_TRUNC('month', CURRENT_DATE)::date"
+                date_to_expr = "(DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day')::date"
             else:
                 # Валидация формата дат во избежание ошибок и инъекций
-                from datetime import datetime as _dt
                 try:
                     _dt.strptime(date_from, '%Y-%m-%d')
                     _dt.strptime(date_to, '%Y-%m-%d')

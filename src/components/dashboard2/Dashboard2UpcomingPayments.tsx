@@ -1,99 +1,133 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { dashboardTypography, dashboardColors } from './dashboardStyles';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { dashboardColors } from './dashboardStyles';
 import { PaymentRecord } from '@/contexts/PaymentsCacheContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { usePeriod } from '@/contexts/PeriodContext';
 import PlannedPaymentDetailModal from './PlannedPaymentDetailModal';
 
+// ─── Константы ────────────────────────────────────────────────────────────────
+
 const PERIOD_LABEL: Record<string, string> = {
   today: 'Сегодня',
-  week: 'Ближайшая неделя',
+  week:  'Текущая неделя',
   month: 'Текущий месяц',
-  year: 'Текущий год',
-  custom: 'Выбранный период',
+  year:  'Текущий год',
+  custom:'Выбранный период',
 };
 
-interface DayGroup {
-  dateKey: string;
-  label: string;
-  sublabel: string;
-  payments: PaymentRecord[];
-  total: number;
-  isToday: boolean;
-  isTomorrow: boolean;
-  isUrgent: boolean;
-}
+const MONTHS     = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const MONTHS_FULL= ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const WEEKDAYS   = ['вс','пн','вт','ср','чт','пт','сб'];
 
-const formatAmount = (amount: number | string) => {
+// ─── Утилиты ──────────────────────────────────────────────────────────────────
+
+const toDateStr = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const parseDateKey = (dateKey: string): Date =>
+  new Date(dateKey + 'T00:00:00');
+
+const formatAmount = (amount: number | string): string => {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
   if (isNaN(num)) return '— ₽';
-  return new Intl.NumberFormat('ru-RU').format(num) + ' ₽';
+  return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(num) + ' ₽';
 };
 
-const groupByDay = (payments: PaymentRecord[]): DayGroup[] => {
+// ─── Типы ─────────────────────────────────────────────────────────────────────
+
+interface DayGroup {
+  dateKey:   string;
+  label:     string;
+  sublabel:  string;
+  fullLabel: string;
+  payments:  PaymentRecord[];
+  total:     number;
+  isToday:   boolean;
+  isTomorrow:boolean;
+}
+
+// ─── Группировка ──────────────────────────────────────────────────────────────
+
+const groupByDay = (payments: PaymentRecord[], dateFromStr: string, dateToStr: string): DayGroup[] => {
   const map = new Map<string, PaymentRecord[]>();
+
   for (const p of payments) {
     const dateKey = String(p.payment_date).slice(0, 10);
+    // Защитный фильтр: только платежи строго в диапазоне
+    if (dateKey < dateFromStr || dateKey > dateToStr) continue;
     if (!map.has(dateKey)) map.set(dateKey, []);
     map.get(dateKey)!.push(p);
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-
-  const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-  const weekdays = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+  const today    = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today.getTime() + 86400000);
 
   const groups: DayGroup[] = [];
-  for (const [dateKey, items] of map.entries()) {
-    const date = new Date(dateKey + 'T00:00:00');
-    const isToday = date.getTime() === today.getTime();
-    const isTomorrow = date.getTime() === tomorrow.getTime();
 
-    let label = '';
+  for (const [dateKey, items] of map.entries()) {
+    const date      = parseDateKey(dateKey);
+    const isToday   = date.getTime() === today.getTime();
+    const isTomorrow= date.getTime() === tomorrow.getTime();
+
+    const d = date.getDate();
+    const mo= date.getMonth();
+    const wd= date.getDay();
+
+    let label    = '';
     let sublabel = '';
+    let fullLabel= '';
+
     if (isToday) {
-      label = 'Сегодня';
-      sublabel = `${date.getDate()} ${months[date.getMonth()]}`;
+      label     = 'Сегодня';
+      sublabel  = `${d} ${MONTHS[mo]}`;
+      fullLabel = `Сегодня, ${d} ${MONTHS_FULL[mo]}`;
     } else if (isTomorrow) {
-      label = 'Завтра';
-      sublabel = `${date.getDate()} ${months[date.getMonth()]}`;
+      label     = 'Завтра';
+      sublabel  = `${d} ${MONTHS[mo]}`;
+      fullLabel = `Завтра, ${d} ${MONTHS_FULL[mo]}`;
     } else {
-      label = `${date.getDate()} ${months[date.getMonth()]}`;
-      sublabel = weekdays[date.getDay()];
+      label     = `${d} ${MONTHS[mo]}`;
+      sublabel  = WEEKDAYS[wd];
+      fullLabel = `${d} ${MONTHS_FULL[mo]}, ${WEEKDAYS[wd]}`;
     }
 
-    const total = items.reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
-    groups.push({ dateKey, label, sublabel, payments: items, total, isToday, isTomorrow, isUrgent: isToday });
+    const total = items.reduce((s, p) => s + (parseFloat(String(p.amount)) || 0), 0);
+    groups.push({ dateKey, label, sublabel, fullLabel, payments: items, total, isToday, isTomorrow });
   }
 
   return groups.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 };
 
-const RECURRENCE_BADGE: Record<string, { label: string; color: string; bg: string }> = {
-  monthly: { label: 'ежемес.',  color: '#0ea5e9', bg: 'rgba(14,165,233,0.10)' },
-  yearly:  { label: 'ежегодно', color: '#f59e0b', bg: 'rgba(245,158,11,0.10)' },
-  weekly:  { label: 'еженед.',  color: '#10b981', bg: 'rgba(16,185,129,0.10)' },
+// ─── Бейджи рекуррентности ────────────────────────────────────────────────────
+
+const REC: Record<string, { label: string; color: string; bg: string }> = {
+  monthly: { label: 'ежемес.',   color: '#0ea5e9', bg: 'rgba(14,165,233,0.09)'  },
+  yearly:  { label: 'ежегодно',  color: '#f59e0b', bg: 'rgba(245,158,11,0.09)'  },
+  weekly:  { label: 'еженед.',   color: '#10b981', bg: 'rgba(16,185,129,0.09)'  },
 };
 
 // ─── PaymentRow ───────────────────────────────────────────────────────────────
+
 const PaymentRow = ({
   payment,
-  accentColor,
+  accent,
   onClick,
   isLast,
 }: {
   payment: PaymentRecord;
-  accentColor: string;
+  accent:  string;
   onClick: (p: PaymentRecord) => void;
-  isLast: boolean;
+  isLast:  boolean;
 }) => {
-  const [hovered, setHovered] = useState(false);
-  const rec = RECURRENCE_BADGE[(payment as Record<string, unknown>).recurrence_type as string];
+  const [hov, setHov] = useState(false);
+  const rec = REC[(payment as Record<string, unknown>).recurrence_type as string];
 
   const meta = [
     payment.contractor_name || payment.legal_entity_name,
@@ -107,151 +141,121 @@ const PaymentRow = ({
       tabIndex={0}
       onClick={() => onClick(payment)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(payment); }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr auto',
         alignItems: 'center',
-        gap: '16px',
-        padding: '7px 10px 7px 14px',
-        margin: '0 -10px',
+        gap: '12px',
+        padding: '8px 8px 8px 12px',
         borderRadius: '6px',
         cursor: 'pointer',
-        background: hovered ? `${accentColor}0d` : 'transparent',
-        borderBottom: isLast ? 'none' : '1px solid hsl(var(--border) / 0.5)',
-        transition: 'background 0.12s',
+        background: hov ? `${accent}12` : 'transparent',
+        borderBottom: isLast ? 'none' : '1px solid hsl(var(--border) / 0.45)',
+        transition: 'background 0.13s',
         outline: 'none',
       }}
     >
       {/* Левая колонка */}
       <div style={{ minWidth: 0 }}>
-        {/* Строка 1: название + тег */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
           <span style={{
-            fontSize: '13px',
-            fontWeight: 600,
+            fontSize: '13px', fontWeight: 600,
             color: 'hsl(var(--foreground))',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            flex: '1 1 0',
-            minWidth: 0,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            flex: '1 1 0', minWidth: 0,
           }}>
             {payment.description || payment.service_name || 'Платёж'}
           </span>
           {rec && (
             <span style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              color: rec.color,
-              background: rec.bg,
-              borderRadius: '4px',
-              padding: '1px 6px',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              letterSpacing: '0.01em',
+              fontSize: '10px', fontWeight: 600,
+              color: rec.color, background: rec.bg,
+              borderRadius: '4px', padding: '1px 6px',
+              whiteSpace: 'nowrap', flexShrink: 0,
             }}>
               {rec.label}
             </span>
           )}
         </div>
-        {/* Строка 2: детали */}
         {meta && (
           <div style={{
-            fontSize: '11px',
-            color: 'hsl(var(--muted-foreground))',
-            marginTop: '2px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            fontSize: '11px', color: 'hsl(var(--muted-foreground))',
+            marginTop: '2px', overflow: 'hidden',
+            textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {meta}
           </div>
         )}
       </div>
 
-      {/* Правая колонка: сумма + стрелка */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+      {/* Правая колонка */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
         <span style={{
-          fontSize: '13px',
-          fontWeight: 700,
-          color: 'hsl(var(--foreground))',
-          whiteSpace: 'nowrap',
+          fontSize: '13px', fontWeight: 700,
+          color: 'hsl(var(--foreground))', whiteSpace: 'nowrap',
           fontVariantNumeric: 'tabular-nums',
         }}>
           {formatAmount(payment.amount)}
         </span>
-        <Icon
-          name="ChevronRight"
-          size={14}
-          style={{
-            color: hovered ? accentColor : 'hsl(var(--muted-foreground) / 0.4)',
-            transition: 'color 0.12s',
-            flexShrink: 0,
-          }}
-        />
+        <Icon name="ChevronRight" size={13} style={{
+          color: hov ? accent : 'hsl(var(--muted-foreground) / 0.35)',
+          transition: 'color 0.13s', flexShrink: 0,
+        }} />
       </div>
     </div>
   );
 };
 
 // ─── DaySection ───────────────────────────────────────────────────────────────
-const DaySection = ({ group, onPaymentClick }: { group: DayGroup; onPaymentClick: (p: PaymentRecord) => void }) => {
-  const accentColor = group.isUrgent
+
+const DaySection = ({
+  group,
+  onPaymentClick,
+}: {
+  group: DayGroup;
+  onPaymentClick: (p: PaymentRecord) => void;
+}) => {
+  const accent = group.isToday
     ? dashboardColors.red
     : group.isTomorrow
     ? dashboardColors.orange
     : dashboardColors.green;
 
-  const countLabel =
-    group.payments.length === 1 ? 'платёж' :
-    group.payments.length < 5 ? 'платежа' : 'платежей';
+  const n = group.payments.length;
+  const nLabel = n === 1 ? 'платёж' : n < 5 ? 'платежа' : 'платежей';
 
   return (
     <div>
-      {/* Заголовок группы — дата */}
+      {/* Заголовок дня */}
       <div style={{
-        display: 'flex',
-        alignItems: 'baseline',
-        justifyContent: 'space-between',
-        padding: '6px 10px 6px 0',
-        borderBottom: `2px solid ${accentColor}`,
-        marginBottom: '2px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '5px 8px 5px 12px',
+        background: `${accent}08`,
+        borderLeft: `3px solid ${accent}`,
+        borderRadius: '0 6px 6px 0',
+        marginBottom: '3px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <span style={{
-            fontSize: '13px',
-            fontWeight: 800,
-            color: accentColor,
-            letterSpacing: '-0.01em',
-          }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 800, color: accent, letterSpacing: '-0.02em' }}>
             {group.label}
           </span>
           {group.sublabel && (
-            <span style={{
-              fontSize: '12px',
-              fontWeight: 500,
-              color: 'hsl(var(--muted-foreground))',
-            }}>
+            <span style={{ fontSize: '11px', fontWeight: 500, color: 'hsl(var(--muted-foreground))' }}>
               {group.sublabel}
             </span>
           )}
           <span style={{
-            fontSize: '11px',
-            fontWeight: 600,
-            color: accentColor,
-            background: `${accentColor}15`,
-            borderRadius: '10px',
-            padding: '1px 8px',
-            lineHeight: '18px',
+            fontSize: '10px', fontWeight: 700,
+            color: accent, background: `${accent}18`,
+            borderRadius: '10px', padding: '1px 7px',
           }}>
-            {group.payments.length} {countLabel}
+            {n} {nLabel}
           </span>
         </div>
         <span style={{
-          fontSize: '12px',
-          fontWeight: 700,
+          fontSize: '12px', fontWeight: 700,
           color: 'hsl(var(--foreground))',
           fontVariantNumeric: 'tabular-nums',
         }}>
@@ -259,13 +263,13 @@ const DaySection = ({ group, onPaymentClick }: { group: DayGroup; onPaymentClick
         </span>
       </div>
 
-      {/* Список платежей */}
-      <div style={{ paddingTop: '2px' }}>
+      {/* Строки платежей */}
+      <div>
         {group.payments.map((p, idx) => (
           <PaymentRow
             key={`${p.id}-${p.payment_date}`}
             payment={p}
-            accentColor={accentColor}
+            accent={accent}
             onClick={onPaymentClick}
             isLast={idx === group.payments.length - 1}
           />
@@ -275,168 +279,205 @@ const DaySection = ({ group, onPaymentClick }: { group: DayGroup; onPaymentClick
   );
 };
 
+// ─── Пустое состояние ─────────────────────────────────────────────────────────
+
+const EmptyState = ({ period }: { period: string }) => (
+  <div style={{
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    padding: '36px 16px', gap: '10px',
+  }}>
+    <div style={{
+      width: '44px', height: '44px', borderRadius: '12px',
+      background: `${dashboardColors.green}15`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <Icon name="CheckCircle" size={22} style={{ color: dashboardColors.green }} />
+    </div>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', marginBottom: '4px' }}>
+        Платежей нет
+      </div>
+      <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}>
+        За период «{(PERIOD_LABEL[period] ?? period).toLowerCase()}» нет запланированных платежей
+      </div>
+    </div>
+  </div>
+);
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
+
 const Dashboard2UpcomingPayments = () => {
   const { token } = useAuth();
   const { period, getDateRange } = usePeriod();
-  const [plannedPayments, setPlannedPayments] = useState<PaymentRecord[]>([]);
-  const [plannedLoading, setPlannedLoading] = useState(true);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
+  const [payments, setPayments]   = useState<PaymentRecord[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [selected, setSelected]   = useState<PaymentRecord | null>(null);
 
-  const toDateStr = (d: Date) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
-
+  // Стабильные строки дат — пересчитываются только при реальной смене диапазона
   const { dateFromStr, dateToStr } = useMemo(() => {
     const { from, to } = getDateRange();
     return { dateFromStr: toDateStr(from), dateToStr: toDateStr(to) };
   }, [getDateRange]);
 
-  const fetchPlanned = useCallback(() => {
+  // Ref для отмены устаревших запросов
+  const abortRef = useRef<AbortController | null>(null);
+
+  const fetchPayments = useCallback(() => {
     if (!token) return;
-    setPlannedLoading(true);
-    fetch(`${API_ENDPOINTS.main}?endpoint=planned-payments&date_from=${dateFromStr}&date_to=${dateToStr}`, {
-      headers: { 'X-Auth-Token': token },
-    })
+
+    // Отменяем предыдущий запрос
+    abortRef.current?.abort();
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+
+    setLoading(true);
+    fetch(
+      `${API_ENDPOINTS.main}?endpoint=planned-payments&date_from=${dateFromStr}&date_to=${dateToStr}`,
+      { headers: { 'X-Auth-Token': token }, signal: ctrl.signal }
+    )
       .then(r => r.ok ? r.json() : [])
-      .then((data) => {
+      .then((data: unknown) => {
+        if (ctrl.signal.aborted) return;
         const list = Array.isArray(data) ? data : [];
-        const mapped: PaymentRecord[] = list.map((pp: Record<string, unknown>) => ({
-          id: pp.id as number,
-          status: 'scheduled',
-          payment_date: String(pp.planned_date as string).slice(0, 10),
-          amount: pp.amount as number,
-          description: pp.description as string,
-          category_id: pp.category_id as number,
-          category_name: pp.category_name as string,
-          category_icon: pp.category_icon as string,
-          service_id: pp.service_id as number,
-          service_name: pp.service_name as string,
-          department_id: pp.department_id as number,
-          department_name: pp.department_name as string,
-          contractor_name: pp.contractor_name as string,
-          legal_entity_name: pp.legal_entity_name as string,
-          payment_type: 'planned',
-          _isPlanned: true,
-          recurrence_type: pp.recurrence_type as string | undefined,
+        const mapped: PaymentRecord[] = (list as Record<string, unknown>[]).map(pp => ({
+          id:                  pp.id as number,
+          status:              'scheduled',
+          payment_date:        String(pp.planned_date as string).slice(0, 10),
+          amount:              pp.amount as number,
+          description:         pp.description as string,
+          category_id:         pp.category_id as number,
+          category_name:       pp.category_name as string,
+          category_icon:       pp.category_icon as string,
+          service_id:          pp.service_id as number,
+          service_name:        pp.service_name as string,
+          department_id:       pp.department_id as number,
+          department_name:     pp.department_name as string,
+          contractor_name:     pp.contractor_name as string,
+          legal_entity_name:   pp.legal_entity_name as string,
+          payment_type:        'planned',
+          _isPlanned:          true,
+          recurrence_type:     pp.recurrence_type as string | undefined,
           recurrence_end_date: pp.recurrence_end_date as string | undefined,
         }));
-        setPlannedPayments(mapped);
+        setPayments(mapped);
       })
-      .catch(() => setPlannedPayments([]))
-      .finally(() => setPlannedLoading(false));
+      .catch((e: unknown) => {
+        if ((e as {name?: string}).name !== 'AbortError') setPayments([]);
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setLoading(false);
+      });
   }, [token, dateFromStr, dateToStr]);
 
-  useEffect(() => { fetchPlanned(); }, [fetchPlanned]);
+  useEffect(() => {
+    fetchPayments();
+    return () => { abortRef.current?.abort(); };
+  }, [fetchPayments]);
 
-  const { upcoming, weekTotal } = useMemo(() => {
-    const sorted = [...plannedPayments].sort((a, b) => {
-      const da = new Date(String(a.payment_date).includes('T') ? String(a.payment_date) : String(a.payment_date) + 'T00:00:00');
-      const db = new Date(String(b.payment_date).includes('T') ? String(b.payment_date) : String(b.payment_date) + 'T00:00:00');
-      return da.getTime() - db.getTime();
-    });
-    const total = sorted.reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
-    return { upcoming: sorted, weekTotal: total };
-  }, [plannedPayments]);
+  // Сортировка + фронтенд-защита от выхода за диапазон
+  const sorted = useMemo(() => {
+    return [...payments]
+      .filter(p => {
+        const dk = String(p.payment_date).slice(0, 10);
+        return dk >= dateFromStr && dk <= dateToStr;
+      })
+      .sort((a, b) => {
+        const ka = String(a.payment_date).slice(0, 10);
+        const kb = String(b.payment_date).slice(0, 10);
+        return ka.localeCompare(kb);
+      });
+  }, [payments, dateFromStr, dateToStr]);
 
-  const groups = useMemo(() => groupByDay(upcoming), [upcoming]);
-
-  const count = upcoming.length;
-  const countLabel = count === 1 ? 'платёж' : count < 5 ? 'платежа' : 'платежей';
+  const total  = useMemo(() => sorted.reduce((s, p) => s + (parseFloat(String(p.amount)) || 0), 0), [sorted]);
+  const groups = useMemo(() => groupByDay(sorted, dateFromStr, dateToStr), [sorted, dateFromStr, dateToStr]);
+  const count  = sorted.length;
+  const cLabel = count === 1 ? 'платёж' : count < 5 ? 'платежа' : 'платежей';
 
   return (
     <Card style={{
       background: 'hsl(var(--card))',
       border: '1px solid hsl(var(--border))',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
       marginBottom: '30px',
     }}>
-      <CardContent className="p-4 sm:p-5">
+      <CardContent style={{ padding: '16px 20px' }}>
 
         {/* ── Шапка ── */}
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '16px',
-          paddingBottom: '12px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: '14px', paddingBottom: '12px',
           borderBottom: '1px solid hsl(var(--border))',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)',
-              padding: '8px',
-              borderRadius: '10px',
-              boxShadow: '0 2px 6px rgba(255,149,0,0.25)',
+              width: '36px', height: '36px', borderRadius: '10px',
+              boxShadow: '0 2px 8px rgba(255,149,0,0.22)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
             }}>
-              <Icon name="CalendarClock" size={18} style={{ color: '#fff' }} />
+              <Icon name="CalendarClock" size={17} style={{ color: '#fff' }} />
             </div>
             <div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.25 }}>
                 Предстоящие платежи
               </div>
-              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>
+              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '1px' }}>
                 {PERIOD_LABEL[period] ?? 'Выбранный период'}
+                {!loading && (
+                  <span style={{ marginLeft: '6px', color: 'hsl(var(--muted-foreground) / 0.6)' }}>
+                    {dateFromStr} — {dateToStr}
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
-          {!plannedLoading && count > 0 && (
-            <div style={{ textAlign: 'right' }}>
+          {!loading && count > 0 && (
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
               <div style={{
-                fontSize: '16px',
-                fontWeight: 800,
+                fontSize: '17px', fontWeight: 800,
                 color: 'hsl(var(--foreground))',
-                fontVariantNumeric: 'tabular-nums',
-                lineHeight: 1.2,
+                fontVariantNumeric: 'tabular-nums', lineHeight: 1.2,
               }}>
-                {formatAmount(weekTotal)}
+                {formatAmount(total)}
               </div>
               <div style={{ fontSize: '11px', color: dashboardColors.orange, fontWeight: 600, marginTop: '2px' }}>
-                {count} {countLabel}
+                {count} {cLabel}
               </div>
             </div>
           )}
         </div>
 
-        {/* ── Состояния ── */}
-        {plannedLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-orange-400" />
+        {/* ── Тело ── */}
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+            <div style={{
+              width: '28px', height: '28px', borderRadius: '50%',
+              border: '2px solid hsl(var(--border))',
+              borderTopColor: dashboardColors.orange,
+              animation: 'spin 0.7s linear infinite',
+            }} />
           </div>
         ) : count === 0 ? (
-          <div className="text-center py-10">
-            <Icon name="CheckCircle" size={36} style={{ color: dashboardColors.green, margin: '0 auto 10px' }} />
-            <p className={dashboardTypography.cardSmall} style={{ color: 'hsl(var(--muted-foreground))' }}>
-              Нет платежей за {(PERIOD_LABEL[period] ?? 'выбранный период').toLowerCase()}
-            </p>
-          </div>
+          <EmptyState period={period} />
         ) : (
-          /* ── Реестр ── */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {groups.map((group) => (
-              <DaySection
-                key={group.dateKey}
-                group={group}
-                onPaymentClick={setSelectedPayment}
-              />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {groups.map(group => (
+              <DaySection key={group.dateKey} group={group} onPaymentClick={setSelected} />
             ))}
           </div>
         )}
+
       </CardContent>
 
       <PlannedPaymentDetailModal
-        payment={selectedPayment}
-        onClose={() => setSelectedPayment(null)}
-        onActionDone={fetchPlanned}
+        payment={selected}
+        onClose={() => setSelected(null)}
+        onActionDone={fetchPayments}
       />
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </Card>
   );
 };
