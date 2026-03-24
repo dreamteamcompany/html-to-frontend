@@ -44,6 +44,7 @@ export interface Payment {
   rejection_comment?: string;
   rejected_at?: string;
   is_planned?: boolean;
+  planned_payment_id?: number | null;
   custom_fields?: CustomField[];
   documents?: PaymentDocument[];
 }

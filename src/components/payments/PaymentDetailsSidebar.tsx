@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/icon';
 import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
+import LinkedPlannedPaymentModal from './LinkedPlannedPaymentModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Payment, PaymentDocument } from './paymentDetailsTypes';
 
@@ -25,6 +26,7 @@ const PaymentDetailsSidebar = ({
 }: PaymentDetailsSidebarProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showDocsPanel, setShowDocsPanel] = useState(false);
+  const [linkedModalOpen, setLinkedModalOpen] = useState(false);
 
   const docs: PaymentDocument[] = payment.documents && payment.documents.length > 0
     ? payment.documents
@@ -79,6 +81,20 @@ const PaymentDetailsSidebar = ({
             </div>
           )}
         </div>
+
+        {/* Кнопка перехода к связанному запланированному платежу */}
+        {payment.planned_payment_id && (
+          <div className="mt-3">
+            <button
+              onClick={() => setLinkedModalOpen(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-400/30 bg-blue-500/10 hover:bg-blue-500/20 transition-colors text-sm font-medium text-blue-400 w-full"
+            >
+              <Icon name="CalendarClock" size={15} />
+              <span>Запланированный платёж</span>
+              <Icon name="ArrowRight" size={14} className="ml-auto opacity-60" />
+            </button>
+          </div>
+        )}
 
         {docs.length > 0 && (
           <div className="mt-3">
@@ -236,6 +252,13 @@ const PaymentDetailsSidebar = ({
           )}
         </div>
       ) : null}
+
+      {/* Модал связанного запланированного платежа */}
+      <LinkedPlannedPaymentModal
+        plannedPaymentId={payment.planned_payment_id ?? null}
+        open={linkedModalOpen}
+        onClose={() => setLinkedModalOpen(false)}
+      />
     </div>
   );
 };

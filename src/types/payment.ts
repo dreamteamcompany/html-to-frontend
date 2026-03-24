@@ -42,6 +42,7 @@ export interface Payment {
   created_at?: string;
   submitted_at?: string;
   is_planned?: boolean;
+  planned_payment_id?: number | null;
   rejection_comment?: string;
   rejected_at?: string;
   custom_fields?: CustomField[];

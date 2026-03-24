@@ -1341,7 +1341,8 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     s.description as service_description,
                     p.invoice_number,
                     p.invoice_date,
-                    p.is_planned
+                    p.is_planned,
+                    pp.id as planned_payment_id
                 FROM {SCHEMA}.payments p
                 LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
                 LEFT JOIN {SCHEMA}.legal_entities le ON p.legal_entity_id = le.id
@@ -1349,6 +1350,7 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 LEFT JOIN {SCHEMA}.customer_departments cd ON p.department_id = cd.id
                 LEFT JOIN {SCHEMA}.users u ON p.created_by = u.id
                 LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+                LEFT JOIN {SCHEMA}.planned_payments pp ON pp.converted_to_payment_id = p.id
                 ORDER BY p.payment_date DESC
             """)
             rows = cur.fetchall()
@@ -1381,7 +1383,8 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                     'service_description': row[24],
                     'invoice_number': row[25],
                     'invoice_date': row[26].isoformat() if row[26] else None,
-                    'is_planned': row[27] if len(row) > 27 else False
+                    'is_planned': row[27] if len(row) > 27 else False,
+                    'planned_payment_id': row[28] if len(row) > 28 else None
                 }
                 for row in rows
             ]
