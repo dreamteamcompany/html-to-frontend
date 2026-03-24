@@ -22,6 +22,8 @@ const BiometricSettingsPanel = () => {
   const [showSetup, setShowSetup] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   const loadCredentials = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -31,13 +33,14 @@ const BiometricSettingsPanel = () => {
   }, [token]);
 
   useEffect(() => {
+    if (isMobile) return;
     webAuthn.isPlatformAuthAvailable().then(a => {
       setAvailable(a);
       if (a) loadCredentials();
     });
   }, [loadCredentials]);
 
-  if (!available) return null;
+  if (isMobile || !available) return null;
 
   const handleDelete = async (id: number) => {
     if (!token) return;

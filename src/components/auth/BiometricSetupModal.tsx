@@ -15,7 +15,10 @@ const BiometricSetupModal = ({ token, onClose }: BiometricSetupModalProps) => {
   const [done, setDone] = useState(false);
   const webAuthn = useWebAuthn();
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   useEffect(() => {
+    if (isMobile) { onClose(); return; }
     webAuthn.isPlatformAuthAvailable().then(setAvailable);
   }, []);
 
@@ -29,7 +32,7 @@ const BiometricSetupModal = ({ token, onClose }: BiometricSetupModalProps) => {
     onClose();
   };
 
-  if (!available) return null;
+  if (isMobile || !available) return null;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
