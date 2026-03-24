@@ -93,8 +93,13 @@ const RECURRENCE_BADGE: Record<string, { label: string; color: string; bg: strin
 
 // ─── PaymentRow ───────────────────────────────────────────────────────────────
 const PaymentRow = ({ payment, accentColor, onClick }: { payment: PaymentRecord; accentColor: string; onClick: (p: PaymentRecord) => void }) => {
-  const icon = getCategoryIcon(payment.category_name);
   const rec = RECURRENCE_BADGE[(payment as Record<string, unknown>).recurrence_type as string];
+
+  const meta = [
+    payment.contractor_name || payment.legal_entity_name,
+    payment.department_name,
+    payment.service_name,
+  ].filter(Boolean).join(' · ') || payment.category_name || '';
 
   return (
     <div
@@ -104,34 +109,23 @@ const PaymentRow = ({ payment, accentColor, onClick }: { payment: PaymentRecord;
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(payment); }}
       style={{
         display: 'grid',
-        gridTemplateColumns: '28px 1fr auto',
+        gridTemplateColumns: '1fr auto',
         alignItems: 'center',
-        gap: '10px',
-        padding: '8px 12px',
-        borderRadius: '8px',
+        gap: '12px',
+        padding: '5px 0 5px 12px',
+        borderRadius: '6px',
         cursor: 'pointer',
-        transition: 'background 0.15s',
+        transition: 'background 0.12s',
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = `${accentColor}0d`; }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = `${accentColor}0a`; }}
       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
     >
-      {/* Иконка */}
-      <div style={{
-        width: '28px', height: '28px', borderRadius: '7px',
-        background: `${accentColor}20`, display: 'flex', alignItems: 'center',
-        justifyContent: 'center', flexShrink: 0,
-      }}>
-        <Icon name={icon} size={13} style={{ color: accentColor }} />
-      </div>
-
-      {/* Основная информация */}
+      {/* Левая колонка: название + мета */}
       <div style={{ minWidth: 0 }}>
-        {/* Строка 1: название + бейджи */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           <span style={{
-            fontSize: '12px', fontWeight: 700, color: 'hsl(var(--foreground))',
+            fontSize: '12px', fontWeight: 600, color: 'hsl(var(--foreground))',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            maxWidth: '240px',
           }}>
             {payment.description || payment.service_name || 'Платёж'}
           </span>
@@ -139,28 +133,25 @@ const PaymentRow = ({ payment, accentColor, onClick }: { payment: PaymentRecord;
             <span style={{
               fontSize: '9px', fontWeight: 700, color: rec.color,
               background: rec.bg, border: `1px solid ${rec.border}`,
-              borderRadius: '4px', padding: '1px 4px', whiteSpace: 'nowrap',
+              borderRadius: '3px', padding: '0px 4px', whiteSpace: 'nowrap', flexShrink: 0,
             }}>
               {rec.label}
             </span>
           )}
         </div>
-        {/* Строка 2: контрагент / юрлицо · отдел · сервис */}
-        <div style={{
-          fontSize: '10px', color: 'hsl(var(--muted-foreground))',
-          marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {[
-            payment.contractor_name || payment.legal_entity_name,
-            payment.department_name,
-            payment.service_name,
-          ].filter(Boolean).join(' · ') || payment.category_name || ''}
-        </div>
+        {meta && (
+          <div style={{
+            fontSize: '10px', color: 'hsl(var(--muted-foreground))',
+            marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {meta}
+          </div>
+        )}
       </div>
 
-      {/* Сумма */}
+      {/* Правая колонка: сумма */}
       <div style={{
-        fontSize: '13px', fontWeight: 800, color: 'hsl(var(--foreground))',
+        fontSize: '12px', fontWeight: 700, color: 'hsl(var(--foreground))',
         whiteSpace: 'nowrap', flexShrink: 0,
       }}>
         {formatAmount(payment.amount)}
@@ -182,32 +173,34 @@ const DaySection = ({ group, onPaymentClick }: { group: DayGroup; onPaymentClick
       {/* Заголовок дня */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '6px 12px',
-        borderLeft: `3px solid ${accentColor}`,
+        padding: '3px 0 3px 12px',
+        borderLeft: `2px solid ${accentColor}`,
         marginBottom: '2px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 800, color: accentColor }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: accentColor, lineHeight: 1 }}>
             {group.label}
           </span>
-          <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}>
-            {group.sublabel}
-          </span>
+          {group.sublabel && (
+            <span style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', lineHeight: 1 }}>
+              {group.sublabel}
+            </span>
+          )}
           <span style={{
             fontSize: '10px', color: accentColor,
-            background: `${accentColor}18`, borderRadius: '10px',
-            padding: '1px 7px', fontWeight: 700,
+            background: `${accentColor}15`, borderRadius: '8px',
+            padding: '0px 6px', fontWeight: 600, lineHeight: '16px',
           }}>
             {group.payments.length}
           </span>
         </div>
-        <span style={{ fontSize: '12px', fontWeight: 700, color: 'hsl(var(--foreground))' }}>
+        <span style={{ fontSize: '11px', fontWeight: 700, color: 'hsl(var(--muted-foreground))' }}>
           {formatAmount(group.total)}
         </span>
       </div>
 
       {/* Строки платежей */}
-      <div>
+      <div style={{ paddingLeft: '2px' }}>
         {group.payments.map((p) => (
           <PaymentRow key={`${p.id}-${p.payment_date}`} payment={p} accentColor={accentColor} onClick={onPaymentClick} />
         ))}
@@ -342,12 +335,12 @@ const Dashboard2UpcomingPayments = () => {
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {groups.map((group, i) => (
               <div key={group.dateKey}>
                 <DaySection group={group} onPaymentClick={setSelectedPayment} />
                 {i < groups.length - 1 && (
-                  <div style={{ height: '1px', background: 'hsl(var(--border))', margin: '10px 0 0' }} />
+                  <div style={{ height: '1px', background: 'hsl(var(--border))', margin: '8px 0 0' }} />
                 )}
               </div>
             ))}
