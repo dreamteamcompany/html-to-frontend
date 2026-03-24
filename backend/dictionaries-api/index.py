@@ -635,6 +635,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     SET department_id = %s
                     WHERE service_id = %s
                 """, (svc_req.customer_department_id, svc_id))
+
+                cur.execute(f"""
+                    UPDATE {SCHEMA}.planned_payments
+                    SET department_id = %s
+                    WHERE service_id = %s
+                """, (svc_req.customer_department_id, svc_id))
                 
                 conn.commit()
                 
