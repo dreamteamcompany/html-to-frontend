@@ -630,6 +630,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(404, {'error': 'Service not found'})
                 
+                cur.execute(f"""
+                    UPDATE {SCHEMA}.payments
+                    SET department_id = %s
+                    WHERE service_id = %s
+                """, (svc_req.customer_department_id, svc_id))
+                
                 conn.commit()
                 
                 cur.execute(f"""
