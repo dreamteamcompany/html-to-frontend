@@ -1,18 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { useState, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useState, useEffect, useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { useDrillDown } from './useDrillDown';
 import DrillDownModal from './DrillDownModal';
-
-interface PaymentRecord {
-  status: string;
-  payment_date: string;
-  amount: number;
-  department_name?: string;
-  [key: string]: unknown;
-}
 
 const PALETTE = [
   { solid: '#01b574', light: 'rgba(1,181,116,0.18)',   mid: 'rgba(1,181,116,0.55)'   },
@@ -147,10 +138,9 @@ const BarChart = ({ data, isMobile, isLight, onItemClick }: BarChartProps) => {
 };
 
 const Dashboard2TeamPerformance = () => {
-  const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const { getDateRange, dateFrom, dateTo } = usePeriod();
   const { drillFilter, openDrill, closeDrill } = useDrillDown();
-  const [currentData, setCurrentData] = useState<{ name: string; amount: number }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
   const [isMobile, setIsMobile] = useState(false);
   const [isLight, setIsLight] = useState(false);
 
@@ -169,44 +159,25 @@ const Dashboard2TeamPerformance = () => {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const currentData = useMemo(() => {
     const { from: start, to: end } = getDateRange();
+    const filtered = (Array.isArray(allPayments) ? allPayments : []).filter(p => {
+      if (p.status !== 'approved') return false;
+      const raw = String(p.payment_date);
+      const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
+      return d >= start && d <= end;
+    });
 
-    const fetchDepartmentData = async () => {
-      setLoading(true);
-      try {
-        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await response.json();
+    const map: Record<string, number> = {};
+    filtered.forEach(p => {
+      const dept = (p.department_name as string) || 'Без отдела';
+      map[dept] = (map[dept] || 0) + Number(p.amount);
+    });
 
-        const payments: PaymentRecord[] = Array.isArray(data) ? data : (data.payments || []);
-        const filtered = payments.filter(p => {
-          if (p.status !== 'approved') return false;
-          const d = new Date(p.payment_date);
-          return d >= start && d <= end;
-        });
-
-        const map: Record<string, number> = {};
-        filtered.forEach(p => {
-          const dept = p.department_name || 'Без отдела';
-          map[dept] = (map[dept] || 0) + Number(p.amount);
-        });
-
-        const sorted = Object.entries(map)
-          .map(([name, amount]) => ({ name, amount }))
-          .sort((a, b) => b.amount - a.amount);
-
-        setCurrentData(sorted);
-      } catch {
-        if (!controller.signal.aborted) setCurrentData([]);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    };
-    fetchDepartmentData();
-    return () => controller.abort();
-  }, [period, dateFrom, dateTo]);
+    return Object.entries(map)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [allPayments, getDateRange, dateFrom, dateTo]);
 
   const total = currentData.reduce((s, d) => s + d.amount, 0);
 
