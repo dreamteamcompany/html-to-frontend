@@ -36,29 +36,29 @@
 
   :root.light {
     --background: 0 0% 96%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 240 15% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 240 15% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 262 67% 61%;
+    --popover-foreground: 240 15% 8%;
+    --primary: 262 67% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 218 100% 62%;
+    --secondary: 218 100% 55%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 90%;
-    --accent-foreground: 240 5.9% 10%;
-    --success: 158 97% 36%;
-    --destructive: 0 84% 60%;
+    --muted: 240 4.8% 93%;
+    --muted-foreground: 240 8% 32%;
+    --accent: 240 4.8% 88%;
+    --accent-foreground: 240 15% 8%;
+    --success: 158 97% 30%;
+    --destructive: 0 84% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 262 67% 61%;
+    --border: 240 5.9% 82%;
+    --input: 240 5.9% 86%;
+    --ring: 262 67% 55%;
     --sidebar-bg: 0 0% 100%;
 
     --dashboard-card-bg: 0 0% 100%;
-    --dashboard-card-border: 240 5.9% 90%;
+    --dashboard-card-border: 240 5.9% 85%;
     --dashboard-card-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
   }
 }
