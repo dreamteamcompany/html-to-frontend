@@ -52,37 +52,37 @@ const PaymentDetailsSidebar = ({
     onReject;
 
   return (
-    <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10 overflow-hidden">
+    <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10 lg:overflow-hidden">
       <div className="p-4 sm:p-6 border-b border-white/10">
         <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
+          <div className="flex justify-between items-baseline gap-3">
+            <span className="text-muted-foreground shrink-0">
               {(isPlannedPayment || payment.is_planned) ? 'Дата планирования:' : 'Дата платежа:'}
             </span>
-            <span className="font-medium">
+            <span className="font-medium text-right">
               {payment.planned_date
                 ? new Date(payment.planned_date).toLocaleDateString('ru-RU')
                 : payment.payment_date
                   ? new Date(payment.payment_date).toLocaleDateString('ru-RU')
-                  : 'Invalid Date'}
+                  : '—'}
             </span>
           </div>
           {payment.submitted_at && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Дата отправки:</span>
-              <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
+            <div className="flex justify-between items-baseline gap-3">
+              <span className="text-muted-foreground shrink-0">Дата отправки:</span>
+              <span className="font-medium text-right">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
             </div>
           )}
           {payment.invoice_date && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Дата счёта:</span>
-              <span className="font-medium">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
+            <div className="flex justify-between items-baseline gap-3">
+              <span className="text-muted-foreground shrink-0">Дата счёта:</span>
+              <span className="font-medium text-right">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
             </div>
           )}
           {payment.created_at && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Создана:</span>
-              <span className="font-medium">{new Date(payment.created_at).toLocaleDateString('ru-RU')}</span>
+            <div className="flex justify-between items-baseline gap-3">
+              <span className="text-muted-foreground shrink-0">Создана:</span>
+              <span className="font-medium text-right">{new Date(payment.created_at).toLocaleDateString('ru-RU')}</span>
             </div>
           )}
         </div>
@@ -160,22 +160,22 @@ const PaymentDetailsSidebar = ({
       </div>
 
       {!isPlannedPayment && (
-        <Tabs defaultValue="history" className="flex-1 flex flex-col overflow-hidden">
+        <Tabs defaultValue="history" className="flex-1 flex flex-col lg:overflow-hidden">
           <TabsList className="px-4 sm:px-6 pt-4 grid w-auto grid-cols-1">
             <TabsTrigger value="history">История согласований</TabsTrigger>
           </TabsList>
-          <TabsContent value="history" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
+          <TabsContent value="history" className="flex-1 lg:overflow-y-auto px-4 sm:px-6 pb-4">
             <PaymentAuditLog paymentId={payment.id} />
           </TabsContent>
         </Tabs>
       )}
 
       {isPlannedPayment && (
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
-          <div className="text-center text-muted-foreground py-8">
-            <Icon name="Clock" size={48} className="mx-auto mb-4 opacity-50" />
+        <div className="px-4 sm:px-6 py-6">
+          <div className="text-center text-muted-foreground">
+            <Icon name="Clock" size={40} className="mx-auto mb-3 opacity-50" />
             <p className="text-sm">Запланированный платёж</p>
-            <p className="text-xs mt-2">История согласований появится после создания платежа</p>
+            <p className="text-xs mt-1">История согласований появится после создания платежа</p>
           </div>
         </div>
       )}
@@ -188,9 +188,9 @@ const PaymentDetailsSidebar = ({
                 onEdit(payment);
                 onClose();
               }}
-              className="w-full px-4 py-3 rounded-lg bg-accent text-accent-foreground hover:bg-accent/80 font-medium transition-colors flex items-center justify-center gap-2"
+              className="w-full px-4 py-3 rounded-lg bg-accent text-accent-foreground hover:bg-accent/80 font-medium transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <Icon name="Edit" size={18} />
+              <Icon name="Edit" size={16} />
               Редактировать платёж
             </button>
           )}
@@ -198,9 +198,9 @@ const PaymentDetailsSidebar = ({
           {(!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval && !showConfirmation && (
             <button
               onClick={() => setShowConfirmation(true)}
-              className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30 hover:text-blue-800 dark:hover:text-blue-200 font-medium transition-colors"
+              className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30 hover:text-blue-800 dark:hover:text-blue-200 font-medium transition-colors text-sm sm:text-base"
             >
-              {payment.status === 'rejected' ? 'Отправить на повторное согласование' : 'Отправить на согласование'}
+              {payment.status === 'rejected' ? 'Отправить повторно' : 'Отправить на согласование'}
             </button>
           )}
 
@@ -209,10 +209,10 @@ const PaymentDetailsSidebar = ({
               <p className="text-sm text-muted-foreground text-center">
                 Отправить платёж на согласование?
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <button
                   onClick={() => setShowConfirmation(false)}
-                  className="flex-1 px-4 py-3 rounded-lg bg-accent text-accent-foreground hover:bg-accent/80 font-medium transition-colors"
+                  className="flex-1 px-3 py-3 rounded-lg bg-accent text-accent-foreground hover:bg-accent/80 font-medium transition-colors text-sm"
                 >
                   Отмена
                 </button>
@@ -221,7 +221,7 @@ const PaymentDetailsSidebar = ({
                     onSubmitForApproval(payment.id);
                     onClose();
                   }}
-                  className="flex-1 px-4 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30 font-medium transition-colors"
+                  className="flex-1 px-3 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30 font-medium transition-colors text-sm"
                 >
                   Отправить
                 </button>
@@ -230,14 +230,14 @@ const PaymentDetailsSidebar = ({
           )}
 
           {(onApprove || onReject) && (
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               {onApprove && (
                 <button
                   onClick={() => {
                     onApprove(payment.id);
                     onClose();
                   }}
-                  className="flex-1 px-4 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 font-medium transition-colors"
+                  className="flex-1 px-3 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 font-medium transition-colors text-sm sm:text-base"
                 >
                   Одобрить
                 </button>
@@ -248,7 +248,7 @@ const PaymentDetailsSidebar = ({
                     onReject(payment.id);
                     onClose();
                   }}
-                  className="flex-1 px-4 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors"
+                  className="flex-1 px-3 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors text-sm sm:text-base"
                 >
                   Отклонить
                 </button>

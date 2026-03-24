@@ -90,13 +90,13 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
   };
 
   return (
-    <div className="w-full lg:w-1/2 lg:border-r border-white/10 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
+    <div className="w-full lg:w-1/2 lg:border-r border-white/10 lg:overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
       <div className="flex items-start gap-3 sm:gap-4">
-        <div className="bg-primary/20 p-2 sm:p-3 rounded-lg">
+        <div className="bg-primary/20 p-2 sm:p-3 rounded-lg flex-shrink-0">
           <Icon name={payment.category_icon} size={24} />
         </div>
-        <div className="flex-1">
-          <h3 className="text-base sm:text-lg font-medium mb-1">{payment.category_name}</h3>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base sm:text-lg font-medium mb-1 break-words">{payment.category_name}</h3>
           <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
         </div>
       </div>
@@ -145,16 +145,16 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       {payment.description && (
         <div>
           <p className="text-sm text-muted-foreground mb-1">Описание</p>
-          <p className="font-medium">{payment.description}</p>
+          <p className="font-medium break-words">{payment.description}</p>
         </div>
       )}
 
       {payment.category_name && (
         <div>
           <p className="text-sm text-muted-foreground mb-1">Категория</p>
-          <div className="flex items-center gap-2 font-medium">
-            <Icon name={payment.category_icon || 'Tag'} size={18} />
-            {payment.category_name}
+          <div className="flex items-center gap-2 font-medium min-w-0">
+            <Icon name={payment.category_icon || 'Tag'} size={18} className="flex-shrink-0" />
+            <span className="break-words">{payment.category_name}</span>
           </div>
         </div>
       )}
@@ -162,25 +162,25 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       {payment.legal_entity_name && (
         <div>
           <p className="text-sm text-muted-foreground mb-1">Юридическое лицо</p>
-          <p className="font-medium">{payment.legal_entity_name}</p>
+          <p className="font-medium break-words">{payment.legal_entity_name}</p>
         </div>
       )}
 
       {payment.contractor_name && (
         <div>
           <p className="text-sm text-muted-foreground mb-1">Контрагент</p>
-          <p className="font-medium">{payment.contractor_name}</p>
+          <p className="font-medium break-words">{payment.contractor_name}</p>
         </div>
       )}
 
       {(currentDeptName || canEditDept) && (
         <div>
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-1 gap-2">
             <p className="text-sm text-muted-foreground">Отдел-заказчик</p>
             {canEditDept && !isEditingDept && (
               <button
                 onClick={handleStartEditDept}
-                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors flex-shrink-0"
               >
                 <Icon name="Pencil" size={12} />
                 Изменить
@@ -188,9 +188,9 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
             )}
           </div>
           {isEditingDept ? (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <Select value={selectedDeptId} onValueChange={setSelectedDeptId}>
-                <SelectTrigger className="flex-1 h-8 text-sm">
+                <SelectTrigger className="flex-1 h-9 text-sm">
                   <SelectValue placeholder="Выберите отдел" />
                 </SelectTrigger>
                 <SelectContent>
@@ -200,15 +200,17 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
                   ))}
                 </SelectContent>
               </Select>
-              <Button size="sm" className="h-8 px-3" onClick={handleSaveDept} disabled={isSavingDept}>
-                {isSavingDept ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Check" size={14} />}
-              </Button>
-              <Button size="sm" variant="ghost" className="h-8 px-2" onClick={handleCancelEditDept} disabled={isSavingDept}>
-                <Icon name="X" size={14} />
-              </Button>
+              <div className="flex gap-2 sm:flex-shrink-0">
+                <Button size="sm" className="h-9 flex-1 sm:flex-none sm:px-3" onClick={handleSaveDept} disabled={isSavingDept}>
+                  {isSavingDept ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Check" size={14} />}
+                </Button>
+                <Button size="sm" variant="ghost" className="h-9 flex-1 sm:flex-none sm:px-2" onClick={handleCancelEditDept} disabled={isSavingDept}>
+                  <Icon name="X" size={14} />
+                </Button>
+              </div>
             </div>
           ) : (
-            <p className="font-medium">{currentDeptName || <span className="text-muted-foreground italic text-sm">Не указан</span>}</p>
+            <p className="font-medium break-words">{currentDeptName || <span className="text-muted-foreground italic text-sm">Не указан</span>}</p>
           )}
         </div>
       )}
@@ -217,12 +219,12 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
         <div>
           <p className="text-sm text-muted-foreground mb-1">Запланированный платеж</p>
           <div className="flex items-center gap-2 font-medium text-blue-300">
-            <Icon name="CalendarClock" size={18} />
-            {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('ru-RU', {
+            <Icon name="CalendarClock" size={18} className="flex-shrink-0" />
+            <span>{payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('ru-RU', {
               day: '2-digit',
               month: 'long',
               year: 'numeric'
-            }) : 'Дата не указана'}
+            }) : 'Дата не указана'}</span>
           </div>
         </div>
       )}
@@ -230,9 +232,9 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       {payment.service_name && (
         <div>
           <p className="text-sm text-muted-foreground mb-1">Сервис</p>
-          <p className="font-medium">{payment.service_name}</p>
+          <p className="font-medium break-words">{payment.service_name}</p>
           {payment.service_description && (
-            <p className="text-sm text-muted-foreground mt-1">{payment.service_description}</p>
+            <p className="text-sm text-muted-foreground mt-1 break-words">{payment.service_description}</p>
           )}
         </div>
       )}
@@ -240,14 +242,14 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       {payment.invoice_number && (
         <div>
           <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
-          <p className="font-medium">{payment.invoice_number}</p>
+          <p className="font-medium break-words">{payment.invoice_number}</p>
         </div>
       )}
 
       {payment.created_by_name && (
         <div>
           <p className="text-sm text-muted-foreground mb-1">Создал заявку</p>
-          <p className="font-medium">{payment.created_by_name}</p>
+          <p className="font-medium break-words">{payment.created_by_name}</p>
         </div>
       )}
 

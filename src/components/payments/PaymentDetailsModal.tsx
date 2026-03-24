@@ -41,22 +41,24 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
   if (!payment) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-card border border-white/10 rounded-xl w-full max-w-[1200px] max-h-[95vh] sm:max-h-[90vh] flex flex-col">
-        <div className="bg-card border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg sm:text-xl font-semibold">Детали платежа #{payment.id}</h2>
-            {getStatusBadge(payment.status)}
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 z-50">
+      <div className="bg-card border border-white/10 sm:rounded-xl rounded-t-2xl w-full max-w-[1200px] h-[95dvh] sm:h-auto sm:max-h-[90vh] flex flex-col">
+        {/* Шапка */}
+        <div className="bg-card border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <h2 className="text-base sm:text-xl font-semibold truncate">Детали платежа #{payment.id}</h2>
+            <div className="flex-shrink-0">{getStatusBadge(payment.status)}</div>
           </div>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-white transition-colors"
+            className="text-muted-foreground hover:text-white transition-colors flex-shrink-0 p-1 -mr-1"
           >
             <Icon name="X" size={20} />
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Тело — на мобиле скролл всего содержимого, на десктопе — две колонки со своими скроллами */}
+        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
           <PaymentDetailsInfo
             payment={payment}
             views={views}
