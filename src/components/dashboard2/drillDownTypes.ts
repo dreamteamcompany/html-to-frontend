@@ -1,10 +1,12 @@
 import type { PaymentRecord } from '@/contexts/PaymentsCacheContext';
 
 export interface DrillDownFilter {
-  type: 'category' | 'contractor' | 'department' | 'legal_entity' | 'payment_type' | 'date' | 'service' | 'all';
+  type: 'category' | 'contractor' | 'department' | 'legal_entity' | 'payment_type' | 'date' | 'service' | 'all' | 'other';
   value: string;
   label: string;
   serviceLabel?: string;
+  otherValues?: string[];   // для type='other': список конкретных значений поля
+  otherField?: 'department_name' | 'service_name' | 'category_name'; // по какому полю фильтровать
 }
 
 export type SortField = 'payment_date' | 'amount';

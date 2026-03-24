@@ -86,6 +86,11 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
           }
           return dateKey === fv || dateKey.startsWith(fv);
         }
+        case 'other': {
+          if (!filter.otherValues || !filter.otherField) return false;
+          const fieldVal = (p[filter.otherField] as string | undefined) || '';
+          return filter.otherValues.includes(fieldVal);
+        }
         case 'all':
           return true;
         default:

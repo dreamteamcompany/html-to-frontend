@@ -306,8 +306,23 @@ const ExpenseShareChart = () => {
     category: 'category',
   };
 
+  const otherLabelMap: Record<GroupKey, string> = {
+    department: 'Прочие отделы',
+    service: 'Прочие сервисы',
+    category: 'Прочие категории',
+  };
+
   const handleSegmentClick = (name: string) => {
-    if (name === 'Прочие') return;
+    if (name === 'Прочие') {
+      openDrill({
+        type: 'other',
+        value: 'Прочие',
+        label: otherLabelMap[groupBy],
+        otherValues: restNames,
+        otherField: otherFieldMap[groupBy],
+      });
+      return;
+    }
     openDrill({ type: drillTypeMap[groupBy], value: name, label: name });
   };
 
@@ -318,7 +333,7 @@ const ExpenseShareChart = () => {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const { slices, total, filteredPayments } = useMemo(() => {
+  const { slices, total, filteredPayments, restNames } = useMemo(() => {
     const { from, to } = getDateRange();
 
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
@@ -349,6 +364,7 @@ const ExpenseShareChart = () => {
     const top = sorted.slice(0, TOP);
     const rest = sorted.slice(TOP);
     const restTotal = rest.reduce((s, [, v]) => s + v, 0);
+    const restNames = rest.map(([name]) => name);
 
     const all = restTotal > 0 ? [...top, ['Прочие', restTotal]] : top;
 
@@ -364,8 +380,14 @@ const ExpenseShareChart = () => {
       };
     });
 
-    return { slices: result, total: totalAmt, filteredPayments: filtered };
+    return { slices: result, total: totalAmt, filteredPayments: filtered, restNames };
   }, [allPayments, groupBy, period, dateFrom, dateTo]);
+
+  const otherFieldMap: Record<GroupKey, 'department_name' | 'service_name' | 'category_name'> = {
+    department: 'department_name',
+    service: 'service_name',
+    category: 'category_name',
+  };
 
   const handleExport = () => {
     if (loading || exporting || filteredPayments.length === 0) return;
