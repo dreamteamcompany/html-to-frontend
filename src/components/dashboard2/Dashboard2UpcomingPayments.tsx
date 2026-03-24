@@ -33,17 +33,6 @@ const formatAmount = (amount: number | string) => {
   return new Intl.NumberFormat('ru-RU').format(num) + ' ₽';
 };
 
-const getCategoryIcon = (categoryName: string = ''): string => {
-  const n = categoryName.toLowerCase();
-  if (n.includes('сервер') || n.includes('хостинг')) return 'Server';
-  if (n.includes('облак') || n.includes('saas')) return 'Cloud';
-  if (n.includes('софт') || n.includes('програм')) return 'Code';
-  if (n.includes('дизайн') || n.includes('figma')) return 'Palette';
-  if (n.includes('безопасн')) return 'Shield';
-  if (n.includes('база') || n.includes('данн')) return 'Database';
-  return 'DollarSign';
-};
-
 const groupByDay = (payments: PaymentRecord[]): DayGroup[] => {
   const map = new Map<string, PaymentRecord[]>();
   for (const p of payments) {
@@ -85,14 +74,25 @@ const groupByDay = (payments: PaymentRecord[]): DayGroup[] => {
   return groups.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 };
 
-const RECURRENCE_BADGE: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  monthly:  { label: 'ежемес.',  color: '#0ea5e9', bg: '#0ea5e915', border: '#0ea5e930' },
-  yearly:   { label: 'ежегодно', color: '#f59e0b', bg: '#f59e0b15', border: '#f59e0b30' },
-  weekly:   { label: 'еженед.',  color: '#10b981', bg: '#10b98115', border: '#10b98130' },
+const RECURRENCE_BADGE: Record<string, { label: string; color: string; bg: string }> = {
+  monthly: { label: 'ежемес.',  color: '#0ea5e9', bg: 'rgba(14,165,233,0.10)' },
+  yearly:  { label: 'ежегодно', color: '#f59e0b', bg: 'rgba(245,158,11,0.10)' },
+  weekly:  { label: 'еженед.',  color: '#10b981', bg: 'rgba(16,185,129,0.10)' },
 };
 
 // ─── PaymentRow ───────────────────────────────────────────────────────────────
-const PaymentRow = ({ payment, accentColor, onClick }: { payment: PaymentRecord; accentColor: string; onClick: (p: PaymentRecord) => void }) => {
+const PaymentRow = ({
+  payment,
+  accentColor,
+  onClick,
+  isLast,
+}: {
+  payment: PaymentRecord;
+  accentColor: string;
+  onClick: (p: PaymentRecord) => void;
+  isLast: boolean;
+}) => {
+  const [hovered, setHovered] = useState(false);
   const rec = RECURRENCE_BADGE[(payment as Record<string, unknown>).recurrence_type as string];
 
   const meta = [
@@ -107,54 +107,90 @@ const PaymentRow = ({ payment, accentColor, onClick }: { payment: PaymentRecord;
       tabIndex={0}
       onClick={() => onClick(payment)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(payment); }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr auto',
         alignItems: 'center',
-        gap: '12px',
-        padding: '5px 0 5px 12px',
+        gap: '16px',
+        padding: '7px 10px 7px 14px',
+        margin: '0 -10px',
         borderRadius: '6px',
         cursor: 'pointer',
+        background: hovered ? `${accentColor}0d` : 'transparent',
+        borderBottom: isLast ? 'none' : '1px solid hsl(var(--border) / 0.5)',
         transition: 'background 0.12s',
+        outline: 'none',
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = `${accentColor}0a`; }}
-      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
     >
-      {/* Левая колонка: название + мета */}
+      {/* Левая колонка */}
       <div style={{ minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+        {/* Строка 1: название + тег */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
           <span style={{
-            fontSize: '12px', fontWeight: 600, color: 'hsl(var(--foreground))',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: 'hsl(var(--foreground))',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            flex: '1 1 0',
+            minWidth: 0,
           }}>
             {payment.description || payment.service_name || 'Платёж'}
           </span>
           {rec && (
             <span style={{
-              fontSize: '9px', fontWeight: 700, color: rec.color,
-              background: rec.bg, border: `1px solid ${rec.border}`,
-              borderRadius: '3px', padding: '0px 4px', whiteSpace: 'nowrap', flexShrink: 0,
+              fontSize: '10px',
+              fontWeight: 600,
+              color: rec.color,
+              background: rec.bg,
+              borderRadius: '4px',
+              padding: '1px 6px',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              letterSpacing: '0.01em',
             }}>
               {rec.label}
             </span>
           )}
         </div>
+        {/* Строка 2: детали */}
         {meta && (
           <div style={{
-            fontSize: '10px', color: 'hsl(var(--muted-foreground))',
-            marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            fontSize: '11px',
+            color: 'hsl(var(--muted-foreground))',
+            marginTop: '2px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}>
             {meta}
           </div>
         )}
       </div>
 
-      {/* Правая колонка: сумма */}
-      <div style={{
-        fontSize: '12px', fontWeight: 700, color: 'hsl(var(--foreground))',
-        whiteSpace: 'nowrap', flexShrink: 0,
-      }}>
-        {formatAmount(payment.amount)}
+      {/* Правая колонка: сумма + стрелка */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+        <span style={{
+          fontSize: '13px',
+          fontWeight: 700,
+          color: 'hsl(var(--foreground))',
+          whiteSpace: 'nowrap',
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          {formatAmount(payment.amount)}
+        </span>
+        <Icon
+          name="ChevronRight"
+          size={14}
+          style={{
+            color: hovered ? accentColor : 'hsl(var(--muted-foreground) / 0.4)',
+            transition: 'color 0.12s',
+            flexShrink: 0,
+          }}
+        />
       </div>
     </div>
   );
@@ -168,41 +204,71 @@ const DaySection = ({ group, onPaymentClick }: { group: DayGroup; onPaymentClick
     ? dashboardColors.orange
     : dashboardColors.green;
 
+  const countLabel =
+    group.payments.length === 1 ? 'платёж' :
+    group.payments.length < 5 ? 'платежа' : 'платежей';
+
   return (
     <div>
-      {/* Заголовок дня */}
+      {/* Заголовок группы — дата */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '3px 0 3px 12px',
-        borderLeft: `2px solid ${accentColor}`,
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        padding: '6px 10px 6px 0',
+        borderBottom: `2px solid ${accentColor}`,
         marginBottom: '2px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: accentColor, lineHeight: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+          <span style={{
+            fontSize: '13px',
+            fontWeight: 800,
+            color: accentColor,
+            letterSpacing: '-0.01em',
+          }}>
             {group.label}
           </span>
           {group.sublabel && (
-            <span style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', lineHeight: 1 }}>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 500,
+              color: 'hsl(var(--muted-foreground))',
+            }}>
               {group.sublabel}
             </span>
           )}
           <span style={{
-            fontSize: '10px', color: accentColor,
-            background: `${accentColor}15`, borderRadius: '8px',
-            padding: '0px 6px', fontWeight: 600, lineHeight: '16px',
+            fontSize: '11px',
+            fontWeight: 600,
+            color: accentColor,
+            background: `${accentColor}15`,
+            borderRadius: '10px',
+            padding: '1px 8px',
+            lineHeight: '18px',
           }}>
-            {group.payments.length}
+            {group.payments.length} {countLabel}
           </span>
         </div>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: 'hsl(var(--muted-foreground))' }}>
+        <span style={{
+          fontSize: '12px',
+          fontWeight: 700,
+          color: 'hsl(var(--foreground))',
+          fontVariantNumeric: 'tabular-nums',
+        }}>
           {formatAmount(group.total)}
         </span>
       </div>
 
-      {/* Строки платежей */}
-      <div style={{ paddingLeft: '2px' }}>
-        {group.payments.map((p) => (
-          <PaymentRow key={`${p.id}-${p.payment_date}`} payment={p} accentColor={accentColor} onClick={onPaymentClick} />
+      {/* Список платежей */}
+      <div style={{ paddingTop: '2px' }}>
+        {group.payments.map((p, idx) => (
+          <PaymentRow
+            key={`${p.id}-${p.payment_date}`}
+            payment={p}
+            accentColor={accentColor}
+            onClick={onPaymentClick}
+            isLast={idx === group.payments.length - 1}
+          />
         ))}
       </div>
     </div>
@@ -224,7 +290,6 @@ const Dashboard2UpcomingPayments = () => {
     return `${y}-${m}-${day}`;
   };
 
-  // Строки вместо Date-объектов — стабильны при сравнении в useCallback
   const { dateFromStr, dateToStr } = useMemo(() => {
     const { from, to } = getDateRange();
     return { dateFromStr: toDateStr(from), dateToStr: toDateStr(to) };
@@ -286,63 +351,82 @@ const Dashboard2UpcomingPayments = () => {
     <Card style={{
       background: 'hsl(var(--card))',
       border: '1px solid hsl(var(--border))',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
       marginBottom: '30px',
     }}>
-      <CardContent className="p-4 sm:p-6">
-        {/* Заголовок */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+      <CardContent className="p-4 sm:p-5">
+
+        {/* ── Шапка ── */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '16px',
+          paddingBottom: '12px',
+          borderBottom: '1px solid hsl(var(--border))',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)',
-              padding: '10px', borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(255,181,71,0.3)', flexShrink: 0,
+              padding: '8px',
+              borderRadius: '10px',
+              boxShadow: '0 2px 6px rgba(255,149,0,0.25)',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}>
-              <Icon name="CalendarClock" size={20} style={{ color: '#fff' }} />
+              <Icon name="CalendarClock" size={18} style={{ color: '#fff' }} />
             </div>
             <div>
-              <h3 className={dashboardTypography.cardTitle} style={{ color: 'hsl(var(--foreground))' }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.2 }}>
                 Предстоящие платежи
-              </h3>
-              <p className={`${dashboardTypography.cardSmall} mt-0.5`} style={{ color: 'hsl(var(--muted-foreground))' }}>
+              </div>
+              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '2px' }}>
                 {PERIOD_LABEL[period] ?? 'Выбранный период'}
-              </p>
+              </div>
             </div>
           </div>
 
           {!plannedLoading && count > 0 && (
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>
+              <div style={{
+                fontSize: '16px',
+                fontWeight: 800,
+                color: 'hsl(var(--foreground))',
+                fontVariantNumeric: 'tabular-nums',
+                lineHeight: 1.2,
+              }}>
                 {formatAmount(weekTotal)}
               </div>
-              <div style={{ fontSize: '11px', color: dashboardColors.orange, fontWeight: 600 }}>
+              <div style={{ fontSize: '11px', color: dashboardColors.orange, fontWeight: 600, marginTop: '2px' }}>
                 {count} {countLabel}
               </div>
             </div>
           )}
         </div>
 
-        {/* Состояния */}
+        {/* ── Состояния ── */}
         {plannedLoading ? (
           <div className="flex items-center justify-center py-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-orange-400" />
           </div>
         ) : count === 0 ? (
           <div className="text-center py-10">
-            <Icon name="CheckCircle" size={40} style={{ color: dashboardColors.green, margin: '0 auto 12px' }} />
+            <Icon name="CheckCircle" size={36} style={{ color: dashboardColors.green, margin: '0 auto 10px' }} />
             <p className={dashboardTypography.cardSmall} style={{ color: 'hsl(var(--muted-foreground))' }}>
-              Нет запланированных платежей: {(PERIOD_LABEL[period] ?? 'выбранный период').toLowerCase()}
+              Нет платежей за {(PERIOD_LABEL[period] ?? 'выбранный период').toLowerCase()}
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {groups.map((group, i) => (
-              <div key={group.dateKey}>
-                <DaySection group={group} onPaymentClick={setSelectedPayment} />
-                {i < groups.length - 1 && (
-                  <div style={{ height: '1px', background: 'hsl(var(--border))', margin: '8px 0 0' }} />
-                )}
-              </div>
+          /* ── Реестр ── */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {groups.map((group) => (
+              <DaySection
+                key={group.dateKey}
+                group={group}
+                onPaymentClick={setSelectedPayment}
+              />
             ))}
           </div>
         )}
