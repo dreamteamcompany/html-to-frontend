@@ -11,7 +11,7 @@ interface RolesHeaderProps {
 const RolesHeader = ({ menuOpen, setMenuOpen, onAddClick }: RolesHeaderProps) => {
   return (
     <>
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-[30px] px-4 md:px-[25px] py-4 md:py-[18px] bg-[#1b254b]/50 backdrop-blur-[20px] rounded-[15px] border border-white/10">
+      <header className="hidden">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           className="lg:hidden p-2 text-white"
