@@ -174,14 +174,14 @@ const PlannedPaymentsModal = () => {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="flex-row items-center justify-between space-y-0 pb-2 pr-10">
+          <DialogHeader className="flex-row items-center justify-between space-y-0 pb-2 gap-2">
             <DialogTitle className="flex items-center gap-2 leading-normal min-w-0 truncate">
               <Icon name="CalendarClock" size={20} className="shrink-0" />
               Запланированные платежи
             </DialogTitle>
             <Button
               size="sm"
-              className="bg-blue-500 hover:bg-blue-600 gap-1.5 shrink-0 mr-1"
+              className="bg-blue-500 hover:bg-blue-600 gap-1.5 shrink-0 mr-8"
               onClick={() => { loadDicts(); setCreateOpen(true); }}
             >
               <Icon name="Plus" size={15} />
