@@ -143,7 +143,7 @@ def handler(event: dict, context) -> dict:
             FROM {schema}.payments p
             LEFT JOIN {schema}.legal_entities le ON p.legal_entity_id = le.id
             LEFT JOIN {schema}.contractors c ON p.contractor_id = c.id
-            ORDER BY p.created_at DESC
+            ORDER BY p.payment_date DESC
             LIMIT 5
         ''')
         

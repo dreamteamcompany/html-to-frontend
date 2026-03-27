@@ -199,7 +199,7 @@ def handler(event: dict, context) -> dict:
         cur.execute(f"""
             SELECT COUNT(DISTINCT created_by) as active_users
             FROM {SCHEMA}.payments
-            WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            WHERE payment_date >= CURRENT_DATE - INTERVAL '30 days'
         """)
         
         active_users_stat = dict(cur.fetchone())
@@ -211,7 +211,7 @@ def handler(event: dict, context) -> dict:
                 COUNT(DISTINCT p.created_by) as user_count
             FROM {SCHEMA}.payments p
             LEFT JOIN {SCHEMA}.customer_departments d ON p.department_id = d.id
-            WHERE p.created_at >= CURRENT_DATE - INTERVAL '30 days'
+            WHERE p.payment_date >= CURRENT_DATE - INTERVAL '30 days'
             GROUP BY d.name
             ORDER BY user_count DESC
             LIMIT 5
