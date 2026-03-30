@@ -7,6 +7,7 @@ import { dashboardTypography } from '../dashboardStyles';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { useDrillDown } from '../useDrillDown';
 import DrillDownModal from '../DrillDownModal';
+import { parsePaymentDate } from '../dashboardUtils';
 
 interface PaymentRecord {
   status: string;
@@ -63,7 +64,7 @@ const LegalEntityComparisonChart = () => {
 
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
       if (p.status !== 'approved') return false;
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(p.payment_date);
       return d >= from && d <= to;
     });
 

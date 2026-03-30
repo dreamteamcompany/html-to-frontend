@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { useMemo } from 'react';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { usePeriod } from '@/contexts/PeriodContext';
+import { parsePaymentDate } from './dashboardUtils';
 
 interface Payment {
   amount: number;
@@ -26,11 +27,11 @@ const Dashboard2StatsCards = () => {
     const approved = all.filter(p => p.status === 'approved');
 
     const current = approved.filter(p => {
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(p.payment_date);
       return d >= from && d <= to;
     });
     const prev = approved.filter(p => {
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(p.payment_date);
       return d >= prevFrom && d <= prevTo;
     });
 

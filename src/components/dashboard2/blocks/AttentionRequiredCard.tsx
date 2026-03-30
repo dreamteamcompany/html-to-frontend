@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
+import { parsePaymentDate } from '../dashboardUtils';
 
 interface PaymentRecord {
   id: number;
@@ -29,7 +30,7 @@ const AttentionRequiredCard = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        setOverdue(all.filter(p => p.status?.startsWith('pending_') && new Date(p.payment_date) < today).length);
+        setOverdue(all.filter(p => p.status?.startsWith('pending_') && parsePaymentDate(p.payment_date) < today).length);
         setRejected(all.filter(p => p.status === 'rejected').length);
       } catch {
         // silent

@@ -3,12 +3,12 @@ import Icon from '@/components/ui/icon';
 import { useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { parsePaymentDate } from '../dashboardUtils';
 
 interface PaymentRecord {
   status: string;
   payment_date: string;
   amount: number;
-  created_at?: string;
   [key: string]: unknown;
 }
 
@@ -25,22 +25,16 @@ const LiveMetricsCard = () => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const parseDate = (raw: string | undefined | null): Date | null => {
-      if (!raw) return null;
-      const d = new Date(raw);
-      return isNaN(d.getTime()) ? null : d;
-    };
-
     const todayPayments = all.filter(p => {
       if (p.status !== 'approved') return false;
-      const d = parseDate(p.payment_date) ?? parseDate(p.created_at);
-      return d !== null && d >= today && d < tomorrow;
+      const d = parsePaymentDate(p.payment_date);
+      return !isNaN(d.getTime()) && d >= today && d < tomorrow;
     });
 
     const periodApproved = all.filter(p => {
       if (p.status !== 'approved') return false;
-      const d = parseDate(p.payment_date);
-      return d !== null && d >= from && d <= to;
+      const d = parsePaymentDate(p.payment_date);
+      return !isNaN(d.getTime()) && d >= from && d <= to;
     });
 
     const totalAmount = periodApproved.reduce((s, p) => s + Number(p.amount), 0);
@@ -48,8 +42,8 @@ const LiveMetricsCard = () => {
 
     const pendingInPeriod = all.filter(p => {
       if (p.status !== 'pending_approval') return false;
-      const d = parseDate(p.payment_date);
-      return d !== null && d >= from && d <= to;
+      const d = parsePaymentDate(p.payment_date);
+      return !isNaN(d.getTime()) && d >= from && d <= to;
     });
 
     return {

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { dashboardTypography } from './dashboardStyles';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { parsePaymentDate } from './dashboardUtils';
 
 interface Service {
   name: string;
@@ -57,12 +58,12 @@ const Dashboard2ServicesDynamics = () => {
     );
 
     const current = approved.filter((p: Payment) => {
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(p.payment_date);
       return d >= from && d <= to;
     });
 
     const previous = approved.filter((p: Payment) => {
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(p.payment_date);
       return d >= prevFrom && d <= prevTo;
     });
 

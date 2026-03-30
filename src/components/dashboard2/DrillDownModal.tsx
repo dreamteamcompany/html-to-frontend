@@ -56,8 +56,8 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
       if (p.status !== 'approved') return false;
       if (!p.payment_date) return false;
       const raw = String(p.payment_date);
-      const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
-      if (d < from || d > to) return false;
+      const d = parsePaymentDate(p.payment_date);
+      if (!(d >= from && d <= to)) return false;
 
       switch (filter.type) {
         case 'category':

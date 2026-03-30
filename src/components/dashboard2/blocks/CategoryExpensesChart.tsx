@@ -5,6 +5,7 @@ import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { useDrillDown } from '../useDrillDown';
 import DrillDownModal from '../DrillDownModal';
+import { parsePaymentDate } from '../dashboardUtils';
 
 interface PaymentRecord {
   status: string;
@@ -56,7 +57,7 @@ const CategoryExpensesChart = () => {
 
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
       if (p.status !== 'approved') return false;
-      const d = new Date(p.payment_date);
+      const d = parsePaymentDate(p.payment_date);
       return d >= from && d <= to;
     });
 
@@ -66,7 +67,7 @@ const CategoryExpensesChart = () => {
 
     if (period === 'today' || (period === 'custom' && diffDays <= 1)) {
       labels = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
-      getKey = (p) => `${String(new Date(p.payment_date).getHours()).padStart(2, '0')}:00`;
+      getKey = (p) => `${String(parsePaymentDate(p.payment_date).getHours()).padStart(2, '0')}:00`;
     } else if (period === 'week' || (period === 'custom' && diffDays <= 7)) {
       labels = [];
       const cur = new Date(from);
@@ -74,7 +75,7 @@ const CategoryExpensesChart = () => {
         labels.push(fmtWeekLabel(cur));
         cur.setDate(cur.getDate() + 1);
       }
-      getKey = (p) => fmtWeekLabel(new Date(p.payment_date));
+      getKey = (p) => fmtWeekLabel(parsePaymentDate(p.payment_date));
     } else if (period === 'month' || (period === 'custom' && diffDays <= 31)) {
       labels = [];
       const cur = new Date(from);
@@ -82,10 +83,10 @@ const CategoryExpensesChart = () => {
         labels.push(cur.getDate().toString());
         cur.setDate(cur.getDate() + 1);
       }
-      getKey = (p) => new Date(p.payment_date).getDate().toString();
+      getKey = (p) => parsePaymentDate(p.payment_date).getDate().toString();
     } else {
       labels = MONTHS;
-      getKey = (p) => MONTHS[new Date(p.payment_date).getMonth()];
+      getKey = (p) => MONTHS[parsePaymentDate(p.payment_date).getMonth()];
     }
 
     const categoryMap: { [category: string]: { [key: string]: number } } = {};

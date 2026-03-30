@@ -4,6 +4,7 @@ import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache, PaymentRecord } from '@/contexts/PaymentsCacheContext';
 import { useDrillDown } from '../useDrillDown';
 import DrillDownModal from '../DrillDownModal';
+import { parsePaymentDate } from '../dashboardUtils';
 import Icon from '@/components/ui/icon';
 import { exportPaymentsToExcel } from '@/utils/exportExcel';
 
@@ -338,8 +339,7 @@ const ExpenseShareChart = () => {
 
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
       if (p.status !== 'approved') return false;
-      const raw = String(p.payment_date);
-      const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
+      const d = parsePaymentDate(p.payment_date);
       return d >= from && d <= to;
     });
 

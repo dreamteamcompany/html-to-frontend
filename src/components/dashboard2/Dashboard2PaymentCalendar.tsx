@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
+import { parsePaymentDate } from './dashboardUtils';
 
 interface Payment {
   id: number;
@@ -45,7 +46,7 @@ const Dashboard2PaymentCalendar = () => {
     const currentYear = currentDate.getFullYear();
 
     payments.forEach((payment) => {
-      const paymentDate = new Date(payment.payment_date);
+      const paymentDate = parsePaymentDate(payment.payment_date);
       if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
         const day = paymentDate.getDate();
         if (!paymentsByDay[day]) {
