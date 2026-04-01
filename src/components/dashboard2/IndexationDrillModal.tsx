@@ -89,9 +89,6 @@ const IndexationDrillModal = ({ open, onClose }: Props) => {
     const allKeys = Array.from(new Set([...Object.keys(curMap), ...Object.keys(prevMap)]));
     const rows = allKeys.map((key) => {
       const name = (curMap[key] || prevMap[key]).name;
-      const cur = curMap[key]?.current ?? 0;
-      const prev = prevMap[key]?.previous ?? 0;
-      // prevMap хранит в .current — исправляем: пересчитываем правильно
       const curAmt = curMap[key]?.current ?? 0;
       const prevAmt = prevMap[key]?.current ?? 0;
       const rowDiff = curAmt - prevAmt;

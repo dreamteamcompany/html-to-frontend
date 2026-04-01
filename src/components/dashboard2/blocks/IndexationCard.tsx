@@ -59,11 +59,11 @@ const IndexationCard = () => {
       ? parseFloat((((currentTotal - previousTotal) / previousTotal) * 100).toFixed(1))
       : null;
 
-    // Детализация по сервисам — только те, что есть в обоих периодах
+    // Детализация по сервисам — все сервисы из обоих периодов
     const buildServiceMap = (payments: PaymentRecord[]) => {
       const map: { [key: string]: { totalAmount: number; name: string } } = {};
       payments.forEach((p) => {
-        const key = p.service_id ? `service_${p.service_id}` : `no_service`;
+        const key = p.service_id ? `svc_${p.service_id}` : `no_service`;
         const name = p.service_name || (p.service_id ? `Сервис ${p.service_id}` : 'Без сервиса');
         if (!map[key]) map[key] = { totalAmount: 0, name };
         map[key].totalAmount += p.amount;
@@ -74,23 +74,26 @@ const IndexationCard = () => {
     const currentMap = buildServiceMap(currentPayments);
     const previousMap = buildServiceMap(previousPayments);
 
-    const commonKeys = Object.keys(currentMap).filter((key) => key in previousMap);
+    // Объединяем все ключи из обоих периодов (union), как в модалке детализации
+    const allKeys = Array.from(new Set([...Object.keys(currentMap), ...Object.keys(previousMap)]));
 
-    const details: ServiceIndexation[] = commonKeys
+    const details: ServiceIndexation[] = allKeys
       .map((key) => {
-        const cur = currentMap[key];
-        const prev = previousMap[key];
-        const percent = prev.totalAmount > 0
-          ? parseFloat((((cur.totalAmount - prev.totalAmount) / prev.totalAmount) * 100).toFixed(1))
+        const curTotal = currentMap[key]?.totalAmount ?? 0;
+        const prevTotal = previousMap[key]?.totalAmount ?? 0;
+        const name = (currentMap[key] || previousMap[key]).name;
+        const percent = prevTotal > 0
+          ? parseFloat((((curTotal - prevTotal) / prevTotal) * 100).toFixed(1))
           : 0;
         return {
           serviceKey: key,
-          serviceName: cur.name,
-          currentTotal: cur.totalAmount,
-          previousTotal: prev.totalAmount,
+          serviceName: name,
+          currentTotal: curTotal,
+          previousTotal: prevTotal,
           percent,
         };
       })
+      .filter((item) => item.currentTotal > 0 || item.previousTotal > 0)
       .sort((a, b) => Math.abs(b.percent) - Math.abs(a.percent));
 
     return {

@@ -53,17 +53,24 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
   const populateFormData = () => {
     if (!payment) return;
 
+    // Извлекаем только дату (YYYY-MM-DD) из payment_date/invoice_date,
+    // т.к. input type="date" требует формат YYYY-MM-DD
+    const extractDate = (v: string | undefined | null): string => {
+      if (!v) return '';
+      return v.substring(0, 10); // YYYY-MM-DD из ISO-строки
+    };
+
     const data: Record<string, string | undefined> = {
       category_id: payment.category_id?.toString() || '',
       description: payment.description || '',
       amount: payment.amount?.toString() || '',
-      payment_date: payment.payment_date || '',
+      payment_date: extractDate(payment.payment_date),
       legal_entity_id: payment.legal_entity_id?.toString() || '',
       service_id: payment.service_id?.toString() || '',
       contractor_id: payment.contractor_id?.toString() || '',
       department_id: payment.department_id?.toString() || '',
       invoice_number: payment.invoice_number || '',
-      invoice_date: payment.invoice_date || '',
+      invoice_date: extractDate(payment.invoice_date),
       invoice_file_url: payment.invoice_file_url || '',
     };
 

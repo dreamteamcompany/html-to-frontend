@@ -351,6 +351,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
           category_id: formData.category_id ? parseInt(formData.category_id) : 0,
           description: formData.description || '',
           amount: formData.amount ? parseFloat(formData.amount) : 0,
+          payment_date: formData.invoice_date || '',
           legal_entity_id: formData.legal_entity_id ? parseInt(formData.legal_entity_id) : null,
           contractor_id: formData.contractor_id ? parseInt(formData.contractor_id) : null,
           department_id: formData.department_id ? parseInt(formData.department_id) : null,

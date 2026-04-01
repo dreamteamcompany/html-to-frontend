@@ -272,7 +272,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 conn.close()
                 return response(400, {'error': f'Validation error: {str(e)}'})
             
-            payment_date = pay_req.payment_date if pay_req.payment_date else datetime.now().isoformat()
+            # Приоритет: payment_date из запроса → invoice_date → текущая дата
+            payment_date = pay_req.payment_date or pay_req.invoice_date or datetime.now().strftime('%Y-%m-%d')
             
             cur.execute(
                 f"""SELECT name FROM {SCHEMA}.categories WHERE id = %s""",
@@ -396,6 +397,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             category_name = category['name']
             
+            # Приоритет: payment_date из запроса → invoice_date → текущая дата
+            update_payment_date = pay_req.payment_date or pay_req.invoice_date or datetime.now().strftime('%Y-%m-%d')
+            
             file_uploaded_at = datetime.now().isoformat() if pay_req.invoice_file_url else None
             cur.execute(f"""
                 UPDATE {SCHEMA}.payments 
@@ -407,7 +411,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 WHERE id = %s
                 RETURNING id, category_id, amount, description, payment_date, created_at, status, invoice_file_url, invoice_file_uploaded_at
             """, (category_name, pay_req.category_id, pay_req.amount, pay_req.description, 
-                  pay_req.payment_date, pay_req.legal_entity_id, pay_req.contractor_id, 
+                  update_payment_date, pay_req.legal_entity_id, pay_req.contractor_id, 
                   pay_req.department_id, pay_req.service_id, pay_req.invoice_number, 
                   pay_req.invoice_date, pay_req.invoice_file_url, file_uploaded_at, payment_id))
             
