@@ -224,7 +224,7 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
 
   return (
     <Dialog open onOpenChange={v => { if (!v) { setMode('view'); onClose(); } }}>
-      <DialogContent style={{ maxWidth: '520px', padding: '0', overflow: 'hidden', maxHeight: '95dvh', display: 'flex', flexDirection: 'column' }}>
+      <DialogContent className="!flex !flex-col !gap-0 !p-0" style={{ maxWidth: '520px', overflow: 'hidden', maxHeight: '95dvh' }}>
         <DialogHeader style={{ padding: '18px 20px 0', flexShrink: 0 }}>
           <DialogTitle style={{ fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Icon name="CalendarClock" size={16} style={{ color: '#ffb547', flexShrink: 0 }} />
@@ -235,7 +235,7 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
         {/* ── Режим просмотра ── */}
         {mode === 'view' && (
           <>
-            <div style={{ padding: '14px 20px', overflowY: 'auto', flex: '1 1 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ padding: '14px 20px', overflowY: 'auto', flex: '1 1 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {/* Сумма */}
               <div style={{
                 background: 'linear-gradient(135deg, #ffb54720 0%, #ff950010 100%)',
@@ -300,8 +300,8 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
 
         {/* ── Режим редактирования ── */}
         {mode === 'edit' && e && (
-          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', flex: '1 1 0', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 20px', overflowY: 'auto', flex: '1 1 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', flex: '1 1 auto', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 20px', overflowY: 'auto', flex: '1 1 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
               {/* Категория + Сумма */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
