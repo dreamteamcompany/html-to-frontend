@@ -4,6 +4,7 @@ import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { useDrillDown } from './useDrillDown';
 import DrillDownModal from './DrillDownModal';
+import { parsePaymentDate } from './dashboardUtils';
 
 const PALETTE = [
   { solid: '#01b574', light: 'rgba(1,181,116,0.18)',   mid: 'rgba(1,181,116,0.55)'   },
@@ -163,9 +164,8 @@ const Dashboard2TeamPerformance = () => {
     const { from: start, to: end } = getDateRange();
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter(p => {
       if (p.status !== 'approved') return false;
-      const raw = String(p.payment_date);
-      const d = new Date(raw.includes('T') ? raw : raw + 'T00:00:00');
-      return d >= start && d <= end;
+      const d = parsePaymentDate(p.payment_date);
+      return !isNaN(d.getTime()) && d >= start && d <= end;
     });
 
     const map: Record<string, number> = {};
