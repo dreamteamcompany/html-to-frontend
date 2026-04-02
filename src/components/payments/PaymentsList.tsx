@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Payment, CustomField } from '@/types/payment';
@@ -17,6 +18,14 @@ interface PaymentsListProps {
   showRevoke?: boolean;
   showResubmit?: boolean;
 }
+
+type SortKey = 'category' | 'service' | 'legal_entity' | 'description' | 'amount' | 'status' | 'date';
+type SortDir = 'asc' | 'desc';
+
+const STATUS_ORDER: Record<string, number> = {
+  draft: 0, pending_ib: 1, pending_cfo: 2, pending_ceo: 3,
+  approved: 4, rejected: 5, revoked: 6,
+};
 
 const getStatusBadge = (status?: string) => {
   if (!status || status === 'draft') {
@@ -68,10 +77,91 @@ const hasActionsForPayment = (
   return false;
 };
 
+const cmp = (a: string, b: string) => a.localeCompare(b, 'ru');
+
+const sortPayments = (list: Payment[], key: SortKey, dir: SortDir): Payment[] => {
+  const sorted = [...list].sort((a, b) => {
+    let r = 0;
+    switch (key) {
+      case 'category':
+        r = cmp(a.category_name || '', b.category_name || '');
+        break;
+      case 'service':
+        r = cmp(a.service_name || '', b.service_name || '');
+        break;
+      case 'legal_entity':
+        r = cmp(a.legal_entity_name || '', b.legal_entity_name || '');
+        break;
+      case 'description':
+        r = cmp(a.description || '', b.description || '');
+        break;
+      case 'amount':
+        r = (a.amount || 0) - (b.amount || 0);
+        break;
+      case 'status':
+        r = (STATUS_ORDER[a.status || 'draft'] ?? 99) - (STATUS_ORDER[b.status || 'draft'] ?? 99);
+        break;
+      case 'date': {
+        const da = new Date(a.planned_date || a.payment_date || 0).getTime();
+        const db = new Date(b.planned_date || b.payment_date || 0).getTime();
+        r = da - db;
+        break;
+      }
+    }
+    return r;
+  });
+  return dir === 'desc' ? sorted.reverse() : sorted;
+};
+
+const SortHeader = ({
+  label, sortKey, activeKey, dir, onClick,
+}: {
+  label: string; sortKey: SortKey;
+  activeKey: SortKey | null; dir: SortDir;
+  onClick: (k: SortKey) => void;
+}) => {
+  const active = activeKey === sortKey;
+  return (
+    <th
+      className="text-left p-4 text-sm font-semibold text-muted-foreground select-none cursor-pointer hover:text-foreground transition-colors"
+      onClick={() => onClick(sortKey)}
+    >
+      <div className="flex items-center gap-1.5">
+        {label}
+        <span style={{ opacity: active ? 1 : 0.3, transition: 'opacity 0.15s' }}>
+          <Icon
+            name={active ? (dir === 'asc' ? 'ArrowUp' : 'ArrowDown') : 'ArrowUpDown'}
+            size={13}
+          />
+        </span>
+      </div>
+    </th>
+  );
+};
+
 const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForApproval, onRevoke, onResubmit, onDelete, onPaymentClick, isPlannedPayments = false, showApproveReject = false, showRevoke = false, showResubmit = false }: PaymentsListProps) => {
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const sorted = useMemo(
+    () => sortKey ? sortPayments(payments, sortKey, sortDir) : payments,
+    [payments, sortKey, sortDir],
+  );
+
   const showActionsColumn = payments.some(p =>
     hasActionsForPayment(p, isPlannedPayments, showApproveReject, showRevoke, showResubmit, onSubmitForApproval, onDelete, onApprove, onReject, onRevoke, onResubmit, onPaymentClick)
   );
+
+  const hp = { activeKey: sortKey, dir: sortDir, onClick: handleSort };
 
   return (
     <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
@@ -88,18 +178,18 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Категория</th>
-                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сервис</th>
-                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Юр. лицо</th>
-                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Назначение</th>
-                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Сумма</th>
-                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Статус</th>
-                    <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Дата</th>
+                    <SortHeader label="Категория"  sortKey="category"     {...hp} />
+                    <SortHeader label="Сервис"      sortKey="service"      {...hp} />
+                    <SortHeader label="Юр. лицо"    sortKey="legal_entity" {...hp} />
+                    <SortHeader label="Назначение"  sortKey="description"  {...hp} />
+                    <SortHeader label="Сумма"       sortKey="amount"       {...hp} />
+                    <SortHeader label="Статус"      sortKey="status"       {...hp} />
+                    <SortHeader label="Дата"        sortKey="date"         {...hp} />
                     {showActionsColumn && <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Действия</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map((payment) => (
+                  {sorted.map((payment) => (
                     <tr 
                       key={payment.id} 
                       className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
@@ -214,7 +304,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
             </div>
             
             <div className="md:hidden space-y-3 p-4">
-              {payments.map((payment) => (
+              {sorted.map((payment) => (
                 <Card 
                   key={payment.id} 
                   className="border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors"
