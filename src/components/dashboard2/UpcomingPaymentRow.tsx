@@ -96,7 +96,7 @@ const UpcomingPaymentRow = ({
 
         {secondaryParts.length > 0 && (
           <div style={{
-            fontSize: '11px', color: 'hsl(var(--muted-foreground))',
+            fontSize: '11px', color: 'hsl(var(--muted-foreground) / 0.85)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             lineHeight: 1.3,
           }}>
@@ -106,7 +106,7 @@ const UpcomingPaymentRow = ({
 
         {tertiaryParts.length > 0 && secondaryParts.join(' · ') !== tertiaryParts.join(' · ') && (
           <div style={{
-            fontSize: '10px', color: 'hsl(var(--muted-foreground) / 0.6)',
+            fontSize: '10px', color: 'hsl(var(--muted-foreground) / 0.75)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             lineHeight: 1.3,
           }}>
@@ -128,7 +128,7 @@ const UpcomingPaymentRow = ({
           {formatAmount(payment.amount)}
         </span>
         <Icon name="ChevronRight" size={12} style={{
-          color: hov ? accent : 'hsl(var(--muted-foreground) / 0.3)',
+          color: hov ? accent : 'hsl(var(--muted-foreground) / 0.5)',
           transition: 'color 0.2s',
         }} />
       </div>

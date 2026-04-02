@@ -77,7 +77,7 @@ const UpcomingPaymentDaySection = ({
 
         <div style={{
           fontSize: '10px', fontWeight: 500,
-          color: 'hsl(var(--muted-foreground) / 0.7)',
+          color: 'hsl(var(--muted-foreground) / 0.85)',
           whiteSpace: 'nowrap', lineHeight: 1,
         }}>
           {n} {nLabel}
