@@ -238,8 +238,8 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
             <div style={{ padding: '14px 20px', overflowY: 'auto', flex: '1 1 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {/* Сумма */}
               <div style={{
-                background: 'linear-gradient(135deg, #ffb54720 0%, #ff950010 100%)',
-                border: '1px solid #ffb54740', borderRadius: '10px',
+                background: 'hsl(var(--muted))',
+                border: '1px solid hsl(var(--border))', borderRadius: '10px',
                 padding: '14px 16px', textAlign: 'center',
               }}>
                 <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginBottom: '4px' }}>Сумма платежа</div>
