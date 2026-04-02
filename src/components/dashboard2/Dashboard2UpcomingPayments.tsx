@@ -133,37 +133,45 @@ const Dashboard2UpcomingPayments = () => {
     <Card style={{
       background: 'hsl(var(--card))',
       border: '1px solid hsl(var(--border))',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       marginBottom: '30px',
+      borderRadius: '14px',
+      overflow: 'hidden',
     }}>
-      <CardContent style={{ padding: '16px 20px' }}>
+      <CardContent style={{ padding: '20px 22px' }}>
 
         {/* ── Шапка ── */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: '14px', paddingBottom: '12px',
-          borderBottom: '1px solid hsl(var(--border))',
-          gap: '8px', minWidth: 0,
+          marginBottom: '20px', paddingBottom: '16px',
+          borderBottom: '1px solid hsl(var(--border) / 0.5)',
+          gap: '10px', minWidth: 0,
         }}>
-          {/* Левая часть: иконка + заголовок */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: '1 1 0', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: '1 1 0', overflow: 'hidden' }}>
             <div style={{
               background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)',
-              width: '36px', height: '36px', borderRadius: '10px',
-              boxShadow: '0 2px 8px rgba(255,149,0,0.22)',
+              width: '40px', height: '40px', borderRadius: '12px',
+              boxShadow: '0 3px 10px rgba(255,149,0,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
             }}>
-              <Icon name="CalendarClock" size={17} style={{ color: '#fff' }} />
+              <Icon name="CalendarClock" size={19} style={{ color: '#fff' }} />
             </div>
             <div style={{ minWidth: 0, overflow: 'hidden' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Предстоящие платежи
               </div>
-              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {PERIOD_LABEL[period] ?? 'Выбранный период'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}>
+                  {PERIOD_LABEL[period] ?? 'Выбранный период'}
+                </span>
                 {!loading && count > 0 && (
-                  <span style={{ marginLeft: '6px', fontWeight: 700, color: dashboardColors.orange }}>
+                  <span style={{
+                    fontSize: '11px', fontWeight: 700, color: dashboardColors.orange,
+                    background: `${dashboardColors.orange}12`,
+                    padding: '2px 8px', borderRadius: '6px',
+                    whiteSpace: 'nowrap',
+                  }}>
                     {count} {cLabel} · {formatAmount(total)}
                   </span>
                 )}
@@ -171,28 +179,29 @@ const Dashboard2UpcomingPayments = () => {
             </div>
           </div>
 
-          {/* Правая часть: кнопка "+" */}
           {hasPermission('payments', 'create') && (
             <button
               onClick={() => { loadDicts(); setDialogOpen(true); }}
               title="Создать запланированный платёж"
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: '30px', height: '30px', borderRadius: '8px', flexShrink: 0,
+                width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
                 border: '1px solid hsl(var(--border))',
                 background: 'hsl(var(--background))',
                 cursor: 'pointer', color: 'hsl(var(--foreground))',
-                transition: 'background 0.15s, border-color 0.15s',
+                transition: 'all 0.2s ease',
               }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLButtonElement).style.background = `${dashboardColors.orange}15`;
                 (e.currentTarget as HTMLButtonElement).style.borderColor = dashboardColors.orange;
                 (e.currentTarget as HTMLButtonElement).style.color = dashboardColors.orange;
+                (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.05)';
               }}
               onMouseLeave={e => {
                 (e.currentTarget as HTMLButtonElement).style.background = 'hsl(var(--background))';
                 (e.currentTarget as HTMLButtonElement).style.borderColor = 'hsl(var(--border))';
                 (e.currentTarget as HTMLButtonElement).style.color = 'hsl(var(--foreground))';
+                (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
               }}
             >
               <Icon name="Plus" size={16} />
@@ -202,10 +211,10 @@ const Dashboard2UpcomingPayments = () => {
 
         {/* ── Тело ── */}
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '44px 0' }}>
             <div style={{
-              width: '28px', height: '28px', borderRadius: '50%',
-              border: '2px solid hsl(var(--border))',
+              width: '30px', height: '30px', borderRadius: '50%',
+              border: '2.5px solid hsl(var(--border))',
               borderTopColor: dashboardColors.orange,
               animation: 'spin 0.7s linear infinite',
             }} />
@@ -213,7 +222,7 @@ const Dashboard2UpcomingPayments = () => {
         ) : count === 0 ? (
           <UpcomingEmptyState period={period} />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {groups.map(group => (
               <UpcomingPaymentDaySection key={group.dateKey} group={group} onPaymentClick={setSelected} />
             ))}
