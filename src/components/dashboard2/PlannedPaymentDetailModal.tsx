@@ -246,7 +246,7 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
                 <div style={{ fontSize: '22px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>{fmt(payment.amount)}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '10px', fontWeight: 700, color: '#fff', background: '#6366f1', borderRadius: '4px', padding: '2px 6px' }}>
-                    запланированный
+                    Запланированный
                   </span>
                   {recType && recType !== 'once' && (
                     <span style={{ fontSize: '10px', fontWeight: 700, color: '#fff', background: '#0ea5e9', borderRadius: '4px', padding: '2px 6px' }}>
