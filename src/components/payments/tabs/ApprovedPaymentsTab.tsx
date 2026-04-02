@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { translateApiError } from '@/utils/api';
 import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 import { exportTabPaymentsToExcel } from '@/utils/exportExcel';
+import PaymentsFilterPanel from '@/components/payments/PaymentsFilterPanel';
+import { usePaymentsFilter } from '@/hooks/usePaymentsFilter';
 
 interface ExtendedPayment extends Payment {
   ceo_approved_at?: string;
@@ -32,6 +34,13 @@ const ApprovedPaymentsTab = () => {
     (allPayments as ExtendedPayment[]).filter(p => p.status === 'approved'),
     [allPayments]
   );
+
+  const {
+    filters, setFilter, clearFilters,
+    showFilters, setShowFilters,
+    filteredPayments: filtered, options,
+    activeCount, totalCount,
+  } = usePaymentsFilter(payments, 'approved');
 
   const fetchApprovedPayments = () => refresh();
 
@@ -70,9 +79,8 @@ const ApprovedPaymentsTab = () => {
     }
   };
 
-  const filteredPayments = payments.filter(payment => {
+  const filteredPayments = filtered.filter(payment => {
     if (!searchQuery) return true;
-    
     const query = searchQuery.toLowerCase();
     return (
       payment.description.toLowerCase().includes(query) ||
@@ -107,6 +115,17 @@ const ApprovedPaymentsTab = () => {
             className="pl-10 bg-background border-white/10"
           />
         </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="relative p-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+        >
+          <Icon name="SlidersHorizontal" size={20} />
+          {activeCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              {activeCount}
+            </span>
+          )}
+        </button>
         {!loading && filteredPayments.length > 0 && (
           <button
             onClick={() => exportTabPaymentsToExcel(filteredPayments, 'Одобренные платежи', 'Одобренные_платежи')}
@@ -117,6 +136,14 @@ const ApprovedPaymentsTab = () => {
           </button>
         )}
       </div>
+
+      {showFilters && (
+        <PaymentsFilterPanel
+          filters={filters} setFilter={setFilter} clearFilters={clearFilters}
+          activeCount={activeCount} filteredCount={filteredPayments.length} totalCount={totalCount}
+          options={options}
+        />
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center h-64">

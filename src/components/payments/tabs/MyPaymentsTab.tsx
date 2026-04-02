@@ -11,9 +11,12 @@ import CashPaymentForm from '@/components/payments/CashPaymentForm';
 import PlannedPaymentsModal from '@/components/payments/PlannedPaymentsModal';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
+import PaymentsFilterPanel from '@/components/payments/PaymentsFilterPanel';
+import { usePaymentsFilter } from '@/hooks/usePaymentsFilter';
 import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
 import Icon from '@/components/ui/icon';
+import { Input } from '@/components/ui/input';
 import { exportTabPaymentsToExcel } from '@/utils/exportExcel';
 
 const MyPaymentsTab = () => {
@@ -36,6 +39,13 @@ const MyPaymentsTab = () => {
     loadContractors,
     loadLegalEntities,
   } = usePaymentsData();
+
+  const {
+    filters, setFilter, clearFilters,
+    showFilters, setShowFilters,
+    filteredPayments, options,
+    activeCount, totalCount,
+  } = usePaymentsFilter(payments, 'my');
 
   const handlePaymentSaved = useCallback(() => {
     loadPayments();
@@ -213,7 +223,7 @@ const MyPaymentsTab = () => {
         <PlannedPaymentsModal />
         {!loading && payments.length > 0 && (
           <button
-            onClick={() => exportTabPaymentsToExcel(payments, 'Мои платежи', 'Мои_платежи')}
+            onClick={() => exportTabPaymentsToExcel(filteredPayments, 'Мои платежи', 'Мои_платежи')}
             className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium whitespace-nowrap"
           >
             <Icon name="Download" size={16} />
@@ -222,8 +232,39 @@ const MyPaymentsTab = () => {
         )}
       </div>
 
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Поиск по описанию, категории, сумме..."
+            value={filters.search}
+            onChange={e => setFilter('search', e.target.value)}
+            className="pl-10 bg-background border-white/10"
+          />
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="relative p-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+        >
+          <Icon name="SlidersHorizontal" size={20} />
+          {activeCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              {activeCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {showFilters && (
+        <PaymentsFilterPanel
+          filters={filters} setFilter={setFilter} clearFilters={clearFilters}
+          activeCount={activeCount} filteredCount={filteredPayments.length} totalCount={totalCount}
+          options={options}
+        />
+      )}
+
       <PaymentsList 
-        payments={payments} 
+        payments={filteredPayments} 
         loading={loading} 
         onSubmitForApproval={handleSubmitForApproval}
         onDelete={handleDelete}

@@ -13,12 +13,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
-import PendingApprovalsFilters from '@/components/approvals/PendingApprovalsFilters';
 import PendingApprovalsList from '@/components/approvals/PendingApprovalsList';
 import PendingApprovalsModal from '@/components/approvals/PendingApprovalsModal';
 import { usePendingApprovalsData } from '@/hooks/usePendingApprovalsData';
-import { usePendingApprovalsFilters } from '@/hooks/usePendingApprovalsFilters';
 import { Payment } from '@/types/payment';
+import PaymentsFilterPanel from '@/components/payments/PaymentsFilterPanel';
+import { usePaymentsFilter } from '@/hooks/usePaymentsFilter';
 
 interface PendingApprovalsTabProps {
   openPaymentId?: number | null;
@@ -32,22 +32,19 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
   const [showConfirm, setShowConfirm] = useState(false);
   
   const {
-    searchQuery,
-    setSearchQuery,
-    amountFrom,
-    setAmountFrom,
-    amountTo,
-    setAmountTo,
-    dateFrom,
-    setDateFrom,
-    dateTo,
-    setDateTo,
+    filters,
+    setFilter,
+    clearFilters,
     showFilters,
     setShowFilters,
     filteredPayments,
-    activeFiltersCount,
-    clearFilters,
-  } = usePendingApprovalsFilters(payments);
+    options,
+    activeCount: activeFiltersCount,
+    totalCount,
+  } = usePaymentsFilter(payments, 'pending');
+
+  const searchQuery = filters.search;
+  const setSearchQuery = (v: string) => setFilter('search', v);
 
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
@@ -133,19 +130,10 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
       </div>
 
       {showFilters && (
-        <PendingApprovalsFilters
-          amountFrom={amountFrom}
-          setAmountFrom={setAmountFrom}
-          amountTo={amountTo}
-          setAmountTo={setAmountTo}
-          dateFrom={dateFrom}
-          setDateFrom={setDateFrom}
-          dateTo={dateTo}
-          setDateTo={setDateTo}
-          activeFiltersCount={activeFiltersCount}
-          clearFilters={clearFilters}
-          filteredCount={filteredPayments.length}
-          totalCount={payments.length}
+        <PaymentsFilterPanel
+          filters={filters} setFilter={setFilter} clearFilters={clearFilters}
+          activeCount={activeFiltersCount} filteredCount={filteredPayments.length} totalCount={totalCount}
+          options={options}
         />
       )}
 
