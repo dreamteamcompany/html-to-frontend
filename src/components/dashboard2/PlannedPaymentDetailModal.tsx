@@ -5,7 +5,7 @@ import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/config/api';
-import { PaymentRecord } from '@/contexts/PaymentsCacheContext';
+import { PaymentRecord, invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 const fmt = (amount: number | string) => {
   const n = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -60,6 +60,7 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
         throw new Error(err.error || 'Не удалось согласовать');
       }
       toast({ title: 'Согласовано', description: 'Платёж подтверждён' });
+      invalidatePaymentsCache();
       onActionDone?.();
       onClose();
     } catch (err: unknown) {
@@ -82,6 +83,7 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
         throw new Error(err.error || 'Не удалось отклонить');
       }
       toast({ title: 'Отклонено', description: 'Запланированный платёж отклонён' });
+      invalidatePaymentsCache();
       onActionDone?.();
       onClose();
     } catch (err: unknown) {
