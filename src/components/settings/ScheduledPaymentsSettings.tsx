@@ -50,7 +50,7 @@ const ScheduledPaymentsSettings = () => {
   };
 
   return (
-    <Card className="border-white/10 bg-card">
+    <Card className="border border-border">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Icon name="CalendarClock" size={24} />
@@ -62,11 +62,11 @@ const ScheduledPaymentsSettings = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-            <Icon name="Info" size={20} className="text-blue-400 mt-0.5 flex-shrink-0" />
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
+            <Icon name="Info" size={20} className="text-primary mt-0.5 flex-shrink-0" />
             <div className="space-y-2 text-sm">
-              <p className="text-blue-200 font-medium">Как работает автоматическая обработка:</p>
-              <ul className="list-disc list-inside space-y-1 text-blue-200/80">
+              <p className="text-foreground font-medium">Как работает автоматическая обработка:</p>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                 <li>Система проверяет запланированные платежи каждый день</li>
                 <li>Если дата платежа наступила, создаётся реальный платёж в статусе "Черновик"</li>
                 <li>Для повторяющихся платежей автоматически планируется следующая дата</li>
@@ -75,7 +75,7 @@ const ScheduledPaymentsSettings = () => {
             </div>
           </div>
 
-          <div className="p-4 rounded-lg bg-white/5 border border-white/10 space-y-3">
+          <div className="p-4 rounded-lg bg-muted/50 border border-border space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="font-medium">Запустить обработку вручную</h4>
@@ -94,7 +94,7 @@ const ScheduledPaymentsSettings = () => {
             </div>
 
             {lastRun && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t border-white/10">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t border-border">
                 <Icon name="Clock" size={16} />
                 <span>Последний запуск: {lastRun}</span>
               </div>
@@ -107,31 +107,31 @@ const ScheduledPaymentsSettings = () => {
               Типы повторения
             </h4>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="font-medium text-sm">Однократно</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Платёж создаётся один раз в указанную дату
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="font-medium text-sm">Ежедневно</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Создаётся каждый день до конечной даты
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="font-medium text-sm">Еженедельно</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Создаётся раз в неделю (каждые 7 дней)
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="font-medium text-sm">Ежемесячно</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Создаётся раз в месяц (каждые 30 дней)
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="font-medium text-sm">Ежегодно</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Создаётся раз в год (каждые 365 дней)

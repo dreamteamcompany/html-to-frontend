@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import ScheduledPaymentsSettings from '@/components/settings/ScheduledPaymentsSettings';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -18,15 +19,17 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-
-const CLEAR_DATA_API = 'https://functions.poehali.dev/69d0e8e7-3feb-4d34-9a63-64521e899118';
+import { API_ENDPOINTS } from '@/config/api';
 
 const Settings = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [clearing, setClearing] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const { token, hasPermission } = useAuth();
   const { toast } = useToast();
+
+  const isAdmin = hasPermission('settings', 'write') || hasPermission('roles', 'write');
 
   const {
     menuOpen,
@@ -48,12 +51,18 @@ const Settings = () => {
 
     setClearing(true);
     try {
-      const response = await fetch(CLEAR_DATA_API, {
+      const response = await fetch(API_ENDPOINTS.clearAllData, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
       });
 
-      if (!response.ok) throw new Error('Failed to clear data');
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Ошибка сервера' }));
+        throw new Error(err.error || 'Не удалось очистить данные');
+      }
 
       const result = await response.json();
       
@@ -64,7 +73,6 @@ const Settings = () => {
 
       setConfirmText('');
       
-      // Перезагрузим страницу через 2 секунды
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
@@ -72,7 +80,7 @@ const Settings = () => {
       console.error('Failed to clear data:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось очистить данные',
+        description: error instanceof Error ? error.message : 'Не удалось очистить данные',
         variant: 'destructive',
       });
     } finally {
@@ -123,7 +131,7 @@ const Settings = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden p-2 text-white"
+              className="lg:hidden p-2 text-foreground"
             >
               <Icon name="Menu" size={24} />
             </button>
@@ -139,115 +147,116 @@ const Settings = () => {
         <div className="grid gap-6">
           <ScheduledPaymentsSettings />
           
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Icon name="Trash2" size={24} className="text-destructive" />
-                Опасная зона
-              </CardTitle>
-              <CardDescription>
-                Действия в этой зоне необратимы. Будьте осторожны!
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <Icon name="AlertTriangle" size={20} className="text-destructive" />
-                  Очистка всех данных
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Это действие удалит все данные из следующих разделов:
-                </p>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
-                  {dataCategories.map((category) => (
-                    <div
-                      key={category.name}
-                      className="flex items-center gap-2 text-sm p-2 rounded bg-card"
-                    >
-                      <Icon name={category.icon} size={16} className="text-muted-foreground" />
-                      <span>{category.name}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="w-full sm:w-auto">
-                      <Icon name="Trash2" size={18} className="mr-2" />
-                      Очистить всю информацию
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="flex items-center gap-2">
-                        <Icon name="AlertTriangle" size={24} className="text-destructive" />
-                        Вы абсолютно уверены?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Это действие необратимо. Все данные будут безвозвратно удалены из базы данных.
-                        <br />
-                        <br />
-                        Для подтверждения введите: <strong>УДАЛИТЬ ВСЁ</strong>
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    
-                    <div className="py-4">
-                      <Input
-                        value={confirmText}
-                        onChange={(e) => setConfirmText(e.target.value)}
-                        placeholder="Введите УДАЛИТЬ ВСЁ"
-                        className="font-mono"
-                      />
-                    </div>
-
-                    <AlertDialogFooter>
-                      <AlertDialogCancel onClick={() => setConfirmText('')}>
-                        Отмена
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleClearAllData}
-                        disabled={clearing || confirmText !== 'УДАЛИТЬ ВСЁ'}
-                        className="bg-destructive hover:bg-destructive/90"
+          {isAdmin && (
+            <Card className="border border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Icon name="Trash2" size={24} className="text-destructive" />
+                  Опасная зона
+                </CardTitle>
+                <CardDescription>
+                  Действия в этой зоне необратимы. Будьте осторожны!
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <Icon name="AlertTriangle" size={20} className="text-destructive" />
+                    Очистка всех данных
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Это действие удалит все данные из следующих разделов:
+                  </p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+                    {dataCategories.map((category) => (
+                      <div
+                        key={category.name}
+                        className="flex items-center gap-2 text-sm p-2 rounded border border-border bg-card"
                       >
-                        {clearing ? (
-                          <>
-                            <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
-                            Удаление...
-                          </>
-                        ) : (
-                          'Удалить всё'
-                        )}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </CardContent>
-          </Card>
+                        <Icon name={category.icon} size={16} className="text-muted-foreground" />
+                        <span>{category.name}</span>
+                      </div>
+                    ))}
+                  </div>
 
-          <Card>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="w-full sm:w-auto">
+                        <Icon name="Trash2" size={18} className="mr-2" />
+                        Очистить всю информацию
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <Icon name="AlertTriangle" size={24} className="text-destructive" />
+                          Вы абсолютно уверены?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Это действие необратимо. Все данные будут безвозвратно удалены из базы данных.
+                          <br />
+                          <br />
+                          Для подтверждения введите: <strong>УДАЛИТЬ ВСЁ</strong>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      
+                      <div className="py-4">
+                        <Input
+                          value={confirmText}
+                          onChange={(e) => setConfirmText(e.target.value)}
+                          placeholder="Введите УДАЛИТЬ ВСЁ"
+                          className="font-mono"
+                        />
+                      </div>
+
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setConfirmText('')}>
+                          Отмена
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleClearAllData}
+                          disabled={clearing || confirmText !== 'УДАЛИТЬ ВСЁ'}
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                          {clearing ? (
+                            <>
+                              <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
+                              Удаление...
+                            </>
+                          ) : (
+                            'Удалить всё'
+                          )}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="border border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Icon name="Info" size={24} />
-                Информация о проекте
+                <Icon name="Info" size={24} className="text-primary" />
+                О проекте
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-muted-foreground">Версия проекта</span>
-                <span className="font-medium">1.0.0</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-muted-foreground">База данных</span>
-                <span className="font-medium">PostgreSQL</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-muted-foreground">Статус</span>
-                <span className="font-medium text-green-500 flex items-center gap-1">
-                  <Icon name="CheckCircle" size={16} />
-                  Активен
-                </span>
+            <CardContent>
+              <div className="grid gap-3">
+                <div className="flex justify-between items-center py-2 border-b border-border">
+                  <span className="text-muted-foreground text-sm">Название</span>
+                  <span className="font-medium text-sm">IT Payment Manager</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-border">
+                  <span className="text-muted-foreground text-sm">Версия</span>
+                  <span className="font-medium text-sm">2.0.0</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-muted-foreground text-sm">Платформа</span>
+                  <span className="font-medium text-sm">Poehali.dev</span>
+                </div>
               </div>
             </CardContent>
           </Card>

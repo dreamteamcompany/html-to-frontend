@@ -7,12 +7,12 @@
       "expectedStatus": 200
     },
     {
-      "name": "Save setting",
+      "name": "Save setting without auth returns 401",
       "method": "POST",
       "path": "/",
       "body": {"key": "test_key", "value": "test_value"},
-      "expectedStatus": 200,
-      "expectedBody": {"ok": true},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "Unauthorized"},
       "bodyMatcher": "partial"
     }
   ]

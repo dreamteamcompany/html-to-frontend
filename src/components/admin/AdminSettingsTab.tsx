@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import Icon from "@/components/ui/icon";
+import { useAuth } from "@/contexts/AuthContext";
 
 const UPLOAD_URL = "https://functions.poehali.dev/33fdaaa7-5f20-43ee-aebd-ece943eb314b";
-const SETTINGS_API_URL = "https://functions.poehali.dev/d316ce9a-d93a-4032-adc2-28e6d615a17b";
+const SETTINGS_API_URL = "https://functions.poehali.dev/6f549b76-2cfc-4746-a61a-9a946c7a84bd";
 
 interface AdminSettingsTabProps {
   applicationFormUrl: string;
@@ -15,6 +16,7 @@ interface AdminSettingsTabProps {
 
 const AdminSettingsTab = ({ applicationFormUrl, setApplicationFormUrl, toast }: AdminSettingsTabProps) => {
   const [uploadingAppForm, setUploadingAppForm] = useState(false);
+  const { token } = useAuth();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -38,7 +40,10 @@ const AdminSettingsTab = ({ applicationFormUrl, setApplicationFormUrl, toast }: 
         setApplicationFormUrl(data.url);
         await fetch(SETTINGS_API_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Token': token || '',
+          },
           body: JSON.stringify({ key: 'application_form_url', value: data.url })
         });
         toast({ title: 'Файл загружен', description: 'Лист подачи заявки успешно загружен' });
@@ -55,7 +60,10 @@ const AdminSettingsTab = ({ applicationFormUrl, setApplicationFormUrl, toast }: 
     setApplicationFormUrl('');
     await fetch(SETTINGS_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Auth-Token': token || '',
+      },
       body: JSON.stringify({ key: 'application_form_url', value: '' })
     });
     toast({ title: 'Удалено', description: 'Ссылка на лист подачи заявки удалена' });
@@ -64,7 +72,7 @@ const AdminSettingsTab = ({ applicationFormUrl, setApplicationFormUrl, toast }: 
   return (
     <div>
       <h2 className="text-3xl font-heading font-bold text-primary mb-8">Настройки</h2>
-      <Card className="p-6 rounded-2xl max-w-2xl">
+      <Card className="p-6 rounded-2xl max-w-2xl border border-border">
         <h3 className="text-xl font-heading font-bold mb-4 flex items-center gap-2">
           <Icon name="ClipboardList" size={20} className="text-primary" />
           Лист подачи заявки
@@ -84,8 +92,8 @@ const AdminSettingsTab = ({ applicationFormUrl, setApplicationFormUrl, toast }: 
             {uploadingAppForm && <Icon name="Loader2" className="animate-spin" />}
           </div>
           {applicationFormUrl && (
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-200">
-              <Icon name="CheckCircle" size={18} className="text-green-600" />
+            <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-xl border border-green-500/20">
+              <Icon name="CheckCircle" size={18} className="text-green-500" />
               <a
                 href={applicationFormUrl}
                 target="_blank"
