@@ -45,8 +45,9 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
   const { toast } = useToast();
   const [actionLoading, setActionLoading] = useState<'approve' | 'reject' | null>(null);
   const [confirmReject, setConfirmReject] = useState(false);
+  const [confirmApprove, setConfirmApprove] = useState(false);
 
-  useEffect(() => { setActionLoading(null); setConfirmReject(false); }, [payment?.id]);
+  useEffect(() => { setActionLoading(null); setConfirmReject(false); setConfirmApprove(false); }, [payment?.id]);
 
   const handleApprove = async () => {
     if (!payment || !token) return;
@@ -154,26 +155,41 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
         </div>
 
         <div style={{ padding: '12px 20px 18px', borderTop: '1px solid hsl(var(--border))', display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
-          <Button
-            onClick={handleApprove}
-            disabled={!!actionLoading}
-            style={{
-              flex: 1, minWidth: '120px', gap: '6px',
-              background: '#01b574', color: '#fff', border: 'none',
-              opacity: actionLoading === 'reject' ? 0.5 : 1,
-            }}
-            className="hover:opacity-90"
-          >
-            {actionLoading === 'approve' ? (
-              <Icon name="Loader2" size={15} className="animate-spin" />
-            ) : (
+          {!confirmApprove ? (
+            <Button
+              onClick={() => { setConfirmApprove(true); setConfirmReject(false); }}
+              disabled={!!actionLoading}
+              style={{
+                flex: 1, minWidth: '120px', gap: '6px',
+                background: '#01b574', color: '#fff', border: 'none',
+                opacity: actionLoading === 'reject' ? 0.5 : 1,
+              }}
+              className="hover:opacity-90"
+            >
               <Icon name="CheckCircle" size={15} />
-            )}
-            Согласовать
-          </Button>
+              Согласовать
+            </Button>
+          ) : (
+            <Button
+              onClick={handleApprove}
+              disabled={!!actionLoading}
+              style={{
+                flex: 1, minWidth: '120px', gap: '6px',
+                background: '#059669', color: '#fff', border: 'none',
+              }}
+              className="hover:opacity-90 animate-pulse"
+            >
+              {actionLoading === 'approve' ? (
+                <Icon name="Loader2" size={15} className="animate-spin" />
+              ) : (
+                <Icon name="CheckCheck" size={15} />
+              )}
+              Подтвердить согласование
+            </Button>
+          )}
           {!confirmReject ? (
             <Button
-              onClick={() => setConfirmReject(true)}
+              onClick={() => { setConfirmReject(true); setConfirmApprove(false); }}
               disabled={!!actionLoading}
               variant="outline"
               style={{
