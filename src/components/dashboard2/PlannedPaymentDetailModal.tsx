@@ -224,7 +224,7 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
 
   return (
     <Dialog open onOpenChange={v => { if (!v) { setMode('view'); onClose(); } }}>
-      <DialogContent className="!flex !flex-col !gap-0 !p-0" style={{ maxWidth: '520px', overflow: 'hidden', maxHeight: '95dvh' }}>
+      <DialogContent className="!flex !flex-col !gap-0 !p-0 w-[95vw]" style={{ maxWidth: '900px', overflow: 'hidden', maxHeight: '95dvh' }}>
         <DialogHeader style={{ padding: '18px 20px 0', flexShrink: 0 }}>
           <DialogTitle style={{ fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Icon name="CalendarClock" size={16} style={{ color: '#ffb547', flexShrink: 0 }} />

@@ -162,7 +162,7 @@ const LinkedPlannedPaymentModal = ({ plannedPaymentId, open, onClose, onDeleted,
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!v) { setIsEditing(false); onClose(); } }}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="flex-row items-center justify-between space-y-0 pb-2 pr-8">
             <DialogTitle className="flex items-center gap-2 leading-normal">
               <Icon name="CalendarClock" size={18} />

@@ -110,7 +110,7 @@ const PlannedPaymentForm = ({
     <>
       {hasPermission('payments', 'create') && (
         <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon name="CalendarClock" size={24} />

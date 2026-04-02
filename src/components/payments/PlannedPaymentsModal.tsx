@@ -173,7 +173,7 @@ const PlannedPaymentsModal = () => {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="flex-row items-center justify-between space-y-0 pb-2 gap-2">
             <DialogTitle className="flex items-center gap-2 leading-normal min-w-0 truncate">
               <Icon name="CalendarClock" size={20} className="shrink-0" />
@@ -267,7 +267,7 @@ const PlannedPaymentsModal = () => {
 
       {editTarget && (
         <Dialog open={!!editTarget} onOpenChange={(v) => !v && setEditTarget(null)}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Icon name="Pencil" size={20} />
