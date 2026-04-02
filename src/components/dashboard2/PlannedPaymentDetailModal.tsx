@@ -44,8 +44,9 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
   const { token } = useAuth();
   const { toast } = useToast();
   const [actionLoading, setActionLoading] = useState<'approve' | 'reject' | null>(null);
+  const [confirmReject, setConfirmReject] = useState(false);
 
-  useEffect(() => { setActionLoading(null); }, [payment?.id]);
+  useEffect(() => { setActionLoading(null); setConfirmReject(false); }, [payment?.id]);
 
   const handleApprove = async () => {
     if (!payment || !token) return;
@@ -170,24 +171,39 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
             )}
             Согласовать
           </Button>
-          <Button
-            onClick={handleReject}
-            disabled={!!actionLoading}
-            variant="outline"
-            style={{
-              flex: 1, minWidth: '120px', gap: '6px',
-              color: '#ff6b6b', borderColor: '#ff6b6b40',
-              opacity: actionLoading === 'approve' ? 0.5 : 1,
-            }}
-            className="hover:bg-red-500/10"
-          >
-            {actionLoading === 'reject' ? (
-              <Icon name="Loader2" size={15} className="animate-spin" />
-            ) : (
+          {!confirmReject ? (
+            <Button
+              onClick={() => setConfirmReject(true)}
+              disabled={!!actionLoading}
+              variant="outline"
+              style={{
+                flex: 1, minWidth: '120px', gap: '6px',
+                color: '#ff6b6b', borderColor: '#ff6b6b40',
+                opacity: actionLoading === 'approve' ? 0.5 : 1,
+              }}
+              className="hover:bg-red-500/10"
+            >
               <Icon name="XCircle" size={15} />
-            )}
-            Отклонить
-          </Button>
+              Отклонить
+            </Button>
+          ) : (
+            <Button
+              onClick={handleReject}
+              disabled={!!actionLoading}
+              style={{
+                flex: 1, minWidth: '120px', gap: '6px',
+                background: '#ef4444', color: '#fff', border: 'none',
+              }}
+              className="hover:opacity-90 animate-pulse"
+            >
+              {actionLoading === 'reject' ? (
+                <Icon name="Loader2" size={15} className="animate-spin" />
+              ) : (
+                <Icon name="AlertTriangle" size={15} />
+              )}
+              Подтвердить отклонение
+            </Button>
+          )}
           <Button variant="outline" onClick={onClose} style={{ flexShrink: 0 }}>
             Закрыть
           </Button>
