@@ -46,7 +46,7 @@ const UpcomingPaymentRow = ({
         borderRadius: '10px',
         cursor: 'pointer',
         background: hov ? `${accent}0a` : 'hsl(var(--card))',
-        border: `1px solid ${hov ? `${accent}30` : 'hsl(var(--border) / 0.5)'}`,
+        border: `1px solid ${hov ? `${accent}40` : 'hsl(var(--border))'}`,
         transition: 'all 0.2s ease',
         outline: 'none',
         minWidth: 0,
