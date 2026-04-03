@@ -290,13 +290,13 @@ const Monitoring = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ok':
-        return 'bg-green-500/10 text-green-500 border-green-500/20';
+        return 'bg-green-500/10 text-green-600 dark:text-green-500 border-green-500/20';
       case 'warning':
-        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+        return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-yellow-500/20';
       case 'critical':
-        return 'bg-red-500/10 text-red-500 border-red-500/20';
+        return 'bg-red-500/10 text-red-600 dark:text-red-500 border-red-500/20';
       default:
-        return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+        return 'bg-gray-500/10 text-gray-600 dark:text-gray-500 border-gray-500/20';
     }
   };
 

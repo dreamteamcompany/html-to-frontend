@@ -53,7 +53,7 @@ const ServiceEditDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0f1535] border-white/10 text-white">
+      <DialogContent className="bg-card border-border text-foreground">
         <DialogHeader>
           <DialogTitle>Настройки сервиса</DialogTitle>
         </DialogHeader>
@@ -65,7 +65,7 @@ const ServiceEditDialog = ({
               id="service_name"
               value={editForm.service_name}
               onChange={(e) => setEditForm({ ...editForm, service_name: e.target.value })}
-              className="bg-white/5 border-white/10 text-white"
+              className="bg-muted border-border text-foreground"
             />
           </div>
 
@@ -76,7 +76,7 @@ const ServiceEditDialog = ({
               value={editForm.description}
               onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
               placeholder="Добавьте описание для этого сервиса..."
-              className="bg-white/5 border-white/10 text-white"
+              className="bg-muted border-border text-foreground"
               rows={3}
             />
           </div>
@@ -89,7 +89,7 @@ const ServiceEditDialog = ({
                 type="number"
                 value={editForm.threshold_warning}
                 onChange={(e) => setEditForm({ ...editForm, threshold_warning: Number(e.target.value) })}
-                className="bg-white/5 border-white/10 text-white"
+                className="bg-muted border-border text-foreground"
               />
               <p className="text-xs text-yellow-500 mt-1">Покажет предупреждение</p>
             </div>
@@ -101,7 +101,7 @@ const ServiceEditDialog = ({
                 type="number"
                 value={editForm.threshold_critical}
                 onChange={(e) => setEditForm({ ...editForm, threshold_critical: Number(e.target.value) })}
-                className="bg-white/5 border-white/10 text-white"
+                className="bg-muted border-border text-foreground"
               />
               <p className="text-xs text-red-500 mt-1">Покажет критическую ошибку</p>
             </div>

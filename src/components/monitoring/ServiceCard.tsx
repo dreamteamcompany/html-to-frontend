@@ -101,11 +101,11 @@ const ServiceCard = ({
 
         {service.threshold_warning && service.threshold_critical && (
           <div className="flex gap-2 sm:gap-3 text-xs sm:text-sm flex-wrap">
-            <div className="flex items-center gap-1 text-yellow-500 font-medium">
+            <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-medium">
               <Icon name="AlertTriangle" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span>&lt; {service.threshold_warning.toLocaleString('ru-RU')}</span>
             </div>
-            <div className="flex items-center gap-1 text-red-500 font-medium">
+            <div className="flex items-center gap-1 text-red-600 dark:text-red-500 font-medium">
               <Icon name="XCircle" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span>&lt; {service.threshold_critical.toLocaleString('ru-RU')}</span>
             </div>

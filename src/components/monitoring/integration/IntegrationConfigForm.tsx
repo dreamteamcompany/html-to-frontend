@@ -42,7 +42,7 @@ const IntegrationConfigForm = ({
   return (
     <div className="space-y-4 py-4">
       <div className="space-y-2">
-        <Label htmlFor="service_name" className="text-white">
+        <Label htmlFor="service_name" className="text-foreground">
           Название в системе
         </Label>
         <Input
@@ -50,12 +50,12 @@ const IntegrationConfigForm = ({
           value={formData.service_name}
           onChange={(e) => setFormData({ ...formData, service_name: e.target.value })}
           placeholder="Например: Timeweb Cloud (основной)"
-          className="bg-white/5 border-white/10 text-white"
+          className="bg-muted border-border text-foreground"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" className="text-white">
+        <Label htmlFor="description" className="text-foreground">
           Описание (необязательно)
         </Label>
         <Textarea
@@ -63,16 +63,16 @@ const IntegrationConfigForm = ({
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Краткое описание"
-          className="bg-white/5 border-white/10 text-white min-h-[60px]"
+          className="bg-muted border-border text-foreground min-h-[60px]"
         />
       </div>
 
-      <div className="border-t border-white/10 pt-4 space-y-3">
-        <h4 className="text-sm font-medium text-white">Данные для подключения</h4>
+      <div className="border-t border-border pt-4 space-y-3">
+        <h4 className="text-sm font-medium text-foreground">Данные для подключения</h4>
         
         {selectedService.fields.map((field) => (
           <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name} className="text-white">
+            <Label htmlFor={field.name} className="text-foreground">
               {field.label}
             </Label>
             <Input
@@ -89,15 +89,15 @@ const IntegrationConfigForm = ({
                 })
               }
               placeholder={field.placeholder}
-              className="bg-white/5 border-white/10 text-white"
+              className="bg-muted border-border text-foreground"
             />
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+      <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
         <div className="space-y-2">
-          <Label htmlFor="threshold_warning" className="text-white">
+          <Label htmlFor="threshold_warning" className="text-foreground">
             Порог предупреждения
           </Label>
           <Input
@@ -107,12 +107,12 @@ const IntegrationConfigForm = ({
             onChange={(e) =>
               setFormData({ ...formData, threshold_warning: parseFloat(e.target.value) || 0 })
             }
-            className="bg-white/5 border-white/10 text-white"
+            className="bg-muted border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="threshold_critical" className="text-white">
+          <Label htmlFor="threshold_critical" className="text-foreground">
             Критический порог
           </Label>
           <Input
@@ -122,13 +122,13 @@ const IntegrationConfigForm = ({
             onChange={(e) =>
               setFormData({ ...formData, threshold_critical: parseFloat(e.target.value) || 0 })
             }
-            className="bg-white/5 border-white/10 text-white"
+            className="bg-muted border-border text-foreground"
           />
         </div>
       </div>
 
       {testResult && (
-        <div className={`p-3 rounded-lg border ${testResult.success ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+        <div className={`p-3 rounded-lg border ${testResult.success ? 'bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'}`}>
           <div className="flex items-start gap-2">
             <Icon name={testResult.success ? 'CheckCircle2' : 'XCircle'} size={16} className="mt-0.5 shrink-0" />
             <span className="text-sm">{testResult.message}</span>
@@ -141,7 +141,7 @@ const IntegrationConfigForm = ({
           variant="outline"
           onClick={onBack}
           disabled={adding || testing}
-          className="border-white/10 text-white hover:bg-white/5"
+          className="border-border text-foreground hover:bg-muted"
         >
           Назад
         </Button>
@@ -149,7 +149,7 @@ const IntegrationConfigForm = ({
           variant="outline"
           onClick={onTest}
           disabled={!isFormValid() || testing || adding}
-          className="border-blue-500/20 text-blue-400 hover:bg-blue-500/10"
+          className="border-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
         >
           {testing ? (
             <>
