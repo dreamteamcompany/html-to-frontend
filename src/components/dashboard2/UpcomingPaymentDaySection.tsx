@@ -48,11 +48,12 @@ const UpcomingPaymentDaySection = ({
       position: 'relative',
       border: '1px solid hsl(var(--border))',
       borderRadius: '12px',
-      padding: '14px',
+      padding: 'clamp(10px, 3vw, 14px)',
     }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: '10px',
-        marginBottom: '10px', paddingLeft: '2px',
+        display: 'flex', alignItems: 'center', gap: 'clamp(6px, 2vw, 10px)',
+        marginBottom: 'clamp(8px, 2vw, 10px)', paddingLeft: '2px',
+        flexWrap: 'wrap',
       }}>
         <div style={{
           width: '8px', height: '8px', borderRadius: '50%',
@@ -61,7 +62,7 @@ const UpcomingPaymentDaySection = ({
         }} />
 
         <div style={{
-          fontSize: '13px', fontWeight: 700,
+          fontSize: 'clamp(11px, 3vw, 13px)', fontWeight: 700,
           color: accent, letterSpacing: '-0.01em',
           lineHeight: 1,
         }}>
@@ -70,7 +71,7 @@ const UpcomingPaymentDaySection = ({
 
         {group.sublabel && (
           <div style={{
-            fontSize: '11px', fontWeight: 500,
+            fontSize: 'clamp(9px, 2.5vw, 11px)', fontWeight: 500,
             color: 'hsl(var(--muted-foreground))',
             lineHeight: 1,
           }}>
@@ -78,10 +79,10 @@ const UpcomingPaymentDaySection = ({
           </div>
         )}
 
-        <div style={{ flex: 1, height: '1px', background: 'hsl(var(--border) / 0.4)' }} />
+        <div style={{ flex: 1, height: '1px', background: 'hsl(var(--border) / 0.4)', minWidth: '10px' }} />
 
         <div style={{
-          fontSize: '10px', fontWeight: 500,
+          fontSize: 'clamp(9px, 2.3vw, 10px)', fontWeight: 500,
           color: 'hsl(var(--muted-foreground) / 0.85)',
           whiteSpace: 'nowrap', lineHeight: 1,
         }}>
@@ -89,7 +90,7 @@ const UpcomingPaymentDaySection = ({
         </div>
 
         <div style={{
-          fontSize: '13px', fontWeight: 700,
+          fontSize: 'clamp(11px, 3vw, 13px)', fontWeight: 700,
           color: accent, flexShrink: 0,
           fontVariantNumeric: 'tabular-nums',
           lineHeight: 1,
@@ -100,7 +101,7 @@ const UpcomingPaymentDaySection = ({
 
       <div style={{
         display: 'flex', flexDirection: 'column', gap: '6px',
-        paddingLeft: '14px',
+        paddingLeft: 'clamp(8px, 2.5vw, 14px)',
         borderLeft: `2px solid ${accent}20`,
         marginLeft: '5px',
       }}>
