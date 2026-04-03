@@ -138,36 +138,36 @@ const Dashboard2UpcomingPayments = () => {
       borderRadius: '14px',
       overflow: 'hidden',
     }}>
-      <CardContent style={{ padding: '20px 22px' }}>
+      <CardContent style={{ padding: 'clamp(14px, 4vw, 20px) clamp(12px, 4vw, 22px)' }}>
 
         {/* ── Шапка ── */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: '20px', paddingBottom: '16px',
+          marginBottom: 'clamp(14px, 3vw, 20px)', paddingBottom: 'clamp(10px, 3vw, 16px)',
           borderBottom: '1px solid hsl(var(--border) / 0.5)',
-          gap: '10px', minWidth: 0,
+          gap: '8px', minWidth: 0,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: '1 1 0', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 2.5vw, 12px)', minWidth: 0, flex: '1 1 0', overflow: 'hidden' }}>
             <div style={{
               background: 'linear-gradient(135deg, #ffb547 0%, #ff9500 100%)',
-              width: '40px', height: '40px', borderRadius: '12px',
+              width: 'clamp(32px, 9vw, 40px)', height: 'clamp(32px, 9vw, 40px)', borderRadius: '10px',
               boxShadow: '0 3px 10px rgba(255,149,0,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
             }}>
-              <Icon name="CalendarClock" size={19} style={{ color: '#fff' }} />
+              <Icon name="CalendarClock" size={18} style={{ color: '#fff' }} />
             </div>
             <div style={{ minWidth: 0, overflow: 'hidden' }}>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: 'clamp(13px, 3.5vw, 15px)', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Предстоящие платежи
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 'clamp(10px, 2.8vw, 12px)', color: 'hsl(var(--muted-foreground))' }}>
                   {PERIOD_LABEL[period] ?? 'Выбранный период'}
                 </span>
                 {!loading && count > 0 && (
                   <span style={{
-                    fontSize: '11px', fontWeight: 700, color: dashboardColors.orange,
+                    fontSize: 'clamp(9px, 2.5vw, 11px)', fontWeight: 700, color: dashboardColors.orange,
                     background: `${dashboardColors.orange}12`,
                     padding: '2px 8px', borderRadius: '6px',
                     whiteSpace: 'nowrap',
