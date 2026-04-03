@@ -184,7 +184,7 @@ const RingChart = ({ categories, totalAmount, isMobile, isLight, onSegmentClick,
                 {hovCat.value}%
               </text>
               <text x={cx} y={cy + (isMobile ? 17 : 21)} textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 500, fill: isLight ? 'rgba(20,20,40,0.5)' : 'rgba(255,255,255,0.4)' }}>
+                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 500, fill: isLight ? 'rgba(20,20,40,0.65)' : 'rgba(255,255,255,0.7)' }}>
                 {fmt(hovCat.amount)}
               </text>
             </>
@@ -195,7 +195,7 @@ const RingChart = ({ categories, totalAmount, isMobile, isLight, onSegmentClick,
             >
               <circle cx={cx} cy={cy} r={innerR - 4} fill="transparent" />
               <text x={cx} y={cy - (isMobile ? 12 : 16)} textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 600, fill: isLight ? 'rgba(20,20,40,0.45)' : 'rgba(255,255,255,0.35)', letterSpacing: '0.8px' }}>
+                style={{ fontSize: `${isMobile ? 8 : 10}px`, fontWeight: 600, fill: isLight ? 'rgba(20,20,40,0.6)' : 'rgba(255,255,255,0.6)', letterSpacing: '0.8px' }}>
                 ИТОГО
               </text>
               <text x={cx} y={cy + (isMobile ? 2 : 2)} textAnchor="middle" dominantBaseline="middle"
@@ -203,7 +203,7 @@ const RingChart = ({ categories, totalAmount, isMobile, isLight, onSegmentClick,
                 {fmt(totalAmount)}
               </text>
               <text x={cx} y={cy + (isMobile ? 17 : 21)} textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: `${isMobile ? 8 : 9}px`, fontWeight: 500, fill: isLight ? 'rgba(20,20,40,0.35)' : 'rgba(255,255,255,0.28)' }}>
+                style={{ fontSize: `${isMobile ? 8 : 9}px`, fontWeight: 500, fill: isLight ? 'rgba(20,20,40,0.55)' : 'rgba(255,255,255,0.55)' }}>
                 {categories.length} {categories.length === 1 ? 'категория' : categories.length < 5 ? 'категории' : 'категорий'}
               </text>
             </g>

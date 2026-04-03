@@ -246,7 +246,7 @@ const CashPaymentForm = ({ categories, customerDepartments, services, onSuccess 
                   <button
                     type="button"
                     onClick={() => handleFileSelect(null)}
-                    className="text-muted-foreground hover:text-white transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <Icon name="X" size={16} />
                   </button>

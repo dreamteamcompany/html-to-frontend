@@ -48,11 +48,11 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                     {p.service_name && (
                       <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline' }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Сервис</span>
-                        <span style={{ fontSize: '11px', color: '#7551e9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</span>
+                        <span style={{ fontSize: '11px', color: 'hsl(var(--primary))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</span>
                       </div>
                     )}
                   </div>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: '#7551e9', flexShrink: 0 }}>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: 'hsl(var(--primary))', flexShrink: 0 }}>
                     {fmt(p.amount)}
                   </div>
                 </div>
@@ -159,7 +159,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                       {p.service_name && (
                         <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline', overflow: 'hidden' }}>
                           <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Сервис</span>
-                          <span style={{ fontSize: '11px', color: '#7551e9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</span>
+                          <span style={{ fontSize: '11px', color: 'hsl(var(--primary))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</span>
                         </div>
                       )}
                     </td>
@@ -178,7 +178,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                     <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                       {p.payment_date ? fmtDate(String(p.payment_date)) : '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '13px', fontWeight: 700, color: '#7551e9', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '13px', fontWeight: 700, color: 'hsl(var(--primary))', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                       {fmt(p.amount)}
                     </td>
                     <td style={{ padding: '11px 12px', overflow: 'hidden' }}>
@@ -216,7 +216,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '13px', color: 'hsl(var(--muted-foreground))' }}>Итого:</span>
-          <span style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 800, color: '#7551e9' }}>{fmt(total)}</span>
+          <span style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 800, color: 'hsl(var(--primary))' }}>{fmt(total)}</span>
         </div>
       </div>
     )}

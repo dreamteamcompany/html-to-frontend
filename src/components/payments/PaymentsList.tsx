@@ -32,22 +32,22 @@ const getStatusBadge = (status?: string) => {
     return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-muted-foreground">Черновик</span>;
   }
   if (status === 'pending_ib') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300 font-medium">На согласовании (ИБ)</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-200 font-medium">На согласовании (ИБ)</span>;
   }
   if (status === 'pending_cfo') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-300 font-medium">На согласовании (CFO)</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-700 dark:text-orange-200 font-medium">На согласовании (CFO)</span>;
   }
   if (status === 'pending_ceo') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300 font-medium">На согласовании (CEO)</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-700 dark:text-blue-200 font-medium">На согласовании (CEO)</span>;
   }
   if (status === 'approved') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300">Одобрен</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-700 dark:text-green-200">Одобрен</span>;
   }
   if (status === 'rejected') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-300">Отклонён</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-700 dark:text-red-200">Отклонён</span>;
   }
   if (status === 'revoked') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-300">Отозван</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-700 dark:text-orange-200">Отозван</span>;
   }
   return null;
 };
@@ -229,7 +229,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {isPlannedPayments && onSubmitForApproval && (
                               <button
                                 onClick={() => onSubmitForApproval(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                                className="px-3 py-1 text-xs rounded bg-green-500/20 text-green-700 dark:text-green-200 hover:bg-green-500/30"
                               >
                                 Создать платёж
                               </button>
@@ -237,8 +237,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status === 'pending_approval') && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit && (
                               <button
                                 onClick={() => onSubmitForApproval(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700"
-                                style={{ color: '#000000' }}
+                                className="px-3 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700"
                               >
                                 Отправить на согласование
                               </button>
@@ -246,7 +245,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (
                               <button
                                 onClick={() => onDelete(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 flex items-center gap-1"
+                                className="px-3 py-1 text-xs rounded bg-red-500/20 text-red-700 dark:text-red-200 hover:bg-red-500/30 flex items-center gap-1"
                                 title="Удалить черновик"
                               >
                                 <Icon name="Trash2" size={14} />
@@ -280,7 +279,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {showResubmit && onResubmit && (
                               <button
                                 onClick={() => onResubmit(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                                className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-700 dark:text-blue-200 hover:bg-blue-500/30"
                               >
                                 Повторное согласование
                               </button>
@@ -363,7 +362,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (
                         <button
                           onClick={() => onDelete(payment.id)}
-                          className="px-3 py-2 text-sm rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium flex items-center gap-1 justify-center"
+                          className="px-3 py-2 text-sm rounded bg-red-500/20 text-red-700 dark:text-red-200 hover:bg-red-500/30 font-medium flex items-center gap-1 justify-center"
                           title="Удалить черновик"
                         >
                           <Icon name="Trash2" size={16} />
@@ -397,7 +396,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       {showResubmit && onResubmit && (
                         <button
                           onClick={() => onResubmit(payment.id)}
-                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium"
+                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-700 dark:text-blue-200 hover:bg-blue-500/30 font-medium"
                         >
                           Отправить на повторное согласование
                         </button>

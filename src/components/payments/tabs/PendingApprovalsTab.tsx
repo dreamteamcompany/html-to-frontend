@@ -189,13 +189,13 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
       {notificationPermission !== 'granted' && (
         <div className="px-4 py-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm text-yellow-200">
+            <div className="flex items-center gap-2 text-sm text-yellow-700 dark:text-yellow-200">
               <Icon name="Bell" size={16} />
               <span>Включите уведомления, чтобы не пропустить новые заявки</span>
             </div>
             <button
               onClick={requestNotificationPermission}
-              className="text-sm text-yellow-200 hover:text-yellow-100 font-medium whitespace-nowrap"
+              className="text-sm text-yellow-700 dark:text-yellow-200 hover:text-yellow-800 dark:hover:text-yellow-100 font-medium whitespace-nowrap"
             >
               Включить
             </button>
