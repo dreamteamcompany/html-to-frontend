@@ -55,7 +55,7 @@ const SavingFormDialog = ({
           Добавить экономию
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Добавить экономию</DialogTitle>
         </DialogHeader>

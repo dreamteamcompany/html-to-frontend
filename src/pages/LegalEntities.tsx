@@ -129,7 +129,7 @@ const LegalEntities = () => {
                   <span className="sm:inline">Добавить юридическое лицо</span>
                 </Button>
               </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="w-[95vw] sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>
                   {editingEntity ? 'Редактировать юридическое лицо' : 'Новое юридическое лицо'}
@@ -216,12 +216,12 @@ const LegalEntities = () => {
                     className="border border-primary/25 rounded-lg p-4 hover:border-primary/50 hover:bg-primary/[0.03] transition-all"
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
                           <Icon name="Building2" size={24} />
                         </div>
-                        <div>
-                          <h3 className="font-semibold">{entity.name}</h3>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold truncate">{entity.name}</h3>
                         </div>
                       </div>
                     </div>
