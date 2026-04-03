@@ -325,7 +325,7 @@ const IndexationDrillModal = ({ open, onClose }: Props) => {
                       background: idx % 2 === 0 ? 'transparent' : 'rgba(255,181,71,0.02)',
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))' }}>{row.name}</span>
+                        <span style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', wordBreak: 'break-word' }}>{row.name}</span>
                         <span style={{ fontSize: '14px', fontWeight: 700, color: row.rowPct === null ? 'hsl(var(--muted-foreground))' : row.rowPct > 0 ? '#ff6b6b' : row.rowPct < 0 ? '#01b574' : 'hsl(var(--foreground))' }}>
                           {row.rowPct === null ? 'Новый' : `${row.rowPct > 0 ? '+' : ''}${row.rowPct}%`}
                         </span>
@@ -350,7 +350,7 @@ const IndexationDrillModal = ({ open, onClose }: Props) => {
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,181,71,0.05)')}
                       onMouseLeave={e => (e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : 'rgba(255,181,71,0.02)')}
                     >
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
                         {row.name}
                       </div>
                       <div style={{ fontSize: '13px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap' }}>

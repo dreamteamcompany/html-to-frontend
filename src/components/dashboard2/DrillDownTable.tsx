@@ -1,4 +1,5 @@
 import Icon from '@/components/ui/icon';
+import { useNavigate } from 'react-router-dom';
 import { fmt, fmtDate, resolvePaymentType, STATUS_LABEL } from './drillDownTypes';
 import type { PaymentRecord } from './drillDownTypes';
 
@@ -9,7 +10,13 @@ interface DrillDownTableProps {
   isLight: boolean;
 }
 
-const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProps) => (
+const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProps) => {
+  const navigate = useNavigate();
+  const goToPayment = (id?: number) => {
+    if (id) navigate(`/payments?payment_id=${id}`);
+  };
+
+  return (
   <>
     {/* ═══ CONTENT ═══ */}
     <div style={{ overflowY: 'auto', flex: 1 }}>
@@ -26,29 +33,32 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
             return (
               <div
                 key={p.id ?? i}
+                onClick={() => goToPayment(p.id)}
                 style={{
                   background: 'hsl(var(--background))',
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '12px',
                   padding: '14px',
+                  cursor: p.id ? 'pointer' : 'default',
+                  transition: 'border-color 0.15s',
                 }}
               >
                 {/* Строка 1: описание + сумма */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '10px' }}>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.3 }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.3, wordBreak: 'break-word' }}>
                       {p.description || '—'}
                     </div>
                     {p.contractor_name && (
-                      <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'baseline' }}>
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Контрагент</span>
-                        <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.contractor_name}</span>
+                        <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', wordBreak: 'break-word' }}>{p.contractor_name}</span>
                       </div>
                     )}
                     {p.service_name && (
-                      <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline' }}>
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Сервис</span>
-                        <span style={{ fontSize: '11px', color: 'hsl(var(--primary))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</span>
+                        <span style={{ fontSize: '11px', color: 'hsl(var(--primary))', wordBreak: 'break-word' }}>{p.service_name}</span>
                       </div>
                     )}
                   </div>
@@ -142,34 +152,35 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                 return (
                   <tr
                     key={p.id ?? i}
-                    style={{ borderBottom: '1px solid hsl(var(--border))', transition: 'background 0.15s' }}
+                    onClick={() => goToPayment(p.id)}
+                    style={{ borderBottom: '1px solid hsl(var(--border))', transition: 'background 0.15s', cursor: p.id ? 'pointer' : 'default' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.03)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
                     <td style={{ padding: '11px 12px', overflow: 'hidden' }}>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
                         {p.description || '—'}
                       </div>
                       {p.contractor_name && (
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '3px', alignItems: 'baseline', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '3px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Контрагент</span>
-                          <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.contractor_name}</span>
+                          <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', wordBreak: 'break-word' }}>{p.contractor_name}</span>
                         </div>
                       )}
                       {p.service_name && (
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Сервис</span>
-                          <span style={{ fontSize: '11px', color: 'hsl(var(--primary))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</span>
+                          <span style={{ fontSize: '11px', color: 'hsl(var(--primary))', wordBreak: 'break-word' }}>{p.service_name}</span>
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
                       {p.category_name || '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
                       {p.department_name || '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
                       {p.legal_entity_name || '—'}
                     </td>
                     <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -221,6 +232,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
       </div>
     )}
   </>
-);
+  );
+};
 
 export default DrillDownTable;
