@@ -7,51 +7,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { usePeriod } from '@/contexts/PeriodContext';
 import PlannedPaymentDetailModal from './PlannedPaymentDetailModal';
-import PlannedPaymentForm from '@/components/payments/PlannedPaymentForm';
-import { usePlannedPaymentForm } from '@/hooks/usePlannedPaymentForm';
+
 import { toDateStr, formatAmount, groupByDay, PERIOD_LABEL } from './UpcomingPaymentsTypes';
 import UpcomingPaymentDaySection, { UpcomingEmptyState } from './UpcomingPaymentDaySection';
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 const Dashboard2UpcomingPayments = () => {
-  const { token, hasPermission } = useAuth();
+  const { token } = useAuth();
   const { period, getDateRange } = usePeriod();
   const [payments, setPayments]   = useState<PaymentRecord[]>([]);
   const [loading, setLoading]     = useState(true);
   const [selected, setSelected]   = useState<PaymentRecord | null>(null);
-  const [dicts, setDicts] = useState<{
-    categories: {id:number;name:string;icon:string}[];
-    legalEntities: {id:number;name:string}[];
-    contractors: {id:number;name:string}[];
-    customerDepartments: {id:number;name:string}[];
-    services: {id:number;name:string;description:string}[];
-    dictsLoaded: boolean;
-  }>({ categories:[], legalEntities:[], contractors:[], customerDepartments:[], services:[], dictsLoaded:false });
 
-  const loadDicts = useCallback(async () => {
-    if (!token || dicts.dictsLoaded) return;
-    const [catR, leR, contrR, deptR, svcR] = await Promise.all([
-      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=categories`,           { headers:{'X-Auth-Token':token} }),
-      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=legal-entities`,       { headers:{'X-Auth-Token':token} }),
-      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=contractors`,          { headers:{'X-Auth-Token':token} }),
-      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=customer-departments`, { headers:{'X-Auth-Token':token} }),
-      fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=services`,             { headers:{'X-Auth-Token':token} }),
-    ]);
-    setDicts({
-      categories:          catR.ok  ? await catR.json()   : [],
-      legalEntities:       leR.ok   ? await leR.json()    : [],
-      contractors:         contrR.ok ? await contrR.json() : [],
-      customerDepartments: deptR.ok  ? await deptR.json()  : [],
-      services:            svcR.ok   ? await svcR.json()   : [],
-      dictsLoaded: true,
-    });
-  }, [token, dicts.dictsLoaded]);
-
-  const { dialogOpen, setDialogOpen, formData, setFormData, handleSubmit } = usePlannedPaymentForm(
-    [],
-    () => { fetchPayments(); }
-  );
 
   const { dateFromStr, dateToStr } = useMemo(() => {
     const { from, to } = getDateRange();
@@ -179,34 +147,7 @@ const Dashboard2UpcomingPayments = () => {
             </div>
           </div>
 
-          {hasPermission('payments', 'create') && (
-            <button
-              onClick={() => { loadDicts(); setDialogOpen(true); }}
-              title="Создать запланированный платёж"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
-                border: '1px solid hsl(var(--border))',
-                background: 'hsl(var(--background))',
-                cursor: 'pointer', color: 'hsl(var(--foreground))',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = `${dashboardColors.orange}15`;
-                (e.currentTarget as HTMLButtonElement).style.borderColor = dashboardColors.orange;
-                (e.currentTarget as HTMLButtonElement).style.color = dashboardColors.orange;
-                (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = 'hsl(var(--background))';
-                (e.currentTarget as HTMLButtonElement).style.borderColor = 'hsl(var(--border))';
-                (e.currentTarget as HTMLButtonElement).style.color = 'hsl(var(--foreground))';
-                (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
-              }}
-            >
-              <Icon name="Plus" size={16} />
-            </button>
-          )}
+
         </div>
 
         {/* ── Тело ── */}
@@ -237,20 +178,7 @@ const Dashboard2UpcomingPayments = () => {
         onActionDone={fetchPayments}
       />
 
-      <PlannedPaymentForm
-        dialogOpen={dialogOpen}
-        setDialogOpen={setDialogOpen}
-        formData={formData}
-        setFormData={setFormData}
-        categories={dicts.categories}
-        legalEntities={dicts.legalEntities}
-        contractors={dicts.contractors}
-        customerDepartments={dicts.customerDepartments}
-        customFields={[]}
-        services={dicts.services}
-        handleSubmit={handleSubmit}
-        onDialogOpen={loadDicts}
-      />
+
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </Card>
