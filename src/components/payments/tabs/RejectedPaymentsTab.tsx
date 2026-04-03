@@ -154,7 +154,7 @@ const RejectedPaymentsTab = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <h3 className="text-lg font-semibold">{payment.category_name}</h3>
-                          <span className="px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-700 dark:text-red-300">✗ Отклонено</span>
+                          <span className="px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-800 dark:text-red-200 font-medium">✗ Отклонено</span>
                         </div>
                         <p className="text-muted-foreground text-sm mb-2">{payment.description}</p>
                         <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">

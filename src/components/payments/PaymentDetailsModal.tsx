@@ -8,19 +8,28 @@ import PaymentDetailsSidebar from './PaymentDetailsSidebar';
 
 const getStatusBadge = (status?: string) => {
   if (!status || status === 'draft') {
-    return <span className="px-3 py-1 rounded-full text-sm bg-gray-500/20" style={{ color: '#000000' }}>Черновик</span>;
+    return <span className="px-3 py-1 rounded-full text-sm bg-gray-500/20 text-foreground/70 font-medium">Черновик</span>;
+  }
+  if (status === 'pending_ib') {
+    return <span className="px-3 py-1 rounded-full text-sm bg-yellow-500/20 text-yellow-800 dark:text-yellow-200 font-medium">На согласовании (ИБ)</span>;
+  }
+  if (status === 'pending_cfo') {
+    return <span className="px-3 py-1 rounded-full text-sm bg-orange-500/20 text-orange-800 dark:text-orange-200 font-medium">На согласовании (CFO)</span>;
   }
   if (status === 'pending_ceo') {
-    return <span className="px-3 py-1 rounded-full text-sm bg-blue-500/20" style={{ color: '#000000' }}>Ожидает CEO</span>;
+    return <span className="px-3 py-1 rounded-full text-sm bg-blue-500/20 text-blue-800 dark:text-blue-200 font-medium">Ожидает CEO</span>;
+  }
+  if (status === 'pending_tech_director') {
+    return <span className="px-3 py-1 rounded-full text-sm bg-purple-500/20 text-purple-800 dark:text-purple-200 font-medium">На согласовании (ТД)</span>;
   }
   if (status === 'approved') {
-    return <span className="px-3 py-1 rounded-full text-sm bg-green-500/20" style={{ color: '#000000' }}>Одобрен</span>;
+    return <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-800 dark:text-green-200 font-medium">Одобрен</span>;
   }
   if (status === 'rejected') {
-    return <span className="px-3 py-1 rounded-full text-sm bg-red-500/20" style={{ color: '#000000' }}>Отклонен</span>;
+    return <span className="px-3 py-1 rounded-full text-sm bg-red-500/20 text-red-800 dark:text-red-200 font-medium">Отклонен</span>;
   }
   if (status === 'revoked') {
-    return <span className="px-3 py-1 rounded-full text-sm bg-orange-500/20" style={{ color: '#000000' }}>⚠ Отозван</span>;
+    return <span className="px-3 py-1 rounded-full text-sm bg-orange-500/20 text-orange-800 dark:text-orange-200 font-medium">⚠ Отозван</span>;
   }
   return null;
 };

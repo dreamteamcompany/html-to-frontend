@@ -29,25 +29,28 @@ const STATUS_ORDER: Record<string, number> = {
 
 const getStatusBadge = (status?: string) => {
   if (!status || status === 'draft') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-muted-foreground">Черновик</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-foreground/70 font-medium">Черновик</span>;
   }
   if (status === 'pending_ib') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-200 font-medium">На согласовании (ИБ)</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-800 dark:text-yellow-200 font-medium">На согласовании (ИБ)</span>;
   }
   if (status === 'pending_cfo') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-700 dark:text-orange-200 font-medium">На согласовании (CFO)</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-800 dark:text-orange-200 font-medium">На согласовании (CFO)</span>;
   }
   if (status === 'pending_ceo') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-700 dark:text-blue-200 font-medium">На согласовании (CEO)</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-800 dark:text-blue-200 font-medium">На согласовании (CEO)</span>;
+  }
+  if (status === 'pending_tech_director') {
+    return <span className="px-2 py-1 rounded-full text-xs bg-purple-500/20 text-purple-800 dark:text-purple-200 font-medium">На согласовании (ТД)</span>;
   }
   if (status === 'approved') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-700 dark:text-green-200">Одобрен</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-800 dark:text-green-200 font-medium">Одобрен</span>;
   }
   if (status === 'rejected') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-700 dark:text-red-200">Отклонён</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-800 dark:text-red-200 font-medium">Отклонён</span>;
   }
   if (status === 'revoked') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-700 dark:text-orange-200">Отозван</span>;
+    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-800 dark:text-orange-200 font-medium">Отозван</span>;
   }
   return null;
 };
