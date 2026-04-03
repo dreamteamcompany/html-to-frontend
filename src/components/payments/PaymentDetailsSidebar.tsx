@@ -198,7 +198,7 @@ const PaymentDetailsSidebar = ({
           {(!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval && !showConfirmation && (
             <button
               onClick={() => setShowConfirmation(true)}
-              className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30 hover:text-blue-800 dark:hover:text-blue-200 font-medium transition-colors text-sm sm:text-base"
+              className="w-full px-4 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base"
             >
               {payment.status === 'rejected' ? 'Отправить повторно' : 'Отправить на согласование'}
             </button>
