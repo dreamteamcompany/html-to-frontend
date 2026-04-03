@@ -7,20 +7,20 @@ import UpcomingPaymentRow from './UpcomingPaymentRow';
 export const UpcomingEmptyState = ({ period }: { period: string }) => (
   <div style={{
     display: 'flex', flexDirection: 'column', alignItems: 'center',
-    padding: '44px 16px', gap: '12px',
+    padding: 'clamp(28px, 8vw, 44px) clamp(12px, 4vw, 16px)', gap: '10px',
   }}>
     <div style={{
-      width: '52px', height: '52px', borderRadius: '14px',
+      width: 'clamp(40px, 12vw, 52px)', height: 'clamp(40px, 12vw, 52px)', borderRadius: '12px',
       background: `${dashboardColors.green}12`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      <Icon name="CheckCircle" size={24} style={{ color: dashboardColors.green }} />
+      <Icon name="CheckCircle" size={22} style={{ color: dashboardColors.green }} />
     </div>
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: '14px', fontWeight: 600, color: 'hsl(var(--foreground))', marginBottom: '4px' }}>
+      <div style={{ fontSize: 'clamp(12px, 3.5vw, 14px)', fontWeight: 600, color: 'hsl(var(--foreground))', marginBottom: '4px' }}>
         Нет платежей
       </div>
-      <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'clamp(11px, 3vw, 12px)', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5, wordBreak: 'break-word' }}>
         За период «{(PERIOD_LABEL[period] ?? period).toLowerCase()}»<br />нет запланированных платежей
       </div>
     </div>
