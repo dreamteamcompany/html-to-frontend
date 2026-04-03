@@ -38,7 +38,7 @@ const Monitoring = () => {
     threshold_critical: 0,
   });
   const [saving, setSaving] = useState(false);
-  const { token } = useAuth();
+  const { token, hasPermission } = useAuth();
   const { toast } = useToast();
 
   const {
@@ -361,10 +361,12 @@ const Monitoring = () => {
                 <Icon name="Wallet" className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mb-3 sm:mb-4" />
                 <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Нет подключенных сервисов</h3>
                 <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto">Добавьте интеграции с сервисами для мониторинга балансов</p>
-                <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)} className="sm:size-default">
-                  <Icon name="Plus" className="mr-2 h-4 w-4" />
-                  Добавить интеграцию
-                </Button>
+                {hasPermission('monitoring', 'configure') && (
+                  <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)} className="sm:size-default">
+                    <Icon name="Plus" className="mr-2 h-4 w-4" />
+                    Добавить интеграцию
+                  </Button>
+                )}
               </Card>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">

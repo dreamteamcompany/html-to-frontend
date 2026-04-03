@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Permission {
   id: number;
@@ -26,6 +27,8 @@ interface RoleCardProps {
 }
 
 const RoleCard = ({ role, onEdit, onDelete, getResourceColor }: RoleCardProps) => {
+  const { hasPermission } = useAuth();
+
   return (
     <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
       <CardContent className="p-6">
@@ -67,26 +70,32 @@ const RoleCard = ({ role, onEdit, onDelete, getResourceColor }: RoleCardProps) =
           </div>
         </div>
 
-        <div className="flex gap-2 pt-4 border-t border-white/10">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEdit(role)}
-            className="flex-1 gap-2"
-          >
-            <Icon name="Pencil" size={16} />
-            Изменить
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDelete(role.id)}
-            className="flex-1 gap-2 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-          >
-            <Icon name="Trash2" size={16} />
-            Удалить
-          </Button>
-        </div>
+        {(hasPermission('roles', 'update') || hasPermission('roles', 'remove')) && (
+          <div className="flex gap-2 pt-4 border-t border-white/10">
+            {hasPermission('roles', 'update') && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(role)}
+                className="flex-1 gap-2"
+              >
+                <Icon name="Pencil" size={16} />
+                Изменить
+              </Button>
+            )}
+            {hasPermission('roles', 'remove') && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(role.id)}
+                className="flex-1 gap-2 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+              >
+                <Icon name="Trash2" size={16} />
+                Удалить
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

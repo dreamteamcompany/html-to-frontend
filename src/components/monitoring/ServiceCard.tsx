@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ServiceBalance {
   id: number;
@@ -32,6 +33,8 @@ const ServiceCard = ({
   getStatusColor, 
   getStatusIcon 
 }: ServiceCardProps) => {
+  const { hasPermission } = useAuth();
+
   return (
     <Card className="p-4 sm:p-5 lg:p-5 hover:shadow-lg transition-all">
       <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
@@ -61,22 +64,26 @@ const ServiceCard = ({
           >
             <Icon name="RefreshCw" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => onEdit(service)}
-            className="h-8 w-8 sm:h-9 sm:w-9"
-          >
-            <Icon name="Settings" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => onDelete(service.id, service.service_name)}
-            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 sm:h-9 sm:w-9"
-          >
-            <Icon name="Trash2" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          </Button>
+          {hasPermission('monitoring', 'configure') && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => onEdit(service)}
+              className="h-8 w-8 sm:h-9 sm:w-9"
+            >
+              <Icon name="Settings" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </Button>
+          )}
+          {hasPermission('monitoring', 'configure') && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => onDelete(service.id, service.service_name)}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 sm:h-9 sm:w-9"
+            >
+              <Icon name="Trash2" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </Button>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RolesHeaderProps {
   menuOpen: boolean;
@@ -9,6 +10,7 @@ interface RolesHeaderProps {
 }
 
 const RolesHeader = ({ menuOpen, setMenuOpen, onAddClick }: RolesHeaderProps) => {
+  const { hasPermission } = useAuth();
   return (
     <>
       <header className="hidden">
@@ -42,10 +44,12 @@ const RolesHeader = ({ menuOpen, setMenuOpen, onAddClick }: RolesHeaderProps) =>
           <h1 className="text-2xl md:text-3xl font-bold mb-2">Права доступа</h1>
           <p className="text-sm md:text-base text-muted-foreground">Управление ролями и разрешениями</p>
         </div>
-        <Button onClick={onAddClick} className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
-          <Icon name="Plus" size={18} />
-          <span>Добавить роль</span>
-        </Button>
+        {hasPermission('roles', 'create') && (
+          <Button onClick={onAddClick} className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
+            <Icon name="Plus" size={18} />
+            <span>Добавить роль</span>
+          </Button>
+        )}
       </div>
     </>
   );

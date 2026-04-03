@@ -29,7 +29,8 @@ const Settings = () => {
   const { token, hasPermission } = useAuth();
   const { toast } = useToast();
 
-  const isAdmin = hasPermission('settings', 'write') || hasPermission('roles', 'write');
+  const canUpdateSettings = hasPermission('system', 'settings_update');
+  const isAdmin = canUpdateSettings;
 
   const {
     menuOpen,
@@ -147,7 +148,7 @@ const Settings = () => {
         <div className="grid gap-6">
           <ScheduledPaymentsSettings />
           
-          {isAdmin && (
+          {(canUpdateSettings || isAdmin) && (
             <Card className="border border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

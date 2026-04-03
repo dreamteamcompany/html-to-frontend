@@ -64,7 +64,7 @@ const App = () => {
             <SwNavigationHandler />
             <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute><Dashboard2 /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute requiredPermission={{ resource: 'dashboard', action: 'read' }}><Dashboard2 /></ProtectedRoute>} />
             <Route path="/payments" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><Payments /></ProtectedRoute>} />
             <Route path="/categories" element={<ProtectedRoute requiredPermission={{ resource: 'categories', action: 'read' }}><Categories /></ProtectedRoute>} />
             <Route path="/legal-entities" element={<ProtectedRoute requiredPermission={{ resource: 'legal_entities', action: 'read' }}><LegalEntities /></ProtectedRoute>} />
@@ -73,16 +73,16 @@ const App = () => {
             <Route path="/customer-departments" element={<ProtectedRoute requiredPermission={{ resource: 'customer_departments', action: 'read' }}><CustomerDepartments /></ProtectedRoute>} />
             <Route path="/users" element={<ProtectedRoute requiredPermission={{ resource: 'users', action: 'read' }}><Users /></ProtectedRoute>} />
             <Route path="/roles" element={<ProtectedRoute requiredPermission={{ resource: 'roles', action: 'read' }}><Roles /></ProtectedRoute>} />
-            <Route path="/approvals-history" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><ApprovalsHistory /></ProtectedRoute>} />
+            <Route path="/approvals-history" element={<ProtectedRoute requiredPermission={{ resource: 'approvals', action: 'read' }}><ApprovalsHistory /></ProtectedRoute>} />
             <Route path="/services" element={<ProtectedRoute requiredPermission={{ resource: 'services', action: 'read' }}><Services /></ProtectedRoute>} />
-            <Route path="/audit-logs" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><AuditLogs /></ProtectedRoute>} />
-            <Route path="/savings" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><Savings /></ProtectedRoute>} />
-            <Route path="/saving-reasons" element={<ProtectedRoute requiredPermission={{ resource: 'categories', action: 'read' }}><SavingReasons /></ProtectedRoute>} />
-            <Route path="/log-analyzer" element={<ProtectedRoute><LogAnalyzer /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/audit-logs" element={<ProtectedRoute requiredPermission={{ resource: 'audit_logs', action: 'read' }}><AuditLogs /></ProtectedRoute>} />
+            <Route path="/savings" element={<ProtectedRoute requiredPermission={{ resource: 'savings', action: 'read' }}><Savings /></ProtectedRoute>} />
+            <Route path="/saving-reasons" element={<ProtectedRoute requiredPermission={{ resource: 'saving_reasons', action: 'read' }}><SavingReasons /></ProtectedRoute>} />
+            <Route path="/log-analyzer" element={<ProtectedRoute requiredPermission={{ resource: 'monitoring', action: 'system_logs' }}><LogAnalyzer /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute requiredPermission={{ resource: 'system', action: 'settings_read' }}><Settings /></ProtectedRoute>} />
             <Route path="/category/:categoryId" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><CategoryPayments /></ProtectedRoute>} />
-            <Route path="/planned-payments" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><PlannedPayments /></ProtectedRoute>} />
-            <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
+            <Route path="/planned-payments" element={<ProtectedRoute requiredPermission={{ resource: 'planned_payments', action: 'read' }}><PlannedPayments /></ProtectedRoute>} />
+            <Route path="/monitoring" element={<ProtectedRoute requiredPermission={{ resource: 'monitoring', action: 'read' }}><Monitoring /></ProtectedRoute>} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

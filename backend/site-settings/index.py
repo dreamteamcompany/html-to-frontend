@@ -36,6 +36,29 @@ def verify_token(event: dict, conn) -> dict:
         return {}
     return payload
 
+def check_permission(conn, user_id: int, resource: str, action: str) -> bool:
+    """Проверяет, есть ли у пользователя указанное разрешение или роль Администратор"""
+    cur = conn.cursor()
+    cur.execute(
+        f"SELECT r.name FROM {SCHEMA}.user_roles ur "
+        f"JOIN {SCHEMA}.roles r ON ur.role_id = r.id "
+        f"WHERE ur.user_id = %s", (user_id,)
+    )
+    roles = [row[0] for row in cur.fetchall()]
+    if 'Администратор' in roles or 'Admin' in roles:
+        cur.close()
+        return True
+    cur.execute(
+        f"SELECT 1 FROM {SCHEMA}.role_permissions rp "
+        f"JOIN {SCHEMA}.permissions p ON rp.permission_id = p.id "
+        f"JOIN {SCHEMA}.user_roles ur ON rp.role_id = ur.role_id "
+        f"WHERE ur.user_id = %s AND p.resource = %s AND p.action = %s LIMIT 1",
+        (user_id, resource, action)
+    )
+    has = cur.fetchone() is not None
+    cur.close()
+    return has
+
 def handler(event: dict, context) -> dict:
     """API для чтения и сохранения настроек сайта с аудит-логированием"""
 
@@ -77,6 +100,15 @@ def handler(event: dict, context) -> dict:
                 'statusCode': 401,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                 'body': json.dumps({'error': 'Unauthorized'})
+            }
+
+        if not check_permission(conn, payload['user_id'], 'system', 'settings_update'):
+            cur.close()
+            conn.close()
+            return {
+                'statusCode': 403,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Forbidden: system.settings_update permission required'})
             }
 
         user_id = payload['user_id']

@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Service {
   id: number;
@@ -38,6 +39,8 @@ interface ServicesTableProps {
 }
 
 const ServicesTable = ({ services, loading, onEdit, onDelete }: ServicesTableProps) => {
+  const { hasPermission } = useAuth();
+
   return (
     <Card>
       <CardHeader>
@@ -80,24 +83,28 @@ const ServicesTable = ({ services, loading, onEdit, onDelete }: ServicesTablePro
                     <TableCell>{service.contractor_name || '—'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEdit(service)}
-                          className="gap-2"
-                        >
-                          <Icon name="Pencil" size={16} />
-                          Редактировать
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onDelete(service.id)}
-                          className="gap-2 text-red-500 hover:text-red-600"
-                        >
-                          <Icon name="Trash2" size={16} />
-                          Удалить
-                        </Button>
+                        {hasPermission('services', 'update') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEdit(service)}
+                            className="gap-2"
+                          >
+                            <Icon name="Pencil" size={16} />
+                            Редактировать
+                          </Button>
+                        )}
+                        {hasPermission('services', 'remove') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDelete(service.id)}
+                            className="gap-2 text-red-500 hover:text-red-600"
+                          >
+                            <Icon name="Trash2" size={16} />
+                            Удалить
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
