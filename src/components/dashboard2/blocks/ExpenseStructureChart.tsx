@@ -340,9 +340,9 @@ const ExpenseStructureChart = () => {
   return (
     <>
     <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
-      <CardContent className="p-6 flex flex-col flex-1">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'hsl(var(--foreground))' }}>Структура Расходов</h3>
+      <CardContent className="flex flex-col flex-1" style={{ padding: isMobile ? '14px 12px' : '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '14px' : '20px', gap: '8px' }}>
+          <h3 style={{ fontSize: isMobile ? '15px' : '18px', fontWeight: '700', color: 'hsl(var(--foreground))' }}>Структура Расходов</h3>
           <div style={{ display: 'flex', gap: '8px', background: 'hsl(var(--muted))', padding: '4px', borderRadius: '10px' }}>
             <button style={activeTab === 'general' ? activeStyle : getInactiveStyle()} onClick={() => setActiveTab('general')}>
               Общие
@@ -370,9 +370,9 @@ const ExpenseStructureChart = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid hsl(var(--border))' }}>
-                  <th style={{ textAlign: 'left', padding: '10px 12px', color: 'hsl(var(--muted-foreground))', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Категория</th>
-                  <th style={{ textAlign: 'right', padding: '10px 12px', color: 'hsl(var(--muted-foreground))', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Доля</th>
-                  <th style={{ textAlign: 'right', padding: '10px 12px', color: 'hsl(var(--muted-foreground))', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Сумма</th>
+                  <th style={{ textAlign: 'left', padding: isMobile ? '8px 6px' : '10px 12px', color: 'hsl(var(--muted-foreground))', fontSize: isMobile ? '10px' : '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Категория</th>
+                  <th style={{ textAlign: 'right', padding: isMobile ? '8px 4px' : '10px 12px', color: 'hsl(var(--muted-foreground))', fontSize: isMobile ? '10px' : '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>Доля</th>
+                  <th style={{ textAlign: 'right', padding: isMobile ? '8px 6px' : '10px 12px', color: 'hsl(var(--muted-foreground))', fontSize: isMobile ? '10px' : '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>Сумма</th>
                 </tr>
               </thead>
               <tbody>
@@ -384,17 +384,17 @@ const ExpenseStructureChart = () => {
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(117,81,233,0.06)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
-                    <td style={{ padding: '14px 12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: cat.color, flexShrink: 0 }} />
-                        <span style={{ color: 'hsl(var(--foreground))', fontSize: '14px', fontWeight: '500' }}>{cat.name}</span>
+                    <td style={{ padding: isMobile ? '10px 6px' : '14px 12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '10px' }}>
+                        <div style={{ width: isMobile ? '8px' : '10px', height: isMobile ? '8px' : '10px', borderRadius: '50%', background: cat.color, flexShrink: 0 }} />
+                        <span style={{ color: 'hsl(var(--foreground))', fontSize: isMobile ? '12px' : '14px', fontWeight: '500', wordBreak: 'break-word', lineHeight: 1.3 }}>{cat.name}</span>
                       </div>
                     </td>
-                    <td style={{ textAlign: 'right', padding: '14px 12px' }}>
-                      <span style={{ color: 'hsl(var(--foreground))', fontSize: '14px', fontWeight: '600' }}>{cat.value}%</span>
+                    <td style={{ textAlign: 'right', padding: isMobile ? '10px 4px' : '14px 12px', whiteSpace: 'nowrap' }}>
+                      <span style={{ color: 'hsl(var(--foreground))', fontSize: isMobile ? '12px' : '14px', fontWeight: '600' }}>{cat.value}%</span>
                     </td>
-                    <td style={{ textAlign: 'right', padding: '14px 12px' }}>
-                      <span style={{ color: 'hsl(var(--foreground))', fontSize: '14px' }}>{new Intl.NumberFormat('ru-RU').format(cat.amount)} ₽</span>
+                    <td style={{ textAlign: 'right', padding: isMobile ? '10px 6px' : '14px 12px', whiteSpace: 'nowrap' }}>
+                      <span style={{ color: 'hsl(var(--foreground))', fontSize: isMobile ? '11px' : '14px', fontVariantNumeric: 'tabular-nums' }}>{new Intl.NumberFormat('ru-RU').format(cat.amount)} ₽</span>
                     </td>
                   </tr>
                 ))}
@@ -402,12 +402,20 @@ const ExpenseStructureChart = () => {
             </table>
             <div
               onClick={() => openDrill({ type: 'all', value: 'all', label: 'Все расходы' })}
-              style={{ marginTop: '16px', padding: '14px 12px', background: 'rgba(117, 81, 233, 0.1)', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(117,81,233,0.18)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(117,81,233,0.10)'; }}
+              style={{
+                marginTop: '16px',
+                padding: isMobile ? '12px 10px' : '14px 16px',
+                background: 'linear-gradient(135deg, #7551e9, #6336e0)',
+                borderRadius: '10px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                cursor: 'pointer', transition: 'all 0.15s ease',
+                boxShadow: '0 4px 14px rgba(117, 81, 233, 0.35)',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(117,81,233,0.5)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 14px rgba(117,81,233,0.35)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
             >
-              <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', fontWeight: '500' }}>Итого</span>
-              <span style={{ color: '#ffffff', fontSize: '16px', fontWeight: '700' }}>
+              <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: isMobile ? '12px' : '14px', fontWeight: '600' }}>Итого</span>
+              <span style={{ color: '#ffffff', fontSize: isMobile ? '14px' : '16px', fontWeight: '800', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
                 {new Intl.NumberFormat('ru-RU').format(totalAmount)} ₽
               </span>
             </div>
