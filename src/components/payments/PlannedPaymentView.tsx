@@ -23,7 +23,7 @@ const PlannedPaymentView = ({ payment, isAdmin, onEditStart, onDeleteRequest }: 
       <div className="text-right shrink-0">
         <p className="text-lg font-bold text-primary">{fmt(payment.amount)}</p>
         {payment.recurrence_type && payment.recurrence_type !== 'once' && (
-          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">
+          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-sky-500/8 text-sky-600 dark:text-sky-400 border border-sky-500/20 inline-flex items-center gap-1 leading-none tracking-wide">
             {recurrenceLabel[payment.recurrence_type] ?? payment.recurrence_type}
           </span>
         )}

@@ -118,11 +118,23 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
             <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginBottom: '4px' }}>Сумма платежа</div>
             <div style={{ fontSize: '22px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>{fmt(payment.amount)}</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '10px', fontWeight: 700, color: '#fff', background: '#6366f1', borderRadius: '4px', padding: '2px 6px' }}>
+              <span style={{
+                fontSize: '10px', fontWeight: 600, color: '#7c3aed',
+                background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.20)',
+                borderRadius: '20px', padding: '3px 10px',
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                letterSpacing: '0.01em', lineHeight: 1.4,
+              }}>
                 Запланированный
               </span>
               {recType && recType !== 'once' && (
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#fff', background: '#0ea5e9', borderRadius: '4px', padding: '2px 6px' }}>
+                <span style={{
+                  fontSize: '10px', fontWeight: 600, color: '#0284c7',
+                  background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.20)',
+                  borderRadius: '20px', padding: '3px 10px',
+                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  letterSpacing: '0.01em', lineHeight: 1.4,
+                }}>
                   {REC_LABEL[recType] ?? recType}
                 </span>
               )}

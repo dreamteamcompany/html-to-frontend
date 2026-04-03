@@ -3,10 +3,10 @@ import Icon from '@/components/ui/icon';
 import { PaymentRecord } from '@/contexts/PaymentsCacheContext';
 import { formatAmount } from './UpcomingPaymentsTypes';
 
-const REC: Record<string, { label: string; icon: string; color: string; bg: string }> = {
-  monthly: { label: 'ежемес.', icon: 'RefreshCw', color: '#0ea5e9', bg: 'rgba(14,165,233,0.10)' },
-  yearly:  { label: 'ежегодно', icon: 'CalendarDays', color: '#f59e0b', bg: 'rgba(245,158,11,0.10)' },
-  weekly:  { label: 'еженед.', icon: 'RotateCw', color: '#10b981', bg: 'rgba(16,185,129,0.10)' },
+const REC: Record<string, { label: string; icon: string; color: string; bg: string; border: string }> = {
+  monthly: { label: 'ежемес.', icon: 'RefreshCw', color: '#0284c7', bg: 'rgba(14,165,233,0.08)', border: 'rgba(14,165,233,0.20)' },
+  yearly:  { label: 'ежегодно', icon: 'CalendarDays', color: '#d97706', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.20)' },
+  weekly:  { label: 'еженед.', icon: 'RotateCw', color: '#059669', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.20)' },
 };
 
 const UpcomingPaymentRow = ({
@@ -83,10 +83,11 @@ const UpcomingPaymentRow = ({
             <span style={{
               fontSize: '10px', fontWeight: 600,
               color: rec.color, background: rec.bg,
-              borderRadius: '6px', padding: '2px 7px',
+              border: `1px solid ${rec.border}`,
+              borderRadius: '20px', padding: '2px 8px',
               whiteSpace: 'nowrap', flexShrink: 0,
-              display: 'flex', alignItems: 'center', gap: '3px',
-              lineHeight: 1.3,
+              display: 'inline-flex', alignItems: 'center', gap: '4px',
+              lineHeight: 1.4, letterSpacing: '0.01em',
             }}>
               <Icon name={rec.icon} fallback="RefreshCw" size={10} style={{ color: rec.color }} />
               {rec.label}
