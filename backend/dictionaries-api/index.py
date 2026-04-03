@@ -167,6 +167,10 @@ def check_user_permission(conn, user_id: int, required_permission: str) -> bool:
     finally:
         cur.close()
 
+def has_dict_permission(conn, user_id: int, action: str, specific_perm: str) -> bool:
+    dict_perm = f'dictionaries.{action}'
+    return check_user_permission(conn, user_id, specific_perm) or check_user_permission(conn, user_id, dict_perm)
+
 def is_admin_user(conn, user_id: int) -> bool:
     cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
@@ -219,7 +223,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Categories
         if endpoint == 'categories':
             if method == 'GET':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.read'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'read', 'payments.read'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -231,7 +235,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, categories)
             
             elif method == 'POST':
-                if not is_admin and not check_user_permission(conn, user_id, 'categories.create'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'create', 'categories.create'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -251,7 +255,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(201, dict(row))
             
             elif method == 'PUT':
-                if not is_admin and not check_user_permission(conn, user_id, 'categories.update'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'update', 'categories.update'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -280,7 +284,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, dict(row))
             
             elif method == 'DELETE':
-                if not is_admin and not check_user_permission(conn, user_id, 'categories.delete'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'remove', 'categories.delete'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -304,7 +308,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Legal Entities
         elif endpoint == 'legal-entities':
             if method == 'GET':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.read'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'read', 'payments.read'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -316,7 +320,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, entities)
             
             elif method == 'POST':
-                if not is_admin and not check_user_permission(conn, user_id, 'legal_entities.create'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'create', 'legal_entities.create'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -336,7 +340,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(201, dict(row))
             
             elif method == 'PUT':
-                if not is_admin and not check_user_permission(conn, user_id, 'legal_entities.update'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'update', 'legal_entities.update'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -365,7 +369,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, dict(row))
             
             elif method == 'DELETE':
-                if not is_admin and not check_user_permission(conn, user_id, 'legal_entities.remove'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'remove', 'legal_entities.remove'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -389,7 +393,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Contractors
         elif endpoint == 'contractors':
             if method == 'GET':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.read'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'read', 'payments.read'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -406,7 +410,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, contractors)
             
             elif method == 'POST':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.create'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'create', 'payments.create'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -433,7 +437,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(201, dict(row))
             
             elif method == 'PUT':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.update'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'update', 'payments.update'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -470,7 +474,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, dict(row))
             
             elif method == 'DELETE':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.delete'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'remove', 'payments.delete'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -494,7 +498,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Customer Departments
         elif endpoint == 'customer-departments' or endpoint == 'customer_departments' or endpoint == 'departments':
             if method == 'GET':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.read'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'read', 'payments.read'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -506,7 +510,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, departments)
             
             elif method == 'POST':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.create'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'create', 'payments.create'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -526,7 +530,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(201, dict(row))
             
             elif method == 'PUT':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.update'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'update', 'payments.update'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -555,7 +559,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, dict(row))
             
             elif method == 'DELETE':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.delete'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'remove', 'payments.delete'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -579,7 +583,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Services
         elif endpoint == 'services':
             if method == 'GET':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.read'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'read', 'payments.read'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -608,7 +612,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, services)
             
             elif method == 'POST':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.create'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'create', 'payments.create'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -641,7 +645,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(201, result)
             
             elif method == 'PUT':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.update'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'update', 'payments.update'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -706,7 +710,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, dict(row))
             
             elif method == 'DELETE':
-                if not is_admin and not check_user_permission(conn, user_id, 'services.remove'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'remove', 'services.remove'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -734,7 +738,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Custom Fields
         elif endpoint == 'custom-fields':
             if method == 'GET':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.read'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'read', 'payments.read'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -746,7 +750,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, fields)
             
             elif method == 'POST':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.create'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'create', 'payments.create'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -765,7 +769,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(201, dict(row))
             
             elif method == 'PUT':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.update'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'update', 'payments.update'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
@@ -793,7 +797,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(200, dict(row))
             
             elif method == 'DELETE':
-                if not is_admin and not check_user_permission(conn, user_id, 'payments.delete'):
+                if not is_admin and not has_dict_permission(conn, user_id, 'remove', 'payments.delete'):
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
