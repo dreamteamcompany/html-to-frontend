@@ -128,12 +128,14 @@ const UpcomingPaymentRow = ({
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
         justifyContent: 'center', flexShrink: 0, gap: '2px',
+        maxWidth: '40%',
       }}>
         <span style={{
-          fontSize: '15px', fontWeight: 800,
+          fontSize: 'clamp(12px, 3.5vw, 15px)', fontWeight: 800,
           color: 'hsl(var(--foreground))', whiteSpace: 'nowrap',
           fontVariantNumeric: 'tabular-nums', lineHeight: 1.2,
           letterSpacing: '-0.02em',
+          overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
           {formatAmount(payment.amount)}
         </span>
