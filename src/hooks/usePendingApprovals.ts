@@ -31,7 +31,7 @@ export const usePendingApprovals = () => {
 
     const loadPendingApprovals = async () => {
       try {
-        const [paymentsRes, servicesRes] = await Promise.all([
+        const [paymentsResAll, servicesRes] = await Promise.all([
           fetch(`${API_ENDPOINTS.paymentsApi}?scope=all`, {
             headers: { 'X-Auth-Token': token },
           }),
@@ -39,6 +39,13 @@ export const usePendingApprovals = () => {
             headers: { 'X-Auth-Token': token },
           }),
         ]);
+
+        let paymentsRes = paymentsResAll;
+        if (paymentsRes.status === 403) {
+          paymentsRes = await fetch(`${API_ENDPOINTS.paymentsApi}?scope=my`, {
+            headers: { 'X-Auth-Token': token },
+          });
+        }
 
         if (!paymentsRes.ok || !servicesRes.ok) return;
 
