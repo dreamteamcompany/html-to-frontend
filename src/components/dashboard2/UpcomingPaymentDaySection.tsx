@@ -44,7 +44,12 @@ const UpcomingPaymentDaySection = ({
   const nLabel = n === 1 ? 'платёж' : n < 5 ? 'платежа' : 'платежей';
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{
+      position: 'relative',
+      border: '1px solid hsl(var(--border))',
+      borderRadius: '12px',
+      padding: '14px',
+    }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: '10px',
         marginBottom: '10px', paddingLeft: '2px',
