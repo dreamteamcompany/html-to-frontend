@@ -549,6 +549,136 @@ export const exportTabPaymentsToExcel = (payments: Payment[], sheetLabel: string
   setTimeout(() => { try { if (a.parentNode) a.parentNode.removeChild(a); } catch (e) { void e; } URL.revokeObjectURL(url); }, 500);
 };
 
+// ─── Экспорт индексации расходов ─────────────────────────────────────────────
+
+export interface IndexationRow {
+  name: string;
+  curAmt: number;
+  prevAmt: number;
+  rowDiff: number;
+  rowPct: number | null;
+}
+
+export const exportIndexationToExcel = (
+  rows: IndexationRow[],
+  currentPeriodLabel: string,
+  previousPeriodLabel: string,
+  currentTotal: number,
+  previousTotal: number,
+): void => {
+  const HEADERS = ['Сервис', 'Текущий период', 'Прошлый период', 'Разница', 'Индекс'];
+
+  const headerRow = `<row r="1">${HEADERS.map(h => headerCell(h)).join('')}</row>`;
+
+  const infoRow1 = `<row r="2">
+    ${cell('Период')}
+    ${cell(currentPeriodLabel)}
+    ${cell(previousPeriodLabel)}
+    ${cell('')}${cell('')}
+  </row>`;
+
+  const dataRows = rows.map((r, i) => {
+    const rowNum = i + 4;
+    const diffSign = r.rowDiff > 0 ? '+' : '';
+    const pctStr = r.rowPct !== null ? `${r.rowPct > 0 ? '+' : ''}${r.rowPct}%` : (r.curAmt > 0 ? 'Новый' : '—');
+    return `<row r="${rowNum}">
+      ${cell(r.name)}
+      ${cell(r.curAmt, true)}
+      ${cell(r.prevAmt > 0 ? r.prevAmt : 0, true)}
+      ${cell(r.rowPct !== null ? r.rowDiff : 0, true)}
+      ${cell(pctStr)}
+    </row>`;
+  });
+
+  const totalDiff = currentTotal - previousTotal;
+  const totalPct = previousTotal > 0 ? parseFloat(((totalDiff / previousTotal) * 100).toFixed(1)) : null;
+  const totalPctStr = totalPct !== null ? `${totalPct > 0 ? '+' : ''}${totalPct}%` : '—';
+
+  const sepRow = `<row r="3">
+    ${cell('РАЗБИВКА ПО СЕРВИСАМ')}${cell('')}${cell('')}${cell('')}${cell('')}
+  </row>`;
+
+  const totalRow = `<row r="${rows.length + 4}">
+    ${cell('ИТОГО')}
+    ${cell(currentTotal, true)}
+    ${cell(previousTotal, true)}
+    ${cell(totalDiff, true)}
+    ${cell(totalPctStr)}
+  </row>`;
+
+  const sheetData = [headerRow, infoRow1, sepRow, ...dataRows, totalRow].join('\n');
+
+  const colWidths = [36, 22, 22, 22, 14]
+    .map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`)
+    .join('');
+
+  const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <cols>${colWidths}</cols>
+  <sheetData>${sheetData}</sheetData>
+</worksheet>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00"/></numFmts>
+  <fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
+  <fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFB547"/></patternFill></fill></fills>
+  <borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="3">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
+  </cellXfs>
+</styleSheet>`;
+
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets><sheet name="Индексация расходов" sheetId="1" r:id="rId1"/></sheets>
+</workbook>`;
+
+  const workbookRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`;
+
+  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+  const files: Record<string, string> = {
+    '[Content_Types].xml': contentTypes,
+    '_rels/.rels': rootRels,
+    'xl/workbook.xml': workbookXml,
+    'xl/_rels/workbook.xml.rels': workbookRels,
+    'xl/worksheets/sheet1.xml': sheetXml,
+    'xl/styles.xml': stylesXml,
+  };
+
+  const zipBytes = buildZip(files);
+  const blob = new Blob([zipBytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.download = `Индексация_расходов_${dateStr}.xlsx`;
+  a.style.position = 'fixed'; a.style.top = '-9999px'; a.style.left = '-9999px';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { try { if (a.parentNode) a.parentNode.removeChild(a); } catch (e) { void e; } URL.revokeObjectURL(url); }, 500);
+};
+
 // ─── Минимальный ZIP builder ─────────────────────────────────────────────────
 
 function strToBytes(str: string): Uint8Array {

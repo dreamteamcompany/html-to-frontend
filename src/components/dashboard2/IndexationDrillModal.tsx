@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { parsePaymentDate, getPreviousPeriodRange } from './dashboardUtils';
+import { exportIndexationToExcel } from '@/utils/exportExcel';
 
 interface Props {
   open: boolean;
@@ -170,17 +171,37 @@ const IndexationDrillModal = ({ open, onClose }: Props) => {
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: '34px', height: '34px', borderRadius: '8px',
-              border: '1px solid hsl(var(--border))', background: 'transparent',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'hsl(var(--muted-foreground))', flexShrink: 0,
-            }}
-          >
-            <Icon name="X" size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <button
+              onClick={() => exportIndexationToExcel(
+                rows,
+                fmtPeriod(from, to),
+                fmtPeriod(prevFrom, prevTo),
+                currentTotal,
+                previousTotal,
+              )}
+              style={{
+                height: '34px', borderRadius: '8px', padding: '0 12px',
+                border: '1px solid hsl(var(--border))', background: 'transparent',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                color: 'hsl(var(--muted-foreground))', flexShrink: 0, fontSize: '12px', fontWeight: 500,
+              }}
+            >
+              <Icon name="Download" size={14} />
+              {!isMobile && 'Excel'}
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                width: '34px', height: '34px', borderRadius: '8px',
+                border: '1px solid hsl(var(--border))', background: 'transparent',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'hsl(var(--muted-foreground))', flexShrink: 0,
+              }}
+            >
+              <Icon name="X" size={16} />
+            </button>
+          </div>
         </div>
 
         {/* BODY */}
