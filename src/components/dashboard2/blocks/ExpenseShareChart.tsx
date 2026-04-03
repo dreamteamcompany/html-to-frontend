@@ -188,8 +188,8 @@ const Donut = ({ slices, total, size, onSegmentClick, onTotalClick }: DonutProps
       {hovSlice && tooltip && (
         <div style={{
           position: 'absolute',
-          left: tooltip.x + 12,
-          top: tooltip.y - 40,
+          left: Math.min(tooltip.x + 12, (typeof window !== 'undefined' ? window.innerWidth - 200 : 300)),
+          top: Math.max(tooltip.y - 40, 10),
           background: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(30,20,60,0.97)',
           border: `1px solid ${hovSlice.color}44`,
           borderRadius: '10px',

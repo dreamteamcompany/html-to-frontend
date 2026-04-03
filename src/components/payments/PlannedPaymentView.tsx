@@ -12,7 +12,7 @@ interface PlannedPaymentViewProps {
 
 const PlannedPaymentView = ({ payment, isAdmin, onEditStart, onDeleteRequest }: PlannedPaymentViewProps) => (
   <div className="space-y-4 mt-1">
-    <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
+    <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-primary/10 border border-primary/20">
       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
         <Icon name={payment.category_icon || 'Calendar'} size={18} className="text-primary" />
       </div>

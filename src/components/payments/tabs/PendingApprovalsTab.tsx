@@ -97,7 +97,7 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <div className="flex-1 relative">
           <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -121,10 +121,10 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
         {!loading && filteredPayments.length > 0 && (
           <button
             onClick={() => exportTabPaymentsToExcel(filteredPayments, 'На согласовании', 'На_согласовании')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium whitespace-nowrap"
+            className="flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium"
           >
             <Icon name="Download" size={16} />
-            Выгрузить Excel
+            <span className="hidden sm:inline">Выгрузить Excel</span>
           </button>
         )}
       </div>

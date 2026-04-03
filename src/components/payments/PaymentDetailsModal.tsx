@@ -51,9 +51,9 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 z-50">
-      <div className="bg-card border border-white/10 sm:rounded-xl rounded-t-2xl w-full max-w-[1200px] h-[95dvh] sm:h-auto sm:max-h-[90vh] flex flex-col">
+      <div className="bg-card border border-white/10 sm:rounded-xl rounded-t-2xl w-full w-[95vw] max-w-[1200px] h-[95dvh] sm:h-auto sm:max-h-[90vh] flex flex-col">
         {/* Шапка */}
-        <div className="bg-card border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0">
+        <div className="bg-card border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2 sm:gap-3 flex-shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <h2 className="text-base sm:text-xl font-semibold truncate">Детали платежа #{payment.id}</h2>
             <div className="flex-shrink-0">{getStatusBadge(payment.status)}</div>

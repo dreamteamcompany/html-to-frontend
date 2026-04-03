@@ -212,9 +212,9 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       <td className="p-4 text-muted-foreground">
                         {payment.legal_entity_name || <span className="text-muted-foreground/50">—</span>}
                       </td>
-                      <td className="p-4 text-muted-foreground">{payment.description}</td>
+                      <td className="p-4 text-muted-foreground"><span className="block max-w-[200px] truncate">{payment.description}</span></td>
                       <td className="p-4">
-                        <span className="font-bold text-lg">{payment.amount.toLocaleString('ru-RU')} ₽</span>
+                        <span className="font-bold text-base sm:text-lg whitespace-nowrap">{payment.amount.toLocaleString('ru-RU')} ₽</span>
                       </td>
                       <td className="p-4">
                         {getStatusBadge(payment.status)}

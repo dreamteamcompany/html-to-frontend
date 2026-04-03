@@ -115,7 +115,7 @@ const TopPaymentsCard = () => {
               onClick={() => setGroupBy(tab.key)}
               style={{
                 flex: 1,
-                padding: '5px 0',
+                padding: '7px 0',
                 fontSize: '11px',
                 fontWeight: groupBy === tab.key ? '700' : '500',
                 color: groupBy === tab.key ? '#fff' : 'hsl(var(--muted-foreground))',
@@ -170,12 +170,12 @@ const TopPaymentsCard = () => {
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       flex: 1,
-                      marginRight: '8px'
+                      marginRight: '6px'
                     }}>
                       {name}
                     </div>
-                    <span style={{ color: color, fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      {new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)} ₽
+                    <span style={{ color: color, fontSize: '12px', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      {new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(total)} ₽
                     </span>
                   </div>
                   <div style={{
