@@ -22,14 +22,14 @@ const UpcomingPaymentRow = ({
   const [hov, setHov] = useState(false);
   const rec = REC[(payment as Record<string, unknown>).recurrence_type as string];
 
-  const title = payment.description || payment.service_name || 'Платёж';
+  const title = payment.service_name || payment.description || 'Платёж';
+  const description = payment.service_name && payment.description ? payment.description : '';
   const contractor = payment.contractor_name || payment.legal_entity_name || '';
   const department = payment.department_name || '';
-  const service = payment.service_name || '';
   const category = payment.category_name || '';
 
-  const secondaryParts = [contractor, department].filter(Boolean);
-  const tertiaryParts = [service, category].filter(Boolean);
+  const secondaryParts = [description, contractor, department].filter(Boolean);
+  const tertiaryParts = [category].filter(Boolean);
 
   return (
     <div
@@ -70,12 +70,16 @@ const UpcomingPaymentRow = ({
       </div>
 
       <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '3px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', minWidth: 0, flexWrap: 'wrap' }}>
           <span style={{
             fontSize: '13px', fontWeight: 600,
             color: 'hsl(var(--foreground))',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            flex: '1 1 0', minWidth: 0, lineHeight: 1.3,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical' as const,
+            overflow: 'hidden',
+            flex: '1 1 0', minWidth: 0, lineHeight: 1.35,
+            wordBreak: 'break-word',
           }}>
             {title}
           </span>
@@ -88,6 +92,7 @@ const UpcomingPaymentRow = ({
               whiteSpace: 'nowrap', flexShrink: 0,
               display: 'inline-flex', alignItems: 'center', gap: '4px',
               lineHeight: 1.4, letterSpacing: '0.01em',
+              marginTop: '1px',
             }}>
               <Icon name={rec.icon} fallback="RefreshCw" size={10} style={{ color: rec.color }} />
               {rec.label}
@@ -98,14 +103,18 @@ const UpcomingPaymentRow = ({
         {secondaryParts.length > 0 && (
           <div style={{
             fontSize: '11px', color: 'hsl(var(--muted-foreground) / 0.85)',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            lineHeight: 1.3,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical' as const,
+            overflow: 'hidden',
+            lineHeight: 1.35,
+            wordBreak: 'break-word',
           }}>
             {secondaryParts.join(' · ')}
           </div>
         )}
 
-        {tertiaryParts.length > 0 && secondaryParts.join(' · ') !== tertiaryParts.join(' · ') && (
+        {tertiaryParts.length > 0 && (
           <div style={{
             fontSize: '10px', color: 'hsl(var(--muted-foreground) / 0.75)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
