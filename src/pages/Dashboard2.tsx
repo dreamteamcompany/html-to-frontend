@@ -88,14 +88,14 @@ const Dashboard2 = () => {
           <Icon name="Menu" size={24} />
         </button>
 
-        <div style={{ padding: '20px 0' }}>
+        <div style={{ padding: '12px 0' }}>
           <Tabs value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as PeriodType)} className="mb-6">
-            <TabsList className="grid grid-cols-5 text-xs sm:text-sm" style={{ width: 'fit-content', minWidth: '280px' }}>
-              <TabsTrigger value="today" className="px-2 sm:px-4">Сегодня</TabsTrigger>
-              <TabsTrigger value="week" className="px-2 sm:px-4">Неделя</TabsTrigger>
-              <TabsTrigger value="month" className="px-2 sm:px-4">Месяц</TabsTrigger>
-              <TabsTrigger value="year" className="px-2 sm:px-4">Год</TabsTrigger>
-              <TabsTrigger value="custom" className="px-2 sm:px-4">Период</TabsTrigger>
+            <TabsList className="grid grid-cols-5 text-xs sm:text-sm" style={{ width: 'fit-content', minWidth: '240px' }}>
+              <TabsTrigger value="today" className="px-1.5 sm:px-4 py-2">Сегодня</TabsTrigger>
+              <TabsTrigger value="week" className="px-1.5 sm:px-4 py-2">Неделя</TabsTrigger>
+              <TabsTrigger value="month" className="px-1.5 sm:px-4 py-2">Месяц</TabsTrigger>
+              <TabsTrigger value="year" className="px-1.5 sm:px-4 py-2">Год</TabsTrigger>
+              <TabsTrigger value="custom" className="px-1.5 sm:px-4 py-2">Период</TabsTrigger>
             </TabsList>
 
             {selectedPeriod === 'custom' && (
