@@ -60,7 +60,7 @@ export const AdminTabs = ({
   onCertificatesClick,
 }: AdminTabsProps) => {
   return (
-    <div className="flex gap-2 sm:gap-4 mb-8 border-b overflow-x-auto [&::-webkit-scrollbar]:h-0">
+    <div className="flex gap-4 mb-8 border-b">
       <Button
         variant={activeTab === 'contests' ? 'default' : 'ghost'}
         onClick={() => setActiveTab('contests')}

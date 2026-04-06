@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Card, CardContent } from '@/components/ui/card';
 import { Saving } from './types';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface SavingsTableProps {
   savings: Saving[];
@@ -18,8 +17,6 @@ const frequencyLabels: Record<string, string> = {
 };
 
 const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) => {
-  const { hasPermission } = useAuth();
-
   return (
     <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
       <CardContent className="p-0">
@@ -74,16 +71,14 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                         {new Date(saving.created_at).toLocaleDateString('ru-RU')}
                       </td>
                       <td className="p-4">
-                        {hasPermission('savings', 'update') && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onDeleteSaving(saving.id)}
-                            className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                          >
-                            <Icon name="Trash2" size={16} />
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDeleteSaving(saving.id)}
+                          className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                        >
+                          <Icon name="Trash2" size={16} />
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -99,16 +94,14 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                       <div className="font-medium">{saving.service_name}</div>
                       <div className="text-sm text-muted-foreground mt-1">{saving.description}</div>
                     </div>
-                    {hasPermission('savings', 'update') && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDeleteSaving(saving.id)}
-                        className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                      >
-                        <Icon name="Trash2" size={16} />
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDeleteSaving(saving.id)}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                    >
+                      <Icon name="Trash2" size={16} />
+                    </Button>
                   </div>
                   <div className="text-xl font-bold text-green-500">
                     {new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(saving.amount).replace(/,/g, '.')} {saving.currency || 'RUB'}

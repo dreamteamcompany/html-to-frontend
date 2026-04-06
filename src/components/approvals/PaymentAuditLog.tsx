@@ -62,13 +62,13 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
 
   const getActionColor = (action: string) => {
     switch (action) {
-      case 'created': return 'text-green-600 dark:text-green-400';
-      case 'updated': return 'text-blue-600 dark:text-blue-400';
-      case 'approve': return 'text-green-600 dark:text-green-500';
-      case 'reject': return 'text-red-600 dark:text-red-500';
-      case 'submit': return 'text-yellow-600 dark:text-yellow-400';
-      case 'revoke': return 'text-orange-600 dark:text-orange-400';
-      default: return 'text-muted-foreground';
+      case 'created': return 'text-green-400';
+      case 'updated': return 'text-blue-400';
+      case 'approve': return 'text-green-500';
+      case 'reject': return 'text-red-500';
+      case 'submit': return 'text-yellow-400';
+      case 'revoke': return 'text-orange-400';
+      default: return 'text-gray-400';
     }
   };
 

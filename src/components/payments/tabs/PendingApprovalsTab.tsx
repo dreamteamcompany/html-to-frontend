@@ -97,7 +97,7 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-3">
         <div className="flex-1 relative">
           <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -121,10 +121,10 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
         {!loading && filteredPayments.length > 0 && (
           <button
             onClick={() => exportTabPaymentsToExcel(filteredPayments, 'На согласовании', 'На_согласовании')}
-            className="flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium whitespace-nowrap"
           >
             <Icon name="Download" size={16} />
-            <span className="hidden sm:inline">Выгрузить Excel</span>
+            Выгрузить Excel
           </button>
         )}
       </div>
@@ -189,13 +189,13 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
       {notificationPermission !== 'granted' && (
         <div className="px-4 py-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm text-yellow-700 dark:text-yellow-200">
+            <div className="flex items-center gap-2 text-sm text-yellow-200">
               <Icon name="Bell" size={16} />
               <span>Включите уведомления, чтобы не пропустить новые заявки</span>
             </div>
             <button
               onClick={requestNotificationPermission}
-              className="text-sm text-yellow-700 dark:text-yellow-200 hover:text-yellow-800 dark:hover:text-yellow-100 font-medium whitespace-nowrap"
+              className="text-sm text-yellow-200 hover:text-yellow-100 font-medium whitespace-nowrap"
             >
               Включить
             </button>

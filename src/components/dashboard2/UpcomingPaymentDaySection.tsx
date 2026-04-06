@@ -7,20 +7,20 @@ import UpcomingPaymentRow from './UpcomingPaymentRow';
 export const UpcomingEmptyState = ({ period }: { period: string }) => (
   <div style={{
     display: 'flex', flexDirection: 'column', alignItems: 'center',
-    padding: 'clamp(28px, 8vw, 44px) clamp(12px, 4vw, 16px)', gap: '10px',
+    padding: '44px 16px', gap: '12px',
   }}>
     <div style={{
-      width: 'clamp(40px, 12vw, 52px)', height: 'clamp(40px, 12vw, 52px)', borderRadius: '12px',
+      width: '52px', height: '52px', borderRadius: '14px',
       background: `${dashboardColors.green}12`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      <Icon name="CheckCircle" size={22} style={{ color: dashboardColors.green }} />
+      <Icon name="CheckCircle" size={24} style={{ color: dashboardColors.green }} />
     </div>
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 'clamp(12px, 3.5vw, 14px)', fontWeight: 600, color: 'hsl(var(--foreground))', marginBottom: '4px' }}>
+      <div style={{ fontSize: '14px', fontWeight: 600, color: 'hsl(var(--foreground))', marginBottom: '4px' }}>
         Нет платежей
       </div>
-      <div style={{ fontSize: 'clamp(11px, 3vw, 12px)', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5, wordBreak: 'break-word' }}>
+      <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
         За период «{(PERIOD_LABEL[period] ?? period).toLowerCase()}»<br />нет запланированных платежей
       </div>
     </div>
@@ -44,16 +44,10 @@ const UpcomingPaymentDaySection = ({
   const nLabel = n === 1 ? 'платёж' : n < 5 ? 'платежа' : 'платежей';
 
   return (
-    <div style={{
-      position: 'relative',
-      border: '1px solid hsl(var(--border))',
-      borderRadius: '12px',
-      padding: 'clamp(10px, 3vw, 14px)',
-    }}>
+    <div style={{ position: 'relative' }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 'clamp(6px, 2vw, 10px)',
-        marginBottom: 'clamp(8px, 2vw, 10px)', paddingLeft: '2px',
-        flexWrap: 'wrap',
+        display: 'flex', alignItems: 'center', gap: '10px',
+        marginBottom: '10px', paddingLeft: '2px',
       }}>
         <div style={{
           width: '8px', height: '8px', borderRadius: '50%',
@@ -62,7 +56,7 @@ const UpcomingPaymentDaySection = ({
         }} />
 
         <div style={{
-          fontSize: 'clamp(11px, 3vw, 13px)', fontWeight: 700,
+          fontSize: '13px', fontWeight: 700,
           color: accent, letterSpacing: '-0.01em',
           lineHeight: 1,
         }}>
@@ -71,7 +65,7 @@ const UpcomingPaymentDaySection = ({
 
         {group.sublabel && (
           <div style={{
-            fontSize: 'clamp(9px, 2.5vw, 11px)', fontWeight: 500,
+            fontSize: '11px', fontWeight: 500,
             color: 'hsl(var(--muted-foreground))',
             lineHeight: 1,
           }}>
@@ -79,10 +73,10 @@ const UpcomingPaymentDaySection = ({
           </div>
         )}
 
-        <div style={{ flex: 1, height: '1px', background: 'hsl(var(--border) / 0.4)', minWidth: '10px' }} />
+        <div style={{ flex: 1, height: '1px', background: 'hsl(var(--border) / 0.4)' }} />
 
         <div style={{
-          fontSize: 'clamp(9px, 2.3vw, 10px)', fontWeight: 500,
+          fontSize: '10px', fontWeight: 500,
           color: 'hsl(var(--muted-foreground) / 0.85)',
           whiteSpace: 'nowrap', lineHeight: 1,
         }}>
@@ -90,7 +84,7 @@ const UpcomingPaymentDaySection = ({
         </div>
 
         <div style={{
-          fontSize: 'clamp(11px, 3vw, 13px)', fontWeight: 700,
+          fontSize: '13px', fontWeight: 700,
           color: accent, flexShrink: 0,
           fontVariantNumeric: 'tabular-nums',
           lineHeight: 1,
@@ -101,7 +95,7 @@ const UpcomingPaymentDaySection = ({
 
       <div style={{
         display: 'flex', flexDirection: 'column', gap: '6px',
-        paddingLeft: 'clamp(8px, 2.5vw, 14px)',
+        paddingLeft: '14px',
         borderLeft: `2px solid ${accent}20`,
         marginLeft: '5px',
       }}>

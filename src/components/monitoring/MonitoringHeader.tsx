@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface MonitoringHeaderProps {
   onAddClick: () => void;
@@ -10,23 +9,19 @@ interface MonitoringHeaderProps {
 }
 
 const MonitoringHeader = ({ onAddClick, onRefreshAll, loading, servicesCount }: MonitoringHeaderProps) => {
-  const { hasPermission } = useAuth();
-
   return (
     <div className="flex justify-between items-center gap-3 sm:gap-4">
       <h2 className="text-xl md:text-2xl font-bold text-foreground">Балансы сервисов</h2>
       <div className="flex gap-2 sm:gap-3 shrink-0">
-        {hasPermission('monitoring', 'configure') && (
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="whitespace-nowrap"
-            onClick={onAddClick}
-          >
-            <Icon name="Plus" className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">Добавить интеграцию</span>
-          </Button>
-        )}
+        <Button 
+          variant="default" 
+          size="sm" 
+          className="whitespace-nowrap"
+          onClick={onAddClick}
+        >
+          <Icon name="Plus" className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Добавить интеграцию</span>
+        </Button>
         <Button 
           onClick={onRefreshAll} 
           variant="outline" 

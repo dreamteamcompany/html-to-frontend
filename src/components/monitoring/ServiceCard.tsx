@@ -1,7 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface ServiceBalance {
   id: number;
@@ -33,8 +32,6 @@ const ServiceCard = ({
   getStatusColor, 
   getStatusIcon 
 }: ServiceCardProps) => {
-  const { hasPermission } = useAuth();
-
   return (
     <Card className="p-4 sm:p-5 lg:p-5 hover:shadow-lg transition-all">
       <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
@@ -64,26 +61,22 @@ const ServiceCard = ({
           >
             <Icon name="RefreshCw" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
-          {hasPermission('monitoring', 'configure') && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => onEdit(service)}
-              className="h-8 w-8 sm:h-9 sm:w-9"
-            >
-              <Icon name="Settings" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </Button>
-          )}
-          {hasPermission('monitoring', 'configure') && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => onDelete(service.id, service.service_name)}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 sm:h-9 sm:w-9"
-            >
-              <Icon name="Trash2" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </Button>
-          )}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => onEdit(service)}
+            className="h-8 w-8 sm:h-9 sm:w-9"
+          >
+            <Icon name="Settings" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => onDelete(service.id, service.service_name)}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 sm:h-9 sm:w-9"
+          >
+            <Icon name="Trash2" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
         </div>
       </div>
 
@@ -101,11 +94,11 @@ const ServiceCard = ({
 
         {service.threshold_warning && service.threshold_critical && (
           <div className="flex gap-2 sm:gap-3 text-xs sm:text-sm flex-wrap">
-            <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-medium">
+            <div className="flex items-center gap-1 text-yellow-500 font-medium">
               <Icon name="AlertTriangle" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span>&lt; {service.threshold_warning.toLocaleString('ru-RU')}</span>
             </div>
-            <div className="flex items-center gap-1 text-red-600 dark:text-red-500 font-medium">
+            <div className="flex items-center gap-1 text-red-500 font-medium">
               <Icon name="XCircle" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span>&lt; {service.threshold_critical.toLocaleString('ru-RU')}</span>
             </div>

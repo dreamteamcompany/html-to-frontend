@@ -82,28 +82,7 @@ def handler(event: dict, context) -> dict:
         if error:
             return error
         
-        user_id = payload.get('user_id')
         cur = conn.cursor(cursor_factory=RealDictCursor)
-
-        cur.execute(f"""
-            SELECT r.name FROM {SCHEMA}.user_roles ur
-            JOIN {SCHEMA}.roles r ON ur.role_id = r.id
-            WHERE ur.user_id = %s
-        """, (user_id,))
-        user_roles = [row['name'] for row in cur.fetchall()]
-        is_admin = 'Администратор' in user_roles or 'Admin' in user_roles
-
-        if not is_admin:
-            cur.execute(f"""
-                SELECT 1 FROM {SCHEMA}.role_permissions rp
-                JOIN {SCHEMA}.permissions p ON rp.permission_id = p.id
-                JOIN {SCHEMA}.user_roles ur ON rp.role_id = ur.role_id
-                WHERE ur.user_id = %s AND p.resource = 'stats' AND p.action = 'read' LIMIT 1
-            """, (user_id,))
-            if not cur.fetchone():
-                cur.close()
-                conn.close()
-                return response(403, {'error': 'Forbidden: stats.read permission required'})
         
         # Общая статистика
         cur.execute(f"""

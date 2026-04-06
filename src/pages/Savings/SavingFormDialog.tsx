@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Service, Employee, SavingReason, SavingFormData, CustomerDepartment } from './types';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface SavingFormDialogProps {
   open: boolean;
@@ -43,10 +42,6 @@ const SavingFormDialog = ({
   departments,
   onSubmit,
 }: SavingFormDialogProps) => {
-  const { hasPermission } = useAuth();
-
-  if (!hasPermission('savings', 'create')) return null;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -55,7 +50,7 @@ const SavingFormDialog = ({
           Добавить экономию
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Добавить экономию</DialogTitle>
         </DialogHeader>

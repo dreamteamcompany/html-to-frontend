@@ -73,8 +73,8 @@ const AnnualSavingsKPICard = () => {
         </h3>
 
         <div style={{
-          color: '#01b574', fontWeight: '900'
-        }} className="text-[24px] sm:text-[32px] md:text-[42px] mb-2 sm:mb-3">
+          color: '#01b574', fontSize: '32px', fontWeight: '900', marginBottom: '8px'
+        }} className="sm:text-[42px] sm:mb-3">
           {loading ? '—' : fmt(total)}
         </div>
 

@@ -69,7 +69,7 @@ const DrillDownToolbar = ({
               padding: '6px 12px', borderRadius: '8px',
               border: '1px solid hsl(var(--border))',
               background: sortField === f ? 'rgba(117,81,233,0.12)' : 'transparent',
-              color: sortField === f ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+              color: sortField === f ? '#7551e9' : 'hsl(var(--muted-foreground))',
               fontSize: '12px', fontWeight: 600, cursor: 'pointer',
               flex: isMobile ? 1 : undefined,
               justifyContent: isMobile ? 'center' : undefined,

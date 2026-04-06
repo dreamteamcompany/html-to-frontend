@@ -12,7 +12,7 @@ interface PlannedPaymentViewProps {
 
 const PlannedPaymentView = ({ payment, isAdmin, onEditStart, onDeleteRequest }: PlannedPaymentViewProps) => (
   <div className="space-y-4 mt-1">
-    <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-primary/10 border border-primary/20">
+    <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
         <Icon name={payment.category_icon || 'Calendar'} size={18} className="text-primary" />
       </div>
@@ -23,7 +23,7 @@ const PlannedPaymentView = ({ payment, isAdmin, onEditStart, onDeleteRequest }: 
       <div className="text-right shrink-0">
         <p className="text-lg font-bold text-primary">{fmt(payment.amount)}</p>
         {payment.recurrence_type && payment.recurrence_type !== 'once' && (
-          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-sky-500/8 text-sky-600 dark:text-sky-400 border border-sky-500/20 inline-flex items-center gap-1 leading-none tracking-wide">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">
             {recurrenceLabel[payment.recurrence_type] ?? payment.recurrence_type}
           </span>
         )}

@@ -12,18 +12,18 @@ const ServiceTemplatesList = ({ onSelect }: ServiceTemplatesListProps) => {
         <button
           key={service.id}
           onClick={() => onSelect(service.id)}
-          className="flex items-center gap-3 p-4 rounded-lg border border-border bg-muted hover:bg-accent transition-colors text-left"
+          className="flex items-center gap-3 p-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-left"
         >
           <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
             <Icon name={service.icon as any} size={20} className="text-blue-400" />
           </div>
           <div className="flex-1">
-            <div className="text-foreground font-medium">{service.name}</div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-white font-medium">{service.name}</div>
+            <div className="text-sm text-gray-400">
               {service.fields.length} {service.fields.length === 1 ? 'параметр' : 'параметра'}
             </div>
           </div>
-          <Icon name="ChevronRight" size={20} className="text-muted-foreground" />
+          <Icon name="ChevronRight" size={20} className="text-gray-400" />
         </button>
       ))}
     </div>

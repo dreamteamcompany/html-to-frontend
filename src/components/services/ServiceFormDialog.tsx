@@ -107,7 +107,7 @@ const ServiceFormDialog = ({
 }: ServiceFormDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {editingService ? 'Редактировать сервис' : 'Создать сервис'}

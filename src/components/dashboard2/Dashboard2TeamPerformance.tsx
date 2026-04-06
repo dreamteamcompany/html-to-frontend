@@ -58,7 +58,7 @@ const BarChart = ({ data, isMobile, isLight, onItemClick }: BarChartProps) => {
             style={{
               padding: isMobile ? '10px 12px' : '13px 16px',
               borderRadius: '12px',
-              background: isHov ? color.light : isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.06)',
+              background: isHov ? color.light : isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.03)',
               border: `1px solid ${isHov ? color.solid : isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)'}`,
               transition: 'all 0.2s ease',
               cursor: 'pointer',

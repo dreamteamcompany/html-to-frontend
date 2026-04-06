@@ -129,7 +129,7 @@ const Categories = () => {
                   <span className="sm:inline">Добавить категорию</span>
                 </Button>
               </DialogTrigger>
-            <DialogContent className="w-[95vw] sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>
                   {editingCategory ? 'Редактировать категорию' : 'Новая категория'}
@@ -197,12 +197,12 @@ const Categories = () => {
                     className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                           <Icon name={category.icon} size={24} />
                         </div>
-                        <div className="min-w-0">
-                          <h3 className="font-semibold truncate">{category.name}</h3>
+                        <div>
+                          <h3 className="font-semibold">{category.name}</h3>
                         </div>
                       </div>
                     </div>

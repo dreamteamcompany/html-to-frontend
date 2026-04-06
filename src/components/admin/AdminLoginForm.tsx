@@ -15,15 +15,15 @@ interface AdminLoginFormProps {
 
 const AdminLoginForm = ({ login, setLogin, password, setPassword, handleLogin, isLoading = false }: AdminLoginFormProps) => {
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center p-4">
       <Card className="w-full max-w-md rounded-3xl shadow-2xl">
-        <CardHeader className="text-center px-4 sm:px-6">
-          <CardTitle className="text-2xl sm:text-3xl font-heading font-bold text-primary">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-heading font-bold text-primary">
             🔐 Вход в админ-панель
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="login" className="text-base font-semibold">Логин</Label>
               <Input
@@ -48,7 +48,7 @@ const AdminLoginForm = ({ login, setLogin, password, setPassword, handleLogin, i
                 className="rounded-xl border-2 focus:border-primary"
               />
             </div>
-            <Button type="submit" disabled={isLoading} className="w-full rounded-xl bg-primary hover:bg-primary/90 text-base sm:text-lg py-5 sm:py-6">
+            <Button type="submit" disabled={isLoading} className="w-full rounded-xl bg-primary hover:bg-primary/90 text-lg py-6">
               <Icon name={isLoading ? "Loader2" : "LogIn"} className={`mr-2 ${isLoading ? "animate-spin" : ""}`} />
               {isLoading ? "Вход..." : "Войти"}
             </Button>

@@ -102,7 +102,7 @@ const Dashboard2ServicesDynamics = () => {
 
   const itemBg = isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.025)';
   const itemBorder = isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)';
-  const nameColor = isLight ? 'rgba(30,30,50,0.9)' : 'rgba(200,210,235,0.95)';
+  const nameColor = isLight ? 'rgba(30,30,50,0.8)' : 'rgba(180,195,225,0.85)';
   const amountColor = 'hsl(var(--foreground))';
   const trackBg = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)';
 

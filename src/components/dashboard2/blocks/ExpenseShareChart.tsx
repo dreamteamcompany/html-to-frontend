@@ -165,7 +165,7 @@ const Donut = ({ slices, total, size, onSegmentClick, onTotalClick }: DonutProps
               {hovSlice.pct}%
             </text>
             <text x={cx} y={cy + 22} textAnchor="middle" dominantBaseline="middle"
-              style={{ fontSize: '10px', fontWeight: 500, fill: isLight ? 'rgba(20,20,40,0.65)' : 'rgba(255,255,255,0.7)' }}>
+              style={{ fontSize: '10px', fontWeight: 500, fill: isLight ? 'rgba(20,20,40,0.5)' : 'rgba(255,255,255,0.4)' }}>
               {fmt(hovSlice.amount)}
             </text>
           </>
@@ -173,7 +173,7 @@ const Donut = ({ slices, total, size, onSegmentClick, onTotalClick }: DonutProps
           <g onClick={onTotalClick} style={{ cursor: onTotalClick ? 'pointer' : 'default' }}>
             <circle cx={cx} cy={cy} r={innerR - 4} fill="transparent" />
             <text x={cx} y={cy - 12} textAnchor="middle" dominantBaseline="middle"
-              style={{ fontSize: '10px', fontWeight: 600, fill: isLight ? 'rgba(20,20,40,0.6)' : 'rgba(255,255,255,0.65)', letterSpacing: '0.8px' }}>
+              style={{ fontSize: '10px', fontWeight: 600, fill: isLight ? 'rgba(20,20,40,0.4)' : 'rgba(255,255,255,0.3)', letterSpacing: '0.8px' }}>
               ИТОГО
             </text>
             <text x={cx} y={cy + 4} textAnchor="middle" dominantBaseline="middle"
@@ -188,8 +188,8 @@ const Donut = ({ slices, total, size, onSegmentClick, onTotalClick }: DonutProps
       {hovSlice && tooltip && (
         <div style={{
           position: 'absolute',
-          left: Math.min(tooltip.x + 12, (typeof window !== 'undefined' ? window.innerWidth - 200 : 300)),
-          top: Math.max(tooltip.y - 40, 10),
+          left: tooltip.x + 12,
+          top: tooltip.y - 40,
           background: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(30,20,60,0.97)',
           border: `1px solid ${hovSlice.color}44`,
           borderRadius: '10px',

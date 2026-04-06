@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface ServicesHeaderProps {
   menuOpen: boolean;
@@ -9,8 +8,6 @@ interface ServicesHeaderProps {
 }
 
 const ServicesHeader = ({ menuOpen, setMenuOpen, onCreateClick }: ServicesHeaderProps) => {
-  const { hasPermission } = useAuth();
-
   return (
     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div className="flex items-center gap-4">
@@ -23,12 +20,10 @@ const ServicesHeader = ({ menuOpen, setMenuOpen, onCreateClick }: ServicesHeader
         <h1 className="text-2xl font-bold">Сервисы</h1>
       </div>
 
-      {hasPermission('services', 'create') && (
-        <Button onClick={onCreateClick}>
-          <Icon name="Plus" size={18} className="mr-2" />
-          Создать сервис
-        </Button>
-      )}
+      <Button onClick={onCreateClick}>
+        <Icon name="Plus" size={18} className="mr-2" />
+        Создать сервис
+      </Button>
     </header>
   );
 };

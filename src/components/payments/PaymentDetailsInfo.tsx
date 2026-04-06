@@ -97,7 +97,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-base sm:text-lg font-medium mb-1 break-words">{payment.category_name}</h3>
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
+          <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
         </div>
       </div>
 

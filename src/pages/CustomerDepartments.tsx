@@ -140,7 +140,7 @@ const CustomerDepartments = () => {
           )}
           
           <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
-            <DialogContent className="w-[95vw] sm:max-w-[425px]">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>
                   {editingDepartment ? 'Редактировать отдел' : 'Новый отдел-заказчик'}

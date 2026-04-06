@@ -3,10 +3,10 @@ import Icon from '@/components/ui/icon';
 import { PaymentRecord } from '@/contexts/PaymentsCacheContext';
 import { formatAmount } from './UpcomingPaymentsTypes';
 
-const REC: Record<string, { label: string; icon: string; color: string; bg: string; border: string }> = {
-  monthly: { label: 'ежемес.', icon: 'RefreshCw', color: '#0284c7', bg: 'rgba(14,165,233,0.08)', border: 'rgba(14,165,233,0.20)' },
-  yearly:  { label: 'ежегодно', icon: 'CalendarDays', color: '#d97706', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.20)' },
-  weekly:  { label: 'еженед.', icon: 'RotateCw', color: '#059669', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.20)' },
+const REC: Record<string, { label: string; icon: string; color: string; bg: string }> = {
+  monthly: { label: 'ежемес.', icon: 'RefreshCw', color: '#0ea5e9', bg: 'rgba(14,165,233,0.10)' },
+  yearly:  { label: 'ежегодно', icon: 'CalendarDays', color: '#f59e0b', bg: 'rgba(245,158,11,0.10)' },
+  weekly:  { label: 'еженед.', icon: 'RotateCw', color: '#10b981', bg: 'rgba(16,185,129,0.10)' },
 };
 
 const UpcomingPaymentRow = ({
@@ -22,14 +22,14 @@ const UpcomingPaymentRow = ({
   const [hov, setHov] = useState(false);
   const rec = REC[(payment as Record<string, unknown>).recurrence_type as string];
 
-  const title = payment.service_name || payment.description || 'Платёж';
-  const description = payment.service_name && payment.description ? payment.description : '';
+  const title = payment.description || payment.service_name || 'Платёж';
   const contractor = payment.contractor_name || payment.legal_entity_name || '';
   const department = payment.department_name || '';
+  const service = payment.service_name || '';
   const category = payment.category_name || '';
 
-  const secondaryParts = [description, contractor, department].filter(Boolean);
-  const tertiaryParts = [category].filter(Boolean);
+  const secondaryParts = [contractor, department].filter(Boolean);
+  const tertiaryParts = [service, category].filter(Boolean);
 
   return (
     <div
@@ -46,7 +46,7 @@ const UpcomingPaymentRow = ({
         borderRadius: '10px',
         cursor: 'pointer',
         background: hov ? `${accent}0a` : 'hsl(var(--card))',
-        border: `1px solid ${hov ? `${accent}40` : 'hsl(var(--border))'}`,
+        border: `1px solid ${hov ? `${accent}30` : 'hsl(var(--border) / 0.5)'}`,
         transition: 'all 0.2s ease',
         outline: 'none',
         minWidth: 0,
@@ -70,16 +70,12 @@ const UpcomingPaymentRow = ({
       </div>
 
       <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '3px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', minWidth: 0, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
           <span style={{
             fontSize: '13px', fontWeight: 600,
             color: 'hsl(var(--foreground))',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical' as const,
-            overflow: 'hidden',
-            flex: '1 1 0', minWidth: 0, lineHeight: 1.35,
-            wordBreak: 'break-word',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            flex: '1 1 0', minWidth: 0, lineHeight: 1.3,
           }}>
             {title}
           </span>
@@ -87,12 +83,10 @@ const UpcomingPaymentRow = ({
             <span style={{
               fontSize: '10px', fontWeight: 600,
               color: rec.color, background: rec.bg,
-              border: `1px solid ${rec.border}`,
-              borderRadius: '20px', padding: '2px 8px',
+              borderRadius: '6px', padding: '2px 7px',
               whiteSpace: 'nowrap', flexShrink: 0,
-              display: 'inline-flex', alignItems: 'center', gap: '4px',
-              lineHeight: 1.4, letterSpacing: '0.01em',
-              marginTop: '1px',
+              display: 'flex', alignItems: 'center', gap: '3px',
+              lineHeight: 1.3,
             }}>
               <Icon name={rec.icon} fallback="RefreshCw" size={10} style={{ color: rec.color }} />
               {rec.label}
@@ -103,18 +97,14 @@ const UpcomingPaymentRow = ({
         {secondaryParts.length > 0 && (
           <div style={{
             fontSize: '11px', color: 'hsl(var(--muted-foreground) / 0.85)',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical' as const,
-            overflow: 'hidden',
-            lineHeight: 1.35,
-            wordBreak: 'break-word',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            lineHeight: 1.3,
           }}>
             {secondaryParts.join(' · ')}
           </div>
         )}
 
-        {tertiaryParts.length > 0 && (
+        {tertiaryParts.length > 0 && secondaryParts.join(' · ') !== tertiaryParts.join(' · ') && (
           <div style={{
             fontSize: '10px', color: 'hsl(var(--muted-foreground) / 0.75)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -128,14 +118,12 @@ const UpcomingPaymentRow = ({
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
         justifyContent: 'center', flexShrink: 0, gap: '2px',
-        maxWidth: '40%',
       }}>
         <span style={{
-          fontSize: 'clamp(12px, 3.5vw, 15px)', fontWeight: 800,
+          fontSize: '15px', fontWeight: 800,
           color: 'hsl(var(--foreground))', whiteSpace: 'nowrap',
           fontVariantNumeric: 'tabular-nums', lineHeight: 1.2,
           letterSpacing: '-0.02em',
-          overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
           {formatAmount(payment.amount)}
         </span>

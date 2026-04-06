@@ -195,7 +195,7 @@ const IndexationCard = () => {
                           className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                           style={{ background: item.percent > 0 ? '#ff6b6b' : item.percent < 0 ? '#01b574' : 'hsl(var(--muted-foreground))' }}
                         />
-                        <span className="text-xs text-muted-foreground" style={{ wordBreak: 'break-word' }}>{item.serviceName}</span>
+                        <span className="text-xs text-muted-foreground truncate">{item.serviceName}</span>
                       </div>
                       <span
                         className="text-xs font-semibold flex-shrink-0"

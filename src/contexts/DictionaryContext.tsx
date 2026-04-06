@@ -116,7 +116,7 @@ const DICT_ENDPOINTS_MAP: Record<string, string> = {
 };
 
 export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
-  const { token, hasPermission } = useAuth();
+  const { token } = useAuth();
 
   const [data, setData] = useState<DictionaryData>({
     categories: [],
@@ -190,12 +190,11 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
 
   const refreshAll = useCallback(async () => {
     const dictKeys = Object.keys(DICT_ENDPOINTS_MAP);
-    const tasks = dictKeys.map(key => fetchDictionary(key as keyof DictionaryData, DICT_ENDPOINTS_MAP[key]));
-    if (hasPermission('users', 'read')) {
-      tasks.push(fetchUsers());
-    }
-    await Promise.all(tasks);
-  }, [fetchDictionary, fetchUsers, hasPermission]);
+    await Promise.all([
+      ...dictKeys.map(key => fetchDictionary(key as keyof DictionaryData, DICT_ENDPOINTS_MAP[key])),
+      fetchUsers(),
+    ]);
+  }, [fetchDictionary, fetchUsers]);
 
   useEffect(() => {
     if (token) {

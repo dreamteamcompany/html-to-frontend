@@ -141,8 +141,6 @@ const Roles = () => {
         return 'BarChart3';
       case 'monitoring':
         return 'Activity';
-      case 'dictionaries':
-        return 'BookOpen';
       default:
         return 'Circle';
     }
@@ -184,8 +182,6 @@ const Roles = () => {
         return 'text-rose-500 bg-rose-500/10';
       case 'monitoring':
         return 'text-amber-500 bg-amber-500/10';
-      case 'dictionaries':
-        return 'text-orange-600 bg-orange-600/10';
       default:
         return 'text-gray-500 bg-gray-500/10';
     }
@@ -227,8 +223,6 @@ const Roles = () => {
         return 'Статистика';
       case 'monitoring':
         return 'Мониторинг';
-      case 'dictionaries':
-        return 'Справочники';
       default:
         return resource;
     }

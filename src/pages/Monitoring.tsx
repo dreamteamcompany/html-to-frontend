@@ -38,7 +38,7 @@ const Monitoring = () => {
     threshold_critical: 0,
   });
   const [saving, setSaving] = useState(false);
-  const { token, hasPermission } = useAuth();
+  const { token } = useAuth();
   const { toast } = useToast();
 
   const {
@@ -290,13 +290,13 @@ const Monitoring = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ok':
-        return 'bg-green-500/10 text-green-600 dark:text-green-500 border-green-500/20';
+        return 'bg-green-500/10 text-green-500 border-green-500/20';
       case 'warning':
-        return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-yellow-500/20';
+        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
       case 'critical':
-        return 'bg-red-500/10 text-red-600 dark:text-red-500 border-red-500/20';
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
       default:
-        return 'bg-gray-500/10 text-gray-600 dark:text-gray-500 border-gray-500/20';
+        return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
     }
   };
 
@@ -361,12 +361,10 @@ const Monitoring = () => {
                 <Icon name="Wallet" className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mb-3 sm:mb-4" />
                 <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">Нет подключенных сервисов</h3>
                 <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto">Добавьте интеграции с сервисами для мониторинга балансов</p>
-                {hasPermission('monitoring', 'configure') && (
-                  <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)} className="sm:size-default">
-                    <Icon name="Plus" className="mr-2 h-4 w-4" />
-                    Добавить интеграцию
-                  </Button>
-                )}
+                <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)} className="sm:size-default">
+                  <Icon name="Plus" className="mr-2 h-4 w-4" />
+                  Добавить интеграцию
+                </Button>
               </Card>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">

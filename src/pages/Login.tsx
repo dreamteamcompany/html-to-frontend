@@ -37,23 +37,23 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-[#0f1729] to-[#1b254b] p-3 sm:p-4 overflow-y-auto">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1729] to-[#1b254b] p-4">
       <Card className="w-full max-w-md border-white/10 bg-card/50 backdrop-blur-xl">
-        <CardHeader className="space-y-1 text-center px-4 sm:px-6 py-4 sm:py-6">
-          <div className="mx-auto mb-3 sm:mb-4 flex items-center justify-center">
-            <Logo className="h-9 sm:h-12 w-auto text-white" />
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto mb-4 flex items-center justify-center">
+            <Logo className="h-12 w-auto text-white" />
           </div>
-          <CardTitle className="text-xl sm:text-2xl font-bold">Вход в систему</CardTitle>
+          <CardTitle className="text-2xl font-bold">Вход в систему</CardTitle>
           <CardDescription>
             Введите логин и пароль для доступа
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
             {(error) && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm flex items-start gap-2">
-                <Icon name="AlertCircle" size={16} className="flex-shrink-0 mt-0.5" />
-                <span className="break-words">{error}</span>
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm flex items-center gap-2">
+                <Icon name="AlertCircle" size={16} />
+                {error}
               </div>
             )}
             
@@ -92,7 +92,7 @@ const Login = () => {
                 id="remember"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-5 h-5 rounded border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer"
+                className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0"
               />
               <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
                 Запомнить меня
@@ -101,7 +101,7 @@ const Login = () => {
 
             <Button
               type="submit"
-              className="w-full h-11 sm:h-10 text-sm sm:text-base"
+              className="w-full"
               disabled={loading}
             >
               {loading ? (

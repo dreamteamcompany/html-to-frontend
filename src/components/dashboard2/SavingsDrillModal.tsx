@@ -295,7 +295,7 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start', gap: '8px' }}>
                     <div style={{ minWidth: 0 }}>
                       {item.service_name && (
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', marginBottom: '2px', wordBreak: 'break-word', lineHeight: 1.3 }}>{item.service_name}</div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.service_name}</div>
                       )}
                       {item.description && (
                         <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}>{item.description}</div>
@@ -338,19 +338,19 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
                   onMouseLeave={e => (e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : 'rgba(1,181,116,0.02)')}
                 >
                   {/* Сервис */}
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {item.service_name || <span style={{ color: 'hsl(var(--muted-foreground))' }}>—</span>}
                   </div>
                   {/* Описание */}
-                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
+                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {item.description || <span>—</span>}
                   </div>
                   {/* Отдел */}
-                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
+                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {item.department_name && item.department_name !== 'Не указан' ? item.department_name : <span style={{ opacity: 0.4 }}>—</span>}
                   </div>
                   {/* Причина */}
-                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
+                  <div style={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {item.saving_reason_name || <span style={{ opacity: 0.4 }}>—</span>}
                   </div>
                   {/* Сумма */}
