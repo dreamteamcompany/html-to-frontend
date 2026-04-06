@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { parsePaymentDate } from './dashboardUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface Payment {
   amount: number;
@@ -15,6 +16,7 @@ interface Payment {
 const Dashboard2StatsCards = () => {
   const { payments: allPayments, loading } = usePaymentsCache();
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
+  const navigate = useNavigate();
 
   const stats = useMemo(() => {
     const { from, to } = getDateRange();
@@ -109,7 +111,7 @@ const Dashboard2StatsCards = () => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '30px' }}>
 
-      <Card style={cardStyle('#7551e9')}>
+      <Card onClick={() => navigate('/payments')} style={{ ...cardStyle('#7551e9'), cursor: 'pointer' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
@@ -128,7 +130,7 @@ const Dashboard2StatsCards = () => {
         </CardContent>
       </Card>
 
-      <Card style={cardStyle('#01b574')}>
+      <Card onClick={() => navigate('/payments')} style={{ ...cardStyle('#01b574'), cursor: 'pointer' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
@@ -149,7 +151,7 @@ const Dashboard2StatsCards = () => {
         </CardContent>
       </Card>
 
-      <Card style={cardStyle('#3965ff')}>
+      <Card onClick={() => navigate('/payments')} style={{ ...cardStyle('#3965ff'), cursor: 'pointer' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
@@ -172,7 +174,7 @@ const Dashboard2StatsCards = () => {
         </CardContent>
       </Card>
 
-      <Card style={cardStyle('#ffb547')}>
+      <Card onClick={() => navigate('/payments')} style={{ ...cardStyle('#ffb547'), cursor: 'pointer' }}>
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>

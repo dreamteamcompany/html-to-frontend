@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { useMemo } from 'react';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { parsePaymentDate } from '../dashboardUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface PaymentRecord {
   id: number;
@@ -22,6 +23,7 @@ interface Alert {
 
 const CriticalAlertsCard = () => {
   const { payments: allPayments, loading } = usePaymentsCache();
+  const navigate = useNavigate();
 
   const alerts = useMemo((): Alert[] => {
     const all: PaymentRecord[] = Array.isArray(allPayments) ? allPayments : [];
@@ -123,8 +125,9 @@ const CriticalAlertsCard = () => {
                 padding: '10px', borderRadius: '10px',
                 border: `1px solid ${alert.urgent ? 'rgba(255, 107, 107, 0.3)' : 'rgba(255,255,255,0.08)'}`,
                 display: 'flex', alignItems: 'center', gap: '10px',
-                transition: 'all 0.3s ease', cursor: 'default'
+                transition: 'all 0.3s ease', cursor: 'pointer'
               }}
+              onClick={() => navigate('/payments')}
               onMouseEnter={e => {
                 e.currentTarget.style.background = alert.urgent ? 'rgba(255, 107, 107, 0.15)' : 'rgba(255,255,255,0.07)';
                 e.currentTarget.style.transform = 'translateX(4px)';

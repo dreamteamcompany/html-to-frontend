@@ -183,7 +183,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                     <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
                       {p.legal_entity_name || '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', wordBreak: 'break-word', lineHeight: 1.3 }}>
                       {resolvePaymentType(p.payment_type, p.legal_entity_name)}
                     </td>
                     <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap', overflow: 'hidden' }}>
@@ -192,14 +192,13 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                     <td style={{ padding: '11px 12px', fontSize: '13px', fontWeight: 700, color: 'hsl(var(--primary))', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                       {fmt(p.amount)}
                     </td>
-                    <td style={{ padding: '11px 12px', overflow: 'hidden' }}>
+                    <td style={{ padding: '11px 12px' }}>
                       <span style={{
                         display: 'inline-flex', alignItems: 'center',
                         padding: '3px 8px', borderRadius: '6px',
                         fontSize: '11px', fontWeight: 600,
                         background: `${st.color}20`, color: st.color,
-                        whiteSpace: 'nowrap', maxWidth: '100%',
-                        overflow: 'hidden', textOverflow: 'ellipsis',
+                        wordBreak: 'break-word', lineHeight: 1.3,
                       }}>
                         {st.label}
                       </span>

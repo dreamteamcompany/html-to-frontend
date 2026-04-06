@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { parsePaymentDate } from '../dashboardUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface PaymentRecord {
   status: string;
@@ -15,6 +16,7 @@ interface PaymentRecord {
 const LiveMetricsCard = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
+  const navigate = useNavigate();
 
   const metrics = useMemo(() => {
     const { from, to } = getDateRange();
@@ -64,13 +66,14 @@ const LiveMetricsCard = () => {
   };
 
   return (
-    <Card style={{
+    <Card onClick={() => navigate('/payments')} style={{
       background: 'hsl(var(--card))',
       border: '1px solid rgba(1, 181, 116, 0.3)',
       borderTop: '4px solid rgba(1, 181, 116, 1)',
       boxShadow: '0 4px 28px rgba(1, 181, 116, 0.1)',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      cursor: 'pointer'
     }}>
       <div style={{
         position: 'absolute', bottom: '-50%', left: '-50%',
