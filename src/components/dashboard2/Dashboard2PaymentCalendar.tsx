@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { parsePaymentDate } from './dashboardUtils';
-import { useDrillDown } from './useDrillDown';
-import DrillDownModal from './DrillDownModal';
 
 interface Payment {
   id: number;
@@ -20,7 +18,6 @@ const Dashboard2PaymentCalendar = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate] = useState(new Date());
-  const { drillFilter, openDrill, closeDrill } = useDrillDown();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -244,12 +241,6 @@ const Dashboard2PaymentCalendar = () => {
                     animation: isToday ? 'pulse 2s infinite' : 'none'
                   }}
                   className="sm:p-2.5 sm:min-h-[70px] sm:rounded-lg"
-                  onClick={() => {
-                    if (dayData) {
-                      const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                      openDrill({ type: 'date', value: dateStr, label: `${i} ${currentDate.toLocaleDateString('ru-RU', { month: 'long' })}` });
-                    }
-                  }}
                   onMouseEnter={(e) => {
                     if (dayData) {
                       e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
@@ -326,7 +317,6 @@ const Dashboard2PaymentCalendar = () => {
           }
         `}</style>
       </CardContent>
-      <DrillDownModal filter={drillFilter} onClose={closeDrill} />
     </Card>
   );
 };

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { parsePaymentDate } from '../dashboardUtils';
-import { useNavigate } from 'react-router-dom';
 
 interface PaymentRecord {
   id: number;
@@ -18,7 +17,6 @@ const AttentionRequiredCard = () => {
   const [overdue, setOverdue] = useState(0);
   const [rejected, setRejected] = useState(0);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -51,7 +49,6 @@ const AttentionRequiredCard = () => {
         ? `Просрочено ${overdue} ${overdue === 1 ? 'платёж' : overdue < 5 ? 'платежа' : 'платежей'}`
         : 'Просроченных платежей нет',
       color: overdue > 0 ? '#ff6b6b' : '#01b574',
-      onClick: overdue > 0 ? () => navigate('/payments') : undefined,
     },
     {
       icon: 'XCircle',
@@ -59,7 +56,6 @@ const AttentionRequiredCard = () => {
         ? `${rejected} ${rejected === 1 ? 'отклонённый запрос' : rejected < 5 ? 'отклонённых запроса' : 'отклонённых запросов'}`
         : 'Отклонённых запросов нет',
       color: rejected > 0 ? '#ffb547' : '#01b574',
-      onClick: rejected > 0 ? () => navigate('/payments') : undefined,
     },
   ];
 
@@ -85,12 +81,10 @@ const AttentionRequiredCard = () => {
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }} className="sm:gap-3">
           {items.map((item) => (
-            <div key={item.icon} onClick={item.onClick} style={{
+            <div key={item.icon} style={{
               background: 'rgba(255, 107, 107, 0.05)', padding: '10px', borderRadius: '8px',
               border: '1px solid rgba(255, 107, 107, 0.2)',
-              display: 'flex', alignItems: 'center', gap: '10px',
-              cursor: item.onClick ? 'pointer' : 'default',
-              transition: 'all 0.2s ease'
+              display: 'flex', alignItems: 'center', gap: '10px'
             }} className="sm:p-3 sm:gap-3">
               <Icon name={item.icon} size={14} style={{ color: item.color, flexShrink: 0 }} className="sm:w-4 sm:h-4" />
               <span style={{ color: '#fff', fontSize: '12px', fontWeight: '500' }} className="sm:text-sm">{item.text}</span>

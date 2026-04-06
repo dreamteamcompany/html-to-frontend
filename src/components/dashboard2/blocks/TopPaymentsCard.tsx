@@ -4,8 +4,6 @@ import Icon from '@/components/ui/icon';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { parsePaymentDate } from '../dashboardUtils';
-import { useDrillDown } from '../useDrillDown';
-import DrillDownModal from '../DrillDownModal';
 
 interface PaymentRecord {
   id: number;
@@ -42,13 +40,6 @@ const TopPaymentsCard = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
   const [groupBy, setGroupBy] = useState<GroupBy>('services');
-  const { drillFilter, openDrill, closeDrill } = useDrillDown();
-
-  const getDrillType = (g: GroupBy) => {
-    if (g === 'services') return 'service' as const;
-    if (g === 'departments') return 'department' as const;
-    return 'category' as const;
-  };
 
   const grouped = useMemo(() => {
     const { from, to } = getDateRange();
@@ -87,7 +78,6 @@ const TopPaymentsCard = () => {
   }
 
   return (
-    <>
     <Card className="h-full flex flex-col" style={{
       background: 'hsl(var(--card))',
       border: '1px solid hsl(var(--border))',
@@ -163,7 +153,6 @@ const TopPaymentsCard = () => {
                   transition: 'all 0.3s ease',
                   cursor: 'pointer'
                 }}
-                onClick={() => openDrill({ type: getDrillType(groupBy), value: name, label: name })}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = color;
                   e.currentTarget.style.boxShadow = `0 2px 8px ${color}40`;
@@ -212,8 +201,6 @@ const TopPaymentsCard = () => {
         </div>
       </CardContent>
     </Card>
-    <DrillDownModal filter={drillFilter} onClose={closeDrill} />
-    </>
   );
 };
 
