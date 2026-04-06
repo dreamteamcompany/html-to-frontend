@@ -1,46 +1,22 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { useMemo } from 'react';
+import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { parsePaymentDate } from '../dashboardUtils';
 
-interface PaymentRecord {
-  id: number;
-  status: string;
-  payment_date: string;
-  amount: number;
-  [key: string]: unknown;
-}
-
 const AttentionRequiredCard = () => {
-  const [overdue, setOverdue] = useState(0);
-  const [rejected, setRejected] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const { payments: allPayments, loading } = usePaymentsCache();
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const load = async () => {
-      try {
-        const res = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
-        if (controller.signal.aborted) return;
-        const data = await res.json();
-        const all: PaymentRecord[] = Array.isArray(data) ? data : [];
+  const { overdue, rejected } = useMemo(() => {
+    const all = Array.isArray(allPayments) ? allPayments : [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        setOverdue(all.filter(p => p.status?.startsWith('pending_') && parsePaymentDate(p.payment_date) < today).length);
-        setRejected(all.filter(p => p.status === 'rejected').length);
-      } catch {
-        // silent
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
+    return {
+      overdue: all.filter(p => p.status?.startsWith('pending_') && parsePaymentDate(p.payment_date) < today).length,
+      rejected: all.filter(p => p.status === 'rejected').length,
     };
-    load();
-    return () => controller.abort();
-  }, []);
+  }, [allPayments]);
 
   const items = [
     {
