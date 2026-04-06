@@ -1,17 +1,44 @@
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
-import { useState, useMemo } from 'react';
-import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { useState, useEffect } from 'react';
+import { apiFetch } from '@/utils/api';
+import { API_ENDPOINTS } from '@/config/api';
 import { parsePaymentDate } from './dashboardUtils';
 
+interface Payment {
+  id: number;
+  amount: number;
+  payment_date: string;
+  service_name?: string;
+  category_name?: string;
+  status: string;
+}
+
 const Dashboard2PaymentCalendar = () => {
-  const { payments: allPayments, loading } = usePaymentsCache();
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentDate] = useState(new Date());
 
-  const payments = useMemo(() => {
-    const all = Array.isArray(allPayments) ? allPayments : [];
-    return all.filter(p => p.status === 'approved');
-  }, [allPayments]);
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadPayments = async () => {
+      try {
+        const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=payments`);
+        if (controller.signal.aborted) return;
+        const data = await response.json();
+        const approvedPayments = (Array.isArray(data) ? data : []).filter((p: Payment) =>
+          p.status === 'approved'
+        );
+        setPayments(approvedPayments);
+      } catch {
+        // silent
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+    loadPayments();
+    return () => controller.abort();
+  }, []);
 
   const getPaymentsByDay = () => {
     const paymentsByDay: { [key: number]: { amount: number; payments: string[] } } = {};
@@ -46,7 +73,7 @@ const Dashboard2PaymentCalendar = () => {
 
   const getFirstDayOfMonth = () => {
     const day = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-    return day === 0 ? 6 : day - 1;
+    return day === 0 ? 6 : day - 1; // Преобразуем к понедельник = 0
   };
 
   const totalPayments = Object.keys(getPaymentsByDay()).length;
@@ -129,6 +156,7 @@ const Dashboard2PaymentCalendar = () => {
           </div>
         </div>
 
+        {/* Days of week header */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '6px' }} className="sm:gap-3 sm:mb-3">
           {['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'].map((day, idx) => (
             <div key={idx} style={{ 
@@ -143,6 +171,7 @@ const Dashboard2PaymentCalendar = () => {
           ))}
         </div>
 
+        {/* Calendar grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }} className="sm:gap-3">
           {(() => {
             const days = [];
@@ -152,70 +181,122 @@ const Dashboard2PaymentCalendar = () => {
             const today = new Date().getDate();
             const isCurrentMonth = new Date().getMonth() === currentDate.getMonth() && new Date().getFullYear() === currentDate.getFullYear();
 
+            // Пустые ячейки до первого дня месяца
             for (let i = 0; i < firstDay; i++) {
               days.push(<div key={`empty-${i}`} />);
             }
 
+            // Дни месяца
             for (let i = 1; i <= daysInMonth; i++) {
               const dayData = paymentsData[i];
               const isToday = isCurrentMonth && i === today;
               
               let bgColor = 'rgba(255, 255, 255, 0.02)';
               let borderColor = 'rgba(255, 255, 255, 0.05)';
-              let dotColor = '';
-
-              if (dayData) {
-                const cat = getCategoryByAmount(dayData.amount);
-                if (cat === 'small') {
-                  bgColor = 'rgba(1, 181, 116, 0.08)';
-                  borderColor = 'rgba(1, 181, 116, 0.3)';
-                  dotColor = '#01b574';
-                } else if (cat === 'medium') {
-                  bgColor = 'rgba(255, 181, 71, 0.08)';
-                  borderColor = 'rgba(255, 181, 71, 0.3)';
-                  dotColor = '#ffb547';
-                } else {
-                  bgColor = 'rgba(255, 107, 107, 0.08)';
-                  borderColor = 'rgba(255, 107, 107, 0.3)';
-                  dotColor = '#ff6b6b';
+              let glowColor = 'transparent';
+              let textColor = 'rgba(180, 195, 225, 0.85)';
+              
+              if (isToday) {
+                bgColor = 'rgba(117, 81, 233, 0.2)';
+                borderColor = '#7551e9';
+                glowColor = 'rgba(117, 81, 233, 0.4)';
+                textColor = '#fff';
+              } else if (dayData) {
+                const category = getCategoryByAmount(dayData.amount);
+                if (category === 'small') {
+                  bgColor = 'rgba(1, 181, 116, 0.15)';
+                  borderColor = 'rgba(1, 181, 116, 0.4)';
+                  glowColor = 'rgba(1, 181, 116, 0.3)';
+                  textColor = '#01b574';
+                } else if (category === 'medium') {
+                  bgColor = 'rgba(255, 181, 71, 0.15)';
+                  borderColor = 'rgba(255, 181, 71, 0.4)';
+                  glowColor = 'rgba(255, 181, 71, 0.3)';
+                  textColor = '#ffb547';
+                } else if (category === 'large') {
+                  bgColor = 'rgba(255, 107, 107, 0.15)';
+                  borderColor = 'rgba(255, 107, 107, 0.4)';
+                  glowColor = 'rgba(255, 107, 107, 0.3)';
+                  textColor = '#ff6b6b';
                 }
               }
 
+              const hasIndicator = dayData && dayData.payments.length > 0;
+
               days.push(
-                <div key={i} style={{
-                  background: bgColor,
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  padding: '4px 2px',
-                  textAlign: 'center',
-                  position: 'relative',
-                  minHeight: '32px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s ease',
-                  ...(isToday ? {
-                    boxShadow: '0 0 15px rgba(117, 81, 233, 0.5)',
-                    border: '1px solid rgba(117, 81, 233, 0.6)'
-                  } : {})
-                }} className="sm:p-2 sm:min-h-[48px] sm:rounded-lg">
-                  <span style={{ 
-                    fontSize: '10px', 
-                    fontWeight: isToday ? '800' : '500',
-                    color: isToday ? '#7551e9' : dayData ? '#fff' : 'rgba(200, 210, 230, 0.5)'
-                  }} className="sm:text-sm">
-                    {i}
-                  </span>
+                <div
+                  key={i}
+                  style={{
+                    background: bgColor,
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    padding: '4px',
+                    minHeight: '50px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'relative',
+                    transition: 'all 0.3s ease',
+                    cursor: dayData ? 'pointer' : 'default',
+                    boxShadow: isToday ? `0 0 20px ${glowColor}, inset 0 0 20px ${glowColor}` : 'none',
+                    animation: isToday ? 'pulse 2s infinite' : 'none'
+                  }}
+                  className="sm:p-2.5 sm:min-h-[70px] sm:rounded-lg"
+                  onMouseEnter={(e) => {
+                    if (dayData) {
+                      e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
+                      e.currentTarget.style.boxShadow = `0 10px 30px ${glowColor}, 0 0 20px ${glowColor}`;
+                      e.currentTarget.style.zIndex = '10';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.boxShadow = isToday ? `0 0 20px ${glowColor}, inset 0 0 20px ${glowColor}` : 'none';
+                    e.currentTarget.style.zIndex = '1';
+                  }}
+                >
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    marginBottom: dayData ? '4px' : '0'
+                  }}>
+                    <span style={{ 
+                      fontSize: '10px', 
+                      fontWeight: '700',
+                      color: textColor
+                    }} className="sm:text-xs">
+                      {i}
+                    </span>
+                    {hasIndicator && (
+                      <div style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: textColor,
+                        boxShadow: `0 0 6px ${textColor}`
+                      }} className="sm:w-2 sm:h-2" />
+                    )}
+                  </div>
                   {dayData && (
-                    <div style={{ 
-                      width: '4px', 
-                      height: '4px', 
-                      borderRadius: '50%', 
-                      background: dotColor,
-                      boxShadow: `0 0 6px ${dotColor}`,
-                      marginTop: '2px'
-                    }} className="sm:w-1.5 sm:h-1.5" />
+                    <>
+                      <div style={{ 
+                        fontSize: '10px', 
+                        fontWeight: '800',
+                        color: textColor,
+                        marginBottom: '2px'
+                      }} className="sm:text-xs">
+                        {new Intl.NumberFormat('ru-RU').format(dayData.amount)} ₽
+                      </div>
+                      <div style={{ 
+                        fontSize: '8px',
+                        color: 'rgba(200, 215, 240, 0.7)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }} className="sm:text-[9px]">
+                        {dayData.payments.map(p => p.split(':')[0]).join(', ')}
+                      </div>
+                    </>
                   )}
                 </div>
               );
@@ -224,6 +305,17 @@ const Dashboard2PaymentCalendar = () => {
             return days;
           })()}
         </div>
+
+        <style>{`
+          @keyframes pulse {
+            0%, 100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.85;
+            }
+          }
+        `}</style>
       </CardContent>
     </Card>
   );

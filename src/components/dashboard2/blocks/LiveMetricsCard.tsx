@@ -41,7 +41,7 @@ const LiveMetricsCard = () => {
     const avg = periodApproved.length > 0 ? Math.round(totalAmount / periodApproved.length) : 0;
 
     const pendingInPeriod = all.filter(p => {
-      if (!p.status?.startsWith('pending_')) return false;
+      if (p.status !== 'pending_approval') return false;
       const d = parsePaymentDate(p.payment_date);
       return !isNaN(d.getTime()) && d >= from && d <= to;
     });
