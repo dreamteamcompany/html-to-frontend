@@ -7,9 +7,10 @@ interface DrillDownTableProps {
   total: number;
   isMobile: boolean;
   isLight: boolean;
+  onPaymentClick?: (p: PaymentRecord) => void;
 }
 
-const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProps) => (
+const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: DrillDownTableProps) => (
   <>
     {/* ═══ CONTENT ═══ */}
     <div style={{ overflowY: 'auto', flex: 1 }}>
@@ -26,11 +27,17 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
             return (
               <div
                 key={p.id ?? i}
+                role={onPaymentClick ? 'button' : undefined}
+                tabIndex={onPaymentClick ? 0 : undefined}
+                onClick={() => onPaymentClick?.(p)}
+                onKeyDown={e => { if (onPaymentClick && (e.key === 'Enter' || e.key === ' ')) onPaymentClick(p); }}
                 style={{
                   background: 'hsl(var(--background))',
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '12px',
                   padding: '14px',
+                  cursor: onPaymentClick ? 'pointer' : undefined,
+                  transition: 'border-color 0.15s',
                 }}
               >
                 {/* Строка 1: описание + сумма */}
@@ -142,7 +149,8 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight }: DrillDownTableProp
                 return (
                   <tr
                     key={p.id ?? i}
-                    style={{ borderBottom: '1px solid hsl(var(--border))', transition: 'background 0.15s' }}
+                    style={{ borderBottom: '1px solid hsl(var(--border))', transition: 'background 0.15s', cursor: onPaymentClick ? 'pointer' : undefined }}
+                    onClick={() => onPaymentClick?.(p)}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.03)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >

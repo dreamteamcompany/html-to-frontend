@@ -7,6 +7,9 @@ import DrillDownHeader from './DrillDownHeader';
 import DrillDownToolbar from './DrillDownToolbar';
 import DrillDownTable from './DrillDownTable';
 import { parsePaymentDate } from './dashboardUtils';
+import ApprovedPaymentDetailsModal from '@/components/payments/ApprovedPaymentDetailsModal';
+import type { Payment as ApprovedPayment } from '@/components/payments/ApprovedPaymentInfo';
+import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 export type { DrillDownFilter } from './drillDownTypes';
 import type { DrillDownFilter } from './drillDownTypes';
@@ -24,6 +27,7 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
   const [search, setSearch] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -40,8 +44,14 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
   }, [filter]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') onClose();
-  }, [onClose]);
+    if (e.key === 'Escape') {
+      if (selectedPayment) {
+        setSelectedPayment(null);
+      } else {
+        onClose();
+      }
+    }
+  }, [onClose, selectedPayment]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -135,59 +145,103 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
     }
   };
 
+  const handlePaymentClick = useCallback((p: PaymentRecord) => {
+    setSelectedPayment(p);
+  }, []);
+
+  const handlePaymentDetailClose = useCallback(() => {
+    setSelectedPayment(null);
+  }, []);
+
+  const handleRevoked = useCallback(() => {
+    setSelectedPayment(null);
+    invalidatePaymentsCache();
+  }, []);
+
   const isLight = document.documentElement.classList.contains('light');
 
   if (!filter) return null;
 
+  const paymentForModal: ApprovedPayment | null = selectedPayment ? {
+    id: selectedPayment.id,
+    category_id: selectedPayment.category_id ?? 0,
+    category_name: selectedPayment.category_name ?? '',
+    category_icon: selectedPayment.category_icon ?? '',
+    description: selectedPayment.description ?? '',
+    amount: selectedPayment.amount,
+    payment_date: selectedPayment.payment_date,
+    status: selectedPayment.status,
+    service_id: selectedPayment.service_id,
+    service_name: selectedPayment.service_name,
+    department_id: selectedPayment.department_id,
+    department_name: selectedPayment.department_name,
+    contractor_name: selectedPayment.contractor_name,
+    legal_entity_name: selectedPayment.legal_entity_name,
+    created_at: selectedPayment.created_at as string | undefined,
+  } : null;
+
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
-        display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
-        padding: isMobile ? '0' : '16px',
-      }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div style={{
-        background: 'hsl(var(--card))',
-        border: '1px solid hsl(var(--border))',
-        borderRadius: isMobile ? '20px 20px 0 0' : '20px',
-        width: '100%',
-        maxWidth: isMobile ? '100%' : '900px',
-        maxHeight: isMobile ? '92vh' : '90vh',
-        display: 'flex',
-        flexDirection: 'column',
-        boxShadow: '0 24px 60px rgba(0,0,0,0.35)',
-        overflow: 'hidden',
-      }}>
-        <DrillDownHeader
-          label={filter.label}
-          serviceLabel={filter.serviceLabel}
-          count={sorted.length}
-          total={total}
-          isMobile={isMobile}
-          onClose={onClose}
-        />
-        <DrillDownToolbar
-          search={search}
-          onSearchChange={setSearch}
-          sortField={sortField}
-          sortDir={sortDir}
-          onToggleSort={toggleSort}
-          exporting={exporting}
-          hasItems={sorted.length > 0}
-          onExport={handleExport}
-          isMobile={isMobile}
-        />
-        <DrillDownTable
-          sorted={sorted}
-          total={total}
-          isMobile={isMobile}
-          isLight={isLight}
-        />
+    <>
+      <div
+        style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
+          padding: isMobile ? '0' : '16px',
+        }}
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      >
+        <div style={{
+          background: 'hsl(var(--card))',
+          border: '1px solid hsl(var(--border))',
+          borderRadius: isMobile ? '20px 20px 0 0' : '20px',
+          width: '100%',
+          maxWidth: isMobile ? '100%' : '900px',
+          maxHeight: isMobile ? '92vh' : '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.35)',
+          overflow: 'hidden',
+        }}>
+          <DrillDownHeader
+            label={filter.label}
+            serviceLabel={filter.serviceLabel}
+            count={sorted.length}
+            total={total}
+            isMobile={isMobile}
+            onClose={onClose}
+          />
+          <DrillDownToolbar
+            search={search}
+            onSearchChange={setSearch}
+            sortField={sortField}
+            sortDir={sortDir}
+            onToggleSort={toggleSort}
+            exporting={exporting}
+            hasItems={sorted.length > 0}
+            onExport={handleExport}
+            isMobile={isMobile}
+          />
+          <DrillDownTable
+            sorted={sorted}
+            total={total}
+            isMobile={isMobile}
+            isLight={isLight}
+            onPaymentClick={handlePaymentClick}
+          />
+        </div>
       </div>
-    </div>
+
+      {selectedPayment && (
+        <div style={{ position: 'relative', zIndex: 1100 }}>
+          <ApprovedPaymentDetailsModal
+            payment={paymentForModal}
+            onClose={handlePaymentDetailClose}
+            onRevoked={handleRevoked}
+          />
+        </div>
+      )}
+    </>
   );
 };
 
