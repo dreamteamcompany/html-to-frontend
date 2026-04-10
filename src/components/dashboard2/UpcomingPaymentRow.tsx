@@ -70,11 +70,11 @@ const UpcomingPaymentRow = ({
       </div>
 
       <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '3px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', minWidth: 0, flexWrap: 'wrap' }}>
           <span style={{
             fontSize: '13px', fontWeight: 600,
             color: 'hsl(var(--foreground))',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            overflowWrap: 'anywhere',
             flex: '1 1 0', minWidth: 0, lineHeight: 1.3,
           }}>
             {title}
@@ -97,7 +97,7 @@ const UpcomingPaymentRow = ({
         {secondaryParts.length > 0 && (
           <div style={{
             fontSize: '11px', color: 'hsl(var(--muted-foreground) / 0.85)',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            overflowWrap: 'anywhere',
             lineHeight: 1.3,
           }}>
             {secondaryParts.join(' · ')}
@@ -107,7 +107,7 @@ const UpcomingPaymentRow = ({
         {tertiaryParts.length > 0 && secondaryParts.join(' · ') !== tertiaryParts.join(' · ') && (
           <div style={{
             fontSize: '10px', color: 'hsl(var(--muted-foreground) / 0.75)',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            overflowWrap: 'anywhere',
             lineHeight: 1.3,
           }}>
             {tertiaryParts.join(' · ')}

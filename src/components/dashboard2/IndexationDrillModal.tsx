@@ -324,9 +324,9 @@ const IndexationDrillModal = ({ open, onClose }: Props) => {
                       borderBottom: idx < rows.length - 1 ? '1px solid hsl(var(--border))' : 'none',
                       background: idx % 2 === 0 ? 'transparent' : 'rgba(255,181,71,0.02)',
                     }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))' }}>{row.name}</span>
-                        <span style={{ fontSize: '14px', fontWeight: 700, color: row.rowPct === null ? 'hsl(var(--muted-foreground))' : row.rowPct > 0 ? '#ff6b6b' : row.rowPct < 0 ? '#01b574' : 'hsl(var(--foreground))' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px', gap: '8px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflowWrap: 'anywhere', flex: 1, minWidth: 0, lineHeight: 1.3 }}>{row.name}</span>
+                        <span style={{ fontSize: '14px', fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap', color: row.rowPct === null ? 'hsl(var(--muted-foreground))' : row.rowPct > 0 ? '#ff6b6b' : row.rowPct < 0 ? '#01b574' : 'hsl(var(--foreground))' }}>
                           {row.rowPct === null ? 'Новый' : `${row.rowPct > 0 ? '+' : ''}${row.rowPct}%`}
                         </span>
                       </div>
@@ -343,14 +343,14 @@ const IndexationDrillModal = ({ open, onClose }: Props) => {
                   ) : (
                     <div key={row.key} style={{
                       display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr 1fr 90px',
-                      padding: '10px 12px', gap: '8px', alignItems: 'center',
+                      padding: '10px 12px', gap: '8px', alignItems: 'flex-start',
                       borderBottom: idx < rows.length - 1 ? '1px solid hsl(var(--border))' : 'none',
                       background: idx % 2 === 0 ? 'transparent' : 'rgba(255,181,71,0.02)',
                     }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,181,71,0.05)')}
                       onMouseLeave={e => (e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : 'rgba(255,181,71,0.02)')}
                     >
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflowWrap: 'anywhere', minWidth: 0, lineHeight: 1.3 }}>
                         {row.name}
                       </div>
                       <div style={{ fontSize: '13px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap' }}>

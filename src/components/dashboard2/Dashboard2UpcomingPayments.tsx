@@ -157,8 +157,8 @@ const Dashboard2UpcomingPayments = () => {
             }}>
               <Icon name="CalendarClock" size={19} style={{ color: '#fff' }} />
             </div>
-            <div style={{ minWidth: 0, overflow: 'hidden' }}>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.3, overflowWrap: 'anywhere' }}>
                 Предстоящие платежи
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px', flexWrap: 'wrap' }}>

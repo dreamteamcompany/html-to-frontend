@@ -195,17 +195,19 @@ const Dashboard2ServicesDynamics = () => {
                     }}
                   >
                     {/* Имя + сумма + тренд */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', gap: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', minWidth: 0, flex: 1 }}>
                         <div style={{
                           width: '8px', height: '8px', borderRadius: '50%',
                           background: color, flexShrink: 0,
                           boxShadow: `0 0 6px ${color}80`,
+                          marginTop: '6px',
                         }} />
                         <span style={{
                           fontSize: '13px', fontWeight: 500,
                           color: nameColor,
-                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                          overflowWrap: 'anywhere',
+                          lineHeight: 1.4,
                         }}>
                           {service.name}
                         </span>

@@ -225,18 +225,18 @@ const Legend = ({ slices, onItemClick }: LegendProps) => {
         <div
           key={s.name}
           onClick={() => onItemClick?.(s.name)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '3px 4px', borderRadius: '6px', transition: 'background 0.15s' }}
+          style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', padding: '3px 4px', borderRadius: '6px', transition: 'background 0.15s' }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
         >
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, flexShrink: 0, marginTop: '5px' }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: '12px', fontWeight: 500, color: 'hsl(var(--foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+            <span style={{ fontSize: '12px', fontWeight: 500, color: 'hsl(var(--foreground))', overflowWrap: 'anywhere', display: 'block', lineHeight: 1.4 }}>
               {s.name}
             </span>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 700, color: s.color, flexShrink: 0 }}>{s.pct}%</span>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: isLight ? 'rgba(20,20,40,0.65)' : 'rgba(255,255,255,0.7)', flexShrink: 0, minWidth: '130px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: s.color, flexShrink: 0, marginTop: '1px' }}>{s.pct}%</span>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: isLight ? 'rgba(20,20,40,0.65)' : 'rgba(255,255,255,0.7)', flexShrink: 0, minWidth: '130px', textAlign: 'right', whiteSpace: 'nowrap', marginTop: '1px' }}>
             {fmt(s.amount)}
           </span>
         </div>

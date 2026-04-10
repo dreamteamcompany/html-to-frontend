@@ -69,7 +69,7 @@ const AuditEntityHistory = ({ log, history, historyLoading }: AuditEntityHistory
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground/80 mt-0.5 truncate">
+                        <div className="text-xs text-muted-foreground/80 mt-0.5 break-anywhere">
                           {h.username || 'Система'}
                           {summary && summary !== `${entityInfo.label} #${log.entity_id} — ${acfg.label}`
                             ? ` · ${summary}` : ''}

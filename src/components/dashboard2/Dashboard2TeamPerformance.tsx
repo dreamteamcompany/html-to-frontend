@@ -65,10 +65,10 @@ const BarChart = ({ data, isMobile, isLight, onItemClick }: BarChartProps) => {
             }}
           >
             {/* Заголовок строки */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', minWidth: 0, flex: 1 }}>
                 {medals[i] && (
-                  <span style={{ fontSize: isMobile ? '14px' : '16px', lineHeight: 1 }}>{medals[i]}</span>
+                  <span style={{ fontSize: isMobile ? '14px' : '16px', lineHeight: 1, flexShrink: 0 }}>{medals[i]}</span>
                 )}
                 {!medals[i] && (
                   <span style={{
@@ -85,8 +85,9 @@ const BarChart = ({ data, isMobile, isLight, onItemClick }: BarChartProps) => {
                   fontSize: isMobile ? '12px' : '13px',
                   fontWeight: 600,
                   color: 'hsl(var(--foreground))',
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                  maxWidth: isMobile ? '140px' : '240px',
+                  overflowWrap: 'anywhere',
+                  minWidth: 0,
+                  lineHeight: 1.3,
                   transition: 'color 0.2s',
                 }}>
                   {item.name}

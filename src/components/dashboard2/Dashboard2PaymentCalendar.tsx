@@ -290,9 +290,12 @@ const Dashboard2PaymentCalendar = () => {
                       <div style={{ 
                         fontSize: '8px',
                         color: 'rgba(200, 215, 240, 0.7)',
+                        overflowWrap: 'anywhere',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
+                        lineHeight: 1.3,
                       }} className="sm:text-[9px]">
                         {dayData.payments.map(p => p.split(':')[0]).join(', ')}
                       </div>

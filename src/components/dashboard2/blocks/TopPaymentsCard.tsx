@@ -161,16 +161,15 @@ const TopPaymentsCard = () => {
                   e.currentTarget.style.borderColor = 'hsl(var(--border))';
                   e.currentTarget.style.boxShadow = 'none';
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start', gap: '8px' }}>
                     <div style={{
                       color: 'hsl(var(--foreground))',
                       fontSize: '13px',
                       fontWeight: '600',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
+                      overflowWrap: 'anywhere',
                       flex: 1,
-                      marginRight: '8px'
+                      minWidth: 0,
+                      lineHeight: 1.3,
                     }}>
                       {name}
                     </div>
