@@ -34,7 +34,7 @@ const DrillDownHeader = ({ label, serviceLabel, count, total, isMobile, onClose 
         <div style={{
           fontSize: isMobile ? '14px' : '16px', fontWeight: 700,
           color: 'hsl(var(--foreground))',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          overflowWrap: 'anywhere', lineHeight: 1.3,
         }}>
           Детализация: <span style={{ color: '#7551e9' }}>{label}</span>
         </div>

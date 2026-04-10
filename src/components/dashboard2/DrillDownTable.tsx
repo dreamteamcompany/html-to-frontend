@@ -47,15 +47,15 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: Dr
                       {p.description || '—'}
                     </div>
                     {p.contractor_name && (
-                      <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'baseline' }}>
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Контрагент</span>
-                        <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.contractor_name}</span>
+                        <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', overflowWrap: 'anywhere' }}>{p.contractor_name}</span>
                       </div>
                     )}
                     {p.service_name && (
-                      <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline' }}>
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Сервис</span>
-                        <span style={{ fontSize: '11px', color: '#7551e9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</span>
+                        <span style={{ fontSize: '11px', color: '#7551e9', overflowWrap: 'anywhere' }}>{p.service_name}</span>
                       </div>
                     )}
                   </div>
@@ -124,17 +124,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: Dr
       ) : (
         /* ═══ DESKTOP: таблица ═══ */
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px', tableLayout: 'fixed' }}>
-            <colgroup>
-              <col style={{ width: '20%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '11%' }} />
-              <col style={{ width: '13%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '11%' }} />
-              <col style={{ width: '13%' }} />
-            </colgroup>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid hsl(var(--border))', position: 'sticky', top: 0, background: 'hsl(var(--card))', zIndex: 1 }}>
                 {['Описание', 'Категория', 'Отдел', 'Юр. лицо', 'Тип расчёта', 'Дата', 'Сумма', 'Статус'].map(h => (
@@ -159,50 +149,49 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: Dr
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.03)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
-                    <td style={{ padding: '11px 12px', overflow: 'hidden' }}>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '11px 12px', verticalAlign: 'top' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflowWrap: 'anywhere', lineHeight: 1.4 }}>
                         {p.description || '—'}
                       </div>
                       {p.contractor_name && (
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '3px', alignItems: 'baseline', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '3px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Контрагент</span>
-                          <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.contractor_name}</span>
+                          <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', overflowWrap: 'anywhere' }}>{p.contractor_name}</span>
                         </div>
                       )}
                       {p.service_name && (
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Сервис</span>
-                          <span style={{ fontSize: '11px', color: '#7551e9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.service_name}</span>
+                          <span style={{ fontSize: '11px', color: '#7551e9', overflowWrap: 'anywhere' }}>{p.service_name}</span>
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', overflowWrap: 'anywhere' }}>
                       {p.category_name || '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', overflowWrap: 'anywhere' }}>
                       {p.department_name || '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', overflowWrap: 'anywhere' }}>
                       {p.legal_entity_name || '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                       {resolvePaymentType(p.payment_type, p.legal_entity_name)}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                       {p.payment_date ? fmtDate(String(p.payment_date)) : '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '13px', fontWeight: 700, color: '#7551e9', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                    <td style={{ padding: '11px 12px', fontSize: '13px', fontWeight: 700, color: '#7551e9', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                       {fmt(p.amount)}
                     </td>
-                    <td style={{ padding: '11px 12px', overflow: 'hidden' }}>
+                    <td style={{ padding: '11px 12px', verticalAlign: 'top' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
                         <span style={{
                           display: 'inline-flex', alignItems: 'center',
                           padding: '3px 8px', borderRadius: '6px',
                           fontSize: '11px', fontWeight: 600,
                           background: `${st.color}20`, color: st.color,
-                          whiteSpace: 'nowrap', maxWidth: '100%',
-                          overflow: 'hidden', textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
                         }}>
                           {st.label}
                         </span>
