@@ -88,10 +88,10 @@ const SearchableSelect = ({
                   {option.icon && (
                     <span className="mr-2">{option.icon}</span>
                   )}
-                  <div className="flex flex-col min-w-0">
-                    <span className="truncate">{option.label}</span>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="break-anywhere">{option.label}</span>
                     {option.sublabel && (
-                      <span className="text-xs text-muted-foreground truncate">{option.sublabel}</span>
+                      <span className="text-xs text-muted-foreground break-anywhere">{option.sublabel}</span>
                     )}
                   </div>
                   {value === option.value && (

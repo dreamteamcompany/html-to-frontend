@@ -417,16 +417,16 @@ const ContractorComparisonChart = () => {
                   const col = LINE_COLORS[i % LINE_COLORS.length];
                   const pct = total > 0 ? ((item.amount / total) * 100).toFixed(1) : '0';
                   return (
-                    <div key={`${item.name}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: col.line, flexShrink: 0 }} />
+                    <div key={`${item.name}-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: col.line, flexShrink: 0, marginTop: '5px' }} />
                       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '12px', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                        <span style={{ fontSize: '12px', color: 'hsl(var(--foreground))', overflowWrap: 'anywhere', lineHeight: 1.4 }}>{item.name}</span>
                         {item.service && (
-                          <span style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.service}</span>
+                          <span style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', overflowWrap: 'anywhere', lineHeight: 1.3 }}>{item.service}</span>
                         )}
                       </div>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: col.line, flexShrink: 0 }}>{pct}%</span>
-                      <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', flexShrink: 0 }}>{fmt(item.amount)}</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: col.line, flexShrink: 0, whiteSpace: 'nowrap' }}>{pct}%</span>
+                      <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', flexShrink: 0, whiteSpace: 'nowrap' }}>{fmt(item.amount)}</span>
                     </div>
                   );
                 })}

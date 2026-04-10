@@ -97,9 +97,9 @@ const AnnualSavingsStatCard = () => {
               {savingsData.top_departments.slice(0, 3).map((dept, index) => (
                 <div
                   key={dept.department_name}
-                  className={`flex justify-between items-center ${dashboardTypography.cardSmall}`}
+                  className={`flex justify-between items-start gap-2 ${dashboardTypography.cardSmall}`}
                 >
-                  <div className="flex items-center gap-1.5 text-foreground min-w-0 flex-1">
+                  <div className="flex items-start gap-1.5 text-foreground min-w-0 flex-1">
                     <span
                       className={`w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center ${dashboardTypography.cardTiny} font-bold flex-shrink-0`}
                       style={{
@@ -109,9 +109,9 @@ const AnnualSavingsStatCard = () => {
                     >
                       {index + 1}
                     </span>
-                    <span className="font-medium truncate">{dept.department_name}</span>
+                    <span className="font-medium break-anywhere">{dept.department_name}</span>
                   </div>
-                  <span className="font-semibold ml-2 flex-shrink-0" style={{ color: '#01b574' }}>
+                  <span className="font-semibold flex-shrink-0 whitespace-nowrap" style={{ color: '#01b574' }}>
                     {formatAmount(dept.total_saved)}
                   </span>
                 </div>
