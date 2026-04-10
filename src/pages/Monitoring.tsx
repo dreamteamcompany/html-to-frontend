@@ -49,9 +49,9 @@ const Monitoring = () => {
     handleTouchEnd,
   } = useSidebarTouch();
 
-  const loadServices = async () => {
+  const loadServices = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const response = await fetch('https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -64,13 +64,15 @@ const Monitoring = () => {
       }
     } catch (error) {
       console.error('Failed to load services:', error);
-      toast({
-        title: 'Ошибка загрузки',
-        description: 'Не удалось загрузить данные мониторинга',
-        variant: 'destructive',
-      });
+      if (!silent) {
+        toast({
+          title: 'Ошибка загрузки',
+          description: 'Не удалось загрузить данные мониторинга',
+          variant: 'destructive',
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -100,8 +102,8 @@ const Monitoring = () => {
     }
   };
 
-  const refreshAllBalances = async () => {
-    setLoading(true);
+  const refreshAllBalances = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const refreshPromises = services.map(service => 
         fetch(`https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d?action=refresh&serviceId=${service.id}`, {
@@ -113,21 +115,25 @@ const Monitoring = () => {
       );
       
       await Promise.all(refreshPromises);
-      await loadServices();
+      await loadServices(silent);
       
-      toast({
-        title: 'Обновлено',
-        description: `Обновлено ${services.length} сервисов`,
-      });
+      if (!silent) {
+        toast({
+          title: 'Обновлено',
+          description: `Обновлено ${services.length} сервисов`,
+        });
+      }
     } catch (error) {
       console.error('Failed to refresh all balances:', error);
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить все балансы',
-        variant: 'destructive',
-      });
+      if (!silent) {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось обновить все балансы',
+          variant: 'destructive',
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -226,7 +232,7 @@ const Monitoring = () => {
     loadServices();
     
     const interval = setInterval(() => {
-      refreshAllBalances();
+      refreshAllBalances(true);
     }, 60000);
     
     return () => clearInterval(interval);

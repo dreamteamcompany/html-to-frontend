@@ -33,12 +33,32 @@ const NotificationsContext = createContext<NotificationsContextValue>({
 
 const POLL_INTERVAL = 15_000;
 
+const NOTIFICATION_TITLES: Record<string, string> = {
+  payment_approved: 'Платёж согласован',
+  payment_rejected: 'Платёж отклонён',
+  payment_pending: 'Новый платёж на согласование',
+  payment_revoked: 'Платёж отозван',
+  payment_created: 'Новый платёж создан',
+  approval_request: 'Новый счёт на согласование',
+};
+
+function getNotificationTitle(n: Notification): string {
+  if (n.type && NOTIFICATION_TITLES[n.type]) return NOTIFICATION_TITLES[n.type];
+  const msg = (n.message || '').toLowerCase();
+  if (msg.includes('согласован') && !msg.includes('на согласование')) return 'Платёж согласован';
+  if (msg.includes('отклон')) return 'Платёж отклонён';
+  if (msg.includes('отозван')) return 'Платёж отозван';
+  if (msg.includes('на согласование') || msg.includes('ожидает')) return 'Новый счёт на согласование';
+  return 'Уведомление';
+}
+
 export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
   const { token, user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const prevUnreadRef = useRef(0);
+  const prevUnreadRef = useRef(-1);
+  const shownIdsRef = useRef<Set<number>>(new Set());
 
   const load = useCallback(async () => {
     if (!token || !user) return;
@@ -49,15 +69,25 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
       if (res.ok) {
         const data = await res.json();
         const newCount: number = data.unread_count || 0;
-        setNotifications(data.notifications || []);
+        const items: Notification[] = data.notifications || [];
+        setNotifications(items);
         setUnreadCount(newCount);
 
-        if (newCount > prevUnreadRef.current && prevUnreadRef.current >= 0) {
-          const latest = (data.notifications || []).find((n: Notification) => !n.is_read);
-          if (latest && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification('Новый счёт на согласование', {
+        if (prevUnreadRef.current >= 0 && newCount > prevUnreadRef.current) {
+          const unshown = items.filter(
+            (n) => !n.is_read && !shownIdsRef.current.has(n.id)
+          );
+          if (
+            unshown.length > 0 &&
+            'Notification' in window &&
+            Notification.permission === 'granted'
+          ) {
+            const latest = unshown[0];
+            shownIdsRef.current.add(latest.id);
+            new window.Notification(getNotificationTitle(latest), {
               body: latest.message,
               icon: '/favicon.ico',
+              tag: `notif-${latest.id}`,
             });
           }
         }

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/config/api';
@@ -18,6 +18,8 @@ interface Service {
   final_approver_id: number;
 }
 
+const POLL_INTERVAL = 30_000;
+
 export const usePendingApprovals = () => {
   const { token, user } = useAuth();
   const { toast } = useToast();
@@ -25,95 +27,84 @@ export const usePendingApprovals = () => {
   const [pendingPayments, setPendingPayments] = useState<Payment[]>([]);
   const previousCountRef = useRef<number>(0);
   const isInitialLoad = useRef(true);
+  const notifiedIdsRef = useRef<Set<number>>(new Set());
 
-  useEffect(() => {
+  const loadPendingApprovals = useCallback(async () => {
     if (!token || !user) return;
+    try {
+      const [paymentsRes, servicesRes] = await Promise.all([
+        fetch(`${API_ENDPOINTS.paymentsApi}?scope=all`, {
+          headers: { 'X-Auth-Token': token },
+        }),
+        fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=services`, {
+          headers: { 'X-Auth-Token': token },
+        }),
+      ]);
 
-    const loadPendingApprovals = async () => {
-      try {
-        const [paymentsRes, servicesRes] = await Promise.all([
-          fetch(`${API_ENDPOINTS.paymentsApi}?scope=all`, {
-            headers: { 'X-Auth-Token': token },
-          }),
-          fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=services`, {
-            headers: { 'X-Auth-Token': token },
-          }),
-        ]);
+      if (!paymentsRes.ok || !servicesRes.ok) return;
 
-        if (!paymentsRes.ok || !servicesRes.ok) return;
+      const paymentsData = await paymentsRes.json();
+      const servicesData = await servicesRes.json();
 
-        const paymentsData = await paymentsRes.json();
-        const servicesData = await servicesRes.json();
+      const allPayments = Array.isArray(paymentsData) ? paymentsData : [];
+      const servicesRaw = Array.isArray(servicesData) ? servicesData : (servicesData?.services ?? []);
+      const services: Service[] = Array.isArray(servicesRaw) ? servicesRaw : [];
 
-        const allPayments = Array.isArray(paymentsData) ? paymentsData : [];
-        const servicesRaw = Array.isArray(servicesData) ? servicesData : (servicesData?.services ?? []);
-        const services: Service[] = Array.isArray(servicesRaw) ? servicesRaw : [];
+      const myPendingPayments = allPayments.filter((payment: Payment) => {
+        if (!payment.status || !payment.service_id) return false;
 
-        const myPendingPayments = allPayments.filter((payment: Payment) => {
-          if (!payment.status || !payment.service_id) return false;
+        const service = services.find((s: Service) => s.id === payment.service_id);
+        if (!service) return false;
 
-          const service = services.find((s: Service) => s.id === payment.service_id);
-          if (!service) return false;
+        if (payment.status === 'pending_tech_director' && service.intermediate_approver_id === user.id) {
+          return true;
+        }
 
-          if (payment.status === 'pending_tech_director' && service.intermediate_approver_id === user.id) {
-            return true;
-          }
+        if (payment.status === 'pending_ceo' && service.final_approver_id === user.id) {
+          return true;
+        }
 
-          if (payment.status === 'pending_ceo' && service.final_approver_id === user.id) {
-            return true;
-          }
+        return false;
+      });
 
-          return false;
-        });
+      const currentCount = myPendingPayments.length;
+      setPendingCount(currentCount);
+      setPendingPayments(myPendingPayments);
 
-        const currentCount = myPendingPayments.length;
-        setPendingCount(currentCount);
-        setPendingPayments(myPendingPayments);
+      if (!isInitialLoad.current && currentCount > previousCountRef.current) {
+        const newPayments = myPendingPayments.filter(
+          (p) => !notifiedIdsRef.current.has(p.id)
+        );
 
-        if (!isInitialLoad.current && currentCount > previousCountRef.current) {
-          const newPaymentsCount = currentCount - previousCountRef.current;
-          const lastPayment = myPendingPayments[0];
-
-          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBDGH0fPTgjMGHm7A7+OZSA0PVKzn7q1aFwtDmuTyvWsjBSyBzfHZiTgIG2m98OWhUQ0NTqfi8LRlHwc5ldb0yoA1Bxt0w/DbmE0PD1am5fCsXhsLQ5zk876tJAU2idTy0oU4ByBxy+/cnE8ND1Gq5O+zYxwGO5fX9Mx+NwcbbMDv3ZlLDhBTrOXurV0bCkSb5fK8rSMGLH/M8diJOQgbbsjv35xPDwxPqeLusWIcBzuY2PTLfzcHHG/D7+CbSw0OUazl7KxeHApFnePzu64jBSh9zPLXijsIG3DI8OGdTQ4OT6nh7bJjHQc9mdj0yoA2ByBuxO3cnEwNDlKr5eyqXBsLRJrj8r6tIwYsf8zw14o7CBtwyPDhnU0ODk+p4e2yYx0HPZnY9MqANgcgbsTt3JxMDQ5Sq+XsqlwbC0Sa4/K+rSMGLH/M8NeKOwgbcMjw4Z1NDg5PqeHtsmMdBz2Z2PTKgDYHIG7E7dycTA0OUqvl7KpcGwtEmuPyvq0jBix/zPDXijsIG3DI8OGdTQ4OT6nh7bJjHQc9mdj0yoA2ByBuxO3cnEwNDlKr5eyqXBsLRJrj8r6tIwYsf8zw14o7CBtwyPDhnU0ODk+p4e2yYx0HPZnY9MqANgcgbsTt3JxMDQ5Sq+XsqlwbC0Sa4/K+rSMGLH/M8NeKOwgbcMjw4Z1NDg5PqeHtsmMdBz2Z2PTKgDYHIG7E7dycTA0OUqvl7KpcGwtEmuPyvq0jBix/zPDXijsIG3DI8OGdTQ4OT6nh7bJjHQc9mdj0yoA2ByBuxO3cnEwNDlKr5eyqXBsLRJrj8r6tIwYsf8zw14o7CBtwyPDhnU0ODk+p4e2yYx0HPZnY9MqANgcgbsTt3JxMDQ5Sq+XsqlwbC0Sa4/K+rSMGLH/M8NeKOwgbcMjw4Z1NDg5PqeHtsmMdBz2Z2PTKgDYHIG7E7dycTA0OUqvl7KpcGwtEmuPyvq0jBix/zPDXijsIG3DI8OGdTQ4OT6nh7bJjHQc9mdj0yoA2ByBuxO3cnEwNDlKr5eyqXBsLRJrj8r6tIwYsf8zw14o7CBtwyPDhnU0ODk+p4e2yYx0HPZnY9MqANgcgbsTt3JxMDQ5Sq+XsqlwbC0Sa4/K+rSMGLH/M8NeKOwgbcMjw4Z1NDg5PqeHtsmMdBz2Z2PTKgDYHIG7E7dycTA0OUqvl7KpcGwtEmuPyvq0jBix/zPDXijsIG3DI8OGdTQ4OT6nh7bJjHQc9mdj0yoA2ByBuxO3cnEwNDlKr5eyqXBsLRJrj8r6tIwYsf8zw14o7CBtwyPDhnU0ODk+p4e2yYx0HPZnY9MqANgcgbsTt3JxMDQ5Sq+XsqlwbC0Sa4/K+rSMGLH/M8NeKOwgbcMjw4Z1NDg5PqeHtsmMdBz2Z2PTKgDYHIG7E7dycTA0OUqvl7KpcGwtEmuPyA==');
-          audio.volume = 0.3;
-          audio.play().catch(() => {});
+        if (newPayments.length > 0) {
+          const lastPayment = newPayments[0];
+          newPayments.forEach((p) => notifiedIdsRef.current.add(p.id));
 
           toast({
             title: '🔔 Новый платёж на согласование',
-            description: lastPayment?.description 
+            description: lastPayment?.description
               ? `${lastPayment.description} — ${lastPayment.amount?.toLocaleString('ru-RU')} ₽`
-              : `${newPaymentsCount} ${newPaymentsCount === 1 ? 'новый платёж' : 'новых платежей'} ожидает согласования`,
+              : `${newPayments.length} ${newPayments.length === 1 ? 'новый платёж' : 'новых платежей'} ожидает согласования`,
             duration: 8000,
           });
-
-          if ('vibrate' in navigator) {
-            navigator.vibrate([200, 100, 200]);
-          }
-
-          if (Notification.permission === 'granted') {
-            new Notification('Новый платёж на согласование', {
-              body: lastPayment?.description || `${newPaymentsCount} новых платежей`,
-              icon: '/favicon.ico',
-              tag: 'pending-approval',
-              requireInteraction: false,
-            });
-          }
         }
-
-        previousCountRef.current = currentCount;
-        isInitialLoad.current = false;
-      } catch (err) {
-        console.error('Failed to load pending approvals:', err);
       }
-    };
 
-    loadPendingApprovals();
-    const interval = setInterval(loadPendingApprovals, 30000);
-
-    return () => clearInterval(interval);
+      myPendingPayments.forEach((p) => notifiedIdsRef.current.add(p.id));
+      previousCountRef.current = currentCount;
+      isInitialLoad.current = false;
+    } catch (err) {
+      console.error('Failed to load pending approvals:', err);
+    }
   }, [token, user, toast]);
 
-  const requestNotificationPermission = async () => {
+  useEffect(() => {
+    loadPendingApprovals();
+    const interval = setInterval(loadPendingApprovals, POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [loadPendingApprovals]);
+
+  const requestNotificationPermission = useCallback(async () => {
     if ('Notification' in window && Notification.permission === 'default') {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
@@ -123,7 +114,7 @@ export const usePendingApprovals = () => {
         });
       }
     }
-  };
+  }, [toast]);
 
   return {
     pendingCount,
