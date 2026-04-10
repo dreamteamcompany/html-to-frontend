@@ -7,6 +7,7 @@ interface SavingsTableProps {
   savings: Saving[];
   loading: boolean;
   onDeleteSaving: (savingId: number) => void;
+  highlightId?: number | null;
 }
 
 const frequencyLabels: Record<string, string> = {
@@ -16,7 +17,7 @@ const frequencyLabels: Record<string, string> = {
   quarterly: 'Ежеквартально',
 };
 
-const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) => {
+const SavingsTable = ({ savings, loading, onDeleteSaving, highlightId }: SavingsTableProps) => {
   return (
     <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
       <CardContent className="p-0">
@@ -45,7 +46,11 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
                 </thead>
                 <tbody>
                   {savings.map(saving => (
-                    <tr key={saving.id} className="border-b border-white/5 last:border-0 hover:bg-white/5">
+                    <tr
+                      key={saving.id}
+                      id={`saving-row-${saving.id}`}
+                      className={`border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors ${highlightId === saving.id ? 'bg-green-500/20 ring-2 ring-green-500/60 animate-pulse' : ''}`}
+                    >
                       <td className="p-4 font-medium">{saving.service_name}</td>
                       <td className="p-4 text-muted-foreground max-w-xs truncate">{saving.description}</td>
                       <td className="p-4">
@@ -88,7 +93,11 @@ const SavingsTable = ({ savings, loading, onDeleteSaving }: SavingsTableProps) =
 
             <div className="md:hidden space-y-4 p-4">
               {savings.map(saving => (
-                <div key={saving.id} className="p-4 rounded-lg border border-white/5 bg-card space-y-2">
+                <div
+                  key={saving.id}
+                  id={`saving-row-${saving.id}`}
+                  className={`p-4 rounded-lg border bg-card space-y-2 transition-colors ${highlightId === saving.id ? 'border-green-500 bg-green-500/10 ring-2 ring-green-500/60 animate-pulse' : 'border-white/5'}`}
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="font-medium">{saving.service_name}</div>

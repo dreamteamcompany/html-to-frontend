@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +20,28 @@ const Savings = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
+  const [highlightId, setHighlightId] = useState<number | null>(null);
   const { token } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const state = location.state as { highlightId?: number } | null;
+    if (state?.highlightId) {
+      setHighlightId(state.highlightId);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.pathname, location.state, navigate]);
+
+  useEffect(() => {
+    if (highlightId == null || loading) return;
+    const el = document.getElementById(`saving-row-${highlightId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    const timer = setTimeout(() => setHighlightId(null), 3000);
+    return () => clearTimeout(timer);
+  }, [highlightId, loading, savings]);
 
   const {
     menuOpen,
@@ -261,6 +283,7 @@ const Savings = () => {
           savings={savings}
           loading={loading}
           onDeleteSaving={handleDeleteSaving}
+          highlightId={highlightId}
         />
       </main>
     </div>

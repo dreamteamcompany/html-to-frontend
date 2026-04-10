@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePeriod } from '@/contexts/PeriodContext';
@@ -42,8 +43,14 @@ const fmtDate = (s: string) => {
 };
 
 const SavingsDrillModal = ({ open, onClose }: Props) => {
+  const navigate = useNavigate();
   const { token } = useAuth();
   const { getDateRange, period, dateFrom, dateTo } = usePeriod();
+
+  const handleRowClick = useCallback((id: number) => {
+    onClose();
+    navigate('/savings', { state: { highlightId: id } });
+  }, [navigate, onClose]);
   const [items, setItems] = useState<SavingsItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -288,10 +295,19 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
             /* MOBILE: карточки */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px' }}>
               {sorted.map(item => (
-                <div key={item.id} style={{
-                  background: 'hsl(var(--muted))', borderRadius: '12px',
-                  padding: '12px', border: '1px solid hsl(var(--border))',
-                }}>
+                <div
+                  key={item.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleRowClick(item.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleRowClick(item.id); }}
+                  style={{
+                    background: 'hsl(var(--muted))', borderRadius: '12px',
+                    padding: '12px', border: '1px solid hsl(var(--border))',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.15s, transform 0.15s',
+                  }}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start', gap: '8px' }}>
                     <div style={{ minWidth: 0 }}>
                       {item.service_name && (
@@ -327,12 +343,17 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
               {sorted.map((item, idx) => (
                 <div
                   key={item.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleRowClick(item.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleRowClick(item.id); }}
                   style={{
                     display: 'grid', gridTemplateColumns: DESKTOP_COLS,
                     padding: '12px 24px', gap: '12px', alignItems: 'center',
                     borderBottom: '1px solid hsl(var(--border))',
                     background: idx % 2 === 0 ? 'transparent' : 'rgba(1,181,116,0.02)',
                     transition: 'background 0.15s',
+                    cursor: 'pointer',
                   }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(1,181,116,0.05)')}
                   onMouseLeave={e => (e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : 'rgba(1,181,116,0.02)')}
