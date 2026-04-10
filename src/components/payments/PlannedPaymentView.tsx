@@ -12,16 +12,16 @@ interface PlannedPaymentViewProps {
 
 const PlannedPaymentView = ({ payment, isAdmin, onEditStart, onDeleteRequest }: PlannedPaymentViewProps) => (
   <div className="space-y-4 mt-1">
-    <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
+    <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
         <Icon name={payment.category_icon || 'Calendar'} size={18} className="text-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold truncate">{payment.description || '—'}</p>
-        <p className="text-xs text-muted-foreground">{payment.category_name}</p>
+        <p className="font-semibold break-anywhere">{payment.description || '—'}</p>
+        <p className="text-xs text-muted-foreground break-anywhere">{payment.category_name}</p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-lg font-bold text-primary">{fmt(payment.amount)}</p>
+        <p className="text-lg font-bold text-primary whitespace-nowrap">{fmt(payment.amount)}</p>
         {payment.recurrence_type && payment.recurrence_type !== 'once' && (
           <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">
             {recurrenceLabel[payment.recurrence_type] ?? payment.recurrence_type}
@@ -46,7 +46,7 @@ const PlannedPaymentView = ({ payment, isAdmin, onEditStart, onDeleteRequest }: 
       )}
     </div>
 
-    <div className="flex gap-2 pt-2 border-t border-white/10">
+    <div className="flex gap-2 pt-2 border-t border-border">
       <Button variant="outline" className="flex-1 gap-2" onClick={onEditStart}>
         <Icon name="Pencil" size={15} />
         Редактировать

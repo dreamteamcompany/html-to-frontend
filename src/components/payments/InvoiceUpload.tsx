@@ -100,7 +100,7 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading,
                 <Icon name={getFileIcon(fileType)} size={32} className="text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{displayName}</p>
+                <p className="text-sm font-medium break-anywhere">{displayName}</p>
                 <p className="text-xs text-muted-foreground">
                   {fileType === 'application/pdf' ? 'PDF документ' :
                    fileType?.startsWith('image/') ? 'Изображение' : 'Документ'}

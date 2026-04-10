@@ -26,12 +26,12 @@ const EditPaymentDocuments = ({
       <Label>Документы (счёт)</Label>
 
       {existingDocs.length > 0 && (
-        <div className="rounded-lg border border-white/10 divide-y divide-white/5 overflow-hidden">
+        <div className="rounded-lg border border-border divide-y divide-border overflow-hidden">
           {existingDocs.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between gap-2 px-3 py-2.5 bg-primary/5">
-              <div className="flex items-center gap-2 min-w-0">
-                <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
-                <span className="text-sm font-medium truncate">{doc.file_name}</span>
+            <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2.5 bg-primary/5">
+              <div className="flex items-start gap-2 min-w-0 flex-1">
+                <Icon name="FileText" size={16} className="text-primary flex-shrink-0 mt-0.5" />
+                <span className="text-sm font-medium break-anywhere">{doc.file_name}</span>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <a
@@ -58,16 +58,16 @@ const EditPaymentDocuments = ({
       )}
 
       {currentFileUrl && uploadedFileName && (
-        <div className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-green-500/30 bg-green-500/5">
-          <div className="flex items-center gap-2 min-w-0">
-            <Icon name="CheckCircle" size={16} className="text-green-400 flex-shrink-0" />
-            <span className="text-sm font-medium truncate text-green-300">{displayFileName}</span>
-            <span className="text-xs text-green-400/70">новый</span>
+        <div className="flex items-start justify-between gap-2 px-3 py-2.5 rounded-lg border border-green-500/30 bg-green-500/5">
+          <div className="flex items-start gap-2 min-w-0 flex-1 flex-wrap">
+            <Icon name="CheckCircle" size={16} className="text-green-400 flex-shrink-0 mt-0.5" />
+            <span className="text-sm font-medium break-anywhere text-green-300">{displayFileName}</span>
+            <span className="text-xs text-green-400/70 flex-shrink-0 mt-0.5">новый</span>
           </div>
           <button
             type="button"
             onClick={onCancelNewFile}
-            className="text-xs text-muted-foreground hover:text-red-400 transition-colors flex-shrink-0"
+            className="text-xs text-muted-foreground hover:text-red-400 transition-colors flex-shrink-0 mt-0.5"
           >
             <Icon name="X" size={14} />
           </button>

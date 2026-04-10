@@ -219,29 +219,29 @@ const PlannedPaymentsModal = () => {
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleEditOpen(p as PlannedPayment); }}
                   className="flex items-start justify-between gap-3 p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/60 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
                     <div className="shrink-0 w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center">
                       <Icon name={p.category_icon || 'Calendar'} size={16} className="text-primary" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate text-foreground">{p.description}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium break-anywhere text-foreground">{p.description}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-xs text-muted-foreground">{p.category_name}</span>
+                        <span className="text-xs text-muted-foreground break-anywhere">{p.category_name}</span>
                         {p.recurrence_type && p.recurrence_type !== 'once' && (
                           <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-300 font-medium">
                             {recurrenceLabel[p.recurrence_type] ?? p.recurrence_type}
                           </span>
                         )}
                         {p.legal_entity_name && (
-                          <span className="text-xs text-muted-foreground truncate">{p.legal_entity_name}</span>
+                          <span className="text-xs text-muted-foreground break-anywhere">{p.legal_entity_name}</span>
                         )}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <div className="text-right mr-2">
-                      <p className="text-sm font-semibold text-foreground">{formatAmount(p.amount)}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{formatDate(p.planned_date)}</p>
+                      <p className="text-sm font-semibold text-foreground whitespace-nowrap">{formatAmount(p.amount)}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">{formatDate(p.planned_date)}</p>
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleEditOpen(p as PlannedPayment); }}
