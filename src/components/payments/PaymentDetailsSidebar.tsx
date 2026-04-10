@@ -52,7 +52,7 @@ const PaymentDetailsSidebar = ({
     onReject;
 
   return (
-    <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-border lg:overflow-hidden">
+    <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-border lg:overflow-hidden overflow-x-hidden">
       <div className="p-4 sm:p-6 border-b border-border">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between items-baseline gap-3">
@@ -120,11 +120,11 @@ const PaymentDetailsSidebar = ({
             {showDocsPanel && (
               <div className="mt-2 rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
                 {docs.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between gap-2 px-3 py-2.5">
+                  <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2.5">
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon name="FileText" size={15} className="text-primary flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{doc.file_name}</p>
+                        <p className="text-sm font-semibold text-foreground break-anywhere">{doc.file_name}</p>
                         <p className="text-xs font-medium text-foreground/60">
                           {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ru-RU') : ''}
                         </p>

@@ -97,6 +97,13 @@
   }
 }
 
+@layer utilities {
+  .break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
 @keyframes pulse-glow {
   0%,
   100% {
