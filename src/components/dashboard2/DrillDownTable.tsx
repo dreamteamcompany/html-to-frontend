@@ -104,13 +104,18 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: Dr
                       </span>
                     )}
                   </div>
-                  <span style={{
-                    display: 'inline-block', padding: '3px 8px', borderRadius: '6px',
-                    fontSize: '11px', fontWeight: 600,
-                    background: `${st.color}20`, color: st.color,
-                  }}>
-                    {st.label}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{
+                      display: 'inline-block', padding: '3px 8px', borderRadius: '6px',
+                      fontSize: '11px', fontWeight: 600,
+                      background: `${st.color}20`, color: st.color,
+                    }}>
+                      {st.label}
+                    </span>
+                    {onPaymentClick && (
+                      <Icon name="ChevronRight" size={14} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -190,16 +195,21 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: Dr
                       {fmt(p.amount)}
                     </td>
                     <td style={{ padding: '11px 12px', overflow: 'hidden' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center',
-                        padding: '3px 8px', borderRadius: '6px',
-                        fontSize: '11px', fontWeight: 600,
-                        background: `${st.color}20`, color: st.color,
-                        whiteSpace: 'nowrap', maxWidth: '100%',
-                        overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>
-                        {st.label}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center',
+                          padding: '3px 8px', borderRadius: '6px',
+                          fontSize: '11px', fontWeight: 600,
+                          background: `${st.color}20`, color: st.color,
+                          whiteSpace: 'nowrap', maxWidth: '100%',
+                          overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>
+                          {st.label}
+                        </span>
+                        {onPaymentClick && (
+                          <Icon name="ChevronRight" size={14} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
