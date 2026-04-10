@@ -52,14 +52,14 @@ const PaymentDetailsSidebar = ({
     onReject;
 
   return (
-    <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10 lg:overflow-hidden">
-      <div className="p-4 sm:p-6 border-b border-white/10">
+    <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-border lg:overflow-hidden">
+      <div className="p-4 sm:p-6 border-b border-border">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between items-baseline gap-3">
-            <span className="text-muted-foreground shrink-0">
+            <span className="font-semibold text-foreground/70 shrink-0">
               {(isPlannedPayment || payment.is_planned) ? 'Дата планирования:' : 'Дата платежа:'}
             </span>
-            <span className="font-medium text-right">
+            <span className="font-semibold text-foreground text-right">
               {payment.planned_date
                 ? new Date(payment.planned_date).toLocaleDateString('ru-RU')
                 : payment.payment_date
@@ -69,20 +69,20 @@ const PaymentDetailsSidebar = ({
           </div>
           {payment.submitted_at && (
             <div className="flex justify-between items-baseline gap-3">
-              <span className="text-muted-foreground shrink-0">Дата отправки:</span>
-              <span className="font-medium text-right">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
+              <span className="font-semibold text-foreground/70 shrink-0">Дата отправки:</span>
+              <span className="font-semibold text-foreground text-right">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
             </div>
           )}
           {payment.invoice_date && (
             <div className="flex justify-between items-baseline gap-3">
-              <span className="text-muted-foreground shrink-0">Дата счёта:</span>
-              <span className="font-medium text-right">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
+              <span className="font-semibold text-foreground/70 shrink-0">Дата счёта:</span>
+              <span className="font-semibold text-foreground text-right">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
             </div>
           )}
           {payment.created_at && (
             <div className="flex justify-between items-baseline gap-3">
-              <span className="text-muted-foreground shrink-0">Создана:</span>
-              <span className="font-medium text-right">{new Date(payment.created_at).toLocaleDateString('ru-RU')}</span>
+              <span className="font-semibold text-foreground/70 shrink-0">Создана:</span>
+              <span className="font-semibold text-foreground text-right">{new Date(payment.created_at).toLocaleDateString('ru-RU')}</span>
             </div>
           )}
         </div>
@@ -92,7 +92,7 @@ const PaymentDetailsSidebar = ({
           <div className="mt-3">
             <button
               onClick={() => setLinkedModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-400/30 bg-blue-500/10 hover:bg-blue-500/20 transition-colors text-sm font-medium text-blue-400 w-full"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-400/30 bg-blue-500/10 hover:bg-blue-500/20 transition-colors text-sm font-semibold text-blue-700 dark:text-blue-300 w-full"
             >
               <Icon name="CalendarClock" size={15} />
               <span>Запланированный платёж</span>
@@ -105,7 +105,7 @@ const PaymentDetailsSidebar = ({
           <div className="mt-3">
             <button
               onClick={() => setShowDocsPanel(v => !v)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-medium text-primary w-full"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-semibold text-primary w-full"
             >
               <Icon name="FileText" size={16} />
               <span>Счёт</span>
@@ -118,14 +118,14 @@ const PaymentDetailsSidebar = ({
             </button>
 
             {showDocsPanel && (
-              <div className="mt-2 rounded-lg border border-white/10 bg-card divide-y divide-white/5 overflow-hidden">
+              <div className="mt-2 rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
                 {docs.map((doc) => (
                   <div key={doc.id} className="flex items-center justify-between gap-2 px-3 py-2.5">
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon name="FileText" size={15} className="text-primary flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{doc.file_name}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm font-semibold text-foreground truncate">{doc.file_name}</p>
+                        <p className="text-xs font-medium text-foreground/60">
                           {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ru-RU') : ''}
                         </p>
                       </div>
@@ -135,7 +135,7 @@ const PaymentDetailsSidebar = ({
                         href={doc.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline"
+                        className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                         title="Просмотреть"
                       >
                         <Icon name="Eye" size={14} />
@@ -144,7 +144,7 @@ const PaymentDetailsSidebar = ({
                       <a
                         href={doc.file_url}
                         download
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground"
                         title="Скачать"
                       >
                         <Icon name="Download" size={14} />
@@ -172,16 +172,16 @@ const PaymentDetailsSidebar = ({
 
       {isPlannedPayment && (
         <div className="px-4 sm:px-6 py-6">
-          <div className="text-center text-muted-foreground">
-            <Icon name="Clock" size={40} className="mx-auto mb-3 opacity-50" />
-            <p className="text-sm">Запланированный платёж</p>
-            <p className="text-xs mt-1">История согласований появится после создания платежа</p>
+          <div className="text-center">
+            <Icon name="Clock" size={40} className="mx-auto mb-3 text-foreground/40" />
+            <p className="text-sm font-semibold text-foreground">Запланированный платёж</p>
+            <p className="text-xs font-medium text-foreground/70 mt-1">История согласований появится после создания платежа</p>
           </div>
         </div>
       )}
 
       {showActions ? (
-        <div className="p-4 sm:p-6 border-t border-white/10 space-y-3">
+        <div className="p-4 sm:p-6 border-t border-border space-y-3">
           {payment.status === 'rejected' && onEdit && (
             <button
               onClick={() => {
@@ -206,7 +206,7 @@ const PaymentDetailsSidebar = ({
 
           {(!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval && showConfirmation && (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground text-center">
+              <p className="text-sm font-semibold text-foreground text-center">
                 Отправить платёж на согласование?
               </p>
               <div className="flex gap-2 sm:gap-3">

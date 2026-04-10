@@ -158,76 +158,76 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-card border border-white/10 rounded-xl w-full max-w-[1400px] h-[95vh] sm:h-[90vh] flex flex-col">
-        <div className="bg-card border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold">Детали платежа #{payment.id}</h2>
+      <div className="bg-card border border-border rounded-xl w-full max-w-[1400px] h-[95vh] sm:h-[90vh] flex flex-col">
+        <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <h2 className="text-lg sm:text-xl font-semibold text-foreground">Детали платежа #{payment.id}</h2>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-white transition-colors"
+            className="text-foreground/60 hover:text-foreground transition-colors"
           >
             <Icon name="X" size={20} />
           </button>
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-          <div className="w-full lg:w-1/2 lg:border-r border-white/10 flex flex-col overflow-y-auto lg:overflow-hidden">
+          <div className="w-full lg:w-1/2 lg:border-r border-border flex flex-col overflow-y-auto lg:overflow-hidden">
             <div className="lg:flex-1 lg:overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div className="flex items-start gap-3 sm:gap-4">
                 <div className="bg-primary/20 p-2 sm:p-3 rounded-lg">
                   <span className="text-xl sm:text-2xl">{payment.category_icon}</span>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base sm:text-lg font-medium mb-1">{payment.category_name}</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">{payment.category_name}</h3>
                   <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
                 </div>
               </div>
 
               {payment.description && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Описание</p>
-                  <p className="font-medium">{payment.description}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Описание</p>
+                  <p className="font-semibold text-foreground">{payment.description}</p>
                 </div>
               )}
 
               {payment.legal_entity_name && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Юридическое лицо</p>
-                  <p className="font-medium">{payment.legal_entity_name}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Юридическое лицо</p>
+                  <p className="font-semibold text-foreground">{payment.legal_entity_name}</p>
                 </div>
               )}
 
               {payment.contractor_name && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Контрагент</p>
-                  <p className="font-medium">{payment.contractor_name}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Контрагент</p>
+                  <p className="font-semibold text-foreground">{payment.contractor_name}</p>
                 </div>
               )}
 
               {payment.department_name && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Отдел-заказчик</p>
-                  <p className="font-medium">{payment.department_name}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Отдел-заказчик</p>
+                  <p className="font-semibold text-foreground">{payment.department_name}</p>
                 </div>
               )}
 
               {payment.service_name && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Сервис</p>
-                  <p className="font-medium">{payment.service_name}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Сервис</p>
+                  <p className="font-semibold text-foreground">{payment.service_name}</p>
                 </div>
               )}
 
               {payment.invoice_number && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
-                  <p className="font-medium">{payment.invoice_number}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Номер счёта</p>
+                  <p className="font-semibold text-foreground">{payment.invoice_number}</p>
                 </div>
               )}
 
               {payment.created_by_name && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Создал заявку</p>
-                  <p className="font-medium">{payment.created_by_name}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Создал заявку</p>
+                  <p className="font-semibold text-foreground">{payment.created_by_name}</p>
                 </div>
               )}
 
@@ -235,13 +235,13 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                 <>
                   {payment.custom_fields.map((field) => (
                     <div key={field.id}>
-                      <p className="text-sm text-muted-foreground mb-1">{field.name}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">{field.name}</p>
                       {field.field_type === 'file' && field.value ? (
-                        <div className="rounded-lg border border-white/10 p-3 bg-primary/5">
+                        <div className="rounded-lg border border-border p-3 bg-primary/5">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 min-w-0">
                               <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
-                              <span className="text-sm font-medium truncate">
+                              <span className="text-sm font-semibold text-foreground truncate">
                                 {field.value.split('/').pop()?.split('_').slice(2).join('_') || 'Файл'}
                               </span>
                             </div>
@@ -250,7 +250,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                                 href={field.value}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-xs text-primary hover:underline"
+                                className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                               >
                                 <Icon name="Eye" size={14} />
                                 Просмотр
@@ -258,7 +258,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                               <a
                                 href={field.value}
                                 download
-                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                                className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground"
                               >
                                 <Icon name="Download" size={14} />
                                 Скачать
@@ -267,7 +267,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                           </div>
                         </div>
                       ) : (
-                        <p className="font-medium">{field.value}</p>
+                        <p className="font-semibold text-foreground">{field.value}</p>
                       )}
                     </div>
                   ))}
@@ -275,7 +275,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
               )}
             </div>
 
-            <div className="border-t border-white/10 p-4 sm:p-6">
+            <div className="border-t border-border p-4 sm:p-6">
               <div className="flex gap-2 sm:gap-3">
                 <button
                   onClick={handleApprove}
@@ -295,29 +295,29 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
             </div>
           </div>
 
-          <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10 lg:overflow-hidden min-h-[400px]">
-            <div className="p-4 sm:p-6 border-b border-white/10">
+          <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-border lg:overflow-hidden min-h-[400px]">
+            <div className="p-4 sm:p-6 border-b border-border">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Дата платежа:</span>
-                  <span className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</span>
+                  <span className="font-semibold text-foreground/70">Дата платежа:</span>
+                  <span className="font-semibold text-foreground">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</span>
                 </div>
                 {payment.submitted_at && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Дата отправки:</span>
-                    <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
+                    <span className="font-semibold text-foreground/70">Дата отправки:</span>
+                    <span className="font-semibold text-foreground">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
                   </div>
                 )}
                 {payment.invoice_date && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Дата счёта:</span>
-                    <span className="font-medium">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
+                    <span className="font-semibold text-foreground/70">Дата счёта:</span>
+                    <span className="font-semibold text-foreground">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
                   </div>
                 )}
                 {payment.created_at && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Создана:</span>
-                    <span className="font-medium">{new Date(payment.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                    <span className="font-semibold text-foreground/70">Создана:</span>
+                    <span className="font-semibold text-foreground">{new Date(payment.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                   </div>
                 )}
               </div>
@@ -340,7 +340,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                   <div className="mt-3">
                     <button
                       onClick={() => setShowDocsPanel(v => !v)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-medium text-primary w-full"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-semibold text-primary w-full"
                     >
                       <Icon name="FileText" size={16} />
                       <span>Счёт</span>
@@ -350,24 +350,24 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                       <Icon name={showDocsPanel ? 'ChevronUp' : 'ChevronDown'} size={14} className="ml-auto" />
                     </button>
                     {showDocsPanel && (
-                      <div className="mt-2 rounded-lg border border-white/10 bg-card divide-y divide-white/5 overflow-hidden">
+                      <div className="mt-2 rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
                         {docs.map((doc) => (
                           <div key={doc.id} className="flex items-center justify-between gap-2 px-3 py-2.5">
                             <div className="flex items-center gap-2 min-w-0">
                               <Icon name="FileText" size={15} className="text-primary flex-shrink-0" />
                               <div className="min-w-0">
-                                <p className="text-sm font-medium truncate">{doc.file_name}</p>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-sm font-semibold text-foreground truncate">{doc.file_name}</p>
+                                <p className="text-xs font-medium text-foreground/60">
                                   {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ru-RU') : ''}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                              <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-primary hover:underline">
+                              <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
                                 <Icon name="Eye" size={14} />
                                 Открыть
                               </a>
-                              <a href={doc.file_url} download className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                              <a href={doc.file_url} download className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground">
                                 <Icon name="Download" size={14} />
                                 Скачать
                               </a>
@@ -403,11 +403,11 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
             </div>
 
             {canRevoke && (
-              <div className="border-t border-white/10 p-4">
+              <div className="border-t border-border p-4">
                 <Button
                   onClick={handleRevokeClick}
                   variant="outline"
-                  className="w-full border-orange-500/50 text-orange-400 hover:bg-orange-500/10"
+                  className="w-full border-orange-500/50 text-orange-700 dark:text-orange-400 hover:bg-orange-500/10 font-semibold"
                 >
                   <Icon name="RotateCcw" size={16} className="mr-2" />
                   Отозвать платёж

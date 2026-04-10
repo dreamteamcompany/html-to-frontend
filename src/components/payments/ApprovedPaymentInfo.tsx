@@ -87,28 +87,28 @@ const ApprovedPaymentInfo = ({
   onRevokeClick,
 }: ApprovedPaymentInfoProps) => {
   return (
-    <div className="w-full lg:w-1/2 lg:border-r border-white/10 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
+    <div className="w-full lg:w-1/2 lg:border-r border-border overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
       <div className="flex items-start gap-3 sm:gap-4">
         <div className="bg-primary/20 p-2 sm:p-3 rounded-lg">
           <Icon name={payment.category_icon} size={24} />
         </div>
         <div className="flex-1">
-          <h3 className="text-base sm:text-lg font-medium mb-1">{payment.category_name}</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">{payment.category_name}</h3>
           <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
         </div>
       </div>
 
       {payment.description && (
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Описание</p>
-          <p className="font-medium">{payment.description}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Описание</p>
+          <p className="font-semibold text-foreground">{payment.description}</p>
         </div>
       )}
 
       {payment.category_name && (
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Категория</p>
-          <div className="flex items-center gap-2 font-medium">
+          <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Категория</p>
+          <div className="flex items-center gap-2 font-semibold text-foreground">
             <Icon name={payment.category_icon || 'Tag'} size={18} />
             {payment.category_name}
           </div>
@@ -117,26 +117,26 @@ const ApprovedPaymentInfo = ({
 
       {payment.legal_entity_name && (
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Юридическое лицо</p>
-          <p className="font-medium">{payment.legal_entity_name}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Юридическое лицо</p>
+          <p className="font-semibold text-foreground">{payment.legal_entity_name}</p>
         </div>
       )}
 
       {payment.contractor_name && (
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Контрагент</p>
-          <p className="font-medium">{payment.contractor_name}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Контрагент</p>
+          <p className="font-semibold text-foreground">{payment.contractor_name}</p>
         </div>
       )}
 
       {(currentDeptName || isAdmin) && (
         <div>
           <div className="flex items-center justify-between mb-1">
-            <p className="text-sm text-muted-foreground">Отдел-заказчик</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Отдел-заказчик</p>
             {isAdmin && !isEditingDept && (
               <button
                 onClick={onStartEditDept}
-                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
               >
                 <Icon name="Pencil" size={12} />
                 Изменить
@@ -164,29 +164,29 @@ const ApprovedPaymentInfo = ({
               </Button>
             </div>
           ) : (
-            <p className="font-medium">{currentDeptName || <span className="text-muted-foreground italic text-sm">Не указан</span>}</p>
+            <p className="font-semibold text-foreground">{currentDeptName || <span className="text-foreground/50 italic text-sm">Не указан</span>}</p>
           )}
         </div>
       )}
 
       {payment.service_name && (
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Сервис</p>
-          <p className="font-medium">{payment.service_name}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Сервис</p>
+          <p className="font-semibold text-foreground">{payment.service_name}</p>
         </div>
       )}
 
       {payment.invoice_number && (
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Номер счёта</p>
-          <p className="font-medium">{payment.invoice_number}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Номер счёта</p>
+          <p className="font-semibold text-foreground">{payment.invoice_number}</p>
         </div>
       )}
 
       {payment.created_by_name && (
         <div>
-          <p className="text-sm text-muted-foreground mb-1">Создал заявку</p>
-          <p className="font-medium">{payment.created_by_name}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Создал заявку</p>
+          <p className="font-semibold text-foreground">{payment.created_by_name}</p>
         </div>
       )}
 
@@ -194,13 +194,13 @@ const ApprovedPaymentInfo = ({
         <>
           {payment.custom_fields.map((field) => (
             <div key={field.id}>
-              <p className="text-sm text-muted-foreground mb-1">{field.name}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">{field.name}</p>
               {field.field_type === 'file' && field.value ? (
-                <div className="rounded-lg border border-white/10 p-3 bg-primary/5">
+                <div className="rounded-lg border border-border p-3 bg-primary/5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
-                      <span className="text-sm font-medium truncate">
+                      <span className="text-sm font-semibold text-foreground truncate">
                         {field.value.split('/').pop()?.split('_').slice(2).join('_') || 'Файл'}
                       </span>
                     </div>
@@ -209,7 +209,7 @@ const ApprovedPaymentInfo = ({
                         href={field.value}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline"
+                        className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                       >
                         <Icon name="Eye" size={14} />
                         Просмотр
@@ -217,7 +217,7 @@ const ApprovedPaymentInfo = ({
                       <a
                         href={field.value}
                         download
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground"
                       >
                         <Icon name="Download" size={14} />
                         Скачать
@@ -226,7 +226,7 @@ const ApprovedPaymentInfo = ({
                   </div>
                 </div>
               ) : (
-                <p className="font-medium">{field.value}</p>
+                <p className="font-semibold text-foreground">{field.value}</p>
               )}
             </div>
           ))}
@@ -234,7 +234,7 @@ const ApprovedPaymentInfo = ({
       )}
 
       {canRevoke && (
-        <div className="pt-4 border-t border-white/10">
+        <div className="pt-4 border-t border-border">
           <Button
             variant="destructive"
             className="w-full"

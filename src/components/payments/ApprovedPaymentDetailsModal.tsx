@@ -177,17 +177,17 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-card border border-white/10 rounded-xl w-full max-w-[1200px] max-h-[95vh] sm:max-h-[90vh] flex flex-col">
-        <div className="bg-card border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+      <div className="bg-card border border-border rounded-xl w-full max-w-[1200px] max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+        <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg sm:text-xl font-semibold">Детали платежа #{localPayment.id}</h2>
-            <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-300">✓ Одобрено CEO</span>
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">Детали платежа #{localPayment.id}</h2>
+            <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-500/15 text-green-700 dark:text-green-300">✓ Одобрено CEO</span>
           </div>
           <div className="flex items-center gap-2">
             {isAdmin && (
               <button
                 onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                 title="Редактировать платёж"
               >
                 <Icon name="Pencil" size={14} />
@@ -196,7 +196,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
             )}
             <button
               onClick={onClose}
-              className="text-muted-foreground hover:text-white transition-colors"
+              className="text-foreground/60 hover:text-foreground transition-colors"
             >
               <Icon name="X" size={20} />
             </button>

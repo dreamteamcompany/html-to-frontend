@@ -26,29 +26,29 @@ const ApprovedPaymentSidebar = ({ payment, auditKey }: ApprovedPaymentSidebarPro
       : [];
 
   return (
-    <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-white/10 overflow-hidden">
-      <div className="p-4 sm:p-6 border-b border-white/10">
+    <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-border overflow-hidden">
+      <div className="p-4 sm:p-6 border-b border-border">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Дата платежа:</span>
-            <span className="font-medium">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</span>
+            <span className="font-semibold text-foreground/70">Дата платежа:</span>
+            <span className="font-semibold text-foreground">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</span>
           </div>
           {payment.submitted_at && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Дата отправки:</span>
-              <span className="font-medium">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
+              <span className="font-semibold text-foreground/70">Дата отправки:</span>
+              <span className="font-semibold text-foreground">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
             </div>
           )}
           {payment.invoice_date && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Дата счёта:</span>
-              <span className="font-medium">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
+              <span className="font-semibold text-foreground/70">Дата счёта:</span>
+              <span className="font-semibold text-foreground">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
             </div>
           )}
           {payment.ceo_approved_at && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Одобрено CEO:</span>
-              <span className="font-medium">
+              <span className="font-semibold text-foreground/70">Одобрено CEO:</span>
+              <span className="font-semibold text-foreground">
                 {new Date(payment.ceo_approved_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })},{' '}
                 {new Date(payment.ceo_approved_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
               </span>
@@ -56,8 +56,8 @@ const ApprovedPaymentSidebar = ({ payment, auditKey }: ApprovedPaymentSidebarPro
           )}
           {payment.created_at && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Создана:</span>
-              <span className="font-medium">
+              <span className="font-semibold text-foreground/70">Создана:</span>
+              <span className="font-semibold text-foreground">
                 {new Date(payment.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })},{' '}
                 {new Date(payment.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
               </span>
@@ -69,7 +69,7 @@ const ApprovedPaymentSidebar = ({ payment, auditKey }: ApprovedPaymentSidebarPro
           <div className="mt-3">
             <button
               onClick={() => setShowDocsPanel(v => !v)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-medium text-primary w-full"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-semibold text-primary w-full"
             >
               <Icon name="FileText" size={16} />
               <span>Счёт</span>
@@ -79,24 +79,24 @@ const ApprovedPaymentSidebar = ({ payment, auditKey }: ApprovedPaymentSidebarPro
               <Icon name={showDocsPanel ? 'ChevronUp' : 'ChevronDown'} size={14} className="ml-auto" />
             </button>
             {showDocsPanel && (
-              <div className="mt-2 rounded-lg border border-white/10 bg-card divide-y divide-white/5 overflow-hidden">
+              <div className="mt-2 rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
                 {docs.map((doc) => (
                   <div key={doc.id} className="flex items-center justify-between gap-2 px-3 py-2.5">
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon name="FileText" size={15} className="text-primary flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{doc.file_name}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm font-semibold text-foreground truncate">{doc.file_name}</p>
+                        <p className="text-xs font-medium text-foreground/60">
                           {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ru-RU') : ''}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-primary hover:underline">
+                      <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
                         <Icon name="Eye" size={14} />
                         Открыть
                       </a>
-                      <a href={doc.file_url} download className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                      <a href={doc.file_url} download className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground">
                         <Icon name="Download" size={14} />
                         Скачать
                       </a>
