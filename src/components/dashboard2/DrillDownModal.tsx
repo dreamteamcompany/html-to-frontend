@@ -196,7 +196,7 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
           border: '1px solid hsl(var(--border))',
           borderRadius: isMobile ? '20px 20px 0 0' : '20px',
           width: '100%',
-          maxWidth: isMobile ? '100%' : '960px',
+          maxWidth: isMobile ? '100%' : '1050px',
           maxHeight: isMobile ? '95vh' : '95vh',
           minHeight: isMobile ? undefined : '70vh',
           display: 'flex',
