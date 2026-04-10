@@ -21,7 +21,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: Dr
         </div>
       ) : isMobile ? (
         /* ═══ MOBILE: карточки ═══ */
-        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {sorted.map((p, i) => {
             const st = STATUS_LABEL[p.status || ''] ?? { label: p.status || '—', color: '#9ca3af' };
             return (
@@ -129,7 +129,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: Dr
               <tr style={{ borderBottom: '1px solid hsl(var(--border))', position: 'sticky', top: 0, background: 'hsl(var(--card))', zIndex: 1 }}>
                 {['Описание', 'Категория', 'Отдел', 'Юр. лицо', 'Тип расчёта', 'Дата', 'Сумма', 'Статус'].map(h => (
                   <th key={h} style={{
-                    padding: '10px 12px', textAlign: 'left',
+                    padding: '12px 14px', textAlign: 'left',
                     fontSize: '11px', fontWeight: 600,
                     color: 'hsl(var(--muted-foreground))',
                     textTransform: 'uppercase', letterSpacing: '0.4px',
@@ -149,42 +149,42 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: Dr
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(0,0,0,0.025)' : 'rgba(255,255,255,0.03)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
-                    <td style={{ padding: '11px 12px', verticalAlign: 'top' }}>
+                    <td style={{ padding: '14px 14px', verticalAlign: 'top' }}>
                       <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))', overflowWrap: 'anywhere', lineHeight: 1.4 }}>
                         {p.description || '—'}
                       </div>
                       {p.contractor_name && (
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '3px', alignItems: 'baseline', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Контрагент</span>
                           <span style={{ fontSize: '11px', color: 'hsl(var(--foreground))', overflowWrap: 'anywhere' }}>{p.contractor_name}</span>
                         </div>
                       )}
                       {p.service_name && (
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'baseline', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '3px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '10px', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Сервис</span>
                           <span style={{ fontSize: '11px', color: '#7551e9', overflowWrap: 'anywhere' }}>{p.service_name}</span>
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', overflowWrap: 'anywhere' }}>
+                    <td style={{ padding: '14px 14px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', overflowWrap: 'anywhere' }}>
                       {p.category_name || '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', overflowWrap: 'anywhere' }}>
+                    <td style={{ padding: '14px 14px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', overflowWrap: 'anywhere' }}>
                       {p.department_name || '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', overflowWrap: 'anywhere' }}>
+                    <td style={{ padding: '14px 14px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', overflowWrap: 'anywhere' }}>
                       {p.legal_entity_name || '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '14px 14px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                       {resolvePaymentType(p.payment_type, p.legal_entity_name)}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '14px 14px', fontSize: '12px', color: 'hsl(var(--foreground))', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                       {p.payment_date ? fmtDate(String(p.payment_date)) : '—'}
                     </td>
-                    <td style={{ padding: '11px 12px', fontSize: '13px', fontWeight: 700, color: '#7551e9', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '14px 14px', fontSize: '13px', fontWeight: 700, color: '#7551e9', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                       {fmt(p.amount)}
                     </td>
-                    <td style={{ padding: '11px 12px', verticalAlign: 'top' }}>
+                    <td style={{ padding: '14px 14px', verticalAlign: 'top' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
                         <span style={{
                           display: 'inline-flex', alignItems: 'center',

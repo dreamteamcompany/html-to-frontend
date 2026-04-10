@@ -148,7 +148,7 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
         position: 'fixed', inset: 0, zIndex: 1000,
         background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
         display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
-        padding: isMobile ? '0' : '16px',
+        padding: isMobile ? '0' : '12px',
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
@@ -158,7 +158,8 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
         borderRadius: isMobile ? '20px 20px 0 0' : '20px',
         width: '100%',
         maxWidth: isMobile ? '100%' : '1100px',
-        maxHeight: isMobile ? '92vh' : '90vh',
+        maxHeight: isMobile ? '95vh' : '95vh',
+        minHeight: isMobile ? undefined : '70vh',
         display: 'flex', flexDirection: 'column',
         boxShadow: '0 24px 60px rgba(0,0,0,0.35)',
         overflow: 'hidden',
@@ -249,7 +250,7 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
         {!isMobile && (
           <div style={{
             display: 'grid', gridTemplateColumns: DESKTOP_COLS,
-            padding: '8px 24px', gap: '12px', flexShrink: 0,
+            padding: '10px 24px', gap: '14px', flexShrink: 0,
             borderBottom: '1px solid hsl(var(--border))',
             background: 'hsl(var(--muted))',
           }}>
@@ -349,7 +350,7 @@ const SavingsDrillModal = ({ open, onClose }: Props) => {
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleRowClick(item.id); }}
                   style={{
                     display: 'grid', gridTemplateColumns: DESKTOP_COLS,
-                    padding: '12px 24px', gap: '12px', alignItems: 'flex-start',
+                    padding: '14px 24px', gap: '14px', alignItems: 'flex-start',
                     borderBottom: '1px solid hsl(var(--border))',
                     background: idx % 2 === 0 ? 'transparent' : 'rgba(1,181,116,0.02)',
                     transition: 'background 0.15s',

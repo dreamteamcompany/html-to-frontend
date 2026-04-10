@@ -131,7 +131,7 @@ const IndexationDrillModal = ({ open, onClose }: Props) => {
         position: 'fixed', inset: 0, zIndex: 1000,
         background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
         display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
-        padding: isMobile ? '0' : '16px',
+        padding: isMobile ? '0' : '12px',
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
@@ -140,8 +140,9 @@ const IndexationDrillModal = ({ open, onClose }: Props) => {
         border: '1px solid hsl(var(--border))',
         borderRadius: isMobile ? '20px 20px 0 0' : '20px',
         width: '100%',
-        maxWidth: isMobile ? '100%' : '780px',
-        maxHeight: isMobile ? '92vh' : '90vh',
+        maxWidth: isMobile ? '100%' : '820px',
+        maxHeight: isMobile ? '95vh' : '95vh',
+        minHeight: isMobile ? undefined : '70vh',
         display: 'flex', flexDirection: 'column',
         boxShadow: '0 24px 60px rgba(0,0,0,0.35)',
         overflow: 'hidden',
@@ -304,7 +305,7 @@ const IndexationDrillModal = ({ open, onClose }: Props) => {
               {!isMobile && (
                 <div style={{
                   display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr 1fr 90px',
-                  padding: '8px 12px', gap: '8px',
+                  padding: '10px 14px', gap: '10px',
                   background: 'hsl(var(--muted))', borderRadius: '8px 8px 0 0',
                   border: '1px solid hsl(var(--border))', borderBottom: 'none',
                 }}>
@@ -343,7 +344,7 @@ const IndexationDrillModal = ({ open, onClose }: Props) => {
                   ) : (
                     <div key={row.key} style={{
                       display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr 1fr 90px',
-                      padding: '10px 12px', gap: '8px', alignItems: 'flex-start',
+                      padding: '13px 14px', gap: '10px', alignItems: 'flex-start',
                       borderBottom: idx < rows.length - 1 ? '1px solid hsl(var(--border))' : 'none',
                       background: idx % 2 === 0 ? 'transparent' : 'rgba(255,181,71,0.02)',
                     }}

@@ -187,7 +187,7 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
           position: 'fixed', inset: 0, zIndex: 1000,
           background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
-          padding: isMobile ? '0' : '16px',
+          padding: isMobile ? '0' : '12px',
         }}
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
@@ -196,8 +196,9 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
           border: '1px solid hsl(var(--border))',
           borderRadius: isMobile ? '20px 20px 0 0' : '20px',
           width: '100%',
-          maxWidth: isMobile ? '100%' : '900px',
-          maxHeight: isMobile ? '92vh' : '90vh',
+          maxWidth: isMobile ? '100%' : '960px',
+          maxHeight: isMobile ? '95vh' : '95vh',
+          minHeight: isMobile ? undefined : '70vh',
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '0 24px 60px rgba(0,0,0,0.35)',
