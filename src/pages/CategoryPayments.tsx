@@ -143,10 +143,10 @@ const CategoryPayments = () => {
                 <Icon name={categoryInfo.icon} fallback="Tag" className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: '#fff' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-1 truncate">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-1 break-anywhere">
                   {categoryInfo.name}
                 </h1>
-                <p className="text-xs sm:text-sm text-[#a3aed0] truncate">
+                <p className="text-xs sm:text-sm text-[#a3aed0] break-anywhere">
                   {categoryInfo.payments_count} платежей • {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(categoryInfo.total_amount)}
                 </p>
               </div>

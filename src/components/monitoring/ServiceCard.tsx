@@ -35,13 +35,13 @@ const ServiceCard = ({
   return (
     <Card className="p-4 sm:p-5 lg:p-5 hover:shadow-lg transition-all">
       <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
           <div className={`p-1.5 sm:p-2 rounded-lg border-2 ${getStatusColor(service.status)} shrink-0`}>
             <Icon name={getStatusIcon(service.status)} className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">{service.service_name}</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate">
+            <h3 className="font-semibold text-foreground text-sm sm:text-base break-anywhere">{service.service_name}</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground break-anywhere">
               Обновлено: {new Date(service.last_updated).toLocaleString('ru-RU', {
                 day: '2-digit',
                 month: '2-digit',

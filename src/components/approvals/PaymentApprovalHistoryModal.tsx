@@ -267,15 +267,14 @@ const PaymentApprovalHistoryModal = ({ paymentInfo, onClose }: PaymentApprovalHi
                         </div>
 
                         {/* Пользователь + роль */}
-                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                          <Icon name="User" size={12} className="text-muted-foreground flex-shrink-0" />
+                        <div className="flex items-start gap-1.5 flex-wrap min-w-0">
+                          <Icon name="User" size={12} className="text-muted-foreground flex-shrink-0 mt-1" />
                           <span
                             className="text-xs text-foreground/80"
                             style={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              maxWidth: '160px',
+                              overflowWrap: 'anywhere',
+                              lineHeight: 1.4,
+                              minWidth: 0,
                             }}
                           >
                             {log.full_name || log.username || 'Система'}

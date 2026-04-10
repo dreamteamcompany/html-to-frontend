@@ -51,8 +51,8 @@ const SavingsTable = ({ savings, loading, onDeleteSaving, highlightId }: Savings
                       id={`saving-row-${saving.id}`}
                       className={`border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors ${highlightId === saving.id ? 'bg-green-500/20 ring-2 ring-green-500/60 animate-pulse' : ''}`}
                     >
-                      <td className="p-4 font-medium">{saving.service_name}</td>
-                      <td className="p-4 text-muted-foreground max-w-xs truncate">{saving.description}</td>
+                      <td className="p-4 font-medium break-anywhere">{saving.service_name}</td>
+                      <td className="p-4 text-muted-foreground max-w-xs break-anywhere">{saving.description}</td>
                       <td className="p-4">
                         {saving.customer_department_name ? (
                           <span className="text-muted-foreground">{saving.customer_department_name}</span>

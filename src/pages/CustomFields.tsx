@@ -252,13 +252,13 @@ const CustomFields = () => {
                     key={field.id}
                     className="border border-white/10 rounded-lg p-4 hover:bg-white/5 transition-colors"
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <div className="flex items-start justify-between mb-3 gap-2">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
                           <Icon name={getFieldTypeIcon(field.field_type)} size={24} />
                         </div>
-                        <div>
-                          <h3 className="font-semibold">{field.name}</h3>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold break-anywhere">{field.name}</h3>
                           <p className="text-xs text-muted-foreground">{getFieldTypeLabel(field.field_type)}</p>
                         </div>
                       </div>
@@ -268,7 +268,7 @@ const CustomFields = () => {
                         <div className="font-medium mb-1">Варианты:</div>
                         <div className="text-xs space-y-1">
                           {field.options.split('\n').filter(opt => opt.trim()).map((opt, idx) => (
-                            <div key={idx} className="truncate">• {opt}</div>
+                            <div key={idx} className="break-anywhere">• {opt}</div>
                           ))}
                         </div>
                       </div>

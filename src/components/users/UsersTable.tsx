@@ -146,8 +146,8 @@ const UsersTable = ({ users, onEdit, onToggleStatus, onDelete }: UsersTableProps
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{user.full_name || 'Без имени'}</div>
-                  <div className="text-sm text-muted-foreground truncate">@{user.username}</div>
+                  <div className="font-medium break-anywhere">{user.full_name || 'Без имени'}</div>
+                  <div className="text-sm text-muted-foreground break-anywhere">@{user.username}</div>
                 </div>
               </div>
               <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${

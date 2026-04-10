@@ -137,22 +137,22 @@ const ExpensesByCategoryChart = ({ categoriesData, totalAmount }: ExpensesByCate
             scrollbarColor: '#2C3E5D #111c44'
           }}>
             {categoriesData.map((cat, index) => (
-              <div key={cat.name} className="flex items-center justify-between p-2 rounded" style={{
+              <div key={cat.name} className="flex items-start justify-between p-2 rounded gap-2" style={{
                 background: 'rgba(44, 62, 93, 0.2)',
                 transition: 'all 0.2s ease'
               }}>
-                <div className="flex items-center gap-3 flex-1">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
                   <div 
-                    className="w-3 h-3 rounded-full flex-shrink-0" 
+                    className="w-3 h-3 rounded-full flex-shrink-0 mt-1.5" 
                     style={{ 
                       background: `linear-gradient(135deg, ${colors[index % colors.length].start}, ${colors[index % colors.length].end})`,
                       boxShadow: `0 0 8px ${colors[index % colors.length].start}40`
                     }} 
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span style={{ fontSize: '14px' }}>{cat.icon}</span>
-                      <span style={{ fontSize: '13px', color: '#fff', fontWeight: '500' }} className="truncate">
+                    <div className="flex items-start gap-2">
+                      <span style={{ fontSize: '14px' }} className="flex-shrink-0">{cat.icon}</span>
+                      <span style={{ fontSize: '13px', color: '#fff', fontWeight: '500', lineHeight: 1.3 }} className="break-anywhere">
                         {cat.name}
                       </span>
                     </div>
