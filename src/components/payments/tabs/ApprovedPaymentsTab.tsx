@@ -107,17 +107,17 @@ const ApprovedPaymentsTab = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/60" />
           <Input
             placeholder="Поиск по описанию, категории, сумме..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-background border-white/10"
+            className="pl-10 bg-background border-border text-foreground placeholder:text-foreground/50"
           />
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="relative p-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+          className="relative p-2 rounded-lg border border-border text-foreground hover:bg-foreground/5 transition-colors"
         >
           <Icon name="SlidersHorizontal" size={20} />
           {activeCount > 0 && (
@@ -129,7 +129,7 @@ const ApprovedPaymentsTab = () => {
         {!loading && filteredPayments.length > 0 && (
           <button
             onClick={() => exportTabPaymentsToExcel(filteredPayments, 'Одобренные платежи', 'Одобренные_платежи')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-foreground hover:bg-foreground/5 transition-colors text-sm font-semibold whitespace-nowrap"
           >
             <Icon name="Download" size={16} />
             Выгрузить Excel
@@ -152,8 +152,8 @@ const ApprovedPaymentsTab = () => {
       ) : filteredPayments.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">✅</div>
-          <h3 className="text-xl font-semibold mb-2">Нет согласованных платежей</h3>
-          <p className="text-muted-foreground">
+          <h3 className="text-xl font-semibold text-foreground mb-2">Нет согласованных платежей</h3>
+          <p className="font-medium text-foreground/70">
             {payments.length === 0 
               ? 'Когда платежи будут одобрены CEO, они отобразятся здесь'
               : 'Попробуйте изменить поисковый запрос'}
@@ -161,14 +161,14 @@ const ApprovedPaymentsTab = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm font-semibold text-foreground/70">
             Найдено платежей: {filteredPayments.length} • Общая сумма: {formatAmount(filteredPayments.reduce((sum, p) => sum + p.amount, 0))}
           </div>
           
           {filteredPayments.map((payment) => (
             <Card 
               key={payment.id} 
-              className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-white/10 transition-all cursor-pointer"
+              className="border-border bg-card shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:border-primary/40 transition-all cursor-pointer"
               onClick={() => setSelectedPayment(payment)}
             >
               <CardContent className="p-6">
@@ -180,13 +180,13 @@ const ApprovedPaymentsTab = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <h3 className="text-lg font-semibold">{payment.category_name}</h3>
-                          <span className="px-2 py-0.5 rounded-full text-xs flex-shrink-0" style={{ backgroundColor: '#00FF66', color: '#000000' }}>
+                          <h3 className="text-lg font-semibold text-foreground">{payment.category_name}</h3>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 bg-green-500/20 text-green-800 dark:text-green-200">
                             ✓ Одобрено CEO
                           </span>
                         </div>
-                        <p className="text-muted-foreground text-sm mb-2">{payment.description}</p>
-                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                        <p className="font-medium text-foreground/80 text-sm mb-2">{payment.description}</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-foreground/70">
                           {payment.service_name && (
                             <div className="flex items-center gap-1">
                               <Icon name="Briefcase" size={14} />
@@ -214,14 +214,14 @@ const ApprovedPaymentsTab = () => {
                     </div>
                   </div>
                   
-                  <div className="text-center lg:text-right lg:border-l lg:border-white/10 lg:pl-6 space-y-3">
+                  <div className="text-center lg:text-right lg:border-l lg:border-border lg:pl-6 space-y-3">
                     <div>
-                      <div className="text-sm text-muted-foreground mb-1">Сумма платежа</div>
-                      <div className="text-2xl font-bold">{formatAmount(payment.amount)}</div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Сумма платежа</div>
+                      <div className="text-2xl font-bold text-foreground">{formatAmount(payment.amount)}</div>
                     </div>
                     <button
                       onClick={(e) => handleRevokeClick(e, payment.id)}
-                      className="px-4 py-2 text-sm rounded bg-orange-600 text-white hover:bg-orange-700 font-medium w-full lg:w-auto"
+                      className="px-4 py-2 text-sm rounded bg-orange-600 text-white hover:bg-orange-700 font-semibold w-full lg:w-auto"
                     >
                       Отозвать согласование
                     </button>

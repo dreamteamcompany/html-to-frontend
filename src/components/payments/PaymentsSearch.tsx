@@ -10,12 +10,12 @@ const PaymentsSearch = ({ searchQuery, onSearchChange }: PaymentsSearchProps) =>
   return (
     <div className="mb-6">
       <div className="relative">
-        <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/60" />
         <Input
           placeholder="Поиск по описанию, категории, сумме, контрагенту..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10 bg-background border-white/10"
+          className="pl-10 bg-background border-border text-foreground placeholder:text-foreground/50"
         />
       </div>
     </div>

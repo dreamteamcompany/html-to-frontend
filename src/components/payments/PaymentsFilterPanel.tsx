@@ -39,11 +39,11 @@ const SelectFilter = ({
   statusLabels?: Record<string, string>;
 }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-xs text-muted-foreground font-medium">{label}</label>
+    <label className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{label}</label>
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
-      className="h-9 rounded-md border border-white/10 bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+      className="h-9 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
     >
       <option value="">Все</option>
       {options.map(o => (
@@ -66,31 +66,31 @@ const RangeFilter = ({
   placeholderTo?: string;
 }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-xs text-muted-foreground font-medium">{label}</label>
+    <label className="text-xs font-semibold uppercase tracking-wide text-foreground/70">{label}</label>
     <div className="flex gap-2">
       <Input
         type={type}
         value={fromValue}
         onChange={e => onFromChange(e.target.value)}
         placeholder={placeholderFrom || 'От'}
-        className="h-9 bg-background border-white/10 text-sm"
+        className="h-9 bg-background border-border text-foreground text-sm placeholder:text-foreground/50"
       />
       <Input
         type={type}
         value={toValue}
         onChange={e => onToChange(e.target.value)}
         placeholder={placeholderTo || 'До'}
-        className="h-9 bg-background border-white/10 text-sm"
+        className="h-9 bg-background border-border text-foreground text-sm placeholder:text-foreground/50"
       />
     </div>
   </div>
 );
 
 const PaymentsFilterPanel = ({ filters, setFilter, clearFilters, activeCount, filteredCount, totalCount, options }: Props) => (
-  <div className="rounded-lg border border-white/10 bg-card p-4 space-y-4">
+  <div className="rounded-lg border border-border bg-card p-4 space-y-4">
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Icon name="SlidersHorizontal" size={15} className="text-muted-foreground" />
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Icon name="SlidersHorizontal" size={15} className="text-foreground/60" />
         Фильтры
         {activeCount > 0 && (
           <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold">
@@ -101,7 +101,7 @@ const PaymentsFilterPanel = ({ filters, setFilter, clearFilters, activeCount, fi
       {activeCount > 0 && (
         <button
           onClick={clearFilters}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+          className="text-xs font-semibold text-foreground/70 hover:text-foreground transition-colors flex items-center gap-1"
         >
           <Icon name="X" size={12} />
           Сбросить
@@ -170,7 +170,7 @@ const PaymentsFilterPanel = ({ filters, setFilter, clearFilters, activeCount, fi
     </div>
 
     {activeCount > 0 && (
-      <div className="text-xs text-muted-foreground">
+      <div className="text-xs font-semibold text-foreground/70">
         Показано {filteredCount} из {totalCount}
       </div>
     )}

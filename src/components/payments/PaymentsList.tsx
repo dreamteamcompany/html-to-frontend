@@ -28,26 +28,27 @@ const STATUS_ORDER: Record<string, number> = {
 };
 
 const getStatusBadge = (status?: string) => {
+  const base = 'px-2 py-1 rounded-full text-xs font-semibold';
   if (!status || status === 'draft') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-muted-foreground">Черновик</span>;
+    return <span className={`${base} bg-gray-500/20 text-gray-800 dark:text-gray-200`}>Черновик</span>;
   }
   if (status === 'pending_ib') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300 font-medium">На согласовании (ИБ)</span>;
+    return <span className={`${base} bg-yellow-500/20 text-yellow-800 dark:text-yellow-200`}>На согласовании (ИБ)</span>;
   }
   if (status === 'pending_cfo') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-300 font-medium">На согласовании (CFO)</span>;
+    return <span className={`${base} bg-orange-500/20 text-orange-800 dark:text-orange-200`}>На согласовании (CFO)</span>;
   }
   if (status === 'pending_ceo') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300 font-medium">На согласовании (CEO)</span>;
+    return <span className={`${base} bg-blue-500/20 text-blue-800 dark:text-blue-200`}>На согласовании (CEO)</span>;
   }
   if (status === 'approved') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300">Одобрен</span>;
+    return <span className={`${base} bg-green-500/20 text-green-800 dark:text-green-200`}>Одобрен</span>;
   }
   if (status === 'rejected') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-300">Отклонён</span>;
+    return <span className={`${base} bg-red-500/20 text-red-800 dark:text-red-200`}>Отклонён</span>;
   }
   if (status === 'revoked') {
-    return <span className="px-2 py-1 rounded-full text-xs bg-orange-500/20 text-orange-300">Отозван</span>;
+    return <span className={`${base} bg-orange-500/20 text-orange-800 dark:text-orange-200`}>Отозван</span>;
   }
   return null;
 };
@@ -123,7 +124,7 @@ const SortHeader = ({
   const active = activeKey === sortKey;
   return (
     <th
-      className="text-left p-4 text-sm font-semibold text-muted-foreground select-none cursor-pointer hover:text-foreground transition-colors"
+      className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-foreground/70 select-none cursor-pointer hover:text-foreground transition-colors"
       onClick={() => onClick(sortKey)}
     >
       <div className="flex items-center gap-1.5">
@@ -164,12 +165,12 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
   const hp = { activeKey: sortKey, dir: sortDir, onClick: handleSort };
 
   return (
-    <Card className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)]">
+    <Card className="border-border bg-card shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
       <CardContent className="p-0">
         {loading ? (
-          <div className="p-8 text-center text-muted-foreground">Загрузка...</div>
+          <div className="p-8 text-center font-semibold text-foreground/70">Загрузка...</div>
         ) : payments.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
+          <div className="p-8 text-center font-semibold text-foreground/70">
             Нет платежей. Добавьте первый платёж для начала работы.
           </div>
         ) : (
@@ -177,7 +178,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
+                  <tr className="border-b border-border">
                     <SortHeader label="Категория"  sortKey="category"     {...hp} />
                     <SortHeader label="Сервис"      sortKey="service"      {...hp} />
                     <SortHeader label="Юр. лицо"    sortKey="legal_entity" {...hp} />
@@ -185,14 +186,14 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                     <SortHeader label="Сумма"       sortKey="amount"       {...hp} />
                     <SortHeader label="Статус"      sortKey="status"       {...hp} />
                     <SortHeader label="Дата"        sortKey="date"         {...hp} />
-                    {showActionsColumn && <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Действия</th>}
+                    {showActionsColumn && <th className="text-left p-4 text-xs font-semibold uppercase tracking-wide text-foreground/70">Действия</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {sorted.map((payment) => (
                     <tr 
                       key={payment.id} 
-                      className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                      className="border-b border-border hover:bg-foreground/5 transition-colors cursor-pointer"
                       onClick={() => onPaymentClick && onPaymentClick(payment)}
                     >
                       <td className="p-4">
@@ -200,23 +201,23 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                             <Icon name={payment.category_icon} size={18} />
                           </div>
-                          <span className="font-medium">{payment.category_name}</span>
+                          <span className="font-semibold text-foreground">{payment.category_name}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-muted-foreground">
-                        {payment.service_name || <span className="text-muted-foreground/50">—</span>}
+                      <td className="p-4 font-medium text-foreground/80">
+                        {payment.service_name || <span className="text-foreground/40">—</span>}
                       </td>
-                      <td className="p-4 text-muted-foreground">
-                        {payment.legal_entity_name || <span className="text-muted-foreground/50">—</span>}
+                      <td className="p-4 font-medium text-foreground/80">
+                        {payment.legal_entity_name || <span className="text-foreground/40">—</span>}
                       </td>
-                      <td className="p-4 text-muted-foreground">{payment.description}</td>
+                      <td className="p-4 font-medium text-foreground/80">{payment.description}</td>
                       <td className="p-4">
-                        <span className="font-bold text-lg">{payment.amount.toLocaleString('ru-RU')} ₽</span>
+                        <span className="font-bold text-lg text-foreground">{payment.amount.toLocaleString('ru-RU')} ₽</span>
                       </td>
                       <td className="p-4">
                         {getStatusBadge(payment.status)}
                       </td>
-                      <td className="p-4 text-muted-foreground">
+                      <td className="p-4 font-medium text-foreground/80">
                         {new Date(payment.planned_date || payment.payment_date || '').toLocaleDateString('ru-RU', {
                           day: '2-digit',
                           month: 'long',
@@ -229,7 +230,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {isPlannedPayments && onSubmitForApproval && (
                               <button
                                 onClick={() => onSubmitForApproval(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                                className="px-3 py-1 text-xs font-semibold rounded bg-green-500/15 text-green-800 dark:text-green-200 hover:bg-green-500/25"
                               >
                                 Создать платёж
                               </button>
@@ -237,8 +238,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status === 'pending_approval') && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit && (
                               <button
                                 onClick={() => onSubmitForApproval(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700"
-                                style={{ color: '#000000' }}
+                                className="px-3 py-1 text-xs font-semibold rounded bg-blue-600 text-white hover:bg-blue-700"
                               >
                                 Отправить на согласование
                               </button>
@@ -246,7 +246,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (
                               <button
                                 onClick={() => onDelete(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 flex items-center gap-1"
+                                className="px-3 py-1 text-xs font-semibold rounded bg-red-500/15 text-red-800 dark:text-red-200 hover:bg-red-500/25 flex items-center gap-1"
                                 title="Удалить черновик"
                               >
                                 <Icon name="Trash2" size={14} />
@@ -256,7 +256,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {showApproveReject && onApprove && (
                               <button
                                 onClick={() => onApprove(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700"
+                                className="px-3 py-1 text-xs font-semibold rounded bg-green-600 text-white hover:bg-green-700"
                               >
                                 Одобрить
                               </button>
@@ -264,7 +264,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {showApproveReject && onReject && (
                               <button
                                 onClick={() => onReject(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
+                                className="px-3 py-1 text-xs font-semibold rounded bg-red-600 text-white hover:bg-red-700"
                               >
                                 Отклонить
                               </button>
@@ -272,7 +272,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {showRevoke && onRevoke && (
                               <button
                                 onClick={() => onRevoke(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-orange-600 text-white hover:bg-orange-700"
+                                className="px-3 py-1 text-xs font-semibold rounded bg-orange-600 text-white hover:bg-orange-700"
                               >
                                 Отозвать согласование
                               </button>
@@ -280,7 +280,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {showResubmit && onResubmit && (
                               <button
                                 onClick={() => onResubmit(payment.id)}
-                                className="px-3 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                                className="px-3 py-1 text-xs font-semibold rounded bg-blue-500/15 text-blue-800 dark:text-blue-200 hover:bg-blue-500/25"
                               >
                                 Повторное согласование
                               </button>
@@ -288,7 +288,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {!isPlannedPayments && !showApproveReject && !showRevoke && !showResubmit && payment.status !== 'draft' && payment.status !== 'pending_approval' && !(!payment.status) && onPaymentClick && (
                               <button
                                 onClick={() => onPaymentClick(payment)}
-                                className="px-3 py-1 text-xs rounded bg-white/10 text-muted-foreground hover:bg-white/20 flex items-center gap-1"
+                                className="px-3 py-1 text-xs font-semibold rounded bg-foreground/10 text-foreground/80 hover:bg-foreground/15 flex items-center gap-1"
                               >
                                 <Icon name="Eye" size={14} />
                                 Детали
@@ -307,7 +307,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
               {sorted.map((payment) => (
                 <Card 
                   key={payment.id} 
-                  className="border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                  className="border-border bg-card cursor-pointer hover:bg-foreground/5 transition-colors"
                   onClick={() => onPaymentClick && onPaymentClick(payment)}
                 >
                   <CardContent className="p-4 space-y-3">
@@ -316,25 +316,25 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                           <Icon name={payment.category_icon} size={18} />
                         </div>
-                        <span className="font-medium">{payment.category_name}</span>
+                        <span className="font-semibold text-foreground">{payment.category_name}</span>
                       </div>
-                      <span className="font-bold text-lg">{payment.amount.toLocaleString('ru-RU')} ₽</span>
+                      <span className="font-bold text-lg text-foreground">{payment.amount.toLocaleString('ru-RU')} ₽</span>
                     </div>
                     {payment.service_name && (
                       <div className="text-sm">
-                        <span className="text-muted-foreground/70">Сервис: </span>
-                        <span className="text-muted-foreground">{payment.service_name}</span>
+                        <span className="font-semibold text-foreground/60">Сервис: </span>
+                        <span className="font-medium text-foreground/80">{payment.service_name}</span>
                       </div>
                     )}
                     {payment.legal_entity_name && (
                       <div className="text-sm">
-                        <span className="text-muted-foreground/70">Юр. лицо: </span>
-                        <span className="text-muted-foreground">{payment.legal_entity_name}</span>
+                        <span className="font-semibold text-foreground/60">Юр. лицо: </span>
+                        <span className="font-medium text-foreground/80">{payment.legal_entity_name}</span>
                       </div>
                     )}
-                    <div className="text-sm text-muted-foreground">{payment.description}</div>
+                    <div className="text-sm font-medium text-foreground/80">{payment.description}</div>
                     <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs font-medium text-foreground/70">
                         {new Date(payment.planned_date || payment.payment_date || '').toLocaleDateString('ru-RU', {
                           day: '2-digit',
                           month: 'long',
@@ -363,7 +363,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (
                         <button
                           onClick={() => onDelete(payment.id)}
-                          className="px-3 py-2 text-sm rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium flex items-center gap-1 justify-center"
+                          className="px-3 py-2 text-sm rounded bg-red-500/15 text-red-800 dark:text-red-200 hover:bg-red-500/25 font-semibold flex items-center gap-1 justify-center"
                           title="Удалить черновик"
                         >
                           <Icon name="Trash2" size={16} />
@@ -397,7 +397,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       {showResubmit && onResubmit && (
                         <button
                           onClick={() => onResubmit(payment.id)}
-                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium"
+                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/15 text-blue-800 dark:text-blue-200 hover:bg-blue-500/25 font-semibold"
                         >
                           Отправить на повторное согласование
                         </button>

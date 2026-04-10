@@ -224,7 +224,7 @@ const MyPaymentsTab = () => {
         {!loading && payments.length > 0 && (
           <button
             onClick={() => exportTabPaymentsToExcel(filteredPayments, 'Мои платежи', 'Мои_платежи')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm font-medium whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-foreground/5 transition-colors text-sm font-semibold text-foreground whitespace-nowrap"
           >
             <Icon name="Download" size={16} />
             Выгрузить Excel
@@ -234,17 +234,17 @@ const MyPaymentsTab = () => {
 
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/60" />
           <Input
             placeholder="Поиск по описанию, категории, сумме..."
             value={filters.search}
             onChange={e => setFilter('search', e.target.value)}
-            className="pl-10 bg-background border-white/10"
+            className="pl-10 bg-background border-border text-foreground placeholder:text-foreground/50"
           />
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="relative p-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+          className="relative p-2 rounded-lg border border-border text-foreground hover:bg-foreground/5 transition-colors"
         >
           <Icon name="SlidersHorizontal" size={20} />
           {activeCount > 0 && (
