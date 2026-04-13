@@ -40,7 +40,7 @@ const PendingApprovalsHeader = ({
             </Button>
           )}
           {notificationPermission === 'granted' && (
-            <div className="flex items-center gap-2 text-sm text-green-400">
+            <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
               <Icon name="BellRing" size={16} />
               <span className="hidden sm:inline">Уведомления включены</span>
             </div>

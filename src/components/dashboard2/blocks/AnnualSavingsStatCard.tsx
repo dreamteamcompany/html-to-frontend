@@ -77,7 +77,7 @@ const AnnualSavingsStatCard = () => {
         </div>
 
         {loadError && (
-          <div className="text-xs text-red-400 mb-2">Не удалось загрузить данные</div>
+          <div className="text-xs text-red-700 dark:text-red-400 mb-2">Не удалось загрузить данные</div>
         )}
         <div className={`${dashboardTypography.cardValue} mb-2`} style={{ color: '#01b574' }}>
           {savingsData ? formatAmount(savingsData.total_amount) : '—'}

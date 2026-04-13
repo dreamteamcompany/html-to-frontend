@@ -32,11 +32,11 @@ export const FieldDiff = ({ field, oldVal, newVal }: { field: string; oldVal: un
   <div className="flex flex-wrap items-center gap-1.5 text-xs py-2"
     style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
     <span className="text-muted-foreground min-w-[120px] font-medium">{getFieldLabel(field)}</span>
-    <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400 line-through break-all">
+    <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-700 dark:text-red-400 line-through break-all">
       {formatValue(oldVal, field)}
     </span>
     <Icon name="ArrowRight" size={11} className="text-muted-foreground/40 flex-shrink-0" />
-    <span className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 break-all">
+    <span className="px-2 py-0.5 rounded bg-green-500/10 text-green-700 dark:text-green-400 break-all">
       {formatValue(newVal, field)}
     </span>
   </div>
@@ -47,8 +47,8 @@ export const ValueRow = ({ label, value, highlight }: { label: string; value: st
     style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
     <span className="text-muted-foreground min-w-[120px] flex-shrink-0 font-medium">{label}</span>
     <span className={
-      highlight === 'green' ? 'text-green-400' :
-        highlight === 'red' ? 'text-red-400 line-through opacity-70' :
+      highlight === 'green' ? 'text-green-700 dark:text-green-400' :
+        highlight === 'red' ? 'text-red-700 dark:text-red-400 line-through opacity-70' :
           'text-foreground/90'
     }>{value}</span>
   </div>

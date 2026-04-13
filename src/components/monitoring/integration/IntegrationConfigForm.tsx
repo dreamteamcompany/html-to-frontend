@@ -128,7 +128,7 @@ const IntegrationConfigForm = ({
       </div>
 
       {testResult && (
-        <div className={`p-3 rounded-lg border ${testResult.success ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+        <div className={`p-3 rounded-lg border ${testResult.success ? 'bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'}`}>
           <div className="flex items-start gap-2">
             <Icon name={testResult.success ? 'CheckCircle2' : 'XCircle'} size={16} className="mt-0.5 shrink-0" />
             <span className="text-sm">{testResult.message}</span>
