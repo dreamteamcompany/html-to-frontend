@@ -315,7 +315,7 @@ const ExpenseStructureChart = () => {
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
       if (p.status !== 'approved') return false;
       const d = parsePaymentDate(p.payment_date);
-      return d >= from && d <= to;
+      return !isNaN(d.getTime()) && d >= from && d <= to;
     });
 
     const categoryMap: Record<string, number> = {};

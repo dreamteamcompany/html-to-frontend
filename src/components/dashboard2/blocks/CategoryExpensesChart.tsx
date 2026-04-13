@@ -58,7 +58,7 @@ const CategoryExpensesChart = () => {
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
       if (p.status !== 'approved') return false;
       const d = parsePaymentDate(p.payment_date);
-      return d >= from && d <= to;
+      return !isNaN(d.getTime()) && d >= from && d <= to;
     });
 
     const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));

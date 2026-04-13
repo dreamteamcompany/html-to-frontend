@@ -49,10 +49,8 @@ const RejectedPaymentsTab = () => {
         fetchRejectedPayments();
       } else {
         const err = await res.json();
-        console.error('Failed to resubmit payment:', err);
       }
     } catch (error) {
-      console.error('Failed to resubmit payment:', error);
     }
   };
 

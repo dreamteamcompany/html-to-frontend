@@ -28,13 +28,13 @@ const TotalExpensesCard = () => {
 
     const current = payments.filter((p) => {
       const d = parsePaymentDate(p.payment_date);
-      return d >= from && d <= to;
+      return !isNaN(d.getTime()) && d >= from && d <= to;
     });
 
     const { prevFrom, prevTo } = getPreviousPeriodRange(period, from, to);
     const previous = payments.filter((p) => {
       const d = parsePaymentDate(p.payment_date);
-      return d >= prevFrom && d <= prevTo;
+      return !isNaN(d.getTime()) && d >= prevFrom && d <= prevTo;
     });
 
     const currentTotal = current.reduce((sum, p) => sum + p.amount, 0);

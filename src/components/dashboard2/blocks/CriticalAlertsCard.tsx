@@ -62,7 +62,7 @@ const CriticalAlertsCard = () => {
     if (pending.length > 0) {
       built.push({
         icon: 'AlertCircle',
-        text: `${pending.length} ${pending.length === 1 ? 'платёж' : 'платежей'} ожидает согласования`,
+        text: `${pending.length} ${pending.length === 1 ? 'платёж' : pending.length < 5 ? 'платежа' : 'платежей'} ожидает согласования`,
         color: pending.length > 10 ? '#ff6b6b' : '#ffb547',
         urgent: pending.length > 10,
       });

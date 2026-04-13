@@ -50,7 +50,6 @@ export const usePendingApprovalsData = () => {
         });
       }
     } catch (err) {
-      console.error('Approve error:', err);
       toast({
         title: 'Ошибка',
         description: 'Не удалось согласовать платёж',
@@ -96,7 +95,7 @@ export const usePendingApprovalsData = () => {
       title: succeeded > 0 ? 'Успешно' : 'Ошибка',
       description: failed > 0
         ? `Одобрено: ${succeeded}, не удалось: ${failed}`
-        : `Одобрено ${succeeded} платежей`,
+        : `Одобрено ${succeeded} ${succeeded === 1 ? 'платёж' : succeeded < 5 ? 'платежа' : 'платежей'}`,
       variant: failed > 0 ? 'destructive' : 'default',
     });
   }, [token, toast, removePayment, refresh]);
@@ -132,7 +131,6 @@ export const usePendingApprovalsData = () => {
         });
       }
     } catch (err) {
-      console.error('Reject error:', err);
       toast({
         title: 'Ошибка',
         description: 'Не удалось отклонить платёж',

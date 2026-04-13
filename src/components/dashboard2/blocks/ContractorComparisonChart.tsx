@@ -70,7 +70,7 @@ const ContractorComparisonChart = () => {
     (Array.isArray(allPayments) ? allPayments : []).forEach((p: PaymentRecord) => {
       if (p.status !== 'approved') return;
       const d = parsePaymentDate(p.payment_date);
-      if (!(d >= from && d <= to)) return;
+      if (isNaN(d.getTime()) || !(d >= from && d <= to)) return;
       const name = p.contractor_name || 'Без контрагента';
       const svc = (p.service_name as string) || '';
       if (!contractorMap[name]) contractorMap[name] = { amount: 0, services: {} };

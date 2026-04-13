@@ -80,24 +80,14 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
   const canRevoke = (isCreator || isAdmin || isCEO) && (payment.status === 'pending_ceo' || payment.status === 'pending_tech_director');
 
   const handleApprove = () => {
-    console.log('[PendingApprovalsModal handleApprove] onClick triggered');
-    console.log('[PendingApprovalsModal handleApprove] onApprove type:', typeof onApprove);
-    console.log('[PendingApprovalsModal handleApprove] payment.id:', payment.id);
     if (typeof onApprove === 'function') {
       onApprove(payment.id);
-    } else {
-      console.error('[PendingApprovalsModal handleApprove] onApprove is not a function!', onApprove);
     }
   };
 
   const handleReject = () => {
-    console.log('[PendingApprovalsModal handleReject] onClick triggered');
-    console.log('[PendingApprovalsModal handleReject] onReject type:', typeof onReject);
-    console.log('[PendingApprovalsModal handleReject] payment.id:', payment.id);
     if (typeof onReject === 'function') {
       onReject(payment.id);
-    } else {
-      console.error('[PendingApprovalsModal handleReject] onReject is not a function!', onReject);
     }
   };
 

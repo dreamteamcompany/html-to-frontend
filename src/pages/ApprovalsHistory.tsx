@@ -49,13 +49,15 @@ const ApprovalsHistory = () => {
         'X-Auth-Token': token,
       },
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
         setApprovals(Array.isArray(data) ? data : []);
         setLoading(false);
       })
-      .catch(err => {
-        console.error('Failed to load approvals:', err);
+      .catch(() => {
         setApprovals([]);
         setLoading(false);
       });
@@ -83,7 +85,6 @@ const ApprovalsHistory = () => {
         description: 'Запись удалена из истории согласований',
       });
     } catch (err) {
-      console.error('Failed to delete approval:', err);
       toast({
         title: 'Ошибка',
         description: 'Не удалось удалить запись',

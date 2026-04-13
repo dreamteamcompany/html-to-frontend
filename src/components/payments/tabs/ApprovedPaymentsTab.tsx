@@ -72,7 +72,6 @@ const ApprovedPaymentsTab = () => {
       setRevokeComment('');
       fetchApprovedPayments();
     } catch (error) {
-      console.error('Failed to revoke payment:', error);
       toast({ title: 'Ошибка', description: translateFetchError(error, 'Не удалось отозвать платёж'), variant: 'destructive' });
     } finally {
       setIsRevoking(false);
