@@ -24,10 +24,13 @@ interface ServiceIndexation {
   percent: number;
 }
 
+const VISIBLE_SERVICES = 3;
+
 const IndexationCard = () => {
   const { getDateRange, period, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
   const [drillOpen, setDrillOpen] = useState(false);
+  const [servicesExpanded, setServicesExpanded] = useState(false);
 
   const indexationData = useMemo(() => {
     const { from, to } = getDateRange();
@@ -94,7 +97,7 @@ const IndexationCard = () => {
         };
       })
       .filter((item) => item.currentTotal > 0 || item.previousTotal > 0)
-      .sort((a, b) => Math.abs(b.percent) - Math.abs(a.percent));
+      .sort((a, b) => Math.max(b.currentTotal, b.previousTotal) - Math.max(a.currentTotal, a.previousTotal));
 
     return {
       overallPercent,
@@ -188,7 +191,7 @@ const IndexationCard = () => {
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                     Расшифровка по сервисам
                   </div>
-                  {serviceDetails.slice(0, 5).map((item) => (
+                  {(servicesExpanded ? serviceDetails : serviceDetails.slice(0, VISIBLE_SERVICES)).map((item) => (
                     <div key={item.serviceKey} className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-1.5 min-w-0 flex-1">
                         <div
@@ -205,10 +208,16 @@ const IndexationCard = () => {
                       </span>
                     </div>
                   ))}
-                  {serviceDetails.length > 5 && (
-                    <div className="text-xs text-muted-foreground text-center pt-1">
-                      +{serviceDetails.length - 5} сервисов
-                    </div>
+                  {serviceDetails.length > VISIBLE_SERVICES && (
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center pt-1 w-full"
+                      onClick={(ev) => { ev.stopPropagation(); setServicesExpanded(!servicesExpanded); }}
+                    >
+                      {servicesExpanded
+                        ? 'Свернуть'
+                        : `+${serviceDetails.length - VISIBLE_SERVICES} сервисов`}
+                    </button>
                   )}
                 </div>
               )}
