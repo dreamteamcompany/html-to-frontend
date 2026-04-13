@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,12 +24,17 @@ const REC_LABEL: Record<string, string> = {
   weekly: 'Еженедельно', monthly: 'Ежемесячно', yearly: 'Ежегодно',
 };
 
-const Row = ({ label, value }: { label: string; value?: React.ReactNode }) => {
+const DetailItem = ({ icon, label, value }: { icon: string; label: string; value?: React.ReactNode }) => {
   if (!value) return null;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-      <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', fontWeight: 500 }}>{label}</div>
-      <div style={{ fontSize: '13px', color: 'hsl(var(--foreground))', fontWeight: 600, wordBreak: 'break-word' }}>{value}</div>
+    <div className="flex items-start gap-2.5 py-2">
+      <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
+        <Icon name={icon} size={13} className="text-muted-foreground" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium leading-tight">{label}</div>
+        <div className="text-sm font-semibold text-foreground break-words leading-snug mt-0.5">{value}</div>
+      </div>
     </div>
   );
 };
@@ -98,132 +103,137 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
   if (!payment) return null;
 
   const recType = (payment as Record<string, unknown>).recurrence_type as string;
+  const invoiceNumber = (payment as Record<string, unknown>).invoice_number as string | undefined;
+  const recEndDate = (payment as Record<string, unknown>).recurrence_end_date as string | undefined;
 
   return (
     <Dialog open onOpenChange={v => { if (!v) onClose(); }}>
-      <DialogContent className="!flex !flex-col !gap-0 !p-0 w-[95vw]" style={{ maxWidth: '900px', overflow: 'hidden', maxHeight: '95dvh' }}>
-        <DialogHeader style={{ padding: '18px 20px 0', flexShrink: 0 }}>
-          <DialogTitle style={{ fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Icon name="CalendarClock" size={16} style={{ color: '#ffb547', flexShrink: 0 }} />
-            Запланированный платёж #{payment.id}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="!p-0 w-[95vw] !gap-0 !flex !flex-col" style={{ maxWidth: '520px', overflow: 'hidden', maxHeight: '95dvh', borderRadius: '16px' }}>
 
-        <div style={{ padding: '14px 20px', overflowY: 'auto', flex: '1 1 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{
-            background: 'hsl(var(--muted))',
-            border: '1px solid hsl(var(--border))', borderRadius: '10px',
-            padding: '14px 16px', textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', marginBottom: '4px' }}>Сумма платежа</div>
-            <div style={{ fontSize: '22px', fontWeight: 800, color: 'hsl(var(--foreground))' }}>{fmt(payment.amount)}</div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '10px', fontWeight: 700, color: '#fff', background: '#6366f1', borderRadius: '4px', padding: '2px 6px' }}>
-                Запланированный
-              </span>
-              {recType && recType !== 'once' && (
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#fff', background: '#0ea5e9', borderRadius: '4px', padding: '2px 6px' }}>
-                  {REC_LABEL[recType] ?? recType}
+        <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
+          <div className="px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255, 181, 71, 0.15)' }}>
+                  <Icon name="CalendarClock" size={15} style={{ color: '#ffb547' }} />
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground font-medium">Запланированный платёж</div>
+                  <div className="text-[11px] text-muted-foreground/60">#{payment.id}</div>
+                </div>
+              </div>
+              <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                <Icon name="X" size={16} />
+              </button>
+            </div>
+
+            <div className="text-center pb-1">
+              <div className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight leading-none">{fmt(payment.amount)}</div>
+              <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1" style={{ background: '#6366f1', color: '#fff' }}>
+                  <Icon name="Clock" size={10} />
+                  Запланированный
                 </span>
-              )}
+                {recType && recType !== 'once' && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1" style={{ background: '#0ea5e9', color: '#fff' }}>
+                    <Icon name="Repeat" size={10} />
+                    {REC_LABEL[recType] ?? recType}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+        </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <Row label="Дата платежа"    value={fmtDate(payment.payment_date as string)} />
-            <Row label="Категория"        value={payment.category_name} />
-            <Row label="Контрагент"       value={payment.contractor_name} />
-            <Row label="Юридическое лицо" value={payment.legal_entity_name} />
-            <Row label="Отдел-заказчик"   value={payment.department_name} />
-            <Row label="Сервис"           value={payment.service_name} />
-            {(payment as Record<string, unknown>).invoice_number && (
-              <Row label="Номер счёта" value={(payment as Record<string, unknown>).invoice_number as string} />
-            )}
-            {(payment as Record<string, unknown>).recurrence_end_date && (
-              <Row label="Повторять до" value={fmtDate((payment as Record<string, unknown>).recurrence_end_date as string)} />
-            )}
+        <div className="px-5 py-4 sm:px-6 overflow-y-auto flex-1">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+            <DetailItem icon="Calendar" label="Дата платежа" value={fmtDate(payment.payment_date as string)} />
+            <DetailItem icon="Tag" label="Категория" value={payment.category_name} />
+            <DetailItem icon="Building2" label="Контрагент" value={payment.contractor_name} />
+            <DetailItem icon="Landmark" label="Юр. лицо" value={payment.legal_entity_name} />
+            <DetailItem icon="Users" label="Отдел" value={payment.department_name} />
+            <DetailItem icon="Server" label="Сервис" value={payment.service_name} />
+            {invoiceNumber && <DetailItem icon="FileText" label="Номер счёта" value={invoiceNumber} />}
+            {recEndDate && <DetailItem icon="CalendarCheck" label="Повторять до" value={fmtDate(recEndDate)} />}
           </div>
 
           {payment.description && (
-            <div>
-              <div style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', fontWeight: 500, marginBottom: '4px' }}>Назначение</div>
-              <div style={{ fontSize: '13px', color: 'hsl(var(--foreground))', background: 'hsl(var(--muted))', borderRadius: '8px', padding: '10px 12px', lineHeight: 1.5, wordBreak: 'break-word' }}>
-                {payment.description}
-              </div>
+            <div className="mt-3 pt-3 border-t border-border">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Назначение</div>
+              <div className="text-sm text-foreground leading-relaxed break-words">{payment.description}</div>
             </div>
           )}
         </div>
 
-        <div style={{ padding: '12px 20px 18px', borderTop: '1px solid hsl(var(--border))', display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
-          {!confirmApprove ? (
+        <div className="px-5 py-4 sm:px-6 border-t border-border bg-muted/30">
+          <div className="flex gap-2.5">
+            {!confirmApprove ? (
+              <Button
+                onClick={() => { setConfirmApprove(true); setConfirmReject(false); }}
+                disabled={!!actionLoading}
+                className="flex-1 h-10 gap-1.5 text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                style={{
+                  background: '#01b574', color: '#fff', border: 'none',
+                  opacity: actionLoading === 'reject' ? 0.4 : 1,
+                }}
+              >
+                <Icon name="CheckCircle" size={15} />
+                Согласовать
+              </Button>
+            ) : (
+              <Button
+                onClick={handleApprove}
+                disabled={!!actionLoading}
+                className="flex-1 h-10 gap-1.5 text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity animate-pulse"
+                style={{ background: '#059669', color: '#fff', border: 'none' }}
+              >
+                {actionLoading === 'approve' ? (
+                  <Icon name="Loader2" size={15} className="animate-spin" />
+                ) : (
+                  <Icon name="CheckCheck" size={15} />
+                )}
+                Подтвердить
+              </Button>
+            )}
+            {!confirmReject ? (
+              <Button
+                onClick={() => { setConfirmReject(true); setConfirmApprove(false); }}
+                disabled={!!actionLoading}
+                variant="outline"
+                className="flex-1 h-10 gap-1.5 text-sm font-semibold rounded-xl hover:bg-red-500/10 transition-colors"
+                style={{
+                  color: '#ff6b6b', borderColor: 'hsl(var(--border))',
+                  opacity: actionLoading === 'approve' ? 0.4 : 1,
+                }}
+              >
+                <Icon name="XCircle" size={15} />
+                Отклонить
+              </Button>
+            ) : (
+              <Button
+                onClick={handleReject}
+                disabled={!!actionLoading}
+                className="flex-1 h-10 gap-1.5 text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity animate-pulse"
+                style={{ background: '#ef4444', color: '#fff', border: 'none' }}
+              >
+                {actionLoading === 'reject' ? (
+                  <Icon name="Loader2" size={15} className="animate-spin" />
+                ) : (
+                  <Icon name="AlertTriangle" size={15} />
+                )}
+                Подтвердить
+              </Button>
+            )}
             <Button
-              onClick={() => { setConfirmApprove(true); setConfirmReject(false); }}
-              disabled={!!actionLoading}
-              style={{
-                flex: 1, minWidth: '120px', gap: '6px',
-                background: '#01b574', color: '#fff', border: 'none',
-                opacity: actionLoading === 'reject' ? 0.5 : 1,
-              }}
-              className="hover:opacity-90"
+              variant="ghost"
+              onClick={onClose}
+              className="shrink-0 h-10 px-4 text-sm font-medium rounded-xl text-muted-foreground hover:text-foreground"
             >
-              <Icon name="CheckCircle" size={15} />
-              Согласовать
+              Закрыть
             </Button>
-          ) : (
-            <Button
-              onClick={handleApprove}
-              disabled={!!actionLoading}
-              style={{
-                flex: 1, minWidth: '120px', gap: '6px',
-                background: '#059669', color: '#fff', border: 'none',
-              }}
-              className="hover:opacity-90 animate-pulse"
-            >
-              {actionLoading === 'approve' ? (
-                <Icon name="Loader2" size={15} className="animate-spin" />
-              ) : (
-                <Icon name="CheckCheck" size={15} />
-              )}
-              Подтвердить согласование
-            </Button>
-          )}
-          {!confirmReject ? (
-            <Button
-              onClick={() => { setConfirmReject(true); setConfirmApprove(false); }}
-              disabled={!!actionLoading}
-              variant="outline"
-              style={{
-                flex: 1, minWidth: '120px', gap: '6px',
-                color: '#ff6b6b', borderColor: '#ff6b6b40',
-                opacity: actionLoading === 'approve' ? 0.5 : 1,
-              }}
-              className="hover:bg-red-500/10"
-            >
-              <Icon name="XCircle" size={15} />
-              Отклонить
-            </Button>
-          ) : (
-            <Button
-              onClick={handleReject}
-              disabled={!!actionLoading}
-              style={{
-                flex: 1, minWidth: '120px', gap: '6px',
-                background: '#ef4444', color: '#fff', border: 'none',
-              }}
-              className="hover:opacity-90 animate-pulse"
-            >
-              {actionLoading === 'reject' ? (
-                <Icon name="Loader2" size={15} className="animate-spin" />
-              ) : (
-                <Icon name="AlertTriangle" size={15} />
-              )}
-              Подтвердить отклонение
-            </Button>
-          )}
-          <Button variant="outline" onClick={onClose} style={{ flexShrink: 0 }}>
-            Закрыть
-          </Button>
+          </div>
         </div>
+
       </DialogContent>
     </Dialog>
   );
