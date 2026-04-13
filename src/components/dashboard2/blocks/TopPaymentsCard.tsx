@@ -4,6 +4,8 @@ import Icon from '@/components/ui/icon';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { parsePaymentDate } from '../dashboardUtils';
+import DrillDownModal from '../DrillDownModal';
+import type { DrillDownFilter } from '../drillDownTypes';
 
 interface PaymentRecord {
   id: number;
@@ -36,10 +38,23 @@ const getColor = (index: number) => {
   return colors[index] || '#7551e9';
 };
 
+const FILTER_TYPE_MAP: Record<GroupBy, DrillDownFilter['type']> = {
+  services: 'service',
+  departments: 'department',
+  categories: 'category',
+};
+
+const LABEL_PREFIX_MAP: Record<GroupBy, string> = {
+  services: 'Сервис',
+  departments: 'Отдел',
+  categories: 'Категория',
+};
+
 const TopPaymentsCard = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
   const [groupBy, setGroupBy] = useState<GroupBy>('services');
+  const [drillFilter, setDrillFilter] = useState<DrillDownFilter | null>(null);
 
   const grouped = useMemo(() => {
     const { from, to } = getDateRange();
@@ -63,6 +78,14 @@ const TopPaymentsCard = () => {
 
   const maxAmount = grouped.length > 0 ? grouped[0].total : 1;
 
+  const handleItemClick = (name: string) => {
+    setDrillFilter({
+      type: FILTER_TYPE_MAP[groupBy],
+      value: name,
+      label: `${LABEL_PREFIX_MAP[groupBy]}: ${name}`,
+    });
+  };
+
   if (loading) {
     return (
       <Card className="h-full flex flex-col" style={{
@@ -78,128 +101,136 @@ const TopPaymentsCard = () => {
   }
 
   return (
-    <Card className="h-full flex flex-col" style={{
-      background: 'hsl(var(--card))',
-      border: '1px solid hsl(var(--border))',
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      <CardContent className="p-4 sm:p-6 flex flex-col flex-1" style={{ position: 'relative', zIndex: 1 }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }} className="sm:gap-3">
-          <div style={{
-            background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
-            padding: '8px',
-            borderRadius: '10px',
-            boxShadow: '0 2px 8px rgba(117, 81, 233, 0.3)',
-            flexShrink: 0
-          }} className="sm:p-3">
-            <Icon name="TrendingUp" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
-          </div>
-          <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'hsl(var(--foreground))' }} className="sm:text-base">Топ-5 Платежей</h3>
-        </div>
-
-        {/* Tabs */}
-        <div style={{
-          display: 'flex',
-          gap: '4px',
-          background: 'hsl(var(--muted))',
-          borderRadius: '8px',
-          padding: '3px',
-          marginBottom: '14px'
-        }}>
-          {TABS.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setGroupBy(tab.key)}
-              style={{
-                flex: 1,
-                padding: '5px 0',
-                fontSize: '11px',
-                fontWeight: groupBy === tab.key ? '700' : '500',
-                color: groupBy === tab.key ? '#fff' : 'hsl(var(--muted-foreground))',
-                background: groupBy === tab.key ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'transparent',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: groupBy === tab.key ? '0 1px 4px rgba(117,81,233,0.4)' : 'none',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }} className="sm:gap-3">
-          {grouped.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Нет данных за выбранный период
+    <>
+      <Card className="h-full flex flex-col" style={{
+        background: 'hsl(var(--card))',
+        border: '1px solid hsl(var(--border))',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <CardContent className="p-4 sm:p-6 flex flex-col flex-1" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }} className="sm:gap-3">
+            <div style={{
+              background: 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)',
+              padding: '8px',
+              borderRadius: '10px',
+              boxShadow: '0 2px 8px rgba(117, 81, 233, 0.3)',
+              flexShrink: 0
+            }} className="sm:p-3">
+              <Icon name="TrendingUp" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
             </div>
-          ) : (
-            grouped.map(({ name, total }, idx) => {
-              const color = getColor(idx);
-              const percent = (total / maxAmount) * 100;
+            <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'hsl(var(--foreground))' }} className="sm:text-base">Топ-5 Платежей</h3>
+          </div>
 
-              return (
-                <div key={name} style={{
-                  background: 'hsl(var(--muted))',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  border: '1px solid hsl(var(--border))',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            background: 'hsl(var(--muted))',
+            borderRadius: '8px',
+            padding: '3px',
+            marginBottom: '14px'
+          }}>
+            {TABS.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setGroupBy(tab.key)}
+                style={{
+                  flex: 1,
+                  padding: '5px 0',
+                  fontSize: '11px',
+                  fontWeight: groupBy === tab.key ? '700' : '500',
+                  color: groupBy === tab.key ? '#fff' : 'hsl(var(--muted-foreground))',
+                  background: groupBy === tab.key ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'transparent',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: groupBy === tab.key ? '0 1px 4px rgba(117,81,233,0.4)' : 'none',
+                  whiteSpace: 'nowrap'
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = color;
-                  e.currentTarget.style.boxShadow = `0 2px 8px ${color}40`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'hsl(var(--border))';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start', gap: '8px' }}>
-                    <div style={{
-                      color: 'hsl(var(--foreground))',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      overflowWrap: 'anywhere',
-                      flex: 1,
-                      minWidth: 0,
-                      lineHeight: 1.3,
-                    }}>
-                      {name}
-                    </div>
-                    <span style={{ color: color, fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      {new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)} ₽
-                    </span>
-                  </div>
-                  <div style={{
-                    width: '100%',
-                    height: '5px',
-                    background: 'hsl(var(--background))',
-                    borderRadius: '10px',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      width: `${percent}%`,
-                      height: '100%',
-                      background: `linear-gradient(90deg, ${color} 0%, ${color}aa 100%)`,
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }} className="sm:gap-3">
+            {grouped.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Нет данных за выбранный период
+              </div>
+            ) : (
+              grouped.map(({ name, total }, idx) => {
+                const color = getColor(idx);
+                const percent = (total / maxAmount) * 100;
+
+                return (
+                  <div
+                    key={name}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleItemClick(name)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleItemClick(name); }}
+                    style={{
+                      background: 'hsl(var(--muted))',
+                      padding: '10px',
                       borderRadius: '10px',
-                      boxShadow: `0 2px 8px ${color}40`,
-                      transition: 'width 0.5s ease'
-                    }} />
+                      border: '1px solid hsl(var(--border))',
+                      transition: 'all 0.3s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = color;
+                      e.currentTarget.style.boxShadow = `0 2px 8px ${color}40`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'hsl(var(--border))';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'flex-start', gap: '8px' }}>
+                      <div style={{
+                        color: 'hsl(var(--foreground))',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        overflowWrap: 'anywhere',
+                        flex: 1,
+                        minWidth: 0,
+                        lineHeight: 1.3,
+                      }}>
+                        {name}
+                      </div>
+                      <span style={{ color: color, fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        {new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)} ₽
+                      </span>
+                    </div>
+                    <div style={{
+                      width: '100%',
+                      height: '5px',
+                      background: 'hsl(var(--background))',
+                      borderRadius: '10px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${percent}%`,
+                        height: '100%',
+                        background: `linear-gradient(90deg, ${color} 0%, ${color}aa 100%)`,
+                        borderRadius: '10px',
+                        boxShadow: `0 2px 8px ${color}40`,
+                        transition: 'width 0.5s ease'
+                      }} />
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </CardContent>
-    </Card>
+                );
+              })
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <DrillDownModal filter={drillFilter} onClose={() => setDrillFilter(null)} />
+    </>
   );
 };
 
