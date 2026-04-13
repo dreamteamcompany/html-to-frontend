@@ -2,6 +2,18 @@ import Icon from '@/components/ui/icon';
 import { fmt, fmtDate, resolvePaymentType, STATUS_LABEL } from './drillDownTypes';
 import type { PaymentRecord } from './drillDownTypes';
 
+const STATUS_TEXT_LIGHT: Record<string, string> = {
+  '#00c951': '#4ade80',
+  '#ff4d6d': '#fca5a5',
+  '#ffb547': '#fde68a',
+  '#9ca3af': '#d1d5db',
+};
+
+const getStatusTextColor = (baseColor: string, isLight: boolean) => {
+  if (isLight) return baseColor;
+  return STATUS_TEXT_LIGHT[baseColor] || baseColor;
+};
+
 interface DrillDownTableProps {
   sorted: PaymentRecord[];
   total: number;
@@ -108,7 +120,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: Dr
                     <span style={{
                       display: 'inline-block', padding: '3px 8px', borderRadius: '6px',
                       fontSize: '11px', fontWeight: 600,
-                      background: `${st.color}20`, color: st.color,
+                      background: `${st.color}20`, color: getStatusTextColor(st.color, isLight),
                     }}>
                       {st.label}
                     </span>
@@ -190,7 +202,7 @@ const DrillDownTable = ({ sorted, total, isMobile, isLight, onPaymentClick }: Dr
                           display: 'inline-flex', alignItems: 'center',
                           padding: '3px 8px', borderRadius: '6px',
                           fontSize: '11px', fontWeight: 600,
-                          background: `${st.color}20`, color: st.color,
+                          background: `${st.color}20`, color: getStatusTextColor(st.color, isLight),
                           whiteSpace: 'nowrap',
                         }}>
                           {st.label}
