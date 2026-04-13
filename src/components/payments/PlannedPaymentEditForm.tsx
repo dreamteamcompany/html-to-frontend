@@ -33,10 +33,10 @@ const PlannedPaymentEditForm = ({
         options={categories}
       />
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Сумма (₽) *</label>
+        <label className="text-sm font-medium text-foreground">Сумма (₽) *</label>
         <input
           type="number" step="0.01" required
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           value={e.amount}
           onChange={(ev) => setEditData({ ...e, amount: Number(ev.target.value) })}
         />
@@ -44,10 +44,10 @@ const PlannedPaymentEditForm = ({
     </div>
 
     <div className="space-y-1.5">
-      <label className="text-sm font-medium">Назначение *</label>
+      <label className="text-sm font-medium text-foreground">Назначение *</label>
       <input
         type="text" required
-        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
         value={e.description}
         onChange={(ev) => setEditData({ ...e, description: ev.target.value })}
       />
@@ -55,10 +55,10 @@ const PlannedPaymentEditForm = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Дата платежа *</label>
+        <label className="text-sm font-medium text-foreground">Дата платежа *</label>
         <input
           type="date" required
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           value={e.planned_date?.slice(0, 10) || ''}
           onChange={(ev) => setEditData({ ...e, planned_date: ev.target.value })}
         />
@@ -95,35 +95,35 @@ const PlannedPaymentEditForm = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Номер счёта</label>
+        <label className="text-sm font-medium text-foreground">Номер счёта</label>
         <input
           type="text"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           value={e.invoice_number || ''}
           onChange={(ev) => setEditData({ ...e, invoice_number: ev.target.value })}
         />
       </div>
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Дата счёта</label>
+        <label className="text-sm font-medium text-foreground">Дата счёта</label>
         <input
           type="date"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           value={e.invoice_date?.slice(0, 10) || ''}
           onChange={(ev) => setEditData({ ...e, invoice_date: ev.target.value })}
         />
       </div>
     </div>
 
-    <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 space-y-3">
+    <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 space-y-3">
       <div className="flex items-center gap-2">
         <Icon name="Repeat" size={15} className="text-blue-600 dark:text-blue-400" />
         <span className="text-sm text-blue-700 dark:text-blue-200 font-medium">Настройки повторения</span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Тип повторения</label>
+          <label className="text-sm font-medium text-foreground">Тип повторения</label>
           <select
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
             value={e.recurrence_type || 'once'}
             onChange={(ev) => setEditData({
               ...e,
@@ -139,10 +139,10 @@ const PlannedPaymentEditForm = ({
         </div>
         {e.recurrence_type && e.recurrence_type !== 'once' && (
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Дата окончания</label>
+            <label className="text-sm font-medium text-foreground">Дата окончания</label>
             <input
               type="date"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
               value={e.recurrence_end_date?.slice(0, 10) || ''}
               onChange={(ev) => setEditData({ ...e, recurrence_end_date: ev.target.value })}
             />

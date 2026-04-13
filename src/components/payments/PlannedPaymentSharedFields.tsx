@@ -19,9 +19,9 @@ export const SelectField = ({
   required?: boolean;
 }) => (
   <div className="space-y-1.5">
-    <label className="text-sm font-medium">{label}{required ? ' *' : ''}</label>
+    <label className="text-sm font-medium text-foreground">{label}{required ? ' *' : ''}</label>
     <select
-      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
       value={value ?? ''}
       onChange={(ev) => onChange(ev.target.value ? Number(ev.target.value) : undefined)}
       required={required}
