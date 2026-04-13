@@ -181,7 +181,7 @@ const ApprovedPaymentsTab = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <h3 className="text-lg font-semibold text-foreground">{payment.category_name}</h3>
-                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 bg-green-500/20 text-green-800 dark:text-green-200">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 bg-green-500/20 text-green-800 dark:text-green-100">
                             ✓ Одобрено CEO
                           </span>
                         </div>

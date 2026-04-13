@@ -12,16 +12,16 @@ const getStatusBadge = (status?: string) => {
     return <span className={`${base} bg-gray-500/20 text-gray-800 dark:text-gray-200`}>Черновик</span>;
   }
   if (status === 'pending_ceo') {
-    return <span className={`${base} bg-blue-500/20 text-blue-800 dark:text-blue-200`}>Ожидает CEO</span>;
+    return <span className={`${base} bg-blue-500/20 text-blue-800 dark:text-blue-100`}>Ожидает CEO</span>;
   }
   if (status === 'approved') {
-    return <span className={`${base} bg-green-500/20 text-green-800 dark:text-green-200`}>Одобрен</span>;
+    return <span className={`${base} bg-green-500/20 text-green-800 dark:text-green-100`}>Одобрен</span>;
   }
   if (status === 'rejected') {
-    return <span className={`${base} bg-red-500/20 text-red-800 dark:text-red-200`}>Отклонен</span>;
+    return <span className={`${base} bg-red-500/20 text-red-800 dark:text-red-100`}>Отклонен</span>;
   }
   if (status === 'revoked') {
-    return <span className={`${base} bg-orange-500/20 text-orange-800 dark:text-orange-200`}>⚠ Отозван</span>;
+    return <span className={`${base} bg-orange-500/20 text-orange-800 dark:text-orange-100`}>⚠ Отозван</span>;
   }
   return null;
 };

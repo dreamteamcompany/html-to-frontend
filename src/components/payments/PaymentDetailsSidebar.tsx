@@ -92,7 +92,7 @@ const PaymentDetailsSidebar = ({
           <div className="mt-3">
             <button
               onClick={() => setLinkedModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-400/30 bg-blue-500/10 hover:bg-blue-500/20 transition-colors text-sm font-semibold text-blue-700 dark:text-blue-300 w-full"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-400/30 bg-blue-500/10 hover:bg-blue-500/20 transition-colors text-sm font-semibold text-blue-700 dark:text-blue-100 w-full"
             >
               <Icon name="CalendarClock" size={15} />
               <span>Запланированный платёж</span>
@@ -198,7 +198,7 @@ const PaymentDetailsSidebar = ({
           {(!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval && !showConfirmation && (
             <button
               onClick={() => setShowConfirmation(true)}
-              className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30 hover:text-blue-800 dark:hover:text-blue-200 font-medium transition-colors text-sm sm:text-base"
+              className="w-full px-4 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-100 hover:bg-blue-500/30 hover:text-blue-800 dark:hover:text-blue-200 font-medium transition-colors text-sm sm:text-base"
             >
               {payment.status === 'rejected' ? 'Отправить повторно' : 'Отправить на согласование'}
             </button>
@@ -221,7 +221,7 @@ const PaymentDetailsSidebar = ({
                     onSubmitForApproval(payment.id);
                     onClose();
                   }}
-                  className="flex-1 px-3 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30 font-medium transition-colors text-sm"
+                  className="flex-1 px-3 py-3 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-100 hover:bg-blue-500/30 font-medium transition-colors text-sm"
                 >
                   Отправить
                 </button>

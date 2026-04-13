@@ -98,15 +98,15 @@ const ApprovalsHistory = () => {
     switch (action) {
       case 'submit':
       case 'submitted':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">Отправлен на согласование</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-100 dark:border-blue-500/30">Отправлен на согласование</span>;
       case 'approve':
       case 'approved':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200 dark:bg-green-500/20 dark:text-green-300 dark:border-green-500/30">Согласован</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200 dark:bg-green-500/20 dark:text-green-100 dark:border-green-500/30">Согласован</span>;
       case 'reject':
       case 'rejected':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30">Отклонён</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 dark:bg-red-500/20 dark:text-red-100 dark:border-red-500/30">Отклонён</span>;
       case 'revoke':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30">Отозван</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 dark:bg-yellow-500/20 dark:text-yellow-100 dark:border-yellow-500/30">Отозван</span>;
       default:
         return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-500/20 dark:text-gray-300 dark:border-gray-500/30">{action}</span>;
     }

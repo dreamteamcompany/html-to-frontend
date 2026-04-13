@@ -216,7 +216,7 @@ const PlannedPaymentForm = ({
           <div className="space-y-2 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
             <div className="flex items-center gap-2 mb-3">
               <Icon name="Repeat" size={18} className="text-blue-600 dark:text-blue-400" />
-              <Label className="text-blue-700 dark:text-blue-200">Настройки повторения</Label>
+              <Label className="text-blue-700 dark:text-blue-100">Настройки повторения</Label>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -228,7 +228,7 @@ const PlannedPaymentsModal = () => {
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <span className="text-xs text-muted-foreground break-anywhere">{p.category_name}</span>
                         {p.recurrence_type && p.recurrence_type !== 'once' && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-300 font-medium">
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-100 font-medium">
                             {recurrenceLabel[p.recurrence_type] ?? p.recurrence_type}
                           </span>
                         )}
