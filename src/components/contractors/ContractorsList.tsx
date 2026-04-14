@@ -88,7 +88,7 @@ const ContractorsList = ({ contractors, loading, handleEdit, handleDelete }: Con
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDelete(contractor.id)}
-                              className="gap-2 text-red-500 hover:text-red-600"
+                              className="gap-2 text-red-500 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200"
                             >
                               <Icon name="Trash2" size={16} />
                               Удалить
@@ -136,7 +136,7 @@ const ContractorsList = ({ contractors, loading, handleEdit, handleDelete }: Con
                           variant="outline"
                           size="sm"
                           onClick={() => handleDelete(contractor.id)}
-                          className="gap-2 text-red-500 hover:text-red-600"
+                          className="gap-2 text-red-500 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200"
                         >
                           <Icon name="Trash2" size={16} />
                         </Button>

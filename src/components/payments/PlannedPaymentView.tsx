@@ -23,7 +23,7 @@ const PlannedPaymentView = ({ payment, isAdmin, onEditStart, onDeleteRequest }: 
       <div className="text-right shrink-0">
         <p className="text-lg font-bold text-primary whitespace-nowrap">{fmt(payment.amount)}</p>
         {payment.recurrence_type && payment.recurrence_type !== 'once' && (
-          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-700 dark:text-blue-100">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-700 dark:text-blue-300">
             {recurrenceLabel[payment.recurrence_type] ?? payment.recurrence_type}
           </span>
         )}
@@ -54,7 +54,7 @@ const PlannedPaymentView = ({ payment, isAdmin, onEditStart, onDeleteRequest }: 
       {isAdmin && (
         <Button
           variant="outline"
-          className="gap-2 text-red-700 dark:text-red-400 border-red-400/30 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+          className="gap-2 text-red-700 dark:text-red-300 border-red-400/30 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
           onClick={onDeleteRequest}
         >
           <Icon name="Trash2" size={15} />

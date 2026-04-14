@@ -37,15 +37,15 @@ const NotificationBell = () => {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'approval_request':
-        return { name: 'Bell', color: 'text-green-500' };
+        return { name: 'Bell', color: 'text-green-500 dark:text-green-300' };
       case 'approval_rejected':
-        return { name: 'XCircle', color: 'text-red-500' };
+        return { name: 'XCircle', color: 'text-red-500 dark:text-red-300' };
       case 'approval_approved':
-        return { name: 'CheckCircle', color: 'text-blue-500' };
+        return { name: 'CheckCircle', color: 'text-blue-500 dark:text-blue-300' };
       case 'comment_added':
-        return { name: 'MessageCircle', color: 'text-yellow-500' };
+        return { name: 'MessageCircle', color: 'text-yellow-500 dark:text-yellow-300' };
       default:
-        return { name: 'Bell', color: 'text-gray-500' };
+        return { name: 'Bell', color: 'text-gray-500 dark:text-gray-300' };
     }
   };
 

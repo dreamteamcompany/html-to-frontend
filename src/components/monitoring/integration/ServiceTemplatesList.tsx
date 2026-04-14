@@ -15,7 +15,7 @@ const ServiceTemplatesList = ({ onSelect }: ServiceTemplatesListProps) => {
           className="flex items-center gap-3 p-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-left"
         >
           <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-            <Icon name={service.icon as any} size={20} className="text-blue-700 dark:text-blue-400" />
+            <Icon name={service.icon as any} size={20} className="text-blue-700 dark:text-blue-300" />
           </div>
           <div className="flex-1">
             <div className="text-white font-medium">{service.name}</div>

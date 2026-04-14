@@ -11,21 +11,21 @@ interface SystemStatusBlockProps {
 const SystemStatusBlock = ({ status }: SystemStatusBlockProps) => {
   const statusConfig = {
     healthy: {
-      color: 'text-green-600',
+      color: 'text-green-600 dark:text-green-300',
       bgColor: 'bg-green-50 dark:bg-green-950/20',
       borderColor: 'border-green-200 dark:border-green-900',
       icon: 'CheckCircle2',
       label: 'Всё работает',
     },
     warning: {
-      color: 'text-yellow-600',
+      color: 'text-yellow-600 dark:text-yellow-300',
       bgColor: 'bg-yellow-50 dark:bg-yellow-950/20',
       borderColor: 'border-yellow-200 dark:border-yellow-900',
       icon: 'AlertTriangle',
       label: 'Требует внимания',
     },
     critical: {
-      color: 'text-red-600',
+      color: 'text-red-600 dark:text-red-300',
       bgColor: 'bg-red-50 dark:bg-red-950/20',
       borderColor: 'border-red-200 dark:border-red-900',
       icon: 'AlertCircle',
@@ -56,9 +56,9 @@ const SystemStatusBlock = ({ status }: SystemStatusBlockProps) => {
           
           {status.alerts.map((alert) => {
             const alertConfig = {
-              error: { icon: 'XCircle', color: 'text-red-600' },
-              warning: { icon: 'AlertTriangle', color: 'text-yellow-600' },
-              info: { icon: 'Info', color: 'text-blue-600' },
+              error: { icon: 'XCircle', color: 'text-red-600 dark:text-red-300' },
+              warning: { icon: 'AlertTriangle', color: 'text-yellow-600 dark:text-yellow-300' },
+              info: { icon: 'Info', color: 'text-blue-600 dark:text-blue-300' },
             };
             
             const aConfig = alertConfig[alert.type];

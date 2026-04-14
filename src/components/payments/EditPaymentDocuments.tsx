@@ -60,14 +60,14 @@ const EditPaymentDocuments = ({
       {currentFileUrl && uploadedFileName && (
         <div className="flex items-start justify-between gap-2 px-3 py-2.5 rounded-lg border border-green-500/30 bg-green-500/5">
           <div className="flex items-start gap-2 min-w-0 flex-1 flex-wrap">
-            <Icon name="CheckCircle" size={16} className="text-green-700 dark:text-green-400 flex-shrink-0 mt-0.5" />
+            <Icon name="CheckCircle" size={16} className="text-green-700 dark:text-green-300 flex-shrink-0 mt-0.5" />
             <span className="text-sm font-medium break-anywhere text-green-800 dark:text-green-300">{displayFileName}</span>
-            <span className="text-xs text-green-700/70 dark:text-green-400/70 flex-shrink-0 mt-0.5">новый</span>
+            <span className="text-xs text-green-700/70 dark:text-green-300/70 flex-shrink-0 mt-0.5">новый</span>
           </div>
           <button
             type="button"
             onClick={onCancelNewFile}
-            className="text-xs text-muted-foreground hover:text-red-700 dark:hover:text-red-400 transition-colors flex-shrink-0 mt-0.5"
+            className="text-xs text-muted-foreground hover:text-red-700 dark:hover:text-red-300 transition-colors flex-shrink-0 mt-0.5"
           >
             <Icon name="X" size={14} />
           </button>

@@ -41,11 +41,11 @@ const getActionIcon = (action: string) => {
 
 const getActionColor = (action: string) => {
   switch (action) {
-    case 'approve': return { text: '#01b574', bg: 'rgba(1,181,116,0.12)',   border: 'rgba(1,181,116,0.25)'   };
-    case 'reject':  return { text: '#ff6b6b', bg: 'rgba(255,107,107,0.12)', border: 'rgba(255,107,107,0.25)' };
-    case 'submit':  return { text: '#4da6ff', bg: 'rgba(77,166,255,0.12)',  border: 'rgba(77,166,255,0.25)'  };
-    case 'revoke':  return { text: '#ffb547', bg: 'rgba(255,181,71,0.12)',  border: 'rgba(255,181,71,0.25)'  };
-    default:        return { text: 'hsl(var(--muted-foreground))', bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.1)' };
+    case 'approve': return { textClass: 'text-green-600 dark:text-green-300',  bg: 'rgba(1,181,116,0.12)',   border: 'rgba(1,181,116,0.25)'   };
+    case 'reject':  return { textClass: 'text-red-600 dark:text-red-300',      bg: 'rgba(255,107,107,0.12)', border: 'rgba(255,107,107,0.25)' };
+    case 'submit':  return { textClass: 'text-blue-600 dark:text-blue-300',    bg: 'rgba(77,166,255,0.12)',  border: 'rgba(77,166,255,0.25)'  };
+    case 'revoke':  return { textClass: 'text-orange-600 dark:text-orange-300', bg: 'rgba(255,181,71,0.12)',  border: 'rgba(255,181,71,0.25)'  };
+    default:        return { textClass: 'text-muted-foreground',                bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.1)' };
   }
 };
 
@@ -233,11 +233,10 @@ const PaymentApprovalHistoryModal = ({ paymentInfo, onClose }: PaymentApprovalHi
                     <div key={log.id} className="flex gap-3">
                       {/* Иконка на линии */}
                       <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative z-10"
+                        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative z-10 ${colors.textClass}`}
                         style={{
                           background: colors.bg,
                           border: `1.5px solid ${colors.border}`,
-                          color: colors.text,
                         }}
                       >
                         <Icon name={getActionIcon(log.action)} size={16} />
@@ -254,8 +253,8 @@ const PaymentApprovalHistoryModal = ({ paymentInfo, onClose }: PaymentApprovalHi
                         {/* Статус + дата — два варианта: строка и колонка */}
                         <div className="flex items-start justify-between gap-2 mb-1.5 min-w-0">
                           <span
-                            className="text-sm font-semibold leading-snug"
-                            style={{ color: colors.text, wordBreak: 'break-word' }}
+                            className={`text-sm font-semibold leading-snug ${colors.textClass}`}
+                            style={{ wordBreak: 'break-word' }}
                           >
                             {getActionLabel(log.action)}
                           </span>

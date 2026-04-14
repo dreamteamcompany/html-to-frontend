@@ -165,7 +165,7 @@ export default function ContactForm() {
                   <a
                     href="http://perfekz.ru/docs/docs/8) СОГЛАСИЕ_НА_ОБРАБОТКУ_signed.pdf"
                     target="_blank"
-                    className="text-yellow-700 dark:text-yellow-400 underline font-bold"
+                    className="text-yellow-700 dark:text-yellow-300 underline font-bold"
                   >
                     обработку персональных данных
                   </a>{" "}
@@ -173,7 +173,7 @@ export default function ContactForm() {
                   <a
                     href="http://perfekz.ru/docs/docs/7) ПОЛОЖЕНИЕ_ЗАЩИТА_ПЕРС_ДАННЫХ_signed.pdf"
                     target="_blank"
-                    className="text-yellow-700 dark:text-yellow-400 underline font-bold"
+                    className="text-yellow-700 dark:text-yellow-300 underline font-bold"
                   >
                     политики конфиденциальности
                   </a>

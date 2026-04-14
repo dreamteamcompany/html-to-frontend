@@ -146,13 +146,13 @@ const RejectedPaymentsTab = () => {
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-600 dark:text-red-400 flex-shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-600 dark:text-red-300 flex-shrink-0">
                         <Icon name={payment.category_icon} size={24} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <h3 className="text-lg font-semibold text-foreground">{payment.category_name}</h3>
-                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-800 dark:text-red-100">✗ Отклонено</span>
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-800 dark:text-red-300">✗ Отклонено</span>
                         </div>
                         <p className="font-medium text-foreground/80 text-sm mb-2">{payment.description}</p>
                         <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-foreground/70">
@@ -193,7 +193,7 @@ const RejectedPaymentsTab = () => {
                         e.stopPropagation();
                         handleResubmit(payment.id);
                       }}
-                      className="px-4 py-2 text-sm rounded bg-blue-500/15 hover:bg-blue-500/25 text-blue-800 dark:text-blue-100 font-semibold w-full lg:w-auto"
+                      className="px-4 py-2 text-sm rounded bg-blue-500/15 hover:bg-blue-500/25 text-blue-800 dark:text-blue-300 font-semibold w-full lg:w-auto"
                     >
                       Отправить на повторное согласование
                     </button>

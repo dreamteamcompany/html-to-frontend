@@ -68,7 +68,7 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
   const getStatusBadge = (status?: string) => {
     switch (status) {
       case 'pending_ceo':
-        return <span className="px-3 py-1 rounded-full text-xs bg-blue-500/20 text-blue-800 dark:text-blue-100 font-semibold">Ожидает CEO</span>;
+        return <span className="px-3 py-1 rounded-full text-xs bg-blue-500/20 text-blue-800 dark:text-blue-300 font-semibold">Ожидает CEO</span>;
       default:
         return null;
     }
@@ -189,13 +189,13 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
       {notificationPermission !== 'granted' && (
         <div className="px-4 py-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-yellow-800 dark:text-yellow-100">
+            <div className="flex items-center gap-2 text-sm font-semibold text-yellow-800 dark:text-yellow-300">
               <Icon name="Bell" size={16} />
               <span>Включите уведомления, чтобы не пропустить новые заявки</span>
             </div>
             <button
               onClick={requestNotificationPermission}
-              className="text-sm font-semibold text-yellow-800 dark:text-yellow-100 hover:underline whitespace-nowrap"
+              className="text-sm font-semibold text-yellow-800 dark:text-yellow-300 hover:underline whitespace-nowrap"
             >
               Включить
             </button>

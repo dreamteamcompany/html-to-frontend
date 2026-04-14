@@ -13,11 +13,11 @@ const RecentEvents = ({ events }: RecentEventsProps) => {
   const navigate = useNavigate();
 
   const eventConfig = {
-    payment: { icon: 'DollarSign', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/20' },
-    approval: { icon: 'CheckCircle2', color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-950/20' },
-    user: { icon: 'User', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-950/20' },
-    system: { icon: 'Settings', color: 'text-gray-600', bg: 'bg-gray-50 dark:bg-gray-950/20' },
-    error: { icon: 'AlertCircle', color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-950/20' },
+    payment: { icon: 'DollarSign', color: 'text-blue-600 dark:text-blue-300', bg: 'bg-blue-50 dark:bg-blue-950/20' },
+    approval: { icon: 'CheckCircle2', color: 'text-green-600 dark:text-green-300', bg: 'bg-green-50 dark:bg-green-950/20' },
+    user: { icon: 'User', color: 'text-purple-600 dark:text-purple-300', bg: 'bg-purple-50 dark:bg-purple-950/20' },
+    system: { icon: 'Settings', color: 'text-gray-600 dark:text-gray-300', bg: 'bg-gray-50 dark:bg-gray-950/20' },
+    error: { icon: 'AlertCircle', color: 'text-red-600 dark:text-red-300', bg: 'bg-red-50 dark:bg-red-950/20' },
   };
 
   const formatTime = (date: Date) => {

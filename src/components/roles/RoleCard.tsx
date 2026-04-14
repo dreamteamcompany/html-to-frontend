@@ -60,7 +60,7 @@ const RoleCard = ({ role, onEdit, onDelete, getResourceColor }: RoleCardProps) =
               </div>
             ))}
             {role.permissions && role.permissions.length > 6 && (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-gray-500 bg-gray-500/10">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-300 bg-gray-500/10">
                 +{role.permissions.length - 6} ещё
               </div>
             )}
@@ -81,7 +81,7 @@ const RoleCard = ({ role, onEdit, onDelete, getResourceColor }: RoleCardProps) =
             variant="outline"
             size="sm"
             onClick={() => onDelete(role.id)}
-            className="flex-1 gap-2 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+            className="flex-1 gap-2 text-red-500 dark:text-red-300 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-500/10"
           >
             <Icon name="Trash2" size={16} />
             Удалить

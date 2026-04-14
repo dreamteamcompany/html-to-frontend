@@ -89,9 +89,9 @@ const AuditEntityHistory = ({ log, history, historyLoading }: AuditEntityHistory
                         {Object.entries(h.changed_fields).slice(0, 3).map(([field, vals]) => (
                           <span key={field} className="text-xs text-muted-foreground/70">
                             {getFieldLabel(field)}:
-                            <span className="text-red-700/70 dark:text-red-400/70 line-through ml-1">{formatValue(vals.old, field)}</span>
+                            <span className="text-red-700/70 dark:text-red-300/70 line-through ml-1">{formatValue(vals.old, field)}</span>
                             <span className="text-muted-foreground/40 mx-0.5">→</span>
-                            <span className="text-green-700/70 dark:text-green-400/70">{formatValue(vals.new, field)}</span>
+                            <span className="text-green-700/70 dark:text-green-300/70">{formatValue(vals.new, field)}</span>
                           </span>
                         ))}
                         {Object.keys(h.changed_fields).length > 3 && (

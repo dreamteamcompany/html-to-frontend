@@ -30,25 +30,25 @@ const STATUS_ORDER: Record<string, number> = {
 const getStatusBadge = (status?: string) => {
   const base = 'px-2 py-1 rounded-full text-xs font-semibold';
   if (!status || status === 'draft') {
-    return <span className={`${base} bg-gray-500/20 text-gray-800 dark:text-gray-200`}>Черновик</span>;
+    return <span className={`${base} bg-gray-500/20 text-gray-800 dark:text-gray-300`}>Черновик</span>;
   }
   if (status === 'pending_ib') {
-    return <span className={`${base} bg-yellow-500/20 text-yellow-800 dark:text-yellow-100`}>На согласовании (ИБ)</span>;
+    return <span className={`${base} bg-yellow-500/20 text-yellow-800 dark:text-yellow-300`}>На согласовании (ИБ)</span>;
   }
   if (status === 'pending_cfo') {
-    return <span className={`${base} bg-orange-500/20 text-orange-800 dark:text-orange-100`}>На согласовании (CFO)</span>;
+    return <span className={`${base} bg-orange-500/20 text-orange-800 dark:text-orange-300`}>На согласовании (CFO)</span>;
   }
   if (status === 'pending_ceo') {
-    return <span className={`${base} bg-blue-500/20 text-blue-800 dark:text-blue-100`}>На согласовании (CEO)</span>;
+    return <span className={`${base} bg-blue-500/20 text-blue-800 dark:text-blue-300`}>На согласовании (CEO)</span>;
   }
   if (status === 'approved') {
-    return <span className={`${base} bg-green-500/20 text-green-800 dark:text-green-100`}>Одобрен</span>;
+    return <span className={`${base} bg-green-500/20 text-green-800 dark:text-green-300`}>Одобрен</span>;
   }
   if (status === 'rejected') {
-    return <span className={`${base} bg-red-500/20 text-red-800 dark:text-red-100`}>Отклонён</span>;
+    return <span className={`${base} bg-red-500/20 text-red-800 dark:text-red-300`}>Отклонён</span>;
   }
   if (status === 'revoked') {
-    return <span className={`${base} bg-orange-500/20 text-orange-800 dark:text-orange-100`}>Отозван</span>;
+    return <span className={`${base} bg-orange-500/20 text-orange-800 dark:text-orange-300`}>Отозван</span>;
   }
   return null;
 };
@@ -230,7 +230,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {isPlannedPayments && onSubmitForApproval && (
                               <button
                                 onClick={() => onSubmitForApproval(payment.id)}
-                                className="px-3 py-1 text-xs font-semibold rounded bg-green-500/15 text-green-800 dark:text-green-100 hover:bg-green-500/25"
+                                className="px-3 py-1 text-xs font-semibold rounded bg-green-500/15 text-green-800 dark:text-green-300 hover:bg-green-500/25"
                               >
                                 Создать платёж
                               </button>
@@ -246,7 +246,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (
                               <button
                                 onClick={() => onDelete(payment.id)}
-                                className="px-3 py-1 text-xs font-semibold rounded bg-red-500/15 text-red-800 dark:text-red-100 hover:bg-red-500/25 flex items-center gap-1"
+                                className="px-3 py-1 text-xs font-semibold rounded bg-red-500/15 text-red-800 dark:text-red-300 hover:bg-red-500/25 flex items-center gap-1"
                                 title="Удалить черновик"
                               >
                                 <Icon name="Trash2" size={14} />
@@ -280,7 +280,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                             {showResubmit && onResubmit && (
                               <button
                                 onClick={() => onResubmit(payment.id)}
-                                className="px-3 py-1 text-xs font-semibold rounded bg-blue-500/15 text-blue-800 dark:text-blue-100 hover:bg-blue-500/25"
+                                className="px-3 py-1 text-xs font-semibold rounded bg-blue-500/15 text-blue-800 dark:text-blue-300 hover:bg-blue-500/25"
                               >
                                 Повторное согласование
                               </button>
@@ -363,7 +363,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (
                         <button
                           onClick={() => onDelete(payment.id)}
-                          className="px-3 py-2 text-sm rounded bg-red-500/15 text-red-800 dark:text-red-100 hover:bg-red-500/25 font-semibold flex items-center gap-1 justify-center"
+                          className="px-3 py-2 text-sm rounded bg-red-500/15 text-red-800 dark:text-red-300 hover:bg-red-500/25 font-semibold flex items-center gap-1 justify-center"
                           title="Удалить черновик"
                         >
                           <Icon name="Trash2" size={16} />
@@ -397,7 +397,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       {showResubmit && onResubmit && (
                         <button
                           onClick={() => onResubmit(payment.id)}
-                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/15 text-blue-800 dark:text-blue-100 hover:bg-blue-500/25 font-semibold"
+                          className="flex-1 px-3 py-2 text-sm rounded bg-blue-500/15 text-blue-800 dark:text-blue-300 hover:bg-blue-500/25 font-semibold"
                         >
                           Отправить на повторное согласование
                         </button>

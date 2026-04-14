@@ -84,10 +84,7 @@ const CashPaymentForm = ({ categories, customerDepartments, services, onSuccess 
     <>
       <Button
         onClick={() => setDialogOpen(true)}
-        className="gap-2 w-full sm:w-auto"
-        style={{ background: '#01b574', color: '#fff' }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#00a066')}
-        onMouseLeave={e => (e.currentTarget.style.background = '#01b574')}
+        className="gap-2 w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
       >
         <Icon name="Banknote" size={18} />
         <span>Наличный платёж</span>
@@ -271,9 +268,7 @@ const CashPaymentForm = ({ categories, customerDepartments, services, onSuccess 
               <Button
                 type="submit"
                 disabled={isUploading}
-                style={{ background: '#01b574', color: '#fff' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#00a066')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#01b574')}
+                className="bg-green-600 hover:bg-green-700 text-white"
               >
                 <Icon name="Send" size={16} className="mr-2" />
                 Отправить на согласование

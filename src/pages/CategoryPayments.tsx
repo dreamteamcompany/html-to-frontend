@@ -75,14 +75,14 @@ const CategoryPayments = () => {
       });
   }, [categoryId]);
 
-  const statusColors: Record<string, string> = {
-    draft: '#6c757d',
-    pending_ib: '#ffc107',
-    pending_cfo: '#ffc107',
-    pending_ceo: '#ffc107',
-    approved: '#28a745',
-    rejected: '#dc3545',
-    revoked: '#6c757d',
+  const statusStyles: Record<string, string> = {
+    draft: 'bg-gray-500/20 text-gray-600 dark:text-gray-300',
+    pending_ib: 'bg-yellow-500/20 text-yellow-800 dark:text-yellow-300',
+    pending_cfo: 'bg-orange-500/20 text-orange-800 dark:text-orange-300',
+    pending_ceo: 'bg-blue-500/20 text-blue-800 dark:text-blue-300',
+    approved: 'bg-green-500/20 text-green-800 dark:text-green-300',
+    rejected: 'bg-red-500/20 text-red-800 dark:text-red-300',
+    revoked: 'bg-gray-500/20 text-gray-600 dark:text-gray-300',
   };
 
   const statusLabels: Record<string, string> = {
@@ -180,10 +180,7 @@ const CategoryPayments = () => {
                           <div style={{ color: categoryInfo.color }} className="text-base sm:text-lg font-bold whitespace-nowrap">
                             {new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(payment.amount)}
                           </div>
-                          <div style={{
-                            background: (statusColors[payment.status] || '#6c757d') + '20',
-                            color: statusColors[payment.status] || '#6c757d'
-                          }} className="inline-block px-2 py-1 rounded-md text-[10px] sm:text-xs font-semibold whitespace-nowrap">
+                          <div className={`inline-block px-2 py-1 rounded-md text-[10px] sm:text-xs font-semibold whitespace-nowrap ${statusStyles[payment.status] || 'bg-gray-500/20 text-gray-600 dark:text-gray-300'}`}>
                             {statusLabels[payment.status] || payment.status}
                           </div>
                         </div>

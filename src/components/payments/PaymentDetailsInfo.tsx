@@ -128,12 +128,12 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       {payment.rejection_comment && payment.status === 'rejected' && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
           <div className="flex items-start gap-2">
-            <Icon name="AlertCircle" size={20} className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <Icon name="AlertCircle" size={20} className="text-red-600 dark:text-red-300 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-red-700 dark:text-red-100 mb-1">Причина отклонения</p>
-              <p className="text-sm font-medium text-red-800 dark:text-red-100 break-anywhere">{payment.rejection_comment}</p>
+              <p className="text-sm font-semibold text-red-700 dark:text-red-300 mb-1">Причина отклонения</p>
+              <p className="text-sm font-medium text-red-800 dark:text-red-300 break-anywhere">{payment.rejection_comment}</p>
               {payment.rejected_at && (
-                <p className="text-xs font-medium text-red-700/80 dark:text-red-100/70 mt-2">
+                <p className="text-xs font-medium text-red-700/80 dark:text-red-300/70 mt-2">
                   {new Date(payment.rejected_at).toLocaleString('ru-RU')}
                 </p>
               )}
@@ -218,7 +218,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       {(isPlannedPayment || payment.is_planned) && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Запланированный платеж</p>
-          <div className="flex items-center gap-2 font-semibold text-blue-700 dark:text-blue-100">
+          <div className="flex items-center gap-2 font-semibold text-blue-700 dark:text-blue-300">
             <Icon name="CalendarClock" size={18} className="flex-shrink-0" />
             <span>{payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('ru-RU', {
               day: '2-digit',

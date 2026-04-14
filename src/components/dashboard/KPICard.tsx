@@ -38,9 +38,9 @@ const KPICard = ({ data, onClick }: KPICardProps) => {
   }
 
   const trendColor = data.trend.direction === 'up' 
-    ? 'text-green-600' 
+    ? 'text-green-600 dark:text-green-300' 
     : data.trend.direction === 'down' 
-    ? 'text-red-600' 
+    ? 'text-red-600 dark:text-red-300' 
     : 'text-muted-foreground';
 
   const trendIcon = data.trend.direction === 'up' 
