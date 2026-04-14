@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_ENDPOINTS } from '@/config/api';
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,9 @@ interface UserFormDialogProps {
   handleSubmit: (e: React.FormEvent) => void;
 }
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 const UserFormDialog = ({
   dialogOpen,
   setDialogOpen,
@@ -60,7 +64,7 @@ const UserFormDialog = ({
   roles,
   handleSubmit,
 }: UserFormDialogProps) => {
-  const { hasPermission } = useAuth();
+  const { hasPermission, token } = useAuth();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
 
@@ -68,63 +72,76 @@ const UserFormDialog = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_FILE_SIZE) {
       toast({
         title: 'Ошибка',
         description: 'Файл слишком большой. Максимум 5 МБ',
         variant: 'destructive',
       });
+      e.target.value = '';
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       toast({
         title: 'Ошибка',
-        description: 'Можно загружать только изображения',
+        description: 'Допустимые форматы: JPG, PNG, GIF',
         variant: 'destructive',
       });
+      e.target.value = '';
       return;
     }
 
     setUploading(true);
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64 = reader.result as string;
-        const base64Data = base64.split(',')[1];
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = () => reject(new Error('Ошибка чтения файла'));
+        reader.readAsDataURL(file);
+      });
 
-        const response = await fetch('https://functions.poehali.dev/37368ef2-6990-44c6-9439-232d3a5820ff', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            file: base64Data,
-            filename: file.name,
-          }),
-        });
+      const uploadResponse = await fetch(API_ENDPOINTS.uploadFile, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({
+          chunk: base64Data,
+          fileName: file.name,
+          fileType: file.type,
+          folder: 'avatars',
+          chunkIndex: 0,
+          totalChunks: 1,
+        }),
+      });
 
-        if (response.ok) {
-          const data = await response.json();
+      if (uploadResponse.ok) {
+        const data = await uploadResponse.json();
+        if (data.url) {
           setFormData({ ...formData, photo_url: data.url });
-          toast({
-            title: 'Успешно',
-            description: 'Фото загружено',
-          });
+          toast({ title: 'Успешно', description: 'Фото загружено' });
         } else {
-          throw new Error('Upload failed');
+          throw new Error('No URL in response');
         }
-      };
-      reader.readAsDataURL(file);
+      } else {
+        const errData = await uploadResponse.json().catch(() => ({}));
+        throw new Error(errData.error || 'Upload failed');
+      }
     } catch (err) {
       console.error('Failed to upload photo:', err);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось загрузить фото',
+        description: err instanceof Error ? err.message : 'Не удалось загрузить фото',
         variant: 'destructive',
       });
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   };
 
@@ -181,7 +198,7 @@ const UserFormDialog = ({
               <div className="flex-1">
                 <Input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/gif"
                   onChange={handlePhotoUpload}
                   disabled={uploading}
                   className="cursor-pointer"

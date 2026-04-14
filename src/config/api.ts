@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
   collectLogs: 'https://functions.poehali.dev/acbb6915-96bf-4e7f-ab66-c34c3fa4b26c',
   logAnalyzer: 'https://functions.poehali.dev/dd221a88-cc33-4a30-a59f-830b0a41862f',
   main: 'https://functions.poehali.dev/8f2170d4-9167-4354-85a1-4478c2403dfd',
+  uploadFile: 'https://functions.poehali.dev/a8d52b31-112f-4c93-9671-47788732fa56',
 } as const;
 
 export const getApiUrl = (endpoint: string, baseApi: keyof typeof API_ENDPOINTS = 'dictionariesApi'): string => {
