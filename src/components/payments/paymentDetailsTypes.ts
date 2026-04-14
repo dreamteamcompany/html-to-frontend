@@ -52,6 +52,7 @@ export interface Payment {
 export interface PaymentView {
   user_id: number;
   full_name: string;
+  photo_url?: string;
   viewed_at: string;
 }
 

@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/config/api';
+import UserAvatar from '@/components/ui/user-avatar';
 
 interface Comment {
   id: number;
@@ -10,6 +11,7 @@ interface Comment {
   user_id: number;
   username: string;
   full_name: string;
+  photo_url?: string;
   parent_comment_id: number | null;
   comment_text: string;
   created_at: string;
@@ -161,9 +163,7 @@ const PaymentComments = ({ paymentId }: PaymentCommentsProps) => {
       <div className={`${isReply ? 'ml-6 sm:ml-12' : ''}`}>
         <div className="flex gap-2 sm:gap-3 group">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center text-xs sm:text-sm font-medium">
-              {comment.full_name?.charAt(0) || comment.username.charAt(0).toUpperCase()}
-            </div>
+            <UserAvatar photoUrl={comment.photo_url} name={comment.full_name || comment.username} size="sm" />
           </div>
 
           <div className="flex-1 min-w-0">

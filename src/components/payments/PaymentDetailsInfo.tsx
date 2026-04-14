@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { translateFetchError } from '@/utils/api';
+import UserAvatar from '@/components/ui/user-avatar';
 
 interface Department {
   id: number;
@@ -113,9 +114,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
               className="flex items-center gap-1.5 bg-primary/15 rounded-full px-2.5 py-1"
               title={new Date(v.viewed_at).toLocaleString('ru-RU')}
             >
-              <div className="w-5 h-5 rounded-full bg-primary/30 flex items-center justify-center text-[10px] font-bold text-primary">
-                {v.full_name.charAt(0).toUpperCase()}
-              </div>
+              <UserAvatar photoUrl={v.photo_url} name={v.full_name} size="xs" />
               <span className="text-xs font-semibold text-foreground">{v.full_name}</span>
               <span className="text-[10px] font-medium text-foreground/70">
                 {new Date(v.viewed_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}

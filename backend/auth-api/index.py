@@ -99,7 +99,7 @@ def get_user_with_permissions(conn, user_id: int) -> Optional[Dict[str, Any]]:
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(f"""
-        SELECT u.id, u.username, u.email, u.full_name, u.is_active, u.last_login
+        SELECT u.id, u.username, u.email, u.full_name, u.is_active, u.last_login, u.photo_url
         FROM {SCHEMA}.users u
         WHERE u.id = %s AND u.is_active = true
     """, (user_id,))

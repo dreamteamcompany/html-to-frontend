@@ -167,7 +167,7 @@ def get_user_with_permissions(conn, user_id: int) -> Optional[Dict[str, Any]]:
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     cur.execute(f"""
-        SELECT u.id, u.username, u.email, u.full_name, u.is_active, u.last_login
+        SELECT u.id, u.username, u.email, u.full_name, u.is_active, u.last_login, u.photo_url
         FROM {SCHEMA}.users u
         WHERE u.id = %s AND u.is_active = true
     """, (user_id,))
@@ -205,6 +205,7 @@ def get_user_with_permissions(conn, user_id: int) -> Optional[Dict[str, Any]]:
         'full_name': user['full_name'],
         'is_active': user['is_active'],
         'last_login': user['last_login'],
+        'photo_url': user.get('photo_url', ''),
         'roles': roles,
         'permissions': permissions
     }
@@ -3776,6 +3777,7 @@ def handle_comments(method: str, event: Dict[str, Any], conn, current_user: Dict
                     c.user_id,
                     u.username,
                     u.full_name,
+                    u.photo_url,
                     c.parent_comment_id,
                     c.comment_text,
                     c.created_at,
@@ -4360,7 +4362,7 @@ def handle_payment_views(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             if not payment_id:
                 return response(400, {'error': 'payment_id is required'})
             cur.execute(
-                f"""SELECT pv.user_id, u.full_name, pv.viewed_at
+                f"""SELECT pv.user_id, u.full_name, u.photo_url, pv.viewed_at
                     FROM {SCHEMA}.payment_views pv
                     JOIN {SCHEMA}.users u ON u.id = pv.user_id
                     WHERE pv.payment_id = %s
@@ -4382,11 +4384,12 @@ def handle_payment_views(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             )
             row = cur.fetchone()
             conn.commit()
-            cur.execute(f"SELECT full_name FROM {SCHEMA}.users WHERE id = %s", (user_id,))
+            cur.execute(f"SELECT full_name, photo_url FROM {SCHEMA}.users WHERE id = %s", (user_id,))
             user_row = cur.fetchone()
             return response(200, {
                 'user_id': row['user_id'],
                 'full_name': user_row['full_name'] if user_row else '',
+                'photo_url': user_row.get('photo_url', '') if user_row else '',
                 'viewed_at': row['viewed_at'].isoformat() if row['viewed_at'] else None
             })
 

@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
+import UserAvatar from '@/components/ui/user-avatar';
 
 interface User {
   id: number;
@@ -31,17 +32,7 @@ const UsersMobileList = ({ users, onEdit, onToggleStatus, onDelete }: UsersMobil
         <Card key={user.id} className="border-white/10 bg-white/5">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-3">
-              {user.photo_url ? (
-                <img 
-                  src={user.photo_url} 
-                  alt={user.full_name}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-white/10"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                  {user.full_name.charAt(0)}
-                </div>
-              )}
+              <UserAvatar photoUrl={user.photo_url} name={user.full_name} size="lg" />
               <div className="flex-1">
                 <div className="font-medium">{user.full_name || 'Без имени'}</div>
                 <div className="text-sm text-muted-foreground">@{user.username}</div>

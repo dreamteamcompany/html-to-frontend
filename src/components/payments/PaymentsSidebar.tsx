@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import Logo from '@/components/ui/Logo';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import BiometricSettingsPanel from '@/components/auth/BiometricSettingsPanel';
+import UserAvatar from '@/components/ui/user-avatar';
 
 interface PaymentsSidebarProps {
   menuOpen: boolean;
@@ -262,9 +263,7 @@ const PaymentsSidebar = ({
           <Icon name="ChevronRight" size={16} />
         </button>
         <div className="flex items-start gap-3 px-2">
-          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold flex-shrink-0">
-            {user?.full_name?.charAt(0) || 'U'}
-          </div>
+          <UserAvatar photoUrl={user?.photo_url} name={user?.full_name} size="md" />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium text-foreground break-anywhere">{user?.full_name}</div>
             <div className="text-xs text-muted-foreground break-anywhere">{user?.email}</div>
