@@ -15,7 +15,6 @@
   "upload-file": "https://functions.poehali.dev/a8d52b31-112f-4c93-9671-47788732fa56",
   "dashboard-api": "https://functions.poehali.dev/08b68f40-ac3c-482d-a3e6-2162d9ca149b",
   "notifications-api": "https://functions.poehali.dev/3e531873-80bf-4d1f-bf41-1900d639b186",
-  "approvals-api": "https://functions.poehali.dev/28de9a43-6aa7-491b-a20e-7a2e9ecebe49",
   "savings-api": "https://functions.poehali.dev/97e7934f-259b-404b-9eae-6de53448c8c2",
   "tickets-api": "https://functions.poehali.dev/36ca4c35-8625-4e62-b383-d5feac4de266",
   "categories": "https://functions.poehali.dev/57770127-fe63-43db-9fb1-87a2bbe27010",

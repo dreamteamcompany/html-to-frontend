@@ -856,7 +856,7 @@ def handle_approvers(event: Dict[str, Any], conn) -> Dict[str, Any]:
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("""
         SELECT 
-            u.id, u.full_name, u.position,
+            u.id, u.full_name, u.position, u.photo_url,
             COALESCE(
                 array_agg(r.name) FILTER (WHERE r.id IS NOT NULL),
                 ARRAY[]::text[]
@@ -3224,7 +3224,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
         
         if payment_id:
             cur.execute(f"""
-                SELECT a.*, u.full_name as approver_name
+                SELECT a.*, u.full_name as approver_name, u.photo_url as approver_photo_url
                 FROM {SCHEMA}.approvals a
                 JOIN {SCHEMA}.users u ON a.approver_id = u.id
                 WHERE a.payment_id = %s
@@ -3232,7 +3232,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
             """, (payment_id,))
         else:
             cur.execute(f"""
-                SELECT a.*, u.full_name as approver_name, p.amount, p.description
+                SELECT a.*, u.full_name as approver_name, u.photo_url as approver_photo_url, p.amount, p.description
                 FROM {SCHEMA}.approvals a
                 JOIN {SCHEMA}.users u ON a.approver_id = u.id
                 JOIN {SCHEMA}.payments p ON a.payment_id = p.id

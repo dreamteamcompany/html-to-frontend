@@ -36,7 +36,7 @@ const Users = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
-  const { token, hasPermission } = useAuth();
+  const { token, hasPermission, user: currentUser, checkAuth } = useAuth();
 
   const {
     menuOpen,
@@ -117,14 +117,11 @@ const Users = () => {
         full_name: formData.full_name,
         position: formData.position,
         role_ids: formData.role_ids,
+        photo_url: formData.photo_url || '',
       };
       
       if (formData.password) {
         body.password = formData.password;
-      }
-      
-      if (formData.photo_url) {
-        body.photo_url = formData.photo_url;
       }
       
       const response = await fetch(url, {
@@ -138,6 +135,7 @@ const Users = () => {
 
       if (response.ok) {
         setDialogOpen(false);
+        const wasEditingSelf = editingUser && currentUser && editingUser.id === currentUser.id;
         setEditingUser(null);
         setFormData({
           username: '',
@@ -148,6 +146,9 @@ const Users = () => {
           photo_url: '',
         });
         loadUsers();
+        if (wasEditingSelf) {
+          checkAuth();
+        }
       } else {
         const error = await response.json();
         alert(translateApiError(error.error) || 'Ошибка при сохранении пользователя');

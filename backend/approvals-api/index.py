@@ -129,7 +129,8 @@ def handle_payment_history(event: Dict[str, Any], conn, payment_id: int, user_id
             a.comment,
             a.created_at,
             u.username,
-            u.full_name
+            u.full_name,
+            u.photo_url
         FROM {SCHEMA}.approvals a
         LEFT JOIN {SCHEMA}.users u ON a.approver_id = u.id
         WHERE a.payment_id = %s
@@ -210,7 +211,8 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
         cur.execute(f"""
             SELECT a.id, a.payment_id, a.approver_id, a.action, a.comment, a.created_at,
                    u.username as approver_username,
-                   u.full_name as approver_full_name
+                   u.full_name as approver_full_name,
+                   u.photo_url as approver_photo_url
             FROM {SCHEMA}.approvals a
             LEFT JOIN {SCHEMA}.users u ON a.approver_id = u.id
             WHERE a.payment_id = %s
