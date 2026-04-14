@@ -34,7 +34,13 @@ interface SliceData {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const fmt = (v: number) =>
-  new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v) + ' ₽';
+  new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v) + '\u00A0₽';
+
+const fmtCompact = (v: number) => {
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1).replace('.0', '') + '\u00A0млн\u00A0₽';
+  if (v >= 100_000) return (v / 1_000).toFixed(0) + '\u00A0тыс\u00A0₽';
+  return new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v) + '\u00A0₽';
+};
 
 const toRad = (d: number) => (d * Math.PI) / 180;
 
@@ -165,8 +171,8 @@ const Donut = ({ slices, total, size, onSegmentClick, onTotalClick }: DonutProps
               {hovSlice.pct}%
             </text>
             <text x={cx} y={cy + 22} textAnchor="middle" dominantBaseline="middle"
-              style={{ fontSize: '10px', fontWeight: 500, fill: isLight ? 'rgba(20,20,40,0.5)' : 'rgba(255,255,255,0.4)' }}>
-              {fmt(hovSlice.amount)}
+              style={{ fontSize: '9px', fontWeight: 500, fill: isLight ? 'rgba(20,20,40,0.5)' : 'rgba(255,255,255,0.4)' }}>
+              {fmtCompact(hovSlice.amount)}
             </text>
           </>
         ) : (
@@ -176,9 +182,9 @@ const Donut = ({ slices, total, size, onSegmentClick, onTotalClick }: DonutProps
               style={{ fontSize: '10px', fontWeight: 600, fill: isLight ? 'rgba(20,20,40,0.4)' : 'rgba(255,255,255,0.3)', letterSpacing: '0.8px' }}>
               ИТОГО
             </text>
-            <text x={cx} y={cy + 4} textAnchor="middle" dominantBaseline="middle"
-              style={{ fontSize: '14px', fontWeight: 900, fill: isLight ? '#1a1a2e' : '#fff' }}>
-              {fmt(total)}
+            <text x={cx} y={cy + 6} textAnchor="middle" dominantBaseline="middle"
+              style={{ fontSize: '12px', fontWeight: 900, fill: isLight ? '#1a1a2e' : '#fff' }}>
+              {fmtCompact(total)}
             </text>
           </g>
         )}
@@ -236,7 +242,7 @@ const Legend = ({ slices, onItemClick }: LegendProps) => {
             </span>
           </div>
           <span style={{ fontSize: '12px', fontWeight: 700, color: s.color, flexShrink: 0, marginTop: '1px' }}>{s.pct}%</span>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: isLight ? 'rgba(20,20,40,0.65)' : 'rgba(255,255,255,0.7)', flexShrink: 0, minWidth: '130px', textAlign: 'right', whiteSpace: 'nowrap', marginTop: '1px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: isLight ? 'rgba(20,20,40,0.65)' : 'rgba(255,255,255,0.7)', flexShrink: 1, minWidth: 0, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '1px' }}>
             {fmt(s.amount)}
           </span>
         </div>
@@ -439,7 +445,7 @@ const ExpenseShareChart = () => {
             <div style={{ flexShrink: 0 }}>
               <Donut slices={slices} total={total} size={size} onSegmentClick={handleSegmentClick} onTotalClick={() => openDrill({ type: 'all', value: 'all', label: 'Все расходы' })} />
             </div>
-            <div style={{ flexShrink: 0, minWidth: 0, alignSelf: 'center', width: isMobile ? '100%' : 'auto' }}>
+            <div style={{ flexShrink: 1, minWidth: 0, alignSelf: 'center', width: isMobile ? '100%' : 'auto', overflow: 'hidden' }}>
               <Legend slices={slices} onItemClick={handleSegmentClick} />
             </div>
           </div>
