@@ -1,7 +1,7 @@
 {
   "tests": [
     {
-      "name": "Test health endpoint",
+      "name": "Health check",
       "method": "GET",
       "path": "/?endpoint=health",
       "expectedStatus": 200,
@@ -11,7 +11,7 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Test unauthorized me endpoint",
+      "name": "Unauthorized me endpoint",
       "method": "GET",
       "path": "/?endpoint=me",
       "expectedStatus": 401,

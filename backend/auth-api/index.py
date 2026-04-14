@@ -131,6 +131,8 @@ def get_user_with_permissions(conn, user_id: int) -> Optional[Dict[str, Any]]:
     result = dict(user)
     result['roles'] = roles
     result['permissions'] = permissions
+    if 'photo_url' not in result:
+        result['photo_url'] = None
 
     if result.get('last_login'):
         result['last_login'] = result['last_login'].isoformat()

@@ -126,6 +126,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (response.ok) {
         const userData = await response.json();
+        console.log('[AuthContext] user data from /me:', JSON.stringify({ photo_url: userData.photo_url, full_name: userData.full_name }));
         setUser(userData);
         setToken(savedToken);
       } else {
