@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import { API_ENDPOINTS } from '@/config/api';
 
 interface Permission {
   name: string;
@@ -96,7 +97,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const data = await response.json();
         const rememberMe = localStorage.getItem('remember_me') === 'true';
         setToken(data.token);
-        setUser(data.user);
+        if (data.user) setUser(data.user);
         
         if (rememberMe) {
           localStorage.setItem('auth_token', data.token);
@@ -118,7 +119,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     try {
-      const response = await fetch('https://functions.poehali.dev/cc3b9628-07ec-420e-b340-1c20cad986da?endpoint=me', {
+      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=me`, {
         headers: {
           'X-Auth-Token': savedToken,
         },
@@ -126,7 +127,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (response.ok) {
         const userData = await response.json();
-        console.log('[AuthContext] user data from /me:', JSON.stringify({ photo_url: userData.photo_url, full_name: userData.full_name }));
         setUser(userData);
         setToken(savedToken);
       } else {
@@ -200,7 +200,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [user, token]);
 
   const login = async (username: string, password: string, rememberMe: boolean = false) => {
-    const response = await fetch('https://functions.poehali.dev/cc3b9628-07ec-420e-b340-1c20cad986da?endpoint=login', {
+    const response = await fetch(`${API_ENDPOINTS.main}?endpoint=login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
