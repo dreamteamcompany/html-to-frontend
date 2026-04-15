@@ -114,6 +114,8 @@ const CategoryExpensesChart = () => {
     backgroundColor: colors[index % colors.length],
     borderRadius: 8,
     borderSkipped: false as const,
+    barPercentage: 0.9,
+    categoryPercentage: 0.95,
   }));
 
   const handleChartClick = (_event: unknown, elements: { datasetIndex: number }[]) => {
