@@ -34,6 +34,7 @@ const PaymentsSidebar = ({
   const location = useLocation();
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const { pendingCount } = usePendingApprovals();
+  const isCEO = user?.roles?.some(r => r.name === 'CEO') && !user?.roles?.some(r => r.name === 'Администратор' || r.name === 'Admin');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -105,7 +106,7 @@ const PaymentsSidebar = ({
           </li>
         )}
 
-        {(hasPermission('legal_entities', 'read') || hasPermission('categories', 'read') || hasPermission('custom_fields', 'read') || hasPermission('contractors', 'read') || hasPermission('customer_departments', 'read') || hasPermission('services', 'read') || hasPermission('saving_reasons', 'read')) && (
+        {!isCEO && (hasPermission('legal_entities', 'read') || hasPermission('categories', 'read') || hasPermission('custom_fields', 'read') || hasPermission('contractors', 'read') || hasPermission('customer_departments', 'read') || hasPermission('services', 'read') || hasPermission('saving_reasons', 'read')) && (
           <li>
             <button 
               onClick={() => setDictionariesOpen(!dictionariesOpen)}
