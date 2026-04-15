@@ -133,15 +133,14 @@ const TopPaymentsCard = () => {
                 padding: '4px 12px',
                 fontSize: '11px',
                 fontWeight: '600',
-                color: !hasMore ? 'hsl(var(--muted-foreground))' : showAll ? '#fff' : '#a78bfa',
-                background: !hasMore ? 'transparent' : showAll ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'rgba(117, 81, 233, 0.15)',
-                border: !hasMore ? '1px solid hsl(var(--border))' : showAll ? '1px solid transparent' : '1px solid #a78bfa',
+                color: showAll ? '#fff' : '#a78bfa',
+                background: showAll ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'rgba(117, 81, 233, 0.15)',
+                border: showAll ? '1px solid transparent' : '1px solid #a78bfa',
                 borderRadius: '6px',
                 cursor: hasMore ? 'pointer' : 'default',
                 transition: 'all 0.2s ease',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
-                opacity: hasMore ? 1 : 0.5,
               }}
             >
               {showAll ? 'Топ-5' : 'Все'}
