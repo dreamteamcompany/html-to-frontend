@@ -84,7 +84,7 @@ const LegalEntityComparisonChart = () => {
 
   const isSingleItem = displayData.length <= 2;
 
-  const tickColor = isLight ? 'rgba(30,30,50,0.6)' : 'rgba(180,190,220,0.65)';
+  const tickColor = isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180,190,220,0.65)';
   const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)';
 
   const areaData = {
