@@ -19,16 +19,16 @@ const MONTHS = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'И�
 const WEEK_DAYS_RU = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const fmtWeekLabel = (d: Date) => `${WEEK_DAYS_RU[d.getDay()]}, ${String(d.getDate()).padStart(2, '0')}`;
 
-const colors = [
+const TOP_COLORS = [
   'rgb(117, 81, 233)',
   'rgb(57, 101, 255)',
-  'rgb(255, 181, 71)',
   'rgb(1, 181, 116)',
+  'rgb(255, 181, 71)',
   'rgb(227, 26, 26)',
-  'rgb(255, 107, 107)',
-  'rgb(78, 205, 196)',
-  'rgb(255, 159, 243)'
 ];
+const OTHER_COLOR = 'rgb(120, 130, 155)';
+
+const MAX_CATEGORIES = 5;
 
 const CategoryExpensesChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
@@ -52,7 +52,7 @@ const CategoryExpensesChart = () => {
     return () => observer.disconnect();
   }, []);
 
-  const { categoryData, xLabels } = useMemo(() => {
+  const { displayData, xLabels } = useMemo(() => {
     const { from, to } = getDateRange();
 
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
@@ -90,7 +90,6 @@ const CategoryExpensesChart = () => {
     }
 
     const categoryMap: { [category: string]: { [key: string]: number } } = {};
-
     filtered.forEach((payment: PaymentRecord) => {
       const category = payment.category_name || 'Без категории';
       const key = getKey(payment);
@@ -98,37 +97,54 @@ const CategoryExpensesChart = () => {
       categoryMap[category][key] = (categoryMap[category][key] || 0) + payment.amount;
     });
 
+    const totals = Object.entries(categoryMap).map(([name, byKey]) => ({
+      name,
+      total: Object.values(byKey).reduce((s, v) => s + v, 0),
+      byKey,
+    }));
+    totals.sort((a, b) => b.total - a.total);
+
+    const topCats = totals.slice(0, MAX_CATEGORIES);
+    const restCats = totals.slice(MAX_CATEGORIES);
+
     const result: { [category: string]: number[] } = {};
-    Object.keys(categoryMap).forEach((category) => {
-      result[category] = labels.map((label) => categoryMap[category][label] || 0);
+    topCats.forEach(({ name, byKey }) => {
+      result[name] = labels.map((label) => byKey[label] || 0);
     });
 
-    return { categoryData: result, xLabels: labels };
+    if (restCats.length > 0) {
+      result['Прочее'] = labels.map((label) =>
+        restCats.reduce((sum, c) => sum + (c.byKey[label] || 0), 0)
+      );
+    }
+
+    return { displayData: result, xLabels: labels };
   }, [allPayments, period, dateFrom, dateTo]);
 
   const labelCount = xLabels.length;
-
-  const catKeys = Object.keys(categoryData);
+  const catKeys = Object.keys(displayData);
   const catCount = catKeys.length || 1;
-  const bp = catCount <= 2 ? 0.6 : catCount <= 4 ? 0.75 : 0.85;
-  const cp = labelCount <= 7 ? 0.65 : labelCount <= 15 ? 0.75 : 0.85;
-  const datasets = catKeys.map((category, index) => ({
-    label: category,
-    data: categoryData[category],
-    backgroundColor: colors[index % colors.length],
-    borderRadius: labelCount <= 12 ? 6 : 3,
-    borderSkipped: false as const,
-    barPercentage: bp,
-    categoryPercentage: cp,
-    maxBarThickness: isMobile ? 28 : 44,
-    minBarLength: 3,
-  }));
+
+  const datasets = catKeys.map((category, index) => {
+    const isOther = category === 'Прочее';
+    return {
+      label: category,
+      data: displayData[category],
+      backgroundColor: isOther ? OTHER_COLOR : TOP_COLORS[index % TOP_COLORS.length],
+      borderRadius: labelCount <= 12 ? 6 : 3,
+      borderSkipped: false as const,
+      barPercentage: 0.82,
+      categoryPercentage: catCount <= 2 ? 0.5 : catCount <= 4 ? 0.7 : 0.82,
+      maxBarThickness: isMobile ? 24 : 40,
+      minBarLength: 2,
+    };
+  });
 
   const handleChartClick = (_event: unknown, elements: { datasetIndex: number }[]) => {
     if (!elements.length) return;
     const dsIdx = elements[0].datasetIndex;
     const catName = datasets[dsIdx]?.label;
-    if (!catName) return;
+    if (!catName || catName === 'Прочее') return;
     openDrill({ type: 'category', value: catName, label: catName });
   };
 
@@ -159,19 +175,30 @@ const CategoryExpensesChart = () => {
                   plugins: {
                     legend: {
                       position: 'bottom',
-                      display: !isMobile,
+                      display: true,
                       labels: {
-                        padding: isMobile ? 10 : 20,
+                        padding: isMobile ? 8 : 16,
                         usePointStyle: true,
+                        pointStyleWidth: isMobile ? 8 : 10,
                         color: isLight ? 'rgba(30,30,50,0.85)' : 'rgba(200,210,230,0.85)',
-                        font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 13 }
+                        font: { family: 'Plus Jakarta Sans, sans-serif', size: isMobile ? 10 : 12 },
+                        boxWidth: isMobile ? 8 : 12,
+                        boxHeight: isMobile ? 8 : 12,
                       }
                     },
                     tooltip: {
-                      enabled: !isMobile,
+                      enabled: true,
+                      backgroundColor: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(18,20,45,0.96)',
+                      titleColor: isLight ? 'rgba(30,30,50,0.9)' : 'rgba(200,210,235,0.95)',
+                      bodyColor: isLight ? 'rgba(30,30,50,0.72)' : 'rgba(170,185,215,0.85)',
+                      borderColor: isLight ? 'rgba(117,81,233,0.2)' : 'rgba(117,81,233,0.3)',
+                      borderWidth: 1,
+                      padding: 10,
+                      cornerRadius: 10,
+                      filter: (item) => (item.raw as number) > 0,
                       callbacks: {
                         label: (context) =>
-                          `${context.dataset.label}: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`,
+                          `  ${context.dataset.label}: ${new Intl.NumberFormat('ru-RU').format(context.raw as number)} ₽`,
                         footer: () => 'Нажмите для детализации',
                       }
                     }
@@ -206,9 +233,6 @@ const CategoryExpensesChart = () => {
                       },
                       grid: { display: false },
                       border: { display: false },
-                      afterFit(scale: { paddingBottom: number }) {
-                        scale.paddingBottom = isMobile ? 4 : 6;
-                      },
                     }
                   }
                 }}
