@@ -109,13 +109,17 @@ const CategoryExpensesChart = () => {
   const labelCount = xLabels.length;
 
   const catKeys = Object.keys(categoryData);
+  const catCount = catKeys.length || 1;
   const datasets = catKeys.map((category, index) => ({
     label: category,
     data: categoryData[category],
     backgroundColor: colors[index % colors.length],
-    borderRadius: labelCount <= 12 ? 8 : 4,
+    borderRadius: labelCount <= 12 ? 6 : 3,
     borderSkipped: false as const,
-    maxBarThickness: isMobile ? 48 : 72,
+    barPercentage: catCount <= 3 ? 0.85 : 0.9,
+    categoryPercentage: catCount <= 3 ? 0.7 : 0.85,
+    maxBarThickness: isMobile ? 32 : 48,
+    minBarLength: 3,
   }));
 
   const handleChartClick = (_event: unknown, elements: { datasetIndex: number }[]) => {
@@ -172,7 +176,6 @@ const CategoryExpensesChart = () => {
                   },
                   scales: {
                     y: {
-                      stacked: true,
                       beginAtZero: true,
                       ticks: {
                         color: isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180, 190, 220, 0.7)',
@@ -190,7 +193,6 @@ const CategoryExpensesChart = () => {
                       border: { dash: [4, 4], display: false }
                     },
                     x: {
-                      stacked: true,
                       ticks: {
                         color: isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180, 190, 220, 0.75)',
                         font: { size: isMobile ? 9 : 11, family: 'Plus Jakarta Sans, sans-serif' as const },
