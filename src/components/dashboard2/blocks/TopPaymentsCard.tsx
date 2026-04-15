@@ -128,7 +128,6 @@ const TopPaymentsCard = () => {
             <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'hsl(var(--foreground))', flex: 1 }} className="sm:text-base">Сравнение по сервисам</h3>
             <button
               onClick={() => setShowAll(!showAll)}
-              disabled={!hasMore}
               style={{
                 padding: '4px 12px',
                 fontSize: '11px',
@@ -137,7 +136,7 @@ const TopPaymentsCard = () => {
                 background: showAll ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'rgba(117, 81, 233, 0.15)',
                 border: showAll ? '1px solid transparent' : '1px solid #a78bfa',
                 borderRadius: '6px',
-                cursor: hasMore ? 'pointer' : 'default',
+                cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
