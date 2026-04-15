@@ -207,6 +207,30 @@ const Savings = () => {
     }
   };
 
+  const handleEditSaving = async (savingId: number, data: Record<string, unknown>): Promise<boolean> => {
+    try {
+      const res = await fetch(`${API_ENDPOINTS.main}?endpoint=savings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({ id: savingId, ...data }),
+      });
+      if (res.ok) {
+        loadSavings();
+        return true;
+      }
+      const error = await res.json();
+      alert(translateApiError(error.error) || 'Ошибка при сохранении');
+      return false;
+    } catch (err) {
+      console.error('Failed to edit saving:', err);
+      alert('Ошибка при сохранении');
+      return false;
+    }
+  };
+
   const handleDeleteSaving = async (savingId: number) => {
     if (!confirm('Вы уверены, что хотите удалить эту запись об экономии?')) return;
     
@@ -283,6 +307,11 @@ const Savings = () => {
           savings={savings}
           loading={loading}
           onDeleteSaving={handleDeleteSaving}
+          onEditSaving={handleEditSaving}
+          services={services}
+          employees={employees}
+          savingReasons={savingReasons}
+          departments={departments}
           highlightId={highlightId}
         />
       </main>

@@ -3548,6 +3548,42 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             create_audit_log(conn, 'saving', int(saving_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values=sv_old_data)
             return response(200, {'message': 'Saving deleted'})
         
+        elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'payments.create')
+            if error:
+                return error
+            
+            body = json.loads(event.get('body', '{}'))
+            saving_id = body.get('id')
+            if not saving_id:
+                return response(400, {'error': 'ID is required'})
+            
+            cur.execute(f"SELECT id, service_id, description, amount, frequency, currency, employee_id, saving_reason_id, customer_department_id FROM {SCHEMA}.savings WHERE id = %s", (saving_id,))
+            old_row = cur.fetchone()
+            if not old_row:
+                return response(404, {'error': 'Saving not found'})
+            
+            saving_req = SavingRequest(**{k: v for k, v in body.items() if k != 'id'})
+            
+            cur.execute(
+                f"""UPDATE {SCHEMA}.savings 
+                   SET service_id = %s, description = %s, amount = %s, frequency = %s, 
+                       currency = %s, employee_id = %s, saving_reason_id = %s, customer_department_id = %s
+                   WHERE id = %s
+                   RETURNING id, service_id, description, amount, frequency, currency, employee_id, saving_reason_id, customer_department_id, created_at""",
+                (saving_req.service_id, saving_req.description, saving_req.amount,
+                 saving_req.frequency, saving_req.currency, saving_req.employee_id, saving_req.saving_reason_id,
+                 saving_req.customer_department_id, saving_id)
+            )
+            
+            row = cur.fetchone()
+            conn.commit()
+            old_data = dict(old_row)
+            if old_data.get('amount') is not None:
+                old_data['amount'] = str(old_data['amount'])
+            create_audit_log(conn, 'saving', int(saving_id), 'updated', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values=old_data, new_values={'description': row['description'], 'amount': str(row['amount']), 'frequency': row.get('frequency'), 'currency': row.get('currency'), 'service_id': row.get('service_id'), 'employee_id': row.get('employee_id'), 'saving_reason_id': row.get('saving_reason_id'), 'customer_department_id': row.get('customer_department_id')})
+            return response(200, dict(row))
+        
         return response(405, {'error': 'Method not allowed'})
     
     finally:
