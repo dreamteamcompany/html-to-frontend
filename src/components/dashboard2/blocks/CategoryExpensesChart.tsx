@@ -140,8 +140,8 @@ const CategoryExpensesChart = () => {
     return { labels, activeDays };
   }, [allPayments, period, dateFrom, dateTo]);
 
-  const tickColor = isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180,190,220,0.65)';
-  const amountColor = isLight ? 'rgba(117,81,233,0.9)' : 'rgba(167,139,250,0.75)';
+  const tickColor = isLight ? 'rgba(20,20,40,0.95)' : 'rgba(180,190,220,0.65)';
+  const amountColor = isLight ? 'rgba(90,55,200,1)' : 'rgba(167,139,250,0.75)';
   const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)';
 
   const handleChartMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
