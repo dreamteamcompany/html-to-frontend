@@ -36,7 +36,7 @@ export const usePendingApprovals = () => {
         fetch(`${API_ENDPOINTS.paymentsApi}?scope=all`, {
           headers: { 'X-Auth-Token': token },
         }),
-        fetch(`${API_ENDPOINTS.dictionariesApi}?endpoint=services`, {
+        fetch(`${API_ENDPOINTS.main}?endpoint=services`, {
           headers: { 'X-Auth-Token': token },
         }),
       ]);

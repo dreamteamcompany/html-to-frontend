@@ -47,7 +47,7 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
         {/* Шапка */}
         <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0">
           <div className="flex items-center gap-2 min-w-0 flex-wrap">
-            <h2 className="text-base sm:text-xl font-semibold text-foreground break-anywhere">Детали платежа #{payment.id}</h2>
+            <h2 className="text-base sm:text-xl font-semibold text-foreground break-words">Детали платежа #{payment.id}</h2>
             <div className="flex-shrink-0">{getStatusBadge(payment.status)}</div>
           </div>
           <button

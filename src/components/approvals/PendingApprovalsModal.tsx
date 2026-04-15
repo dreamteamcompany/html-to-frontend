@@ -150,7 +150,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
       <div className="bg-card border border-border rounded-xl w-full max-w-[1400px] h-[95vh] sm:h-[90vh] flex flex-col">
         <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
-          <h2 className="text-lg sm:text-xl font-semibold text-foreground break-anywhere">Детали платежа #{payment.id}</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-foreground break-words">Детали платежа #{payment.id}</h2>
           <button
             onClick={onClose}
             className="text-foreground/60 hover:text-foreground transition-colors flex-shrink-0"
@@ -167,7 +167,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                   <span className="text-xl sm:text-2xl">{payment.category_icon}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 break-anywhere">{payment.category_name}</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 break-words">{payment.category_name}</h3>
                   <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
                 </div>
               </div>
@@ -175,49 +175,49 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
               {payment.description && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Описание</p>
-                  <p className="font-semibold text-foreground break-anywhere">{payment.description}</p>
+                  <p className="font-semibold text-foreground break-words">{payment.description}</p>
                 </div>
               )}
 
               {payment.legal_entity_name && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Юридическое лицо</p>
-                  <p className="font-semibold text-foreground break-anywhere">{payment.legal_entity_name}</p>
+                  <p className="font-semibold text-foreground break-words">{payment.legal_entity_name}</p>
                 </div>
               )}
 
               {payment.contractor_name && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Контрагент</p>
-                  <p className="font-semibold text-foreground break-anywhere">{payment.contractor_name}</p>
+                  <p className="font-semibold text-foreground break-words">{payment.contractor_name}</p>
                 </div>
               )}
 
               {payment.department_name && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Отдел-заказчик</p>
-                  <p className="font-semibold text-foreground break-anywhere">{payment.department_name}</p>
+                  <p className="font-semibold text-foreground break-words">{payment.department_name}</p>
                 </div>
               )}
 
               {payment.service_name && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Сервис</p>
-                  <p className="font-semibold text-foreground break-anywhere">{payment.service_name}</p>
+                  <p className="font-semibold text-foreground break-words">{payment.service_name}</p>
                 </div>
               )}
 
               {payment.invoice_number && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Номер счёта</p>
-                  <p className="font-semibold text-foreground break-anywhere">{payment.invoice_number}</p>
+                  <p className="font-semibold text-foreground break-words">{payment.invoice_number}</p>
                 </div>
               )}
 
               {payment.created_by_name && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Создал заявку</p>
-                  <p className="font-semibold text-foreground break-anywhere">{payment.created_by_name}</p>
+                  <p className="font-semibold text-foreground break-words">{payment.created_by_name}</p>
                 </div>
               )}
 
@@ -231,7 +231,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div className="flex items-center gap-2 min-w-0">
                               <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
-                              <span className="text-sm font-semibold text-foreground break-anywhere">
+                              <span className="text-sm font-semibold text-foreground break-words">
                                 {field.value.split('/').pop()?.split('_').slice(2).join('_') || 'Файл'}
                               </span>
                             </div>
@@ -257,7 +257,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                           </div>
                         </div>
                       ) : (
-                        <p className="font-semibold text-foreground break-anywhere">{field.value}</p>
+                        <p className="font-semibold text-foreground break-words">{field.value}</p>
                       )}
                     </div>
                   ))}
@@ -346,7 +346,7 @@ const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke
                             <div className="flex items-center gap-2 min-w-0">
                               <Icon name="FileText" size={15} className="text-primary flex-shrink-0" />
                               <div className="min-w-0">
-                                <p className="text-sm font-semibold text-foreground break-anywhere">{doc.file_name}</p>
+                                <p className="text-sm font-semibold text-foreground break-words">{doc.file_name}</p>
                                 <p className="text-xs font-medium text-foreground/60">
                                   {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ru-RU') : ''}
                                 </p>

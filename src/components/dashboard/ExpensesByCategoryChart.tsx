@@ -152,7 +152,7 @@ const ExpensesByCategoryChart = ({ categoriesData, totalAmount }: ExpensesByCate
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2">
                       <span style={{ fontSize: '14px' }} className="flex-shrink-0">{cat.icon}</span>
-                      <span style={{ fontSize: '13px', color: '#fff', fontWeight: '500', lineHeight: 1.3 }} className="break-anywhere">
+                      <span style={{ fontSize: '13px', color: '#fff', fontWeight: '500', lineHeight: 1.3 }} className="break-words">
                         {cat.name}
                       </span>
                     </div>

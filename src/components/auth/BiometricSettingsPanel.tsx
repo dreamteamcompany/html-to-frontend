@@ -99,7 +99,7 @@ const BiometricSettingsPanel = () => {
                 {credentials.map(c => (
                   <div key={c.id} className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="text-xs font-medium text-foreground break-anywhere">{c.device_name}</div>
+                      <div className="text-xs font-medium text-foreground break-words">{c.device_name}</div>
                       <div className="text-[10px] text-muted-foreground">
                         Вход: {formatDate(c.last_used_at)}
                       </div>

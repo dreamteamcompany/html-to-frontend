@@ -3,7 +3,7 @@ export const InfoRow = ({ label, value }: { label: string; value?: string | numb
   return (
     <div className="flex justify-between items-start gap-4 py-2 border-b border-border last:border-0">
       <span className="text-sm text-muted-foreground shrink-0">{label}</span>
-      <span className="text-sm font-medium text-right break-anywhere min-w-0">{value}</span>
+      <span className="text-sm font-medium text-right break-words min-w-0">{value}</span>
     </div>
   );
 };

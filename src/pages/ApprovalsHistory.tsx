@@ -218,7 +218,7 @@ const ApprovalsHistory = () => {
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                           <div className="flex items-start gap-1.5 min-w-0">
                             <Icon name="User" size={13} className="text-muted-foreground/60 flex-shrink-0 mt-1" />
-                            <span className="text-muted-foreground break-anywhere">{approval.approver_name}</span>
+                            <span className="text-muted-foreground break-words">{approval.approver_name}</span>
                             <span className="text-muted-foreground/60 text-xs whitespace-nowrap">({getRoleName(approval.approver_role)})</span>
                           </div>
                           <div className="flex items-center gap-1.5 flex-shrink-0">

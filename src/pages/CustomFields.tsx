@@ -258,7 +258,7 @@ const CustomFields = () => {
                           <Icon name={getFieldTypeIcon(field.field_type)} size={24} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold break-anywhere">{field.name}</h3>
+                          <h3 className="font-semibold break-words">{field.name}</h3>
                           <p className="text-xs text-muted-foreground">{getFieldTypeLabel(field.field_type)}</p>
                         </div>
                       </div>
@@ -268,7 +268,7 @@ const CustomFields = () => {
                         <div className="font-medium mb-1">Варианты:</div>
                         <div className="text-xs space-y-1">
                           {field.options.split('\n').filter(opt => opt.trim()).map((opt, idx) => (
-                            <div key={idx} className="break-anywhere">• {opt}</div>
+                            <div key={idx} className="break-words">• {opt}</div>
                           ))}
                         </div>
                       </div>

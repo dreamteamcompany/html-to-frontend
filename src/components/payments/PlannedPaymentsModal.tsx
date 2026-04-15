@@ -224,16 +224,16 @@ const PlannedPaymentsModal = () => {
                       <Icon name={p.category_icon || 'Calendar'} size={16} className="text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium break-anywhere text-foreground">{p.description}</p>
+                      <p className="text-sm font-medium break-words text-foreground">{p.description}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-xs text-muted-foreground break-anywhere">{p.category_name}</span>
+                        <span className="text-xs text-muted-foreground break-words">{p.category_name}</span>
                         {p.recurrence_type && p.recurrence_type !== 'once' && (
                           <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-100 font-medium">
                             {recurrenceLabel[p.recurrence_type] ?? p.recurrence_type}
                           </span>
                         )}
                         {p.legal_entity_name && (
-                          <span className="text-xs text-muted-foreground break-anywhere">{p.legal_entity_name}</span>
+                          <span className="text-xs text-muted-foreground break-words">{p.legal_entity_name}</span>
                         )}
                       </div>
                     </div>

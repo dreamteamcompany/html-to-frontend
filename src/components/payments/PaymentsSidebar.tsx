@@ -263,12 +263,11 @@ const PaymentsSidebar = ({
           </div>
           <Icon name="ChevronRight" size={16} />
         </button>
-        {(() => { console.log('[Sidebar] rendering avatar, user.photo_url:', user?.photo_url || '(empty)'); return null; })()}
         <div className="flex items-start gap-3 px-2">
           <UserAvatar photoUrl={user?.photo_url} name={user?.full_name} size="md" />
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-foreground break-anywhere">{user?.full_name}</div>
-            <div className="text-xs text-muted-foreground break-anywhere">{user?.email}</div>
+            <div className="text-sm font-medium text-foreground break-words">{user?.full_name}</div>
+            <div className="text-xs text-muted-foreground break-words">{user?.email}</div>
           </div>
         </div>
         <BiometricSettingsPanel />

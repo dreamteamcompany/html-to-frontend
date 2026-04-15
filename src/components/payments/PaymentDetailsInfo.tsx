@@ -97,7 +97,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
           <Icon name={payment.category_icon} size={24} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 break-anywhere">{payment.category_name}</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 break-words">{payment.category_name}</h3>
           <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
         </div>
       </div>
@@ -130,7 +130,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
             <Icon name="AlertCircle" size={20} className="text-red-600 dark:text-red-300 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-red-700 dark:text-red-300 mb-1">Причина отклонения</p>
-              <p className="text-sm font-medium text-red-800 dark:text-red-300 break-anywhere">{payment.rejection_comment}</p>
+              <p className="text-sm font-medium text-red-800 dark:text-red-300 break-words">{payment.rejection_comment}</p>
               {payment.rejected_at && (
                 <p className="text-xs font-medium text-red-700/80 dark:text-red-300/70 mt-2">
                   {new Date(payment.rejected_at).toLocaleString('ru-RU')}
@@ -144,7 +144,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       {payment.description && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Описание</p>
-          <p className="font-semibold text-foreground break-anywhere">{payment.description}</p>
+          <p className="font-semibold text-foreground break-words">{payment.description}</p>
         </div>
       )}
 
@@ -153,7 +153,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Категория</p>
           <div className="flex items-center gap-2 font-semibold text-foreground min-w-0">
             <Icon name={payment.category_icon || 'Tag'} size={18} className="flex-shrink-0" />
-            <span className="break-anywhere">{payment.category_name}</span>
+            <span className="break-words">{payment.category_name}</span>
           </div>
         </div>
       )}
@@ -161,14 +161,14 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       {payment.legal_entity_name && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Юридическое лицо</p>
-          <p className="font-semibold text-foreground break-anywhere">{payment.legal_entity_name}</p>
+          <p className="font-semibold text-foreground break-words">{payment.legal_entity_name}</p>
         </div>
       )}
 
       {payment.contractor_name && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Контрагент</p>
-          <p className="font-semibold text-foreground break-anywhere">{payment.contractor_name}</p>
+          <p className="font-semibold text-foreground break-words">{payment.contractor_name}</p>
         </div>
       )}
 
@@ -209,7 +209,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
               </div>
             </div>
           ) : (
-            <p className="font-semibold text-foreground break-anywhere">{currentDeptName || <span className="text-foreground/50 italic text-sm">Не указан</span>}</p>
+            <p className="font-semibold text-foreground break-words">{currentDeptName || <span className="text-foreground/50 italic text-sm">Не указан</span>}</p>
           )}
         </div>
       )}
@@ -231,9 +231,9 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       {payment.service_name && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Сервис</p>
-          <p className="font-semibold text-foreground break-anywhere">{payment.service_name}</p>
+          <p className="font-semibold text-foreground break-words">{payment.service_name}</p>
           {payment.service_description && (
-            <p className="text-sm font-medium text-foreground/70 mt-1 break-anywhere">{payment.service_description}</p>
+            <p className="text-sm font-medium text-foreground/70 mt-1 break-words">{payment.service_description}</p>
           )}
         </div>
       )}
@@ -241,14 +241,14 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
       {payment.invoice_number && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Номер счёта</p>
-          <p className="font-semibold text-foreground break-anywhere">{payment.invoice_number}</p>
+          <p className="font-semibold text-foreground break-words">{payment.invoice_number}</p>
         </div>
       )}
 
       {payment.created_by_name && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Создал заявку</p>
-          <p className="font-semibold text-foreground break-anywhere">{payment.created_by_name}</p>
+          <p className="font-semibold text-foreground break-words">{payment.created_by_name}</p>
         </div>
       )}
 
@@ -262,7 +262,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
-                      <span className="text-sm font-semibold text-foreground break-anywhere">
+                      <span className="text-sm font-semibold text-foreground break-words">
                         {field.value.split('/').pop()?.split('_').slice(2).join('_') || 'Файл'}
                       </span>
                     </div>
@@ -288,7 +288,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
                   </div>
                 </div>
               ) : (
-                <p className="font-semibold text-foreground break-anywhere">{field.value}</p>
+                <p className="font-semibold text-foreground break-words">{field.value}</p>
               )}
             </div>
           ))}

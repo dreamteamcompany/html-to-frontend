@@ -208,7 +208,7 @@ const MonthlyDynamicsChart = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.8)',
+          color: isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180, 190, 220, 0.8)',
           font: { size: isMobile ? 9 : 12 },
           maxTicksLimit: isMobile ? 4 : 8,
           callback: (value: unknown) => {
@@ -222,7 +222,7 @@ const MonthlyDynamicsChart = () => {
       },
       x: {
         ticks: {
-          color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.8)',
+          color: isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180, 190, 220, 0.8)',
           font: { size: isMobile ? 7 : 11 },
           maxRotation: isMobile ? 45 : 0,
           minRotation: isMobile ? 45 : 0,

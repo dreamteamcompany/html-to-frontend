@@ -17,8 +17,8 @@ const PlannedPaymentView = ({ payment, isAdmin, onEditStart, onDeleteRequest }: 
         <Icon name={payment.category_icon || 'Calendar'} size={18} className="text-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold break-anywhere">{payment.description || '—'}</p>
-        <p className="text-xs text-muted-foreground break-anywhere">{payment.category_name}</p>
+        <p className="font-semibold break-words">{payment.description || '—'}</p>
+        <p className="text-xs text-muted-foreground break-words">{payment.category_name}</p>
       </div>
       <div className="text-right shrink-0">
         <p className="text-lg font-bold text-primary whitespace-nowrap">{fmt(payment.amount)}</p>

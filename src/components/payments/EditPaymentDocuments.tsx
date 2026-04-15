@@ -31,7 +31,7 @@ const EditPaymentDocuments = ({
             <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2.5 bg-primary/5">
               <div className="flex items-start gap-2 min-w-0 flex-1">
                 <Icon name="FileText" size={16} className="text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-sm font-medium break-anywhere">{doc.file_name}</span>
+                <span className="text-sm font-medium break-words">{doc.file_name}</span>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <a
@@ -61,7 +61,7 @@ const EditPaymentDocuments = ({
         <div className="flex items-start justify-between gap-2 px-3 py-2.5 rounded-lg border border-green-500/30 bg-green-500/5">
           <div className="flex items-start gap-2 min-w-0 flex-1 flex-wrap">
             <Icon name="CheckCircle" size={16} className="text-green-700 dark:text-green-300 flex-shrink-0 mt-0.5" />
-            <span className="text-sm font-medium break-anywhere text-green-800 dark:text-green-300">{displayFileName}</span>
+            <span className="text-sm font-medium break-words text-green-800 dark:text-green-300">{displayFileName}</span>
             <span className="text-xs text-green-700/70 dark:text-green-300/70 flex-shrink-0 mt-0.5">новый</span>
           </div>
           <button

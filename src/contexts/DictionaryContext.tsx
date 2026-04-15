@@ -168,7 +168,7 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
   const fetchUsers = useCallback(async () => {
     setLoading(prev => ({ ...prev, users: true }));
     try {
-      const response = await apiFetch(`${API_ENDPOINTS.usersApi}`);
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=users`);
       if (response.ok) {
         const result = await response.json();
         setData(prev => ({ ...prev, users: Array.isArray(result) ? result : [] }));

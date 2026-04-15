@@ -40,8 +40,8 @@ const ServiceCard = ({
             <Icon name={getStatusIcon(service.status)} className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-foreground text-sm sm:text-base break-anywhere">{service.service_name}</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground break-anywhere">
+            <h3 className="font-semibold text-foreground text-sm sm:text-base break-words">{service.service_name}</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground break-words">
               Обновлено: {new Date(service.last_updated).toLocaleString('ru-RU', {
                 day: '2-digit',
                 month: '2-digit',

@@ -131,8 +131,8 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-1 min-w-0 flex-wrap">
                 <div>
-                  <p className="text-sm font-semibold text-foreground break-anywhere">{getActionLabel(log.action)}</p>
-                  <p className="text-xs font-medium text-foreground/70 break-anywhere">
+                  <p className="text-sm font-semibold text-foreground break-words">{getActionLabel(log.action)}</p>
+                  <p className="text-xs font-medium text-foreground/70 break-words">
                     {log.full_name || log.username || 'Система'}
                   </p>
                 </div>
@@ -148,7 +148,7 @@ const PaymentAuditLog = ({ paymentId }: PaymentAuditLogProps) => {
               </div>
               
               {log.comment && (
-                <div className="mt-2 text-xs font-medium text-foreground/75 italic border-l-2 border-border pl-2 break-anywhere">
+                <div className="mt-2 text-xs font-medium text-foreground/75 italic border-l-2 border-border pl-2 break-words">
                   {log.comment}
                 </div>
               )}

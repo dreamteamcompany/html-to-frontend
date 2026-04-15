@@ -124,7 +124,7 @@ const PaymentDetailsSidebar = ({
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon name="FileText" size={15} className="text-primary flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground break-anywhere">{doc.file_name}</p>
+                        <p className="text-sm font-semibold text-foreground break-words">{doc.file_name}</p>
                         <p className="text-xs font-medium text-foreground/60">
                           {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ru-RU') : ''}
                         </p>

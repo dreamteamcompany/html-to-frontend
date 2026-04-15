@@ -109,7 +109,7 @@ const AnnualSavingsStatCard = () => {
                     >
                       {index + 1}
                     </span>
-                    <span className="font-medium break-anywhere">{dept.department_name}</span>
+                    <span className="font-medium break-words">{dept.department_name}</span>
                   </div>
                   <span className="font-semibold flex-shrink-0 whitespace-nowrap" style={{ color: '#01b574' }}>
                     {formatAmount(dept.total_saved)}

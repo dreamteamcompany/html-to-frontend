@@ -271,7 +271,7 @@ const AuditLogs = () => {
 
                               {/* Строка 2: краткое описание */}
                               {summary && (
-                                <div className="text-xs text-muted-foreground break-anywhere max-w-[440px]">
+                                <div className="text-xs text-muted-foreground break-words max-w-[440px]">
                                   {summary}
                                 </div>
                               )}
