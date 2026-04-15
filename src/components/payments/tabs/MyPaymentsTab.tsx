@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { translateApiError } from '@/utils/api';
@@ -19,7 +19,12 @@ import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { exportTabPaymentsToExcel } from '@/utils/exportExcel';
 
-const MyPaymentsTab = () => {
+interface MyPaymentsTabProps {
+  openPaymentId?: number | null;
+  onOpenPaymentIdHandled?: () => void;
+}
+
+const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: MyPaymentsTabProps = {}) => {
   const { token } = useAuth();
   const { toast } = useToast();
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
@@ -39,6 +44,16 @@ const MyPaymentsTab = () => {
     loadContractors,
     loadLegalEntities,
   } = usePaymentsData();
+
+  useEffect(() => {
+    if (openPaymentId && payments.length > 0) {
+      const found = payments.find(p => p.id === openPaymentId);
+      if (found) {
+        setSelectedPayment(found);
+        onOpenPaymentIdHandled?.();
+      }
+    }
+  }, [openPaymentId, payments]);
 
   const {
     filters, setFilter, clearFilters,

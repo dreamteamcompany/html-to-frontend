@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/utils/api';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +18,12 @@ interface ExtendedPayment extends Payment {
   rejection_comment?: string;
 }
 
-const RejectedPaymentsTab = () => {
+interface RejectedPaymentsTabProps {
+  openPaymentId?: number | null;
+  onOpenPaymentIdHandled?: () => void;
+}
+
+const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: RejectedPaymentsTabProps = {}) => {
   const { payments: allPayments, loading, refresh } = useAllPaymentsCache();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<ExtendedPayment | null>(null);
@@ -28,6 +33,16 @@ const RejectedPaymentsTab = () => {
     (allPayments as ExtendedPayment[]).filter(p => p.status === 'rejected'),
     [allPayments]
   );
+
+  useEffect(() => {
+    if (openPaymentId && payments.length > 0) {
+      const found = payments.find(p => p.id === openPaymentId);
+      if (found) {
+        setSelectedPayment(found);
+        onOpenPaymentIdHandled?.();
+      }
+    }
+  }, [openPaymentId, payments]);
 
   const {
     filters, setFilter, clearFilters,
@@ -50,8 +65,7 @@ const RejectedPaymentsTab = () => {
       } else {
         const err = await res.json();
       }
-    } catch (error) {
-    }
+    } catch { /* network error */ }
   };
 
   const filteredPayments = filtered.filter(payment => {

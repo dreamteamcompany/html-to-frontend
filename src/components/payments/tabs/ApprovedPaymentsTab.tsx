@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { apiFetch, translateFetchError } from '@/utils/api';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,7 +21,12 @@ interface ExtendedPayment extends Payment {
   tech_director_approved_at?: string;
 }
 
-const ApprovedPaymentsTab = () => {
+interface ApprovedPaymentsTabProps {
+  openPaymentId?: number | null;
+  onOpenPaymentIdHandled?: () => void;
+}
+
+const ApprovedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: ApprovedPaymentsTabProps = {}) => {
   const { payments: allPayments, loading, refresh } = useAllPaymentsCache();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<ExtendedPayment | null>(null);
@@ -34,6 +39,16 @@ const ApprovedPaymentsTab = () => {
     (allPayments as ExtendedPayment[]).filter(p => p.status === 'approved'),
     [allPayments]
   );
+
+  useEffect(() => {
+    if (openPaymentId && payments.length > 0) {
+      const found = payments.find(p => p.id === openPaymentId);
+      if (found) {
+        setSelectedPayment(found);
+        onOpenPaymentIdHandled?.();
+      }
+    }
+  }, [openPaymentId, payments]);
 
   const {
     filters, setFilter, clearFilters,

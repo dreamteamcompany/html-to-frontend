@@ -27,11 +27,22 @@ const PaymentsInner = () => {
       const id = parseInt(pid, 10);
       if (!isNaN(id)) {
         setOpenPaymentId(id);
-        setActiveTab('pending');
+        const found = allPayments.find(p => p.id === id);
+        if (found?.status === 'approved') {
+          setActiveTab('approved');
+        } else if (found?.status === 'rejected') {
+          setActiveTab('rejected');
+        } else if (found?.status && found.status.startsWith('pending_')) {
+          setActiveTab('pending');
+        } else if (found) {
+          setActiveTab(isCEO ? 'pending' : 'my');
+        } else {
+          setActiveTab('pending');
+        }
         setSearchParams({}, { replace: true });
       }
     }
-  }, []);
+  }, [allPayments.length]);
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
 
@@ -168,20 +179,20 @@ const PaymentsInner = () => {
 
             {!isCEO && (
             <TabsContent value="my" className="mt-0">
-              <MyPaymentsTab />
+              <MyPaymentsTab openPaymentId={activeTab === 'my' ? openPaymentId : null} onOpenPaymentIdHandled={() => setOpenPaymentId(null)} />
             </TabsContent>
             )}
 
             <TabsContent value="pending" className="mt-0">
-              <PendingApprovalsTab openPaymentId={openPaymentId} onOpenPaymentIdHandled={() => setOpenPaymentId(null)} />
+              <PendingApprovalsTab openPaymentId={activeTab === 'pending' ? openPaymentId : null} onOpenPaymentIdHandled={() => setOpenPaymentId(null)} />
             </TabsContent>
 
             <TabsContent value="approved" className="mt-0">
-              <ApprovedPaymentsTab />
+              <ApprovedPaymentsTab openPaymentId={activeTab === 'approved' ? openPaymentId : null} onOpenPaymentIdHandled={() => setOpenPaymentId(null)} />
             </TabsContent>
 
             <TabsContent value="rejected" className="mt-0">
-              <RejectedPaymentsTab />
+              <RejectedPaymentsTab openPaymentId={activeTab === 'rejected' ? openPaymentId : null} onOpenPaymentIdHandled={() => setOpenPaymentId(null)} />
             </TabsContent>
           </Tabs>
         </div>
