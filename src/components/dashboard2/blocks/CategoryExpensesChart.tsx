@@ -139,16 +139,9 @@ const CategoryExpensesChart = () => {
             </div>
           ) : (
             <div
-              className="flex-1 min-h-[260px] sm:min-h-[360px]"
-              style={{ position: 'relative', overflow: 'hidden' }}
+              className="flex-1 min-h-[200px] sm:min-h-[280px]"
+              style={{ position: 'relative', cursor: 'pointer' }}
             >
-              <div style={{
-                position: 'relative',
-                width: '100%',
-                height: '100%',
-                minHeight: isMobile ? '260px' : '360px',
-                cursor: 'pointer',
-              }}>
               <Bar
                 data={{ labels: xLabels, datasets }}
                 options={{
@@ -209,7 +202,6 @@ const CategoryExpensesChart = () => {
                   }
                 }}
               />
-              </div>
             </div>
           )}
         </CardContent>
