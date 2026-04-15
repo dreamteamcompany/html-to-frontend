@@ -126,26 +126,26 @@ const TopPaymentsCard = () => {
               <Icon name="TrendingUp" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
             </div>
             <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'hsl(var(--foreground))', flex: 1 }} className="sm:text-base">Сравнение по сервисам</h3>
-            {hasMore && (
-              <button
-                onClick={() => setShowAll(!showAll)}
-                style={{
-                  padding: '4px 12px',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  color: showAll ? '#fff' : '#7551e9',
-                  background: showAll ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'transparent',
-                  border: showAll ? 'none' : '1px solid #7551e9',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
-              >
-                {showAll ? 'Топ-5' : 'Все'}
-              </button>
-            )}
+            <button
+              onClick={() => setShowAll(!showAll)}
+              disabled={!hasMore}
+              style={{
+                padding: '4px 12px',
+                fontSize: '11px',
+                fontWeight: '600',
+                color: !hasMore ? 'hsl(var(--muted-foreground))' : showAll ? '#fff' : '#a78bfa',
+                background: !hasMore ? 'transparent' : showAll ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'rgba(117, 81, 233, 0.15)',
+                border: !hasMore ? '1px solid hsl(var(--border))' : showAll ? '1px solid transparent' : '1px solid #a78bfa',
+                borderRadius: '6px',
+                cursor: hasMore ? 'pointer' : 'default',
+                transition: 'all 0.2s ease',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                opacity: hasMore ? 1 : 0.5,
+              }}
+            >
+              {showAll ? 'Топ-5' : 'Все'}
+            </button>
           </div>
 
           <div style={{
@@ -159,7 +159,7 @@ const TopPaymentsCard = () => {
             {TABS.map(tab => (
               <button
                 key={tab.key}
-                onClick={() => setGroupBy(tab.key)}
+                onClick={() => { setGroupBy(tab.key); setShowAll(false); }}
                 style={{
                   flex: 1,
                   padding: '5px 0',
