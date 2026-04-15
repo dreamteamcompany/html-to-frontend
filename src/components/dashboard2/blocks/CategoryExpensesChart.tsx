@@ -93,17 +93,52 @@ const CategoryExpensesChart = () => {
     [period, dateFrom, dateTo, showAll, displayData.length]
   );
 
-  const periodLabel = useMemo(() => {
+  const MONTHS_SHORT = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+  const WEEK_DAYS_RU = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+
+  const timelineData = useMemo(() => {
     const { from, to } = getDateRange();
-    const MONTHS_FULL = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const fmtD = (d: Date) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
-    if (period === 'today') return `Сегодня, ${fmtD(from)}`;
-    if (period === 'week') return `Неделя: ${fmtD(from)} — ${fmtD(to)}`;
-    if (period === 'month') return `${MONTHS_FULL[from.getMonth()]} ${from.getFullYear()}`;
-    if (period === 'year') return `${from.getFullYear()} год`;
-    return `${fmtD(from)} — ${fmtD(to)}`;
-  }, [period, dateFrom, dateTo]);
+    const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+
+    const activeDays = new Set<string>();
+    (Array.isArray(allPayments) ? allPayments : []).forEach((p: PaymentRecord) => {
+      if (p.status !== 'approved') return;
+      const d = parsePaymentDate(p.payment_date);
+      if (isNaN(d.getTime()) || !(d >= from && d <= to)) return;
+      if (period === 'today' || (period === 'custom' && diffDays <= 1)) {
+        activeDays.add(`${String(d.getHours()).padStart(2, '0')}:00`);
+      } else if (period === 'year' || (period === 'custom' && diffDays > 31)) {
+        activeDays.add(String(d.getMonth()));
+      } else {
+        activeDays.add(String(d.getDate()));
+      }
+    });
+
+    let labels: { text: string; key: string }[] = [];
+
+    if (period === 'today' || (period === 'custom' && diffDays <= 1)) {
+      labels = Array.from({ length: 24 }, (_, i) => {
+        const h = `${String(i).padStart(2, '0')}:00`;
+        return { text: h, key: h };
+      });
+    } else if (period === 'week' || (period === 'custom' && diffDays <= 7)) {
+      const cur = new Date(from);
+      while (cur <= to) {
+        labels.push({ text: `${WEEK_DAYS_RU[cur.getDay()]}, ${cur.getDate()}`, key: String(cur.getDate()) });
+        cur.setDate(cur.getDate() + 1);
+      }
+    } else if (period === 'month' || (period === 'custom' && diffDays <= 31)) {
+      const cur = new Date(from);
+      while (cur <= to) {
+        labels.push({ text: String(cur.getDate()), key: String(cur.getDate()) });
+        cur.setDate(cur.getDate() + 1);
+      }
+    } else {
+      labels = MONTHS_SHORT.map((m, i) => ({ text: m, key: String(i) }));
+    }
+
+    return { labels, activeDays };
+  }, [allPayments, period, dateFrom, dateTo]);
 
   const tickColor = isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180,190,220,0.65)';
   const amountColor = isLight ? 'rgba(117,81,233,0.9)' : 'rgba(167,139,250,0.75)';
@@ -401,20 +436,69 @@ const CategoryExpensesChart = () => {
               )}
             </div>
             <div style={{
-              textAlign: 'center',
-              marginTop: '12px',
-              padding: '6px 12px',
+              marginTop: '10px',
+              padding: '8px 4px 2px',
               borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}`,
+              position: 'relative',
+              overflow: 'hidden',
             }}>
-              <span style={{
-                fontSize: isMobile ? '10px' : '11px',
-                fontWeight: 600,
-                color: isLight ? 'rgba(117,81,233,0.75)' : 'rgba(167,139,250,0.7)',
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
-                letterSpacing: '0.3px',
+              <div style={{
+                position: 'absolute',
+                top: '17px',
+                left: '8px',
+                right: '8px',
+                height: '1px',
+                background: isLight ? 'rgba(117,81,233,0.15)' : 'rgba(167,139,250,0.15)',
+              }} />
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                position: 'relative',
               }}>
-                {periodLabel}
-              </span>
+                {timelineData.labels.map((item, i) => {
+                  const isActive = timelineData.activeDays.has(item.key);
+                  const showLabel = timelineData.labels.length <= 12
+                    || (isMobile ? i % Math.ceil(timelineData.labels.length / 8) === 0 : i % Math.ceil(timelineData.labels.length / 15) === 0)
+                    || i === timelineData.labels.length - 1;
+                  return (
+                    <div key={item.key + i} style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      flex: '1 1 0',
+                      minWidth: 0,
+                    }}>
+                      <div style={{
+                        width: isActive ? '6px' : '3px',
+                        height: isActive ? '6px' : '3px',
+                        borderRadius: '50%',
+                        background: isActive
+                          ? (isLight ? '#7551e9' : 'rgba(167,139,250,0.9)')
+                          : (isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'),
+                        marginBottom: '4px',
+                        flexShrink: 0,
+                        boxShadow: isActive ? '0 0 4px rgba(117,81,233,0.4)' : 'none',
+                        transition: 'all 0.2s',
+                      }} />
+                      {showLabel && (
+                        <span style={{
+                          fontSize: isMobile ? '8px' : '9px',
+                          color: isActive
+                            ? (isLight ? 'rgba(117,81,233,0.85)' : 'rgba(167,139,250,0.8)')
+                            : (isLight ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.25)'),
+                          fontFamily: 'Plus Jakarta Sans, sans-serif',
+                          fontWeight: isActive ? 600 : 400,
+                          whiteSpace: 'nowrap',
+                          lineHeight: 1,
+                        }}>
+                          {item.text}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </>
         )}
