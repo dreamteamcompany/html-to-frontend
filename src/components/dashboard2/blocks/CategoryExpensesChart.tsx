@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { useState, useEffect, useMemo } from 'react';
 import { usePeriod } from '@/contexts/PeriodContext';
 import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
@@ -20,13 +20,13 @@ const WEEK_DAYS_RU = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const fmtWeekLabel = (d: Date) => `${WEEK_DAYS_RU[d.getDay()]}, ${String(d.getDate()).padStart(2, '0')}`;
 
 const TOP_COLORS = [
-  { line: 'rgb(117, 81, 233)', fill: 'rgba(117, 81, 233, 0.08)' },
-  { line: 'rgb(57, 101, 255)', fill: 'rgba(57, 101, 255, 0.07)' },
-  { line: 'rgb(1, 181, 116)', fill: 'rgba(1, 181, 116, 0.07)' },
-  { line: 'rgb(255, 181, 71)', fill: 'rgba(255, 181, 71, 0.07)' },
-  { line: 'rgb(227, 26, 26)', fill: 'rgba(227, 26, 26, 0.07)' },
+  'rgb(117, 81, 233)',
+  'rgb(57, 101, 255)',
+  'rgb(1, 181, 116)',
+  'rgb(255, 181, 71)',
+  'rgb(227, 26, 26)',
 ];
-const OTHER_COLOR = { line: 'rgb(120, 130, 155)', fill: 'rgba(120, 130, 155, 0.06)' };
+const OTHER_COLOR = 'rgb(120, 130, 155)';
 
 const MAX_CATEGORIES = 5;
 
@@ -121,25 +121,22 @@ const CategoryExpensesChart = () => {
     return { displayData: result, xLabels: labels };
   }, [allPayments, period, dateFrom, dateTo]);
 
+  const labelCount = xLabels.length;
   const catKeys = Object.keys(displayData);
+  const catCount = catKeys.length || 1;
 
   const datasets = catKeys.map((category, index) => {
     const isOther = category === 'Прочее';
-    const color = isOther ? OTHER_COLOR : TOP_COLORS[index % TOP_COLORS.length];
     return {
       label: category,
       data: displayData[category],
-      borderColor: color.line,
-      backgroundColor: color.fill,
-      borderWidth: isMobile ? 1.5 : 2.5,
-      fill: false,
-      tension: 0.35,
-      pointBackgroundColor: color.line,
-      pointBorderColor: isLight ? '#f8f9fa' : '#1a1d2e',
-      pointBorderWidth: isMobile ? 1 : 2,
-      pointRadius: isMobile ? 2 : 3.5,
-      pointHoverRadius: isMobile ? 4 : 6,
-      borderDash: isOther ? [5, 3] : [],
+      backgroundColor: isOther ? OTHER_COLOR : TOP_COLORS[index % TOP_COLORS.length],
+      borderRadius: labelCount <= 12 ? 6 : 3,
+      borderSkipped: false as const,
+      barPercentage: 0.82,
+      categoryPercentage: catCount <= 2 ? 0.5 : catCount <= 4 ? 0.7 : 0.82,
+      maxBarThickness: isMobile ? 24 : 40,
+      minBarLength: 2,
     };
   });
 
@@ -167,7 +164,7 @@ const CategoryExpensesChart = () => {
               className="flex-1 min-h-[200px] sm:min-h-[280px]"
               style={{ position: 'relative', cursor: 'pointer' }}
             >
-              <Line
+              <Bar
                 data={{ labels: xLabels, datasets }}
                 options={{
                   responsive: true,
@@ -221,17 +218,18 @@ const CategoryExpensesChart = () => {
                           return String(v);
                         }
                       },
-                      grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255, 255, 255, 0.06)', lineWidth: 1 },
+                      grid: { color: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255, 255, 255, 0.08)', lineWidth: 1 },
                       border: { dash: [4, 4], display: false }
                     },
                     x: {
                       ticks: {
                         color: isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180, 190, 220, 0.75)',
-                        font: { size: isMobile ? 8 : 11, family: 'Plus Jakarta Sans, sans-serif' as const },
-                        maxRotation: isMobile ? 45 : 0,
-                        minRotation: isMobile ? 45 : 0,
+                        font: { size: isMobile ? 9 : 11, family: 'Plus Jakarta Sans, sans-serif' as const },
+                        maxRotation: 0,
+                        minRotation: 0,
                         autoSkip: true,
                         maxTicksLimit: isMobile ? 8 : 15,
+                        padding: 4,
                       },
                       grid: { display: false },
                       border: { display: false },
