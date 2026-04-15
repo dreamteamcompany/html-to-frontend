@@ -262,6 +262,7 @@ const PaymentsSidebar = ({
           </div>
           <Icon name="ChevronRight" size={16} />
         </button>
+        {(() => { console.log('[Sidebar] rendering avatar, user.photo_url:', user?.photo_url || '(empty)'); return null; })()}
         <div className="flex items-start gap-3 px-2">
           <UserAvatar photoUrl={user?.photo_url} name={user?.full_name} size="md" />
           <div className="flex-1 min-w-0">

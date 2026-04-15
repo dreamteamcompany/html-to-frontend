@@ -132,7 +132,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (response.ok) {
         const userData = await response.json();
+        console.log('[AuthContext] checkAuth /me:', { id: userData.id, photo_url: userData.photo_url || '(empty)' });
         if (!userData.photo_url && userData.id) {
+          console.log('[AuthContext] photo_url missing from /me, fetching from /users...');
           try {
             const usersResp = await fetch(`${API_ENDPOINTS.main}?endpoint=users`, {
               headers: { 'X-Auth-Token': savedToken },
@@ -142,12 +144,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               const found = (Array.isArray(usersList) ? usersList : []).find((u: { id: number }) => u.id === userData.id);
               if (found?.photo_url) {
                 userData.photo_url = found.photo_url;
+                console.log('[AuthContext] photo_url recovered:', found.photo_url);
+              } else {
+                console.log('[AuthContext] no photo_url in /users either');
               }
             }
           } catch {
-            // silent
+            console.log('[AuthContext] failed to fetch /users for photo_url');
           }
         }
+        console.log('[AuthContext] final user photo_url:', userData.photo_url || '(none)');
         setUser(userData);
         setToken(savedToken);
       } else {
@@ -241,7 +247,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const data = await response.json();
     const loginUser = data.user;
+    console.log('[AuthContext] login response:', { id: loginUser.id, photo_url: loginUser.photo_url || '(empty)' });
     if (!loginUser.photo_url && loginUser.id) {
+      console.log('[AuthContext] login: photo_url missing, fetching from /users...');
       try {
         const usersResp = await fetch(`${API_ENDPOINTS.main}?endpoint=users`, {
           headers: { 'X-Auth-Token': data.token },
@@ -251,12 +259,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           const found = (Array.isArray(usersList) ? usersList : []).find((u: { id: number }) => u.id === loginUser.id);
           if (found?.photo_url) {
             loginUser.photo_url = found.photo_url;
+            console.log('[AuthContext] login: photo_url recovered:', found.photo_url);
+          } else {
+            console.log('[AuthContext] login: no photo_url in /users either');
           }
         }
       } catch {
-        // silent
+        console.log('[AuthContext] login: failed to fetch /users');
       }
     }
+    console.log('[AuthContext] login final photo_url:', loginUser.photo_url || '(none)');
     setToken(data.token);
     setUser(loginUser);
     
