@@ -309,7 +309,7 @@ def create_audit_log(
         ))
         conn.commit()
     except Exception as e:
-        print(f"Failed to create audit log: {e}")
+        log(f"Failed to create audit log: {e}")
     finally:
         cur.close()
 
@@ -1427,7 +1427,7 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 body = json.loads(event.get('body', '{}'))
                 pay_req = PaymentRequest(**body)
             except Exception as e:
-                return response(400, {'error': f'Validation error: {str(e)}'})
+                return response(400, {'error': 'Validation error: invalid request data'})
             
             payment_date = pay_req.payment_date if pay_req.payment_date else datetime.now().isoformat()
             
@@ -1503,13 +1503,10 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 cur.close()
                 return response(201, payment_data)
             except Exception as e:
-                import traceback
-                error_details = traceback.format_exc()
-                print(f"Payment creation error: {str(e)}")
-                print(f"Full traceback: {error_details}")
+                log(f"Payment creation error: {e}")
                 conn.rollback()
                 cur.close()
-                return response(500, {'error': f'Database error: {str(e)}', 'details': error_details})
+                return response(500, {'error': 'Internal server error'})
         
         elif method == 'PUT':
             payload, error = verify_token_and_permission(event, conn, 'payments.update')
@@ -3182,7 +3179,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
             return response(403, {'error': 'У вас нет прав для этого действия'})
         
         try:
-            print(f"[DEBUG] Inserting approval: payment_id={req.payment_id}, user_id={user_id}, user_role={user_role}, action={req.action}, comment={req.comment}")
+            log(f"[DEBUG] Inserting approval for payment_id={req.payment_id}")
             cur.execute(f"""
                 INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment)
                 VALUES (%s, %s, %s, %s, %s)
@@ -3190,10 +3187,10 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
             
             conn.commit()
         except Exception as e:
-            print(f"[ERROR] Error saving to DB: {str(e)}")
+            log(f"[ERROR] Error saving approval to DB: {e}")
             conn.rollback()
             cur.close()
-            return response(500, {'error': f'Error saving to DB: {str(e)}'})
+            return response(500, {'error': 'Internal server error'})
         
         # Audit log
         cur.execute(f"SELECT username FROM {SCHEMA}.users WHERE id = %s", (user_id,))
@@ -3458,14 +3455,14 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 return response(200, {'message': message, 'detached_payments': payment_count, 'detached_savings': saving_count})
             except Exception as e:
                 conn.rollback()
-                log(f"[DELETE SERVICE ERROR] {str(e)}")
-                return response(500, {'error': f'Ошибка при удалении услуги: {str(e)}'})
+                log(f"[DELETE SERVICE ERROR] {e}")
+                return response(500, {'error': 'Ошибка при удалении услуги'})
         
         return response(405, {'error': 'Method not allowed'})
     
     except Exception as e:
-        log(f"[HANDLE_SERVICES ERROR] {str(e)}")
-        return response(500, {'error': str(e)})
+        log(f"[HANDLE_SERVICES ERROR] {e}")
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -3793,8 +3790,9 @@ def handle_stats(event: Dict[str, Any], conn) -> Dict[str, Any]:
         })
         
     except Exception as e:
+        log(f"[HANDLE_STATS ERROR] {e}")
         cur.close()
-        return response(500, {'error': str(e)})
+        return response(500, {'error': 'Internal server error'})
 
 # Comments handlers
 def handle_comments(method: str, event: Dict[str, Any], conn, current_user: Dict[str, Any]) -> Dict[str, Any]:
@@ -3831,9 +3829,10 @@ def handle_comments(method: str, event: Dict[str, Any], conn, current_user: Dict
             
             return response(200, [dict(c) for c in comments])
         except Exception as e:
+            log(f"[COMMENTS GET ERROR] {e}")
             if cur:
                 cur.close()
-            return response(500, {'error': str(e)})
+            return response(500, {'error': 'Internal server error'})
     
     elif method == 'POST':
         try:
@@ -3860,10 +3859,11 @@ def handle_comments(method: str, event: Dict[str, Any], conn, current_user: Dict
             
             return response(201, dict(new_comment))
         except Exception as e:
+            log(f"[COMMENTS POST ERROR] {e}")
             conn.rollback()
             if cur:
                 cur.close()
-            return response(500, {'error': str(e)})
+            return response(500, {'error': 'Internal server error'})
     
     return response(405, {'error': 'Method not allowed'})
 
@@ -3889,10 +3889,11 @@ def handle_comment_likes(method: str, event: Dict[str, Any], conn, current_user:
             
             return response(200, {'success': True})
         except Exception as e:
+            log(f"[COMMENT LIKES POST ERROR] {e}")
             conn.rollback()
             if cur:
                 cur.close()
-            return response(500, {'error': str(e)})
+            return response(500, {'error': 'Internal server error'})
     
     elif method == 'DELETE':
         try:
@@ -3914,10 +3915,11 @@ def handle_comment_likes(method: str, event: Dict[str, Any], conn, current_user:
             
             return response(200, {'success': True})
         except Exception as e:
+            log(f"[COMMENT LIKES DELETE ERROR] {e}")
             conn.rollback()
             if cur:
                 cur.close()
-            return response(500, {'error': str(e)})
+            return response(500, {'error': 'Internal server error'})
     
     return response(405, {'error': 'Method not allowed'})
 
@@ -3949,9 +3951,10 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
             cur.close()
             return response(200, result)
         except Exception as e:
+            log(f"[APPROVALS GET ERROR] {e}")
             if cur:
                 cur.close()
-            return response(500, {'error': str(e)})
+            return response(500, {'error': 'Internal server error'})
     
     elif method == 'DELETE':
         params = event.get('queryStringParameters', {})
@@ -3967,10 +3970,11 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
             cur.close()
             return response(200, {'success': True})
         except Exception as e:
+            log(f"[APPROVALS DELETE ERROR] {e}")
             conn.rollback()
             if cur:
                 cur.close()
-            return response(500, {'error': str(e)})
+            return response(500, {'error': 'Internal server error'})
     
     return response(405, {'error': 'Method not allowed'})
 
@@ -4018,9 +4022,10 @@ def handle_audit_logs(method: str, event: Dict[str, Any], conn, payload: Dict[st
             
             return response(200, result)
         except Exception as e:
+            log(f"[AUDIT LOGS GET ERROR] {e}")
             if cur:
                 cur.close()
-            return response(500, {'error': str(e)})
+            return response(500, {'error': 'Internal server error'})
     
     elif method == 'DELETE':
         params = event.get('queryStringParameters', {})
@@ -4036,10 +4041,11 @@ def handle_audit_logs(method: str, event: Dict[str, Any], conn, payload: Dict[st
             cur.close()
             return response(200, {'success': True})
         except Exception as e:
+            log(f"[AUDIT LOGS DELETE ERROR] {e}")
             conn.rollback()
             if cur:
                 cur.close()
-            return response(500, {'error': str(e)})
+            return response(500, {'error': 'Internal server error'})
     
     return response(405, {'error': 'Method not allowed'})
 
@@ -4252,8 +4258,8 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
     
     except Exception as e:
         conn.rollback()
-        log(f"[HANDLE_PLANNED_PAYMENTS ERROR] {str(e)}")
-        return response(500, {'error': str(e)})
+        log(f"[HANDLE_PLANNED_PAYMENTS ERROR] {e}")
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -4280,7 +4286,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
         conn = get_db_connection()
     except Exception as e:
-        return response(500, {'error': f'Database connection failed: {str(e)}'})
+        log(f"[DB CONNECTION ERROR] {e}")
+        return response(500, {'error': 'Service temporarily unavailable'})
     
     try:
         if endpoint == 'login' and method == 'POST':
@@ -4375,12 +4382,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return result
         
     except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"Error: {str(e)}")
-        print(f"Traceback: {error_details}")
+        log(f"[HANDLER ERROR] {e}")
         conn.close()
-        return response(500, {'error': str(e), 'details': error_details})
+        return response(500, {'error': 'Internal server error'})
 
 def handle_payment_views(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     """Запись и чтение фактов просмотра платежа согласующим"""
@@ -4735,8 +4739,9 @@ def handle_tickets_api(method: str, event: Dict[str, Any], conn, payload: Dict[s
         return response(405, {'error': 'Метод не поддерживается'})
     
     except Exception as e:
+        log(f"[TICKETS API ERROR] {e}")
         conn.rollback()
-        return response(500, {'error': str(e)})
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -4769,7 +4774,8 @@ def handle_ticket_dictionaries_api(method: str, event: Dict[str, Any], conn, pay
         })
     
     except Exception as e:
-        return response(500, {'error': str(e)})
+        log(f"[TICKET DICTIONARIES ERROR] {e}")
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -4787,7 +4793,8 @@ def handle_users_list(method: str, event: Dict[str, Any], conn, payload: Dict[st
         return response(200, {'users': users})
     
     except Exception as e:
-        return response(500, {'error': str(e)})
+        log(f"[USERS LIST ERROR] {e}")
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -4948,8 +4955,9 @@ def handle_ticket_comments_api(method: str, event: Dict[str, Any], conn, payload
         return response(405, {'error': 'Метод не поддерживается'})
     
     except Exception as e:
+        log(f"[TICKET COMMENTS ERROR] {e}")
         conn.rollback()
-        return response(500, {'error': str(e)})
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -4995,8 +5003,9 @@ def handle_comment_reactions(method: str, event: Dict[str, Any], conn, payload: 
         return response(405, {'error': 'Метод не поддерживается'})
     
     except Exception as e:
+        log(f"[COMMENT REACTIONS ERROR] {e}")
         conn.rollback()
-        return response(500, {'error': str(e)})
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -5044,7 +5053,8 @@ def handle_upload_file(event: Dict[str, Any], conn, payload: Dict[str, Any]) -> 
         return response(200, {'url': cdn_url})
     
     except Exception as e:
-        return response(500, {'error': str(e)})
+        log(f"[UPLOAD FILE ERROR] {e}")
+        return response(500, {'error': 'Internal server error'})
 
 def handle_ticket_history(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any]) -> Dict[str, Any]:
     """Получение истории изменений заявки из audit_logs"""
@@ -5080,7 +5090,8 @@ def handle_ticket_history(method: str, event: Dict[str, Any], conn, payload: Dic
         return response(200, {'logs': logs if logs else []})
     
     except Exception as e:
-        return response(500, {'error': str(e)})
+        log(f"[TICKET HISTORY ERROR] {e}")
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -5115,7 +5126,8 @@ def handle_tickets_bulk_actions(method: str, event: Dict[str, Any], conn, payloa
                     )
                     results.append({'ticket_id': ticket_id, 'success': True})
                 except Exception as e:
-                    results.append({'ticket_id': ticket_id, 'success': False, 'error': str(e)})
+                    log(f"[BULK STATUS ERROR] ticket_id={ticket_id}: {e}")
+                    results.append({'ticket_id': ticket_id, 'success': False, 'error': 'Operation failed'})
         
         elif action == 'change_priority':
             priority_id = body.get('priority_id')
@@ -5130,7 +5142,8 @@ def handle_tickets_bulk_actions(method: str, event: Dict[str, Any], conn, payloa
                     )
                     results.append({'ticket_id': ticket_id, 'success': True})
                 except Exception as e:
-                    results.append({'ticket_id': ticket_id, 'success': False, 'error': str(e)})
+                    log(f"[BULK PRIORITY ERROR] ticket_id={ticket_id}: {e}")
+                    results.append({'ticket_id': ticket_id, 'success': False, 'error': 'Operation failed'})
         
         elif action == 'delete':
             for ticket_id in ticket_ids:
@@ -5139,7 +5152,8 @@ def handle_tickets_bulk_actions(method: str, event: Dict[str, Any], conn, payloa
                     cur.execute(f'DELETE FROM {SCHEMA}.tickets WHERE id = %s', (ticket_id,))
                     results.append({'ticket_id': ticket_id, 'success': True})
                 except Exception as e:
-                    results.append({'ticket_id': ticket_id, 'success': False, 'error': str(e)})
+                    log(f"[BULK DELETE ERROR] ticket_id={ticket_id}: {e}")
+                    results.append({'ticket_id': ticket_id, 'success': False, 'error': 'Operation failed'})
         
         else:
             return response(400, {'error': f'Неизвестное действие: {action}'})
@@ -5157,8 +5171,9 @@ def handle_tickets_bulk_actions(method: str, event: Dict[str, Any], conn, payloa
         })
     
     except Exception as e:
+        log(f"[TICKETS BULK ERROR] {e}")
         conn.rollback()
-        return response(500, {'error': str(e)})
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -5238,7 +5253,8 @@ def handle_notifications(method: str, event: Dict[str, Any], conn, payload: Dict
             return response(405, {'error': 'Метод не поддерживается'})
     
     except Exception as e:
-        return response(500, {'error': str(e)})
+        log(f"[NOTIFICATIONS ERROR] {e}")
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -5282,8 +5298,9 @@ def handle_dashboard_layout(method: str, event: Dict[str, Any], conn, payload: D
             return response(405, {'error': 'Метод не поддерживается'})
     
     except Exception as e:
+        log(f"[DASHBOARD LAYOUT ERROR] {e}")
         conn.rollback()
-        return response(500, {'error': str(e)})
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -5335,7 +5352,8 @@ def handle_dashboard_stats(method: str, event: Dict[str, Any], conn, payload: Di
         })
     
     except Exception as e:
-        return response(500, {'error': str(e)})
+        log(f"[DASHBOARD STATS ERROR] {e}")
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -5395,7 +5413,8 @@ def handle_budget_breakdown(method: str, event: Dict[str, Any], conn, payload: D
         return response(200, result)
     
     except Exception as e:
-        return response(500, {'error': str(e)})
+        log(f"[BUDGET BREAKDOWN ERROR] {e}")
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -5465,7 +5484,8 @@ def handle_savings_dashboard(method: str, event: Dict[str, Any], conn, payload: 
         })
 
     except Exception as e:
-        return response(500, {'error': str(e)})
+        log(f"[SAVINGS DASHBOARD ERROR] {e}")
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()
 
@@ -5525,6 +5545,7 @@ def handle_savings_list(method: str, event: Dict[str, Any], conn, payload: Dict[
         })
 
     except Exception as e_savings:
-        return response(500, {'error': str(e_savings)})
+        log(f"[SAVINGS LIST ERROR] {e_savings}")
+        return response(500, {'error': 'Internal server error'})
     finally:
         cur.close()

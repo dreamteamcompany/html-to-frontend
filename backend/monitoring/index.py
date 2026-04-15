@@ -97,13 +97,22 @@ def test_connection(event: dict) -> dict:
                 'message': f'Подключение успешно! Текущий баланс: {balance}'
             })
         }
-    except Exception as e:
+    except ValueError as e:
+        return {
+            'statusCode': 400,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({
+                'success': False,
+                'error': f'Ошибка конфигурации: {str(e)}'
+            })
+        }
+    except Exception:
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
             'body': json.dumps({
                 'success': False,
-                'error': f'Ошибка подключения: {str(e)}'
+                'error': 'Не удалось подключиться к сервису. Проверьте API ключи и настройки.'
             })
         }
 
@@ -139,7 +148,6 @@ def get_all_services(conn) -> dict:
 
 def create_service(conn, event: dict) -> dict:
     raw_body = event.get('body', '{}')
-    print(f"[DEBUG] Raw body type: {type(raw_body)}, value: {raw_body}")
     
     if isinstance(raw_body, str):
         if not raw_body or raw_body.strip() == '':
@@ -147,8 +155,6 @@ def create_service(conn, event: dict) -> dict:
         body = json.loads(raw_body)
     else:
         body = raw_body
-    
-    print(f"[DEBUG] Parsed body: {body}")
     
     required_fields = ['service_name', 'currency']
     for field in required_fields:
@@ -238,9 +244,9 @@ def create_service(conn, event: dict) -> dict:
                             'hint': 'Добавьте секрет в настройках проекта перед созданием интеграции'
                         })
                     }
-                print(f"[WARNING] Failed to fetch initial balance: {e}")
-            except Exception as e:
-                print(f"[WARNING] Failed to fetch initial balance: {e}")
+                pass
+            except Exception:
+                pass
         
         return {
             'statusCode': 201,
@@ -347,11 +353,11 @@ def refresh_service_balance(conn, service_id: int) -> dict:
                 float(service['threshold_critical']) if service['threshold_critical'] else None
             )
             
-        except Exception as e:
+        except Exception:
             return {
                 'statusCode': 500,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': f'Failed to fetch balance: {str(e)}'})
+                'body': json.dumps({'error': 'Не удалось обновить баланс. Проверьте настройки подключения.'})
             }
         
         cur.execute('''

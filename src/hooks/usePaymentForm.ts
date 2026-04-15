@@ -100,7 +100,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
         if (file_url) setFormData(prev => ({ ...prev, invoice_file_url: file_url }));
       }
     } catch (err) {
-      console.error('Direct upload failed:', err);
+      console.error('Direct upload failed');
     } finally {
       setIsUploadingInvoice(false);
     }
@@ -196,7 +196,7 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
 
       ocrData = await ocrResponse.json();
       const extracted = (ocrData.extracted_data as Record<string, unknown>) || {};
-      console.log('GPT result:', { extracted, gpt_raw: ocrData.gpt_raw, warning: ocrData.warning });
+      // OCR result received
 
       const updates: Record<string, string | undefined> = {};
 

@@ -71,7 +71,6 @@ def handler(event: dict, context) -> dict:
         return resp(500, {'error': 'Не удалось определить FOLDER_ID для Yandex GPT'})
 
     # ===== ШАГ 1: Загрузка файла на сервер =====
-    print(f"[STEP 1] Загрузка файла: {file_name}, user_id: {user_id}")
 
     if ',' in file_data:
         file_data = file_data.split(',')[1]
@@ -91,10 +90,9 @@ def handler(event: dict, context) -> dict:
     cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
 
     upload_date = datetime.now().isoformat()
-    print(f"[STEP 1] Файл сохранён: {cdn_url}, дата: {upload_date}, user_id: {user_id}")
+
 
     # ===== ШАГ 2: Отправка в Yandex GPT =====
-    print(f"[STEP 2] Отправка в Yandex GPT, folder_id: {folder_id[:8]}...")
 
     ref_data = load_reference_data()
 
@@ -138,13 +136,11 @@ def handler(event: dict, context) -> dict:
             'warning': 'Yandex GPT не вернул результат'
         })
 
-    print(f"[STEP 2] GPT ответ: {json.dumps(gpt_result, ensure_ascii=False)[:500]}")
 
     # ===== ШАГ 3: Сохранение в БД =====
-    print("[STEP 3] Сохранение данных в БД")
 
     extracted = map_gpt_to_db(gpt_result, ref_data)
-    print(f"[STEP 3] Mapped data: {json.dumps(extracted, ensure_ascii=False, default=str)}")
+
 
     return resp(200, {
         'file_url': cdn_url,
@@ -170,7 +166,6 @@ def resolve_folder_id(api_key: str) -> str:
             timeout=10
         )
         if r.status_code != 200:
-            print(f"[RESOLVE] clouds error: {r.status_code} {r.text[:200]}")
             return ''
         clouds = r.json().get('clouds', [])
         if not clouds:
@@ -187,12 +182,11 @@ def resolve_folder_id(api_key: str) -> str:
         folders = r2.json().get('folders', [])
         for f in folders:
             if f.get('status') == 'ACTIVE':
-                print(f"[RESOLVE] Found folder: {f['id']}")
                 return f['id']
         if folders:
             return folders[0]['id']
-    except Exception as e:
-        print(f"[RESOLVE] Exception: {e}")
+    except Exception:
+        pass
     return ''
 
 
@@ -247,13 +241,12 @@ def call_yandex_gpt(api_key: str, folder_id: str, prompt: str, image_base64: str
 
     try:
         r = requests.post(url, headers=headers, json=payload, timeout=60)
-        print(f"[GPT] Status: {r.status_code}")
+        import sys; print(f"[GPT] Status: {r.status_code}", file=sys.stderr, flush=True)
 
         if r.status_code != 200:
-            print(f"[GPT ERROR] {r.text[:500]}")
+            import sys; print(f"[GPT ERROR] status={r.status_code}", file=sys.stderr, flush=True)
 
             if r.status_code == 400 or 'image' in r.text.lower():
-                print("[GPT] Trying text-only OCR fallback via Vision API...")
                 ocr_text = run_vision_ocr(image_base64, api_key, folder_id)
                 if ocr_text:
                     return call_gpt_text_only(api_key, folder_id, prompt, ocr_text)
@@ -262,12 +255,11 @@ def call_yandex_gpt(api_key: str, folder_id: str, prompt: str, image_base64: str
 
         data = r.json()
         text = data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text', '')
-        print(f"[GPT] Raw text: {text[:500]}")
 
         return parse_gpt_json(text)
 
     except Exception as e:
-        print(f"[GPT EXCEPTION] {e}")
+        import sys; print(f"[GPT EXCEPTION] {e}", file=sys.stderr, flush=True)
         return None
 
 
@@ -286,7 +278,7 @@ def run_vision_ocr(image_base64: str, api_key: str, folder_id: str) -> str:
     )
 
     if r.status_code != 200:
-        print(f"[VISION ERROR] {r.status_code}: {r.text[:300]}")
+        import sys; print(f"[VISION ERROR] status={r.status_code}", file=sys.stderr, flush=True)
         return ''
 
     data = r.json()
@@ -300,7 +292,7 @@ def run_vision_ocr(image_base64: str, api_key: str, folder_id: str) -> str:
                     words = [w.get('text', '') for w in line.get('words', [])]
                     full_text += ' '.join(words) + '\n'
     except (KeyError, IndexError) as e:
-        print(f"[VISION PARSE] {e}")
+        import sys; print(f"[VISION PARSE] {e}", file=sys.stderr, flush=True)
 
     return full_text.strip()
 
@@ -332,19 +324,17 @@ def call_gpt_text_only(api_key: str, folder_id: str, original_prompt: str, ocr_t
             'x-folder-id': folder_id
         }, json=payload, timeout=60)
 
-        print(f"[GPT TEXT] Status: {r.status_code}")
+        import sys; print(f"[GPT TEXT] Status: {r.status_code}", file=sys.stderr, flush=True)
 
         if r.status_code != 200:
-            print(f"[GPT TEXT ERROR] {r.text[:500]}")
             return None
 
         data = r.json()
         text = data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text', '')
-        print(f"[GPT TEXT] Raw: {text[:500]}")
         return parse_gpt_json(text)
 
     except Exception as e:
-        print(f"[GPT TEXT EXCEPTION] {e}")
+        import sys; print(f"[GPT TEXT EXCEPTION] {e}", file=sys.stderr, flush=True)
         return None
 
 
@@ -365,7 +355,7 @@ def parse_gpt_json(text: str) -> dict | None:
                 return json.loads(match.group())
             except json.JSONDecodeError:
                 pass
-    print(f"[GPT PARSE FAIL] Could not parse: {text[:300]}")
+    import sys; print("[GPT PARSE FAIL] Could not parse GPT response", file=sys.stderr, flush=True)
     return None
 
 

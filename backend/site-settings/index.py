@@ -9,32 +9,47 @@ import hmac
 SCHEMA = os.environ.get('DB_SCHEMA', 't_p61788166_html_to_frontend')
 JWT_SECRET = os.environ.get('JWT_SECRET', '')
 
-def decode_token(token: str) -> dict:
-    """Декодирует JWT-токен и возвращает payload"""
-    try:
-        parts = token.split('.')
-        if len(parts) != 3:
-            return {}
-        import base64
-        payload = parts[1]
-        padding = 4 - len(payload) % 4
-        if padding != 4:
-            payload += '=' * padding
-        decoded = base64.urlsafe_b64decode(payload)
-        return json.loads(decoded)
-    except Exception:
-        return {}
-
 def verify_token(event: dict, conn) -> dict:
-    """Проверяет токен и возвращает данные пользователя"""
+    """Проверяет JWT токен с верификацией подписи через HMAC"""
     headers = event.get('headers', {})
     token = headers.get('X-Auth-Token') or headers.get('x-auth-token') or ''
     if not token:
         return {}
-    payload = decode_token(token)
-    if not payload or not payload.get('user_id'):
+    
+    try:
+        import base64
+        parts = token.split('.')
+        if len(parts) != 3:
+            return {}
+        
+        if JWT_SECRET:
+            signing_input = f'{parts[0]}.{parts[1]}'.encode('utf-8')
+            signature = hmac.new(JWT_SECRET.encode('utf-8'), signing_input, hashlib.sha256).digest()
+            
+            sig_from_token = parts[2]
+            sig_padding = 4 - len(sig_from_token) % 4
+            if sig_padding != 4:
+                sig_from_token += '=' * sig_padding
+            try:
+                token_signature = base64.urlsafe_b64decode(sig_from_token)
+            except Exception:
+                return {}
+            
+            if not hmac.compare_digest(signature, token_signature):
+                return {}
+        
+        payload_part = parts[1]
+        padding = 4 - len(payload_part) % 4
+        if padding != 4:
+            payload_part += '=' * padding
+        decoded = base64.urlsafe_b64decode(payload_part)
+        payload = json.loads(decoded)
+        
+        if not payload or not payload.get('user_id'):
+            return {}
+        return payload
+    except Exception:
         return {}
-    return payload
 
 def handler(event: dict, context) -> dict:
     """API для чтения и сохранения настроек сайта с аудит-логированием"""

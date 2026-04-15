@@ -109,8 +109,10 @@ def handler(event: dict, context) -> dict:
         }
         
     except Exception as e:
+        import sys
+        print(f"[payment-webhook] Error: {e}", file=sys.stderr, flush=True)
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps({'error': 'Internal server error'})
         }

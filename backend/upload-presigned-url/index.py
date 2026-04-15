@@ -132,8 +132,8 @@ def handler(event: dict, context) -> dict:
             }
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        import sys
+        print(f"[upload-presigned-url] Error: {e}", file=sys.stderr, flush=True)
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', **CORS_HEADERS},
