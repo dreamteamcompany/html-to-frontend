@@ -107,6 +107,9 @@ const CategoryExpensesChart = () => {
   }, [allPayments, period, dateFrom, dateTo]);
 
   const labelCount = xLabels.length;
+  const datasetCount = Object.keys(categoryData).length || 1;
+  const minColWidth = isMobile ? 24 : 36;
+  const minChartWidth = labelCount * datasetCount * minColWidth;
   const maxBarThickness = labelCount <= 7 ? (isMobile ? 28 : 48) : (isMobile ? 18 : 28);
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
@@ -142,11 +145,12 @@ const CategoryExpensesChart = () => {
           ) : (
             <div
               className="flex-1 min-h-[260px] sm:min-h-[360px]"
-              style={{ position: 'relative', overflow: 'hidden' }}
+              style={{ position: 'relative', overflowX: 'auto', overflowY: 'hidden' }}
             >
               <div style={{
                 position: 'relative',
                 width: '100%',
+                minWidth: `${minChartWidth}px`,
                 height: '100%',
                 minHeight: isMobile ? '260px' : '360px',
                 cursor: 'pointer',
