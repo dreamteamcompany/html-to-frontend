@@ -34,8 +34,8 @@ const getGroupKey = (p: PaymentRecord, groupBy: GroupBy): string => {
 };
 
 const getColor = (index: number) => {
-  const colors = ['#7551e9', '#3965ff', '#01b574', '#ffb547', '#ff6b6b'];
-  return colors[index] || '#7551e9';
+  const colors = ['#7551e9', '#3965ff', '#01b574', '#ffb547', '#ff6b6b', '#e945a0', '#45b7e9', '#8bc34a', '#ff9800', '#9c27b0', '#00bcd4', '#cddc39'];
+  return colors[index % colors.length];
 };
 
 const FILTER_TYPE_MAP: Record<GroupBy, DrillDownFilter['type']> = {
@@ -55,8 +55,9 @@ const TopPaymentsCard = () => {
   const { payments: allPayments, loading } = usePaymentsCache();
   const [groupBy, setGroupBy] = useState<GroupBy>('services');
   const [drillFilter, setDrillFilter] = useState<DrillDownFilter | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
-  const grouped = useMemo(() => {
+  const allGrouped = useMemo(() => {
     const { from, to } = getDateRange();
     const filtered = (Array.isArray(allPayments) ? allPayments : []).filter((p: PaymentRecord) => {
       if (p.status !== 'approved') return false;
@@ -72,9 +73,11 @@ const TopPaymentsCard = () => {
 
     return Array.from(map.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
       .map(([name, total]) => ({ name, total }));
   }, [allPayments, period, dateFrom, dateTo, groupBy]);
+
+  const grouped = showAll ? allGrouped : allGrouped.slice(0, 5);
+  const hasMore = allGrouped.length > 5;
 
   const maxAmount = grouped.length > 0 ? grouped[0].total : 1;
 
@@ -122,7 +125,27 @@ const TopPaymentsCard = () => {
             }} className="sm:p-3">
               <Icon name="TrendingUp" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
             </div>
-            <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'hsl(var(--foreground))' }} className="sm:text-base">Топ-5 Платежей</h3>
+            <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'hsl(var(--foreground))', flex: 1 }} className="sm:text-base">Сравнение по сервисам</h3>
+            {hasMore && (
+              <button
+                onClick={() => setShowAll(!showAll)}
+                style={{
+                  padding: '4px 12px',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  color: showAll ? '#fff' : '#7551e9',
+                  background: showAll ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'transparent',
+                  border: showAll ? 'none' : '1px solid #7551e9',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                {showAll ? 'Топ-5' : 'Все'}
+              </button>
+            )}
           </div>
 
           <div style={{
@@ -157,7 +180,7 @@ const TopPaymentsCard = () => {
             ))}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }} className="sm:gap-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: showAll ? '400px' : 'none', overflowY: showAll ? 'auto' : 'visible' }} className="sm:gap-3">
             {grouped.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 Нет данных за выбранный период
