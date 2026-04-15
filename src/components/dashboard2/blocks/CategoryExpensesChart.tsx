@@ -93,6 +93,18 @@ const CategoryExpensesChart = () => {
     [period, dateFrom, dateTo, showAll, displayData.length]
   );
 
+  const periodLabel = useMemo(() => {
+    const { from, to } = getDateRange();
+    const MONTHS_FULL = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const fmtD = (d: Date) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+    if (period === 'today') return `Сегодня, ${fmtD(from)}`;
+    if (period === 'week') return `Неделя: ${fmtD(from)} — ${fmtD(to)}`;
+    if (period === 'month') return `${MONTHS_FULL[from.getMonth()]} ${from.getFullYear()}`;
+    if (period === 'year') return `${from.getFullYear()} год`;
+    return `${fmtD(from)} — ${fmtD(to)}`;
+  }, [period, dateFrom, dateTo]);
+
   const tickColor = isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180,190,220,0.65)';
   const amountColor = isLight ? 'rgba(117,81,233,0.9)' : 'rgba(167,139,250,0.75)';
   const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)';
@@ -386,6 +398,22 @@ const CategoryExpensesChart = () => {
                   <div style={{ fontSize: '11px', color: isLight ? 'rgba(117,81,233,0.85)' : 'rgba(167,139,250,0.9)', marginTop: '2px' }}>{labelTooltip.amount}</div>
                 </div>
               )}
+            </div>
+            <div style={{
+              textAlign: 'center',
+              marginTop: '12px',
+              padding: '6px 12px',
+              borderTop: `1px solid ${isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}`,
+            }}>
+              <span style={{
+                fontSize: isMobile ? '10px' : '11px',
+                fontWeight: 600,
+                color: isLight ? 'rgba(117,81,233,0.75)' : 'rgba(167,139,250,0.7)',
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                letterSpacing: '0.3px',
+              }}>
+                {periodLabel}
+              </span>
             </div>
           </>
         )}
