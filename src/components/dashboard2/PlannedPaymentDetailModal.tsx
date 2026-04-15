@@ -122,9 +122,7 @@ const PlannedPaymentDetailModal = ({ payment, onClose, onActionDone }: Props) =>
                   <div className="text-[11px] text-muted-foreground/60">#{payment.id}</div>
                 </div>
               </div>
-              <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
-                <Icon name="X" size={16} />
-              </button>
+              <div className="w-8 h-8" />
             </div>
 
             <div className="text-center pb-1">
