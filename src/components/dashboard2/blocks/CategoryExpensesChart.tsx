@@ -98,28 +98,16 @@ const CategoryExpensesChart = () => {
       categoryMap[category][key] = (categoryMap[category][key] || 0) + payment.amount;
     });
 
-    const allKeys = new Set<string>();
-    Object.values(categoryMap).forEach((keyMap) => {
-      Object.keys(keyMap).forEach((k) => allKeys.add(k));
-    });
-
-    const activeLabels = labels.filter((label) => allKeys.has(label));
-    const finalLabels = activeLabels.length > 0 ? activeLabels : labels;
-
     const result: { [category: string]: number[] } = {};
     Object.keys(categoryMap).forEach((category) => {
-      result[category] = finalLabels.map((label) => categoryMap[category][label] || 0);
+      result[category] = labels.map((label) => categoryMap[category][label] || 0);
     });
 
-    return { categoryData: result, xLabels: finalLabels };
+    return { categoryData: result, xLabels: labels };
   }, [allPayments, period, dateFrom, dateTo]);
 
   const labelCount = xLabels.length;
-  const datasetCount = Object.keys(categoryData).length || 1;
-  const minColWidth = isMobile ? 32 : 48;
-  const minChartWidth = labelCount > 4 ? labelCount * datasetCount * minColWidth : 0;
-  const maxBarThickness = labelCount <= 2 ? (isMobile ? 40 : 60) : labelCount <= 5 ? (isMobile ? 28 : 48) : (isMobile ? 18 : 28);
-  const needConstrainWidth = labelCount <= 4;
+  const maxBarThickness = labelCount <= 7 ? (isMobile ? 28 : 48) : labelCount <= 14 ? (isMobile ? 16 : 28) : undefined;
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,
@@ -154,16 +142,14 @@ const CategoryExpensesChart = () => {
           ) : (
             <div
               className="flex-1 min-h-[260px] sm:min-h-[360px]"
-              style={{ position: 'relative', overflowX: minChartWidth ? 'auto' : 'hidden', overflowY: 'hidden' }}
+              style={{ position: 'relative', overflow: 'hidden' }}
             >
               <div style={{
                 position: 'relative',
-                width: needConstrainWidth ? `${Math.min(100, Math.max(40, labelCount * 25 + datasetCount * 10))}%` : '100%',
-                minWidth: minChartWidth ? `${minChartWidth}px` : undefined,
+                width: '100%',
                 height: '100%',
                 minHeight: isMobile ? '260px' : '360px',
                 cursor: 'pointer',
-                margin: needConstrainWidth ? '0 auto' : undefined,
               }}>
               <Bar
                 data={{ labels: xLabels, datasets }}
@@ -212,11 +198,12 @@ const CategoryExpensesChart = () => {
                     },
                     x: {
                       ticks: {
-                        color: isLight ? 'rgba(30,30,50,0.55)' : 'rgba(180, 190, 220, 0.75)',
+                        color: isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180, 190, 220, 0.75)',
                         font: { size: isMobile ? 9 : 11 },
-                        maxRotation: labelCount > 12 ? 45 : 0,
+                        maxRotation: 0,
                         minRotation: 0,
-                        autoSkip: false,
+                        autoSkip: true,
+                        maxTicksLimit: isMobile ? 8 : 15,
                         padding: 4,
                       },
                       grid: { display: false }
