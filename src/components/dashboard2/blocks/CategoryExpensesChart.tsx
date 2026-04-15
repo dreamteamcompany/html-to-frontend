@@ -107,17 +107,13 @@ const CategoryExpensesChart = () => {
   }, [allPayments, period, dateFrom, dateTo]);
 
   const labelCount = xLabels.length;
-  const maxBarThickness = labelCount <= 7 ? (isMobile ? 28 : 48) : labelCount <= 14 ? (isMobile ? 16 : 28) : undefined;
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,
     data: categoryData[category],
     backgroundColor: colors[index % colors.length],
-    borderRadius: isMobile ? 4 : 8,
+    borderRadius: 8,
     borderSkipped: false as const,
-    barPercentage: 0.85,
-    categoryPercentage: 0.9,
-    maxBarThickness,
   }));
 
   const handleChartClick = (_event: unknown, elements: { datasetIndex: number }[]) => {
