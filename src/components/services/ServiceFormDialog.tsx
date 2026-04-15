@@ -8,15 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import Icon from '@/components/ui/icon';
+import SearchableSelect from '@/components/ui/searchable-select';
 
 interface User {
   id: number;
@@ -105,6 +98,36 @@ const ServiceFormDialog = ({
   contractors,
   onSubmit,
 }: ServiceFormDialogProps) => {
+  const userOptions = users.map((u) => ({
+    value: u.id.toString(),
+    label: u.full_name,
+    sublabel: u.role || undefined,
+  }));
+
+  const categoryOptions = categories.map((c) => ({
+    value: c.id.toString(),
+    label: c.name,
+    icon: c.icon || undefined,
+  }));
+
+  const departmentOptions = departments.map((d) => ({
+    value: d.id.toString(),
+    label: d.name,
+    sublabel: d.description || undefined,
+  }));
+
+  const legalEntityOptions = legalEntities.map((e) => ({
+    value: e.id.toString(),
+    label: e.name,
+    sublabel: e.inn ? `ИНН: ${e.inn}` : undefined,
+  }));
+
+  const contractorOptions = contractors.map((c) => ({
+    value: c.id.toString(),
+    label: c.name,
+    sublabel: c.inn ? `ИНН: ${c.inn}` : undefined,
+  }));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -140,112 +163,64 @@ const ServiceFormDialog = ({
             />
           </div>
 
-          <div>
-            <Label htmlFor="category">Категория сервиса</Label>
-            <Select
+          <div className="space-y-2">
+            <Label>Категория сервиса</Label>
+            <SearchableSelect
+              options={categoryOptions}
               value={formData.category_id || ''}
-              onValueChange={(value) =>
-                setFormData({ ...formData, category_id: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите категорию" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id.toString()}>
-                    <div className="flex items-center gap-2">
-                      <Icon name={cat.icon} size={16} />
-                      {cat.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={(v) => setFormData({ ...formData, category_id: v || '' })}
+              placeholder="Выберите категорию"
+              searchPlaceholder="Поиск категории..."
+              emptyText="Категория не найдена"
+            />
           </div>
 
-          <div>
-            <Label htmlFor="department">Отдел-заказчик</Label>
-            <Select
+          <div className="space-y-2">
+            <Label>Отдел-заказчик</Label>
+            <SearchableSelect
+              options={departmentOptions}
               value={formData.customer_department_id || ''}
-              onValueChange={(value) =>
-                setFormData({ ...formData, customer_department_id: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите отдел" />
-              </SelectTrigger>
-              <SelectContent>
-                {departments.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id.toString()}>
-                    {dept.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={(v) => setFormData({ ...formData, customer_department_id: v || '' })}
+              placeholder="Выберите отдел"
+              searchPlaceholder="Поиск отдела..."
+              emptyText="Отдел не найден"
+            />
           </div>
 
-          <div>
-            <Label htmlFor="final">Согласующее лицо (CEO)</Label>
-            <Select
+          <div className="space-y-2">
+            <Label>Согласующее лицо (CEO)</Label>
+            <SearchableSelect
+              options={userOptions}
               value={formData.final_approver_id || ''}
-              onValueChange={(value) =>
-                setFormData({ ...formData, final_approver_id: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите пользователя" />
-              </SelectTrigger>
-              <SelectContent>
-                {users.map((user) => (
-                  <SelectItem key={user.id} value={user.id.toString()}>
-                    {user.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={(v) => setFormData({ ...formData, final_approver_id: v || '' })}
+              placeholder="Выберите пользователя"
+              searchPlaceholder="Поиск по имени..."
+              emptyText="Пользователь не найден"
+            />
           </div>
 
-          <div>
-            <Label htmlFor="legal_entity">Юридическое лицо</Label>
-            <Select
+          <div className="space-y-2">
+            <Label>Юридическое лицо</Label>
+            <SearchableSelect
+              options={legalEntityOptions}
               value={formData.legal_entity_id || ''}
-              onValueChange={(value) =>
-                setFormData({ ...formData, legal_entity_id: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите юридическое лицо" />
-              </SelectTrigger>
-              <SelectContent>
-                {legalEntities.map((entity) => (
-                  <SelectItem key={entity.id} value={entity.id.toString()}>
-                    {entity.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={(v) => setFormData({ ...formData, legal_entity_id: v || '' })}
+              placeholder="Выберите юридическое лицо"
+              searchPlaceholder="Поиск по названию или ИНН..."
+              emptyText="Юрлицо не найдено"
+            />
           </div>
 
-          <div>
-            <Label htmlFor="contractor">Контрагент</Label>
-            <Select
+          <div className="space-y-2">
+            <Label>Контрагент</Label>
+            <SearchableSelect
+              options={contractorOptions}
               value={formData.contractor_id || ''}
-              onValueChange={(value) =>
-                setFormData({ ...formData, contractor_id: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите контрагента" />
-              </SelectTrigger>
-              <SelectContent>
-                {contractors.map((contractor) => (
-                  <SelectItem key={contractor.id} value={contractor.id.toString()}>
-                    {contractor.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={(v) => setFormData({ ...formData, contractor_id: v || '' })}
+              placeholder="Выберите контрагента"
+              searchPlaceholder="Поиск по названию или ИНН..."
+              emptyText="Контрагент не найден"
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
