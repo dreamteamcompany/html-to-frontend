@@ -117,8 +117,9 @@ const CategoryExpensesChart = () => {
   const labelCount = xLabels.length;
   const datasetCount = Object.keys(categoryData).length || 1;
   const minColWidth = isMobile ? 32 : 48;
-  const minChartWidth = labelCount * datasetCount * minColWidth;
+  const minChartWidth = labelCount > 4 ? labelCount * datasetCount * minColWidth : 0;
   const maxBarThickness = labelCount <= 2 ? (isMobile ? 40 : 60) : labelCount <= 5 ? (isMobile ? 28 : 48) : (isMobile ? 18 : 28);
+  const needConstrainWidth = labelCount <= 4;
 
   const datasets = Object.keys(categoryData).map((category, index) => ({
     label: category,
@@ -153,15 +154,16 @@ const CategoryExpensesChart = () => {
           ) : (
             <div
               className="flex-1 min-h-[260px] sm:min-h-[360px]"
-              style={{ position: 'relative', overflowX: 'auto', overflowY: 'hidden' }}
+              style={{ position: 'relative', overflowX: minChartWidth ? 'auto' : 'hidden', overflowY: 'hidden' }}
             >
               <div style={{
                 position: 'relative',
-                width: '100%',
-                minWidth: `${minChartWidth}px`,
+                width: needConstrainWidth ? `${Math.min(100, Math.max(40, labelCount * 25 + datasetCount * 10))}%` : '100%',
+                minWidth: minChartWidth ? `${minChartWidth}px` : undefined,
                 height: '100%',
                 minHeight: isMobile ? '260px' : '360px',
                 cursor: 'pointer',
+                margin: needConstrainWidth ? '0 auto' : undefined,
               }}>
               <Bar
                 data={{ labels: xLabels, datasets }}
