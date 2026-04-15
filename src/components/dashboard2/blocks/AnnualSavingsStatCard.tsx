@@ -62,7 +62,7 @@ const AnnualSavingsStatCard = () => {
     <>
     <Card
       className="h-full"
-      style={{ background: 'hsl(var(--card))', border: '1px solid rgba(1, 181, 116, 0.4)', borderTop: '4px solid #7551e9', position: 'relative', overflow: 'hidden', cursor: !savingsData ? 'default' : 'pointer' }}
+      style={{ background: 'hsl(var(--card))', border: '1px solid rgba(1, 181, 116, 0.4)', borderTop: '4px solid #7551e9', boxShadow: '0 4px 28px rgba(117,81,233,0.13)', position: 'relative', overflow: 'hidden', cursor: !savingsData ? 'default' : 'pointer' }}
       onClick={() => savingsData && setSavingsOpen(true)}
     >
       <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between" style={{ position: 'relative', zIndex: 1 }}>

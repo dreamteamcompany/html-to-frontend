@@ -259,7 +259,7 @@ const LegalEntityComparisonChart = () => {
       background: 'hsl(var(--card))',
       border: '1px solid rgba(57,101,255,0.22)',
       borderTop: '4px solid #7551e9',
-      boxShadow: isLight ? '0 4px 24px rgba(57,101,255,0.07)' : '0 4px 28px rgba(57,101,255,0.13)',
+      boxShadow: isLight ? '0 4px 24px rgba(117,81,233,0.07)' : '0 4px 28px rgba(117,81,233,0.13)',
       overflow: 'hidden',
       position: 'relative',
     }}>

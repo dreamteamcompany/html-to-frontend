@@ -128,6 +128,7 @@ const IndexationCard = () => {
           background: 'hsl(var(--card))',
           border: '1px solid rgba(255, 181, 71, 0.4)',
           borderTop: '4px solid #7551e9',
+          boxShadow: '0 4px 28px rgba(117,81,233,0.13)',
           cursor: loading ? 'default' : 'pointer',
         }}
         onClick={() => !loading && setDrillOpen(true)}

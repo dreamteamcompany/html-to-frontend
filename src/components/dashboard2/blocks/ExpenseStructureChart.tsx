@@ -340,7 +340,7 @@ const ExpenseStructureChart = () => {
 
   return (
     <>
-    <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderTop: '4px solid #7551e9', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+    <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderTop: '4px solid #7551e9', boxShadow: isLight ? '0 4px 24px rgba(117,81,233,0.07)' : '0 4px 28px rgba(117,81,233,0.13)' }}>
       <CardContent className={`flex flex-col flex-1 ${isMobile ? 'p-4' : 'p-6'}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '16px' : '20px', gap: '8px', flexWrap: 'wrap' }}>
           <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', color: 'hsl(var(--foreground))' }}>Структура Расходов</h3>
