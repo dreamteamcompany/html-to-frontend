@@ -121,7 +121,7 @@ const LegalEntityComparisonChart = () => {
       borderColor: displayData.map((_, i) => LINE_COLORS[i % LINE_COLORS.length].line),
       borderRadius: 10,
       borderSkipped: false as const,
-      maxBarThickness: isMobile ? 60 : 90,
+      maxBarThickness: isMobile ? 56 : 80,
       borderWidth: 2,
     }],
   };

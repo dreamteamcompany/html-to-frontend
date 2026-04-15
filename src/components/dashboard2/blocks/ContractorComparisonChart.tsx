@@ -221,6 +221,7 @@ const ContractorComparisonChart = () => {
       borderWidth: 2,
       borderRadius: 8,
       borderSkipped: false,
+      maxBarThickness: isMobile ? 56 : 80,
       hoverBackgroundColor: displayData.map((_, i) => LINE_COLORS[i % LINE_COLORS.length].line),
     }],
   }), [displayData, isLight, isMobile]);
