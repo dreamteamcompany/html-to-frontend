@@ -249,6 +249,24 @@ const TopPaymentsCard = () => {
               })
             )}
           </div>
+
+          {showAll && grouped.length > 0 && (
+            <div style={{
+              marginTop: '14px',
+              paddingTop: '12px',
+              borderTop: '1px solid hsl(var(--border))',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: 'hsl(var(--foreground))' }}>
+                Итого ({grouped.length})
+              </span>
+              <span style={{ fontSize: '14px', fontWeight: '800', color: '#a78bfa' }}>
+                {new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(grouped.reduce((sum, item) => sum + item.total, 0))} ₽
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
