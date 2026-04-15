@@ -20,10 +20,18 @@
       "expectedStatus": 401
     },
     {
-      "name": "Check Health",
+      "name": "Check Health Options",
       "method": "OPTIONS",
       "path": "/",
       "expectedStatus": 200
+    },
+    {
+      "name": "Check Health GET",
+      "method": "GET",
+      "path": "/?endpoint=health",
+      "expectedStatus": 200,
+      "expectedBody": {"status": "string", "version": "string"},
+      "bodyMatcher": "partial"
     },
     {
       "name": "Ticket Dictionaries Unauthorized",

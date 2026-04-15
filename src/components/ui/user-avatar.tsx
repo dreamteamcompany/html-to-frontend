@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 
 interface UserAvatarProps {
@@ -17,6 +17,10 @@ const sizeMap = {
 
 const UserAvatar = ({ photoUrl, name, size = 'md', className = '' }: UserAvatarProps) => {
   const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [photoUrl]);
   const s = sizeMap[size];
   const initial = name?.charAt(0)?.toUpperCase() || '';
 

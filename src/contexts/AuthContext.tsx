@@ -97,7 +97,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const data = await response.json();
         const rememberMe = localStorage.getItem('remember_me') === 'true';
         setToken(data.token);
-        if (data.user) setUser(data.user);
+        if (data.user) {
+          setUser(prev => ({
+            ...data.user,
+            photo_url: data.user.photo_url || prev?.photo_url || '',
+          }));
+        }
         
         if (rememberMe) {
           localStorage.setItem('auth_token', data.token);
@@ -127,6 +132,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (response.ok) {
         const userData = await response.json();
+        if (!userData.photo_url && userData.id) {
+          try {
+            const usersResp = await fetch(`${API_ENDPOINTS.main}?endpoint=users`, {
+              headers: { 'X-Auth-Token': savedToken },
+            });
+            if (usersResp.ok) {
+              const usersList = await usersResp.json();
+              const found = (Array.isArray(usersList) ? usersList : []).find((u: { id: number }) => u.id === userData.id);
+              if (found?.photo_url) {
+                userData.photo_url = found.photo_url;
+              }
+            }
+          } catch {
+            // silent
+          }
+        }
         setUser(userData);
         setToken(savedToken);
       } else {
@@ -173,7 +194,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             const data = await response.json();
             const rememberMe = localStorage.getItem('remember_me') === 'true';
             setToken(data.token);
-            setUser(data.user);
+            if (data.user) {
+              setUser(prev => ({
+                ...data.user,
+                photo_url: data.user.photo_url || prev?.photo_url || '',
+              }));
+            }
             
             if (rememberMe) {
               localStorage.setItem('auth_token', data.token);
@@ -214,8 +240,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     const data = await response.json();
+    const loginUser = data.user;
+    if (!loginUser.photo_url && loginUser.id) {
+      try {
+        const usersResp = await fetch(`${API_ENDPOINTS.main}?endpoint=users`, {
+          headers: { 'X-Auth-Token': data.token },
+        });
+        if (usersResp.ok) {
+          const usersList = await usersResp.json();
+          const found = (Array.isArray(usersList) ? usersList : []).find((u: { id: number }) => u.id === loginUser.id);
+          if (found?.photo_url) {
+            loginUser.photo_url = found.photo_url;
+          }
+        }
+      } catch {
+        // silent
+      }
+    }
     setToken(data.token);
-    setUser(data.user);
+    setUser(loginUser);
     
     if (rememberMe) {
       localStorage.setItem('auth_token', data.token);
@@ -225,7 +268,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       localStorage.removeItem('remember_me');
     }
     
-    return data.user; // Возвращаем данные пользователя
+    return loginUser;
   };
 
   const hasPermission = (resource: string, action: string): boolean => {
