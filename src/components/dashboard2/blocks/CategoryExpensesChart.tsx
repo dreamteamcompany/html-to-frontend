@@ -108,14 +108,14 @@ const CategoryExpensesChart = () => {
 
   const labelCount = xLabels.length;
 
-  const datasets = Object.keys(categoryData).map((category, index) => ({
+  const catKeys = Object.keys(categoryData);
+  const datasets = catKeys.map((category, index) => ({
     label: category,
     data: categoryData[category],
     backgroundColor: colors[index % colors.length],
-    borderRadius: 8,
+    borderRadius: labelCount <= 12 ? 8 : 4,
     borderSkipped: false as const,
-    barPercentage: 0.9,
-    categoryPercentage: 0.95,
+    maxBarThickness: isMobile ? 48 : 72,
   }));
 
   const handleChartClick = (_event: unknown, elements: { datasetIndex: number }[]) => {
@@ -147,6 +147,7 @@ const CategoryExpensesChart = () => {
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
+                  animation: { duration: 250 },
                   interaction: { mode: 'index' as const, intersect: false },
                   onClick: handleChartClick,
                   plugins: {
@@ -171,12 +172,13 @@ const CategoryExpensesChart = () => {
                   },
                   scales: {
                     y: {
+                      stacked: true,
                       beginAtZero: true,
                       ticks: {
                         color: isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180, 190, 220, 0.7)',
-                        font: { size: isMobile ? 10 : 11 },
+                        font: { size: isMobile ? 10 : 11, family: 'Plus Jakarta Sans, sans-serif' as const },
                         maxTicksLimit: isMobile ? 4 : 6,
-                        padding: 6,
+                        padding: 8,
                         callback: (value) => {
                           const v = value as number;
                           if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' млн';
@@ -188,16 +190,21 @@ const CategoryExpensesChart = () => {
                       border: { dash: [4, 4], display: false }
                     },
                     x: {
+                      stacked: true,
                       ticks: {
                         color: isLight ? 'rgba(30,30,50,0.85)' : 'rgba(180, 190, 220, 0.75)',
-                        font: { size: isMobile ? 9 : 11 },
+                        font: { size: isMobile ? 9 : 11, family: 'Plus Jakarta Sans, sans-serif' as const },
                         maxRotation: 0,
                         minRotation: 0,
                         autoSkip: true,
                         maxTicksLimit: isMobile ? 8 : 15,
                         padding: 4,
                       },
-                      grid: { display: false }
+                      grid: { display: false },
+                      border: { display: false },
+                      afterFit(scale: { paddingBottom: number }) {
+                        scale.paddingBottom = isMobile ? 4 : 6;
+                      },
                     }
                   }
                 }}
