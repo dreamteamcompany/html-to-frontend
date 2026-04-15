@@ -26,7 +26,7 @@ interface PendingApprovalsTabProps {
 }
 
 const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingApprovalsTabProps = {}) => {
-  const { requestNotificationPermission } = usePendingApprovals();
+  usePendingApprovals();
   const { payments, loading, approveProgress, handleApprove, handleApproveAll, handleReject } = usePendingApprovalsData();
   const [approvingAll, setApprovingAll] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -46,14 +46,7 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
   const searchQuery = filters.search;
   const setSearchQuery = (v: string) => setFilter('search', v);
 
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-
-  useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationPermission(Notification.permission);
-    }
-  }, []);
 
   useEffect(() => {
     if (openPaymentId && payments.length > 0) {
@@ -185,23 +178,6 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {notificationPermission !== 'granted' && (
-        <div className="px-4 py-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-yellow-800 dark:text-yellow-300">
-              <Icon name="Bell" size={16} />
-              <span>Включите уведомления, чтобы не пропустить новые заявки</span>
-            </div>
-            <button
-              onClick={requestNotificationPermission}
-              className="text-sm font-semibold text-yellow-800 dark:text-yellow-300 hover:underline whitespace-nowrap"
-            >
-              Включить
-            </button>
-          </div>
-        </div>
-      )}
 
       <PendingApprovalsList
         loading={loading}
