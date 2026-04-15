@@ -66,7 +66,7 @@ const PaymentTypeChart = () => {
       style={{
         background: 'hsl(var(--card))',
         border: '1px solid hsl(var(--border))',
-        borderTop: '4px solid #3965ff',
+        borderTop: '4px solid #7551e9',
       }}
     >
       <CardContent className="p-4 sm:p-6 h-full flex flex-col">

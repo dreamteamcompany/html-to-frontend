@@ -84,7 +84,7 @@ const CriticalAlertsCard = () => {
     <Card style={{
       background: 'hsl(var(--card))',
       border: '1px solid rgba(255, 107, 107, 0.3)',
-      borderTop: '4px solid rgba(255, 107, 107, 1)',
+      borderTop: '4px solid #7551e9',
       boxShadow: '0 4px 28px rgba(255, 107, 107, 0.1)',
       position: 'relative',
       overflow: 'hidden'

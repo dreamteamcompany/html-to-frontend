@@ -236,7 +236,7 @@ const MonthlyDynamicsChart = () => {
 
   return (
     <>
-      <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(117, 81, 233, 0.4)' }}>
+      <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(117, 81, 233, 0.4)', borderTop: '4px solid #7551e9' }}>
         <CardContent className="p-3 sm:p-6 flex flex-col flex-1">
           <div style={{ marginBottom: '12px' }} className="sm:mb-4">
             <h3 className={dashboardTypography.cardTitle}>Динамика расходов</h3>

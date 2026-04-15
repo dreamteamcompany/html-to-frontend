@@ -410,7 +410,7 @@ const ExpenseShareChart = () => {
 
   return (
     <>
-    <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+    <Card className="h-full flex flex-col" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderTop: '4px solid #7551e9', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
       <CardContent className="p-4 flex flex-col flex-1">
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>

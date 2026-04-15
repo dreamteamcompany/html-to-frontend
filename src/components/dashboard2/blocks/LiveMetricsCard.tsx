@@ -67,7 +67,7 @@ const LiveMetricsCard = () => {
     <Card style={{
       background: 'hsl(var(--card))',
       border: '1px solid rgba(1, 181, 116, 0.3)',
-      borderTop: '4px solid rgba(1, 181, 116, 1)',
+      borderTop: '4px solid #7551e9',
       boxShadow: '0 4px 28px rgba(1, 181, 116, 0.1)',
       position: 'relative',
       overflow: 'hidden'

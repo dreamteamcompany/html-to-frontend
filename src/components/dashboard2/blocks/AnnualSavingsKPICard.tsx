@@ -56,7 +56,7 @@ const AnnualSavingsKPICard = () => {
   return (
     <>
     <Card
-      style={{ background: 'hsl(var(--card))', border: '1px solid rgba(1, 181, 116, 0.3)', position: 'relative', overflow: 'hidden', cursor: loading ? 'default' : 'pointer' }}
+      style={{ background: 'hsl(var(--card))', border: '1px solid rgba(1, 181, 116, 0.3)', borderTop: '4px solid #7551e9', position: 'relative', overflow: 'hidden', cursor: loading ? 'default' : 'pointer' }}
       onClick={() => !loading && setSavingsOpen(true)}
     >
       <CardContent className="p-4 sm:p-6" style={{ position: 'relative', zIndex: 1 }}>
