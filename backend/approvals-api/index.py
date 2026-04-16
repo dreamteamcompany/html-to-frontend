@@ -270,7 +270,7 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
         log(f'[BITRIX-BOT] Missing config: webhook={bool(webhook_url)}, user={bitrix_user_id}')
         return
 
-    payment_url = f'{APP_BASE_URL}/payments?payment_id={payment_id}'
+    payment_url = f'{APP_BASE_URL}/payments?payment_id={payment_id}&auto_bitrix=1'
     full_message = f"{message}\n[url={payment_url}]Перейти к платежу[/url]"
 
     if bot_id:

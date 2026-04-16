@@ -46,7 +46,18 @@ const BitrixCallback = () => {
         setUser(data.user);
         localStorage.setItem('auth_token', data.token);
         localStorage.setItem('remember_me', 'true');
-        navigate('/');
+
+        let target = '/';
+        try {
+          const saved = sessionStorage.getItem('post_login_redirect');
+          if (saved) {
+            sessionStorage.removeItem('post_login_redirect');
+            target = saved;
+          }
+        } catch {
+          /* ignore */
+        }
+        navigate(target);
       } catch {
         setError('Ошибка соединения с сервером');
         setLoading(false);

@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/icon';
 
@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -22,7 +23,18 @@ const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) =
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    const targetPath = location.pathname + location.search;
+    if (targetPath && targetPath !== '/' && targetPath !== '/login') {
+      try {
+        sessionStorage.setItem('post_login_redirect', targetPath);
+      } catch {
+        /* ignore */
+      }
+    }
+    const searchParams = new URLSearchParams(location.search);
+    const autoBitrix = searchParams.get('auto_bitrix') === '1';
+    const loginUrl = autoBitrix ? '/login?auto_bitrix=1' : '/login';
+    return <Navigate to={loginUrl} replace />;
   }
 
   if (requiredPermission) {

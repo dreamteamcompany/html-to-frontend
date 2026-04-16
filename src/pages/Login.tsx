@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { Button } from '@/components/ui/button';
@@ -18,9 +18,21 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const autoBitrixTriggered = useRef(false);
 
   const navigateAfterLogin = (_userData: { roles?: { name: string }[]; permissions?: { resource: string; action: string }[] }) => {
-    navigate('/');
+    let target = '/';
+    try {
+      const saved = sessionStorage.getItem('post_login_redirect');
+      if (saved) {
+        sessionStorage.removeItem('post_login_redirect');
+        target = saved;
+      }
+    } catch {
+      /* ignore */
+    }
+    navigate(target);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +70,30 @@ const Login = () => {
       setBitrixLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (autoBitrixTriggered.current) return;
+    if (searchParams.get('auto_bitrix') === '1') {
+      autoBitrixTriggered.current = true;
+      handleBitrixLogin();
+    }
+  }, [searchParams]);
+
+  const autoBitrix = searchParams.get('auto_bitrix') === '1';
+
+  if (autoBitrix && !error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1729] to-[#1b254b] p-4">
+        <Card className="w-full max-w-md border-[#7551e9]/30 bg-card/95 backdrop-blur-xl shadow-[0_8px_40px_rgba(117,81,233,0.18)]">
+          <CardContent className="flex flex-col items-center gap-4 py-12">
+            <Logo className="h-12 w-auto text-white mb-2" />
+            <Icon name="Loader2" size={40} className="animate-spin text-[#7551e9]" />
+            <p className="text-foreground font-medium">Перенаправляем в Битрикс24...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1729] to-[#1b254b] p-4">
