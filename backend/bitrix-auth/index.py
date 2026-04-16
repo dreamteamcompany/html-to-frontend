@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import urlencode
 import urllib.request
+import urllib.error
 
 SCHEMA = 't_p61788166_html_to_frontend'
 BITRIX_DOMAIN = 'https://bitrix.dreamteamcompany.ru'
@@ -141,12 +142,21 @@ def handle_bitrix_callback(event: Dict[str, Any]) -> Dict[str, Any]:
         'code': code,
     })
 
+    log(f"[BITRIX-AUTH] Token URL: {token_url}")
+    log(f"[BITRIX-AUTH] redirect_uri={redirect_uri}")
+
     try:
         req = urllib.request.Request(token_url)
         with urllib.request.urlopen(req, timeout=10) as resp:
-            token_data = json.loads(resp.read().decode())
+            raw = resp.read().decode()
+            log(f"[BITRIX-AUTH] Token response: {raw[:500]}")
+            token_data = json.loads(raw)
+    except urllib.error.HTTPError as e:
+        body = e.read().decode() if e.fp else ''
+        log(f"[BITRIX-AUTH] Token HTTP error {e.code}: {body[:500]}")
+        return response(502, {'error': f'Битрикс вернул ошибку {e.code}'})
     except Exception as e:
-        log(f"Bitrix token error: {e}")
+        log(f"[BITRIX-AUTH] Token error: {type(e).__name__}: {e}")
         return response(502, {'error': 'Не удалось получить токен от Битрикс'})
 
     access_token = token_data.get('access_token')
