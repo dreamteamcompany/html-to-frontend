@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,11 @@ const Settings = () => {
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [clearing, setClearing] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [restoreConfirmText, setRestoreConfirmText] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const { token, hasPermission } = useAuth();
   const { toast } = useToast();
 
@@ -88,6 +93,84 @@ const Settings = () => {
     }
   };
 
+  const handleExportBackup = async () => {
+    setExporting(true);
+    try {
+      const resp = await fetch(`${API_ENDPOINTS.dbBackup}?action=export`, {
+        headers: { 'X-Auth-Token': token || '' },
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Ошибка сервера' }));
+        throw new Error(err.error || 'Не удалось скачать бэкап');
+      }
+      const data = await resp.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `backup_${date}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: 'Готово', description: 'Резервная копия скачана' });
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Не удалось скачать бэкап',
+        variant: 'destructive',
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingFile(file);
+    setRestoreConfirmText('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleRestoreBackup = async () => {
+    if (restoreConfirmText !== 'ВОССТАНОВИТЬ' || !pendingFile) return;
+    setImporting(true);
+    try {
+      const text = await pendingFile.text();
+      const backup = JSON.parse(text);
+      const resp = await fetch(`${API_ENDPOINTS.dbBackup}?action=import`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({ backup }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Ошибка сервера' }));
+        throw new Error(err.error || 'Не удалось восстановить данные');
+      }
+      const result = await resp.json();
+      toast({
+        title: 'Данные восстановлены',
+        description: `Таблиц: ${result.tables_restored}, записей: ${result.rows_restored}`,
+      });
+      setPendingFile(null);
+      setRestoreConfirmText('');
+      setTimeout(() => { window.location.href = '/'; }, 2000);
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Не удалось восстановить данные',
+        variant: 'destructive',
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const dataCategories = [
     { name: 'Платежи', icon: 'CreditCard' },
     { name: 'На согласовании', icon: 'Clock' },
@@ -147,6 +230,98 @@ const Settings = () => {
         <div className="grid gap-6">
           <ScheduledPaymentsSettings />
           
+          {isAdmin && (
+            <Card className="border border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Icon name="DatabaseBackup" fallback="Database" size={24} className="text-[#7551e9]" />
+                  Резервное копирование
+                </CardTitle>
+                <CardDescription>
+                  Скачайте копию всей базы данных или восстановите из ранее сохранённого файла
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={handleExportBackup}
+                    disabled={exporting}
+                    className="bg-[#7551e9] hover:bg-[#6341d4] text-white"
+                  >
+                    {exporting ? (
+                      <>
+                        <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
+                        Скачивание...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="Download" size={18} className="mr-2" />
+                        Скачать резервную копию
+                      </>
+                    )}
+                  </Button>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-500"
+                  >
+                    <Icon name="Upload" size={18} className="mr-2" />
+                    Восстановить из копии
+                  </Button>
+                </div>
+
+                {pendingFile && (
+                  <AlertDialog open={!!pendingFile} onOpenChange={(open) => { if (!open) { setPendingFile(null); setRestoreConfirmText(''); } }}>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <Icon name="AlertTriangle" size={24} className="text-amber-500" />
+                          Восстановление из резервной копии
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Файл: <strong>{pendingFile.name}</strong>
+                          <br /><br />
+                          Все текущие данные будут заменены на данные из файла. Это действие необратимо.
+                          <br /><br />
+                          Для подтверждения введите: <strong>ВОССТАНОВИТЬ</strong>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="py-4">
+                        <Input
+                          value={restoreConfirmText}
+                          onChange={(e) => setRestoreConfirmText(e.target.value)}
+                          placeholder="Введите ВОССТАНОВИТЬ"
+                          className="font-mono"
+                        />
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => { setPendingFile(null); setRestoreConfirmText(''); }}>
+                          Отмена
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleRestoreBackup}
+                          disabled={importing || restoreConfirmText !== 'ВОССТАНОВИТЬ'}
+                          className="bg-amber-600 text-white hover:bg-amber-700"
+                        >
+                          {importing ? 'Восстановление...' : 'Восстановить'}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {isAdmin && (
             <Card className="border border-border">
               <CardHeader>

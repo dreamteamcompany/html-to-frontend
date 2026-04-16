@@ -1,4 +1,5 @@
 {
+  "db-backup": "https://functions.poehali.dev/09a1f7cf-31f8-4957-95b4-4809aebb317f",
   "bitrix-auth": "https://functions.poehali.dev/915240b9-c9a0-443b-b12d-bd2930ab3793",
   "payment": "https://functions.poehali.dev/9b98c372-55f8-448c-94ad-e318c0a78214",
   "generate-certificate": "https://functions.poehali.dev/0bf38d97-39bc-494b-9022-6aa490b9e0cd",
