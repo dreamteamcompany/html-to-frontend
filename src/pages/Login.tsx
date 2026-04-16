@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_ENDPOINTS } from '@/config/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [bitrixLoading, setBitrixLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -33,6 +35,27 @@ const Login = () => {
       setError(err instanceof Error ? err.message : 'Ошибка входа');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBitrixLogin = async () => {
+    setError('');
+    setBitrixLoading(true);
+
+    try {
+      const resp = await fetch(`${API_ENDPOINTS.main}?endpoint=bitrix-login`);
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        setError(data.error || 'Ошибка подключения к Битрикс');
+        setBitrixLoading(false);
+        return;
+      }
+
+      window.location.href = data.auth_url;
+    } catch {
+      setError('Ошибка соединения с сервером');
+      setBitrixLoading(false);
     }
   };
 
@@ -120,6 +143,35 @@ const Login = () => {
               )}
             </Button>
           </form>
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border/40" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-card px-3 text-muted-foreground/60">или</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-[#2fc7f7]/40 text-[#2fc7f7] hover:bg-[#2fc7f7]/10 hover:text-[#2fc7f7] hover:border-[#2fc7f7]/60"
+            disabled={bitrixLoading}
+            onClick={handleBitrixLogin}
+          >
+            {bitrixLoading ? (
+              <>
+                <Icon name="Loader2" size={18} className="animate-spin" />
+                Подключение...
+              </>
+            ) : (
+              <>
+                <Icon name="Building2" size={18} />
+                Войти через Битрикс24
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
     </div>

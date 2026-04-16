@@ -1,1 +1,0 @@
-{"tests": [{"name": "Get config", "method": "GET", "path": "/?action=config", "expectedStatus": 200, "expectedBody": {"bitrix_domain": "string"}, "bodyMatcher": "partial"}, {"name": "Callback without code", "method": "GET", "path": "/?action=callback", "expectedStatus": 400, "expectedBody": {"error": "string"}, "bodyMatcher": "partial"}]}

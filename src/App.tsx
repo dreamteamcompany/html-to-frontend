@@ -12,6 +12,7 @@ import PushNotificationPrompt from "@/components/notifications/PushNotificationP
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import BitrixCallback from "./pages/BitrixCallback";
 import Dashboard2 from "./pages/Dashboard2";
 import Payments from "./pages/Payments";
 import Categories from "./pages/Categories";
@@ -64,6 +65,7 @@ const App = () => {
             <SwNavigationHandler />
             <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/bitrix-callback" element={<BitrixCallback />} />
             <Route path="/" element={<ProtectedRoute><Dashboard2 /></ProtectedRoute>} />
             <Route path="/payments" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><Payments /></ProtectedRoute>} />
             <Route path="/categories" element={<ProtectedRoute requiredPermission={{ resource: 'categories', action: 'read' }}><Categories /></ProtectedRoute>} />

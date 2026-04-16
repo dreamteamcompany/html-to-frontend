@@ -15,7 +15,9 @@ import hmac
 import base64
 import secrets
 import struct
-# Deploy version: v2.6.0 - WebAuthn/Passkeys support
+import urllib.request
+from urllib.parse import urlencode
+# Deploy version: v2.7.1 - Bitrix24 OAuth support
 
 SCHEMA = 't_p61788166_html_to_frontend'
 VERSION = '2.6.0'
@@ -417,6 +419,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return handle_planned_payments(method, event, conn)
         elif endpoint == 'payment-views':
             return handle_payment_views(method, event, conn)
+        elif endpoint == 'bitrix-login':
+            return handle_bitrix_login(event, conn)
+        elif endpoint == 'bitrix-callback':
+            return handle_bitrix_callback(event, conn)
         # Endpoints requiring auth
         auth_endpoints = {
             'comments': lambda p, u: handle_comments(method, event, conn, u),
@@ -487,6 +493,112 @@ def handle_login(event: Dict[str, Any], conn) -> Dict[str, Any]:
     return response(200, {
         'token': token,
         'user': user_data
+    })
+
+BITRIX_DOMAIN = 'https://bitrix.dreamteamcompany.ru'
+
+def handle_bitrix_login(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Генерирует URL для OAuth авторизации через Битрикс24"""
+    client_id = os.environ.get('BITRIX_CLIENT_ID')
+    if not client_id:
+        return response(500, {'error': 'BITRIX_CLIENT_ID не настроен'})
+
+    redirect_uri = os.environ.get('BITRIX_REDIRECT_URI')
+    if not redirect_uri:
+        return response(500, {'error': 'BITRIX_REDIRECT_URI не настроен'})
+
+    auth_url = BITRIX_DOMAIN + '/oauth/authorize/?' + urlencode({
+        'client_id': client_id,
+        'response_type': 'code',
+        'redirect_uri': redirect_uri,
+    })
+
+    return response(200, {'auth_url': auth_url})
+
+def handle_bitrix_callback(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Обработка callback от Битрикс24 OAuth"""
+    params = event.get('queryStringParameters') or {}
+    code = params.get('code')
+    if not code:
+        return response(400, {'error': 'Отсутствует code от Битрикс'})
+
+    client_id = os.environ.get('BITRIX_CLIENT_ID')
+    client_secret = os.environ.get('BITRIX_CLIENT_SECRET')
+    if not client_id or not client_secret:
+        return response(500, {'error': 'Битрикс OAuth не настроен'})
+
+    redirect_uri = os.environ.get('BITRIX_REDIRECT_URI', '')
+    
+    token_url = BITRIX_DOMAIN + '/oauth/token/?' + urlencode({
+        'grant_type': 'authorization_code',
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'redirect_uri': redirect_uri,
+        'code': code,
+    })
+
+    try:
+        req = urllib.request.Request(token_url)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            token_data = json.loads(resp.read().decode())
+    except Exception as e:
+        log(f"Bitrix token error: {e}")
+        return response(502, {'error': 'Не удалось получить токен от Битрикс'})
+
+    access_token = token_data.get('access_token')
+    if not access_token:
+        log(f"Bitrix token response: {token_data}")
+        return response(502, {'error': 'Битрикс не вернул access_token'})
+
+    try:
+        user_url = BITRIX_DOMAIN + '/rest/user.current.json?auth=' + access_token
+        req = urllib.request.Request(user_url)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            user_data = json.loads(resp.read().decode())
+    except Exception as e:
+        log(f"Bitrix user error: {e}")
+        return response(502, {'error': 'Не удалось получить профиль из Битрикс'})
+
+    bx_user = user_data.get('result', {})
+    bx_email = (bx_user.get('EMAIL') or '').strip().lower()
+
+    if not bx_email:
+        return response(400, {'error': 'У пользователя Битрикс не заполнен email'})
+
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(f"""
+        SELECT id, username, is_active FROM {SCHEMA}.users
+        WHERE LOWER(email) = %s
+    """, (bx_email,))
+    local_user = cur.fetchone()
+    cur.close()
+
+    if not local_user:
+        return response(403, {
+            'error': f'Пользователь с email {bx_email} не найден в системе. Обратитесь к администратору.'
+        })
+
+    if not local_user['is_active']:
+        return response(403, {'error': 'Учётная запись деактивирована'})
+
+    cur = conn.cursor()
+    moscow_tz = ZoneInfo('Europe/Moscow')
+    now = datetime.now(moscow_tz).strftime('%Y-%m-%d %H:%M:%S')
+    cur.execute(f"""
+        UPDATE {SCHEMA}.users SET last_login = %s WHERE id = %s
+    """, (now, local_user['id']))
+    conn.commit()
+    cur.close()
+
+    user_full = get_user_with_permissions(conn, local_user['id'])
+    if not user_full:
+        return response(500, {'error': 'Ошибка загрузки профиля'})
+
+    token = create_jwt_token(local_user['id'], local_user['username'])
+
+    return response(200, {
+        'token': token,
+        'user': user_full,
     })
 
 def handle_register(event: Dict[str, Any], conn) -> Dict[str, Any]:
