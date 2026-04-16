@@ -134,7 +134,8 @@ def handle_bitrix_callback(event: Dict[str, Any]) -> Dict[str, Any]:
 
     redirect_uri = os.environ.get('BITRIX_REDIRECT_URI', '')
 
-    token_url = BITRIX_DOMAIN + '/oauth/token/?' + urlencode({
+    token_url = BITRIX_DOMAIN + '/oauth/token/'
+    token_params = urlencode({
         'grant_type': 'authorization_code',
         'client_id': client_id,
         'client_secret': client_secret,
@@ -146,7 +147,8 @@ def handle_bitrix_callback(event: Dict[str, Any]) -> Dict[str, Any]:
     log(f"[BITRIX-AUTH] redirect_uri={redirect_uri}")
 
     try:
-        req = urllib.request.Request(token_url)
+        req = urllib.request.Request(token_url, data=token_params.encode('utf-8'), method='POST')
+        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
         with urllib.request.urlopen(req, timeout=10) as resp:
             raw = resp.read().decode()
             log(f"[BITRIX-AUTH] Token response: {raw[:500]}")
