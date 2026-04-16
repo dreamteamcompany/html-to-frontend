@@ -6,6 +6,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from decimal import Decimal
 from services import fetch_service_balance, calculate_status
+# Deploy v1.0.1 - improve error logging
 
 def handler(event: dict, context) -> dict:
     '''API для мониторинга балансов сервисов - получение, обновление и управление интеграциями'''
@@ -353,11 +354,13 @@ def refresh_service_balance(conn, service_id: int) -> dict:
                 float(service['threshold_critical']) if service['threshold_critical'] else None
             )
             
-        except Exception:
+        except Exception as e:
+            import sys as _sys
+            print(f"[MONITORING] Refresh failed for service {service_id} ({service.get('service_name')}): {type(e).__name__}: {e}", file=_sys.stderr, flush=True)
             return {
                 'statusCode': 500,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'Не удалось обновить баланс. Проверьте настройки подключения.'})
+                'body': json.dumps({'error': f'Не удалось обновить баланс: {type(e).__name__}: {str(e)}'})
             }
         
         cur.execute('''

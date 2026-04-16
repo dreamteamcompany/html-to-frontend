@@ -21,6 +21,7 @@
   "tickets-api": "https://functions.poehali.dev/36ca4c35-8625-4e62-b383-d5feac4de266",
   "categories": "https://functions.poehali.dev/eb1ea9c3-8bfb-40dd-b581-d200a162ee9a",
   "users-api": "https://functions.poehali.dev/e779e7ac-e5aa-4f88-b2dc-e856132ad15d",
+  "monitoring": "https://functions.poehali.dev/ffd10ecc-7940-4a9a-92f7-e6eea426304d",
   "push-notifications": "https://functions.poehali.dev/cc67e884-8946-4bcd-939d-ea3c195a6598",
   "test-deploy": "https://functions.poehali.dev/e50e0008-e6b6-4c27-9969-a5dc77bd5f99",
   "process-scheduled-payments": "https://functions.poehali.dev/eeefc720-2351-43cd-804d-44fbd748ab8f",
