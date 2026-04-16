@@ -101,6 +101,15 @@ def verify_admin(event):
 def check_admin_permission(conn, user_id):
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute(f"""
+        SELECT r.name FROM {SCHEMA}.roles r
+        JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
+        WHERE ur.user_id = %s AND r.name IN ('Администратор', 'Admin')
+    """, (user_id,))
+    admin_roles = cur.fetchall()
+    if len(admin_roles) > 0:
+        cur.close()
+        return True
+    cur.execute(f"""
         SELECT DISTINCT p.name FROM {SCHEMA}.permissions p
         JOIN {SCHEMA}.role_permissions rp ON p.id = rp.permission_id
         JOIN {SCHEMA}.user_roles ur ON rp.role_id = ur.role_id
