@@ -1,9 +1,11 @@
 """API для управления согласованиями платежей"""
 import json
 import os
+import sys
 import base64
 import urllib.request
-from typing import Dict, Any
+from urllib.parse import urlencode, quote
+from typing import Dict, Any, List
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import jwt
@@ -11,11 +13,14 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel, Field
 
-# Environment
 SCHEMA = 't_p61788166_html_to_frontend'
 DSN = os.environ['DATABASE_URL']
 
 PUSH_API_URL = 'https://functions.poehali.dev/cc67e884-8946-4bcd-939d-ea3c195a6598'
+APP_BASE_URL = 'https://procurement.poehali.dev'
+
+def log(msg):
+    print(msg, file=sys.stderr, flush=True)
 
 def response(status: int, body: Any) -> Dict[str, Any]:
     """Формирует HTTP ответ"""
@@ -255,6 +260,120 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
     cur.close()
     return response(200, {'payments': payments})
 
+def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
+    """Отправляет сообщение от бота в Битрикс24 пользователю"""
+    webhook_url = os.environ.get('BITRIX_WEBHOOK_URL', '').rstrip('/')
+    bot_id = os.environ.get('BITRIX_BOT_ID', '')
+    
+    if not webhook_url or not bot_id or not bitrix_user_id:
+        return
+
+    payment_url = f'{APP_BASE_URL}/payments?payment_id={payment_id}'
+    
+    attach = json.dumps([
+        {"BLOCKS": [
+            {"MESSAGE": message},
+            {"LINK": {"NAME": "Перейти к платежу", "LINK": payment_url}}
+        ]}
+    ])
+
+    params = urlencode({
+        'BOT_ID': bot_id,
+        'DIALOG_ID': bitrix_user_id,
+        'MESSAGE': message,
+        'ATTACH': attach,
+    })
+
+    url = f'{webhook_url}/imbot.message.add.json?{params}'
+
+    try:
+        req = urllib.request.Request(url, method='GET')
+        resp = urllib.request.urlopen(req, timeout=10)
+        result = json.loads(resp.read().decode())
+        log(f'[BITRIX-BOT] Sent to user {bitrix_user_id}: {result}')
+    except Exception as e:
+        log(f'[BITRIX-BOT] Failed to send to user {bitrix_user_id}: {e}')
+
+
+def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int, comment: str = ''):
+    """Отправляет уведомления через Битрикс бота по ролям"""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute(f"""
+        SELECT p.id, p.description, p.amount, p.payment_date, p.service_id, p.created_by,
+               s.name AS service_name
+        FROM {SCHEMA}.payments p
+        LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+        WHERE p.id = %s
+    """, (payment_id,))
+    payment = cur.fetchone()
+    if not payment:
+        cur.close()
+        return
+
+    service_name = payment['service_name'] or payment['description'] or f'Платёж #{payment_id}'
+    try:
+        amount_fmt = f"{float(payment['amount']):,.0f}".replace(',', ' ') + ' ₽'
+    except Exception:
+        amount_fmt = str(payment['amount']) + ' ₽'
+
+    cur.execute(f"SELECT full_name FROM {SCHEMA}.users WHERE id = %s", (actor_id,))
+    actor_row = cur.fetchone()
+    actor_name = actor_row['full_name'] if actor_row else 'Пользователь'
+
+    action_labels = {
+        'approve': 'согласован',
+        'reject': 'отклонён',
+        'revoke': 'отозван',
+        'submit': 'на согласование',
+    }
+    action_label = action_labels.get(action, action)
+
+    recipients_bitrix_ids: List[str] = []
+
+    if action == 'submit':
+        cur.execute(f"""
+            SELECT DISTINCT u.bitrix_id FROM {SCHEMA}.user_roles ur
+            JOIN {SCHEMA}.roles r ON ur.role_id = r.id
+            JOIN {SCHEMA}.users u ON ur.user_id = u.id
+            WHERE r.name IN ('CEO', 'Генеральный директор')
+              AND u.bitrix_id IS NOT NULL AND u.bitrix_id != ''
+              AND u.is_active = true AND ur.user_id != %s
+        """, (actor_id,))
+        for row in cur.fetchall():
+            recipients_bitrix_ids.append(row['bitrix_id'])
+
+        msg = f"📋 Новый счёт на согласование\n{service_name} — {amount_fmt}\nОт: {actor_name}"
+
+    elif action in ('approve', 'reject', 'revoke'):
+        cur.execute(f"""
+            SELECT DISTINCT u.bitrix_id FROM {SCHEMA}.user_roles ur
+            JOIN {SCHEMA}.roles r ON ur.role_id = r.id
+            JOIN {SCHEMA}.users u ON ur.user_id = u.id
+            WHERE r.name IN ('Администратор', 'Admin', 'Финансист')
+              AND u.bitrix_id IS NOT NULL AND u.bitrix_id != ''
+              AND u.is_active = true AND ur.user_id != %s
+        """, (actor_id,))
+        for row in cur.fetchall():
+            recipients_bitrix_ids.append(row['bitrix_id'])
+
+        emoji = {'approve': '✅', 'reject': '❌', 'revoke': '↩️'}.get(action, '📋')
+        msg = f"{emoji} Счёт {action_label}: {service_name} — {amount_fmt}\n{actor_name}"
+        if comment:
+            msg += f"\nКомментарий: {comment}"
+    else:
+        cur.close()
+        return
+
+    cur.close()
+
+    seen = set()
+    for bx_id in recipients_bitrix_ids:
+        if bx_id not in seen:
+            seen.add(bx_id)
+            send_bitrix_bot_message(bx_id, msg, payment_id)
+
+
 def create_approval_notifications(conn, payment_id: int, action: str, actor_id: int):
     """Создаёт уведомления согласующим при изменении статуса платежа"""
     cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -340,6 +459,16 @@ def create_approval_notifications(conn, payment_id: int, action: str, actor_id: 
         )
         notif_type = 'approval_rejected'
 
+    elif action == 'revoke':
+        if payment['final_approver_id'] and payment['final_approver_id'] != actor_id:
+            recipients.append(payment['final_approver_id'])
+        if payment['intermediate_approver_id'] and payment['intermediate_approver_id'] != actor_id:
+            recipients.append(payment['intermediate_approver_id'])
+        message = (
+            f"Счёт отозван: {service_name} — {amount_fmt} (дата: {date_fmt}), от {creator_name}"
+        )
+        notif_type = 'approval_revoked'
+
     else:
         return
 
@@ -364,6 +493,8 @@ def create_approval_notifications(conn, payment_id: int, action: str, actor_id: 
         push_title = 'Счёт согласован'
     elif action == 'reject':
         push_title = 'Счёт отклонён'
+    elif action == 'revoke':
+        push_title = 'Счёт отозван'
 
     push_url = f'/payments?payment_id={payment_id}'
 
@@ -513,11 +644,16 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     conn.commit()
     cur.close()
 
-    if approval_action.action in ('submit', 'approve', 'reject'):
+    if approval_action.action in ('submit', 'approve', 'reject', 'revoke'):
         try:
             create_approval_notifications(conn, approval_action.payment_id, approval_action.action, user_id)
         except Exception as e:
-            print(f"[WARN] Notification creation failed: {e}")
+            log(f"[WARN] Notification creation failed: {e}")
+
+        try:
+            send_bitrix_notifications(conn, approval_action.payment_id, approval_action.action, user_id, approval_action.comment)
+        except Exception as e:
+            log(f"[WARN] Bitrix bot notification failed: {e}")
 
     return response(200, {'message': 'Действие выполнено успешно', 'new_status': new_status})
 
