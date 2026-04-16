@@ -126,24 +126,49 @@ const TopPaymentsCard = () => {
               <Icon name="TrendingUp" size={18} style={{ color: '#fff' }} className="sm:w-6 sm:h-6" />
             </div>
             <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'hsl(var(--foreground))', flex: 1 }} className="sm:text-base">Сравнение по сервисам</h3>
-            <button
-              onClick={() => setShowAll(!showAll)}
-              style={{
-                padding: '4px 12px',
-                fontSize: '11px',
-                fontWeight: '600',
-                color: showAll ? '#fff' : '#a78bfa',
-                background: showAll ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'rgba(117, 81, 233, 0.15)',
-                border: showAll ? '1px solid transparent' : '1px solid #a78bfa',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}
-            >
-              {showAll ? 'Топ-5' : 'Все'}
-            </button>
+            <div style={{
+              display: 'flex',
+              background: '#1e1b4b',
+              borderRadius: '8px',
+              padding: '3px',
+              gap: '2px',
+              flexShrink: 0,
+            }}>
+              <button
+                onClick={() => setShowAll(false)}
+                style={{
+                  padding: '4px 14px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: !showAll ? '#fff' : 'rgba(167, 139, 250, 0.7)',
+                  background: !showAll ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'transparent',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Топ-5
+              </button>
+              <button
+                onClick={() => setShowAll(true)}
+                style={{
+                  padding: '4px 14px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: showAll ? '#fff' : 'rgba(167, 139, 250, 0.7)',
+                  background: showAll ? 'linear-gradient(135deg, #7551e9 0%, #5a3ec5 100%)' : 'transparent',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Все
+              </button>
+            </div>
           </div>
 
           <div style={{
