@@ -17,10 +17,10 @@ import secrets
 import struct
 import urllib.request
 from urllib.parse import urlencode
-# Deploy version: v2.7.1 - Bitrix24 OAuth support
+# Deploy version: v2.8.0 - Bitrix24 OAuth login + callback
 
 SCHEMA = 't_p61788166_html_to_frontend'
-VERSION = '2.6.0'
+VERSION = '2.8.0'
 
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
