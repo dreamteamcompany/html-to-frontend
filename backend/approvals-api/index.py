@@ -271,7 +271,18 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
         return
 
     payment_url = f'{APP_BASE_URL}/payments?payment_id={payment_id}&auto_bitrix=1'
-    full_message = f"{message}\n[url={payment_url}]Перейти к платежу[/url]"
+
+    keyboard = json.dumps([
+        {
+            'TEXT': 'Перейти к платежу',
+            'LINK': payment_url,
+            'BG_COLOR': '#29619b',
+            'TEXT_COLOR': '#ffffff',
+            'DISPLAY': 'LINE',
+        }
+    ])
+
+    fallback_message = f"{message}\n[url={payment_url}]Перейти к платежу[/url]"
 
     if bot_id:
         url = f'{webhook_url}/imbot.message.add.json'
@@ -280,7 +291,8 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
         base_payload = {
             'BOT_ID': bot_id,
             'DIALOG_ID': str(bitrix_user_id),
-            'MESSAGE': full_message,
+            'MESSAGE': message,
+            'KEYBOARD': keyboard,
         }
         if bot_client_id:
             attempts.append({**base_payload, 'CLIENT_ID': bot_client_id})
@@ -288,7 +300,8 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
             'BOT_ID': bot_id,
             'FROM_USER_ID': bot_id,
             'TO_USER_ID': str(bitrix_user_id),
-            'MESSAGE': full_message,
+            'MESSAGE': message,
+            'KEYBOARD': keyboard,
         })
         attempts.append(base_payload)
 
@@ -313,7 +326,7 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
 
     im_data = json.dumps({
         'DIALOG_ID': str(bitrix_user_id),
-        'MESSAGE': full_message,
+        'MESSAGE': fallback_message,
         'SYSTEM': 'N',
     }).encode('utf-8')
     im_url = f'{webhook_url}/im.message.add.json'
@@ -330,7 +343,7 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
 
     notify_data = json.dumps({
         'to': str(bitrix_user_id),
-        'message': full_message,
+        'message': fallback_message,
         'type': 'SYSTEM',
     }).encode('utf-8')
     notify_url = f'{webhook_url}/im.notify.system.add.json'
@@ -351,9 +364,13 @@ def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int,
 
     cur.execute(f"""
         SELECT p.id, p.description, p.amount, p.payment_date, p.service_id, p.created_by,
-               s.name AS service_name
+               s.name AS service_name,
+               le.name AS legal_entity_name,
+               dep.name AS department_name
         FROM {SCHEMA}.payments p
         LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
+        LEFT JOIN {SCHEMA}.legal_entities le ON p.legal_entity_id = le.id
+        LEFT JOIN {SCHEMA}.customer_departments dep ON p.department_id = dep.id
         WHERE p.id = %s
     """, (payment_id,))
     payment = cur.fetchone()
@@ -362,7 +379,11 @@ def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int,
         cur.close()
         return
 
-    service_name = payment['service_name'] or payment['description'] or f'Платёж #{payment_id}'
+    service_name = payment['service_name'] or f'Платёж #{payment_id}'
+    description = payment['description'] or '—'
+    department_name = payment['department_name'] or '—'
+    legal_entity_name = payment['legal_entity_name'] or '—'
+
     try:
         amount_fmt = f"{float(payment['amount']):,.0f}".replace(',', ' ') + ' ₽'
     except Exception:
@@ -380,6 +401,14 @@ def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int,
     }
     action_label = action_labels.get(action, action)
 
+    details_block = (
+        f"Сервис: {service_name}\n"
+        f"Описание: {description}\n"
+        f"Для кого: {department_name}\n"
+        f"Сумма: {amount_fmt}\n"
+        f"Юридическое лицо: {legal_entity_name}"
+    )
+
     recipients_bitrix_ids: List[str] = []
 
     if action == 'submit':
@@ -394,7 +423,7 @@ def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int,
         for row in cur.fetchall():
             recipients_bitrix_ids.append(row['bitrix_id'])
 
-        msg = f"📋 Новый счёт на согласование\n{service_name} — {amount_fmt}\nОт: {actor_name}"
+        msg = f"📋 Новый счёт на согласование\nОт: {actor_name}\n\n{details_block}"
 
     elif action in ('approve', 'reject', 'revoke'):
         cur.execute(f"""
@@ -409,9 +438,9 @@ def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int,
             recipients_bitrix_ids.append(row['bitrix_id'])
 
         emoji = {'approve': '✅', 'reject': '❌', 'revoke': '↩️'}.get(action, '📋')
-        msg = f"{emoji} Счёт {action_label}: {service_name} — {amount_fmt}\n{actor_name}"
+        msg = f"{emoji} Счёт {action_label}\nКто: {actor_name}\n\n{details_block}"
         if comment:
-            msg += f"\nКомментарий: {comment}"
+            msg += f"\n\nКомментарий: {comment}"
     else:
         cur.close()
         return
