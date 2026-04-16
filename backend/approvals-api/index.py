@@ -311,6 +311,7 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
 
 def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int, comment: str = ''):
     """Отправляет уведомления через Битрикс бота по ролям"""
+    log(f'[BITRIX-BOT] send_bitrix_notifications called: payment_id={payment_id}, action={action}, actor_id={actor_id}')
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(f"""
@@ -322,6 +323,7 @@ def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int,
     """, (payment_id,))
     payment = cur.fetchone()
     if not payment:
+        log(f'[BITRIX-BOT] Payment {payment_id} not found')
         cur.close()
         return
 
@@ -380,6 +382,8 @@ def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int,
         return
 
     cur.close()
+
+    log(f'[BITRIX-BOT] Recipients for action={action}: {recipients_bitrix_ids}')
 
     seen = set()
     for bx_id in recipients_bitrix_ids:
@@ -664,10 +668,12 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         except Exception as e:
             log(f"[WARN] Notification creation failed: {e}")
 
+        log(f"[BITRIX-BOT] About to call send_bitrix_notifications for payment {approval_action.payment_id}")
         try:
             send_bitrix_notifications(conn, approval_action.payment_id, approval_action.action, user_id, approval_action.comment)
         except Exception as e:
-            log(f"[WARN] Bitrix bot notification failed: {e}")
+            import traceback
+            log(f"[WARN] Bitrix bot notification failed: {e}\n{traceback.format_exc()}")
 
     return response(200, {'message': 'Действие выполнено успешно', 'new_status': new_status})
 
