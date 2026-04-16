@@ -265,39 +265,71 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
     webhook_url = os.environ.get('BITRIX_WEBHOOK_URL', '').rstrip('/')
     bot_id = os.environ.get('BITRIX_BOT_ID', '')
     
-    if not webhook_url or not bot_id or not bitrix_user_id:
-        log(f'[BITRIX-BOT] Missing config: webhook={bool(webhook_url)}, bot_id={bool(bot_id)}, user={bitrix_user_id}')
+    if not webhook_url or not bitrix_user_id:
+        log(f'[BITRIX-BOT] Missing config: webhook={bool(webhook_url)}, user={bitrix_user_id}')
         return
 
     payment_url = f'{APP_BASE_URL}/payments?payment_id={payment_id}'
-    
     full_message = f"{message}\n[url={payment_url}]Перейти к платежу[/url]"
 
-    post_data = json.dumps({
-        'BOT_ID': bot_id,
+    if bot_id:
+        post_data = json.dumps({
+            'BOT_ID': bot_id,
+            'FROM_USER_ID': bot_id,
+            'TO_USER_ID': str(bitrix_user_id),
+            'MESSAGE': full_message,
+        }).encode('utf-8')
+
+        url = f'{webhook_url}/imbot.message.add.json'
+
+        try:
+            req = urllib.request.Request(url, data=post_data, headers={'Content-Type': 'application/json'}, method='POST')
+            resp = urllib.request.urlopen(req, timeout=10)
+            result = json.loads(resp.read().decode())
+            log(f'[BITRIX-BOT] imbot.message.add (FROM/TO) to user {bitrix_user_id}: {result}')
+            if result.get('result'):
+                return
+        except Exception as e:
+            log(f'[BITRIX-BOT] imbot.message.add FROM/TO failed for user {bitrix_user_id}: {e}')
+
+        post_data2 = json.dumps({
+            'BOT_ID': bot_id,
+            'DIALOG_ID': str(bitrix_user_id),
+            'MESSAGE': full_message,
+        }).encode('utf-8')
+
+        try:
+            req_b = urllib.request.Request(url, data=post_data2, headers={'Content-Type': 'application/json'}, method='POST')
+            resp_b = urllib.request.urlopen(req_b, timeout=10)
+            result_b = json.loads(resp_b.read().decode())
+            log(f'[BITRIX-BOT] imbot.message.add (DIALOG_ID) to user {bitrix_user_id}: {result_b}')
+            if result_b.get('result'):
+                return
+        except Exception as e:
+            log(f'[BITRIX-BOT] imbot.message.add DIALOG_ID failed for user {bitrix_user_id}: {e}')
+
+    im_data = json.dumps({
         'DIALOG_ID': str(bitrix_user_id),
         'MESSAGE': full_message,
+        'SYSTEM': 'N',
     }).encode('utf-8')
-
-    url = f'{webhook_url}/imbot.message.add.json'
+    im_url = f'{webhook_url}/im.message.add.json'
 
     try:
-        req = urllib.request.Request(url, data=post_data, headers={'Content-Type': 'application/json'}, method='POST')
-        resp = urllib.request.urlopen(req, timeout=10)
-        result = json.loads(resp.read().decode())
-        log(f'[BITRIX-BOT] imbot.message.add to user {bitrix_user_id}: {result}')
-        if result.get('result'):
+        req3 = urllib.request.Request(im_url, data=im_data, headers={'Content-Type': 'application/json'}, method='POST')
+        resp3 = urllib.request.urlopen(req3, timeout=10)
+        result3 = json.loads(resp3.read().decode())
+        log(f'[BITRIX-BOT] im.message.add to user {bitrix_user_id}: {result3}')
+        if result3.get('result'):
             return
     except Exception as e:
-        log(f'[BITRIX-BOT] imbot.message.add failed for user {bitrix_user_id}: {e}')
+        log(f'[BITRIX-BOT] im.message.add failed for user {bitrix_user_id}: {e}')
 
-    log(f'[BITRIX-BOT] Trying im.notify for user {bitrix_user_id}')
     notify_data = json.dumps({
         'to': str(bitrix_user_id),
         'message': full_message,
         'type': 'SYSTEM',
     }).encode('utf-8')
-
     notify_url = f'{webhook_url}/im.notify.system.add.json'
 
     try:
