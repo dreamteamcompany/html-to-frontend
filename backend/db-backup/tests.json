@@ -17,6 +17,12 @@
       "method": "POST",
       "path": "/?action=import",
       "expectedStatus": 401
+    },
+    {
+      "name": "History without auth",
+      "method": "GET",
+      "path": "/?action=history",
+      "expectedStatus": 401
     }
   ]
 }

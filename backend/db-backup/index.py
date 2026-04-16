@@ -140,7 +140,29 @@ def get_existing_tables(conn):
     cur.close()
     return existing
 
-def handle_export(conn):
+def log_backup_action(conn, user_id, username, action, metadata=None):
+    cur = conn.cursor()
+    cur.execute(f"""
+        INSERT INTO {SCHEMA}.audit_logs
+        (entity_type, entity_id, action, user_id, username, metadata, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s, NOW())
+    """, ('backup', 0, action, user_id, username, json.dumps(metadata or {})))
+    conn.commit()
+    cur.close()
+
+def get_last_backup_info(conn):
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(f"""
+        SELECT action, username, created_at, metadata
+        FROM {SCHEMA}.audit_logs
+        WHERE entity_type = 'backup'
+        ORDER BY created_at DESC LIMIT 5
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    return [dict(r) for r in rows]
+
+def handle_export(conn, user_id=None, username=None):
     existing = get_existing_tables(conn)
     cur = conn.cursor(cursor_factory=RealDictCursor)
     backup = {
@@ -149,16 +171,20 @@ def handle_export(conn):
         'schema': SCHEMA,
         'tables': {}
     }
+    total_rows = 0
     for table in TABLES_ORDER:
         if table not in existing:
             continue
         cur.execute(f'SELECT * FROM {SCHEMA}."{table}" ORDER BY 1')
         rows = cur.fetchall()
         backup['tables'][table] = [dict(row) for row in rows]
+        total_rows += len(rows)
     cur.close()
+    if user_id:
+        log_backup_action(conn, user_id, username, 'export', {'tables': len(backup['tables']), 'rows': total_rows})
     return response(200, backup)
 
-def handle_import(conn, event):
+def handle_import(conn, event, user_id=None, username=None):
     body = json.loads(event.get('body', '{}'))
     backup_data = body.get('backup')
     if not backup_data:
@@ -226,6 +252,9 @@ def handle_import(conn, event):
 
         cur.execute('COMMIT')
 
+        if user_id:
+            log_backup_action(conn, user_id, username, 'import', {'tables': tables_restored, 'rows': rows_restored})
+
         return response(200, {
             'success': True,
             'tables_restored': tables_restored,
@@ -257,11 +286,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
         params = event.get('queryStringParameters') or {}
         action = params.get('action', 'export')
+        user_id = payload.get('user_id')
+        username = payload.get('username', '')
 
-        if method == 'GET' and action == 'export':
-            return handle_export(conn)
+        if method == 'GET' and action == 'history':
+            history = get_last_backup_info(conn)
+            return response(200, {'history': history})
+        elif method == 'GET' and action == 'export':
+            return handle_export(conn, user_id, username)
         elif method == 'POST' and action == 'import':
-            return handle_import(conn, event)
+            return handle_import(conn, event, user_id, username)
         else:
             return response(400, {'error': 'Неизвестное действие'})
     finally:

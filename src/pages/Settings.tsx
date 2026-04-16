@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { API_ENDPOINTS } from '@/config/api';
 
+interface BackupHistoryItem {
+  action: string;
+  username: string;
+  created_at: string;
+  metadata: { tables?: number; rows?: number };
+}
+
 const Settings = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
@@ -28,6 +35,8 @@ const Settings = () => {
   const [restoreConfirmText, setRestoreConfirmText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [history, setHistory] = useState<BackupHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const { token, hasPermission } = useAuth();
   const { toast } = useToast();
 
@@ -40,6 +49,34 @@ const Settings = () => {
     handleTouchMove,
     handleTouchEnd,
   } = useSidebarTouch();
+
+  const loadHistory = useCallback(async () => {
+    if (!token) return;
+    setHistoryLoading(true);
+    try {
+      const resp = await fetch(`${API_ENDPOINTS.dbBackup}?action=history`, {
+        headers: { 'X-Auth-Token': token },
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setHistory(data.history || []);
+      }
+    } catch { /* ignore */ } finally {
+      setHistoryLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (isAdmin) loadHistory();
+  }, [isAdmin, loadHistory]);
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleString('ru-RU', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  };
 
   const handleExportBackup = async () => {
     setExporting(true);
@@ -63,6 +100,7 @@ const Settings = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast({ title: 'Готово', description: 'Резервная копия скачана' });
+      loadHistory();
     } catch (error) {
       toast({
         title: 'Ошибка',
@@ -250,6 +288,63 @@ const Settings = () => {
             </Card>
           )}
 
+          {isAdmin && (
+            <Card className="border border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Icon name="History" size={24} className="text-muted-foreground" />
+                  История операций
+                </CardTitle>
+                <CardDescription>
+                  Последние действия с резервными копиями
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {historyLoading ? (
+                  <div className="flex items-center gap-2 text-muted-foreground py-4">
+                    <Icon name="Loader2" size={18} className="animate-spin" />
+                    <span className="text-sm">Загрузка...</span>
+                  </div>
+                ) : history.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4">
+                    Операций с резервными копиями пока не было
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {history.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3 border-b border-border last:border-0"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${item.action === 'export' ? 'bg-[#7551e9]/10' : 'bg-amber-500/10'}`}>
+                            <Icon
+                              name={item.action === 'export' ? 'Download' : 'Upload'}
+                              size={18}
+                              className={item.action === 'export' ? 'text-[#7551e9]' : 'text-amber-500'}
+                            />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">
+                              {item.action === 'export' ? 'Скачивание копии' : 'Восстановление из копии'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.username || 'Администратор'}
+                              {item.metadata?.tables ? ` \u00b7 ${item.metadata.tables} табл.` : ''}
+                              {item.metadata?.rows ? `, ${item.metadata.rows} записей` : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-xs text-muted-foreground sm:text-right">
+                          {formatDate(item.created_at)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
     </div>
