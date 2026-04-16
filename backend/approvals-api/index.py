@@ -266,33 +266,47 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
     bot_id = os.environ.get('BITRIX_BOT_ID', '')
     
     if not webhook_url or not bot_id or not bitrix_user_id:
+        log(f'[BITRIX-BOT] Missing config: webhook={bool(webhook_url)}, bot_id={bool(bot_id)}, user={bitrix_user_id}')
         return
 
     payment_url = f'{APP_BASE_URL}/payments?payment_id={payment_id}'
     
-    attach = json.dumps([
-        {"BLOCKS": [
-            {"MESSAGE": message},
-            {"LINK": {"NAME": "Перейти к платежу", "LINK": payment_url}}
-        ]}
-    ])
+    full_message = f"{message}\n[url={payment_url}]Перейти к платежу[/url]"
 
-    params = urlencode({
+    post_data = json.dumps({
         'BOT_ID': bot_id,
-        'DIALOG_ID': bitrix_user_id,
-        'MESSAGE': message,
-        'ATTACH': attach,
-    })
+        'DIALOG_ID': str(bitrix_user_id),
+        'MESSAGE': full_message,
+    }).encode('utf-8')
 
-    url = f'{webhook_url}/imbot.message.add.json?{params}'
+    url = f'{webhook_url}/imbot.message.add.json'
 
     try:
-        req = urllib.request.Request(url, method='GET')
+        req = urllib.request.Request(url, data=post_data, headers={'Content-Type': 'application/json'}, method='POST')
         resp = urllib.request.urlopen(req, timeout=10)
         result = json.loads(resp.read().decode())
-        log(f'[BITRIX-BOT] Sent to user {bitrix_user_id}: {result}')
+        log(f'[BITRIX-BOT] imbot.message.add to user {bitrix_user_id}: {result}')
+        if result.get('result'):
+            return
     except Exception as e:
-        log(f'[BITRIX-BOT] Failed to send to user {bitrix_user_id}: {e}')
+        log(f'[BITRIX-BOT] imbot.message.add failed for user {bitrix_user_id}: {e}')
+
+    log(f'[BITRIX-BOT] Trying im.notify for user {bitrix_user_id}')
+    notify_data = json.dumps({
+        'to': str(bitrix_user_id),
+        'message': full_message,
+        'type': 'SYSTEM',
+    }).encode('utf-8')
+
+    notify_url = f'{webhook_url}/im.notify.system.add.json'
+
+    try:
+        req2 = urllib.request.Request(notify_url, data=notify_data, headers={'Content-Type': 'application/json'}, method='POST')
+        resp2 = urllib.request.urlopen(req2, timeout=10)
+        result2 = json.loads(resp2.read().decode())
+        log(f'[BITRIX-BOT] im.notify.system.add to user {bitrix_user_id}: {result2}')
+    except Exception as e2:
+        log(f'[BITRIX-BOT] im.notify.system.add also failed for user {bitrix_user_id}: {e2}')
 
 
 def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int, comment: str = ''):
