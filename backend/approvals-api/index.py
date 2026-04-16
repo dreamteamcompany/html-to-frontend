@@ -17,7 +17,7 @@ SCHEMA = 't_p61788166_html_to_frontend'
 DSN = os.environ['DATABASE_URL']
 
 PUSH_API_URL = 'https://functions.poehali.dev/cc67e884-8946-4bcd-939d-ea3c195a6598'
-APP_BASE_URL = 'https://procurement.poehali.dev'
+APP_BASE_URL = 'https://finance-km.ru'
 
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
