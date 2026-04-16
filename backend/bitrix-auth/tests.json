@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Bitrix Login URL",
+      "method": "GET",
+      "path": "/?endpoint=login",
+      "expectedStatus": 200,
+      "expectedBody": {"auth_url": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Callback without code",
+      "method": "GET",
+      "path": "/?endpoint=callback",
+      "expectedStatus": 400
+    }
+  ]
+}

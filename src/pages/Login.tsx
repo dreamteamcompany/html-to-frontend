@@ -43,7 +43,7 @@ const Login = () => {
     setBitrixLoading(true);
 
     try {
-      const resp = await fetch(`${API_ENDPOINTS.main}?endpoint=bitrix-login`);
+      const resp = await fetch(`${API_ENDPOINTS.bitrixAuth}?endpoint=login`);
       const data = await resp.json();
 
       if (!resp.ok) {

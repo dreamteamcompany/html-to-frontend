@@ -1,4 +1,5 @@
 {
+  "bitrix-auth": "https://functions.poehali.dev/915240b9-c9a0-443b-b12d-bd2930ab3793",
   "payment": "https://functions.poehali.dev/9b98c372-55f8-448c-94ad-e318c0a78214",
   "generate-certificate": "https://functions.poehali.dev/0bf38d97-39bc-494b-9022-6aa490b9e0cd",
   "contests": "https://functions.poehali.dev/8a61f9fd-d77e-4bd9-9c4f-461d255c69f8",

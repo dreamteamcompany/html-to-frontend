@@ -32,7 +32,7 @@ const BitrixCallback = () => {
     const exchangeCode = async () => {
       try {
         const resp = await fetch(
-          `${API_ENDPOINTS.main}?endpoint=bitrix-callback&code=${encodeURIComponent(code)}`
+          `${API_ENDPOINTS.bitrixAuth}?endpoint=callback&code=${encodeURIComponent(code)}`
         );
         const data = await resp.json();
 
