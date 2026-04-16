@@ -20,6 +20,8 @@ interface User {
   username: string;
   full_name: string;
   position: string;
+  email?: string;
+  bitrix_id?: string;
   is_active: boolean;
   created_at: string;
   last_login: string | null;
@@ -43,6 +45,8 @@ interface UserFormDialogProps {
     password: string;
     full_name: string;
     position: string;
+    email: string;
+    bitrix_id: string;
     role_ids: number[];
     photo_url: string;
   };
@@ -157,6 +161,8 @@ const UserFormDialog = ({
               password: '',
               full_name: '',
               position: '',
+              email: '',
+              bitrix_id: '',
               role_ids: [],
               photo_url: '',
             });
@@ -236,6 +242,25 @@ const UserFormDialog = ({
               value={formData.position}
               onChange={(e) => setFormData({ ...formData, position: e.target.value })}
               placeholder="Менеджер"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Почта</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="user@company.ru"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bitrix_id">ID учётки в Битрикс</Label>
+            <Input
+              id="bitrix_id"
+              value={formData.bitrix_id}
+              onChange={(e) => setFormData({ ...formData, bitrix_id: e.target.value })}
+              placeholder="123"
             />
           </div>
           <div className="space-y-2">

@@ -176,22 +176,33 @@ def handle_bitrix_callback(event: Dict[str, Any]) -> Dict[str, Any]:
 
     bx_user = user_data.get('result', {})
     bx_email = (bx_user.get('EMAIL') or '').strip().lower()
-    if not bx_email:
-        return response(400, {'error': 'У пользователя Битрикс не заполнен email'})
+    bx_id = str(bx_user.get('ID', ''))
+    log(f"[BITRIX-AUTH] Bitrix user: email={bx_email}, id={bx_id}")
 
     conn = get_db_connection()
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute(f"""
-            SELECT id, username, is_active FROM {SCHEMA}.users
-            WHERE LOWER(email) = %s
-        """, (bx_email,))
-        local_user = cur.fetchone()
+        local_user = None
+
+        if bx_email:
+            cur.execute(f"""
+                SELECT id, username, is_active FROM {SCHEMA}.users
+                WHERE LOWER(email) = %s
+            """, (bx_email,))
+            local_user = cur.fetchone()
+
+        if not local_user and bx_id:
+            cur.execute(f"""
+                SELECT id, username, is_active FROM {SCHEMA}.users
+                WHERE bitrix_id = %s
+            """, (bx_id,))
+            local_user = cur.fetchone()
+
         cur.close()
 
         if not local_user:
             return response(403, {
-                'error': f'Пользователь с email {bx_email} не найден в системе. Обратитесь к администратору.'
+                'error': f'Пользователь с email {bx_email} (Битрикс ID: {bx_id}) не найден в системе. Обратитесь к администратору.'
             })
 
         if not local_user['is_active']:

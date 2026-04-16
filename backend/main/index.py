@@ -17,7 +17,7 @@ import secrets
 import struct
 import urllib.request
 from urllib.parse import urlencode
-# Deploy version: v3.3.0 - force public redeploy
+# Deploy version: v3.4.0 - add email+bitrix_id to users
 
 SCHEMA = 't_p61788166_html_to_frontend'
 VERSION = '2.8.0'
@@ -997,7 +997,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         cur.execute("""
             SELECT 
                 u.id, u.username, u.full_name, u.position, u.photo_url, u.is_active, 
-                u.created_at, u.last_login,
+                u.created_at, u.last_login, u.email, u.bitrix_id,
                 COALESCE(
                     array_agg(json_build_object('id', r.id, 'name', r.name)) FILTER (WHERE r.id IS NOT NULL),
                     ARRAY[]::json[]
@@ -1025,6 +1025,8 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         full_name = body_data.get('full_name', '').strip()
         position = body_data.get('position', '').strip()
         photo_url = body_data.get('photo_url', '').strip()
+        email = body_data.get('email', '').strip()
+        bitrix_id = body_data.get('bitrix_id', '').strip()
         role_ids = body_data.get('role_ids', [])
         
         if not username or not password or not full_name:
@@ -1039,10 +1041,10 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         
         try:
             cur.execute("""
-                INSERT INTO users (username, password_hash, full_name, position, photo_url, email, is_active)
-                VALUES (%s, %s, %s, %s, %s, %s, true)
+                INSERT INTO users (username, password_hash, full_name, position, photo_url, email, bitrix_id, is_active)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, true)
                 RETURNING id, username, full_name, position, photo_url, is_active, created_at
-            """, (username, password_hash, full_name, position, photo_url, username + '@example.com'))
+            """, (username, password_hash, full_name, position, photo_url, email or (username + '@example.com'), bitrix_id or None))
             
             new_user = cur.fetchone()
             
@@ -1112,6 +1114,8 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         full_name = body_data.get('full_name', '').strip()
         position = body_data.get('position', '').strip()
         photo_url = body_data.get('photo_url', '').strip()
+        email = body_data.get('email', '').strip()
+        bitrix_id = body_data.get('bitrix_id', '').strip()
         password = body_data.get('password')
         role_ids = body_data.get('role_ids')
         
@@ -1121,9 +1125,9 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         try:
             cur.execute("""
                 UPDATE users 
-                SET username = %s, full_name = %s, position = %s, photo_url = %s
+                SET username = %s, full_name = %s, position = %s, photo_url = %s, email = %s, bitrix_id = %s
                 WHERE id = %s
-            """, (username, full_name, position, photo_url, user_id))
+            """, (username, full_name, position, photo_url, email, bitrix_id or None, user_id))
             
             if password and len(password) >= 4:
                 password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')

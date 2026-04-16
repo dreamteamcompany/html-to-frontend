@@ -1,0 +1,1 @@
+ALTER TABLE t_p61788166_html_to_frontend.users ADD COLUMN IF NOT EXISTS bitrix_id VARCHAR(100) NULL;

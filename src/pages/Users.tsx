@@ -15,6 +15,8 @@ interface User {
   username: string;
   full_name: string;
   position: string;
+  email?: string;
+  bitrix_id?: string;
   is_active: boolean;
   created_at: string;
   last_login: string | null;
@@ -51,6 +53,8 @@ const Users = () => {
     password: '',
     full_name: '',
     position: '',
+    email: '',
+    bitrix_id: '',
     role_ids: [] as number[],
     photo_url: '',
   });
@@ -116,6 +120,8 @@ const Users = () => {
         username: formData.username,
         full_name: formData.full_name,
         position: formData.position,
+        email: formData.email,
+        bitrix_id: formData.bitrix_id,
         role_ids: formData.role_ids,
         photo_url: formData.photo_url || '',
       };
@@ -142,6 +148,8 @@ const Users = () => {
           password: '',
           full_name: '',
           position: '',
+          email: '',
+          bitrix_id: '',
           role_ids: [],
           photo_url: '',
         });
@@ -209,6 +217,8 @@ const Users = () => {
       username: user.username,
       full_name: user.full_name,
       position: user.position || '',
+      email: user.email || '',
+      bitrix_id: user.bitrix_id || '',
       password: '',
       role_ids: user.roles?.map(r => r.id).filter(id => id !== undefined) || [],
       photo_url: user.photo_url || '',
