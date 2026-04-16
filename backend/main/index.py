@@ -17,7 +17,7 @@ import secrets
 import struct
 import urllib.request
 from urllib.parse import urlencode
-# Deploy version: v2.8.0 - Bitrix24 OAuth login + callback
+# Deploy version: v3.3.0 - force public redeploy
 
 SCHEMA = 't_p61788166_html_to_frontend'
 VERSION = '2.8.0'
