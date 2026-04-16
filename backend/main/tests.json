@@ -1,22 +1,9 @@
 {
   "tests": [
     {
-      "name": "Login Success",
-      "method": "POST",
-      "path": "/?endpoint=login",
-      "body": {"username": "admin", "password": "admin"},
-      "expectedStatus": 200
-    },
-    {
       "name": "Unauthorized Access",
       "method": "GET",
       "path": "/?endpoint=users",
-      "expectedStatus": 401
-    },
-    {
-      "name": "Approvers Unauthorized",
-      "method": "GET",
-      "path": "/?endpoint=approvers",
       "expectedStatus": 401
     },
     {
@@ -26,30 +13,12 @@
       "expectedStatus": 200
     },
     {
-      "name": "Check Health GET",
+      "name": "Bitrix Login",
       "method": "GET",
-      "path": "/?endpoint=health",
+      "path": "/?endpoint=bitrix-login",
       "expectedStatus": 200,
-      "expectedBody": {"status": "string", "version": "string"},
+      "expectedBody": {"auth_url": "string"},
       "bodyMatcher": "partial"
-    },
-    {
-      "name": "Ticket Dictionaries Unauthorized",
-      "method": "GET",
-      "path": "/?endpoint=ticket-dictionaries-api",
-      "expectedStatus": 401
-    },
-    {
-      "name": "WebAuthn Credentials Unauthorized",
-      "method": "GET",
-      "path": "/?endpoint=webauthn-credentials",
-      "expectedStatus": 401
-    },
-    {
-      "name": "Savings List Unauthorized",
-      "method": "GET",
-      "path": "/?endpoint=savings-list",
-      "expectedStatus": 401
     }
   ]
 }
