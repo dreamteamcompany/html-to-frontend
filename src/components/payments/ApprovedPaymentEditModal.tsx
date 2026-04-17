@@ -232,14 +232,23 @@ const ApprovedPaymentEditModal = ({ open, payment, onClose, onSaved }: ApprovedP
             />
           </div>
 
-          <InvoiceUploadDropzone
-            fileUrl={invoiceFileUrl}
-            fileName={invoiceFileName}
-            isUploading={isUploadingInvoice}
-            onFileSelected={uploadInvoiceFile}
-            onRemove={handleRemoveInvoice}
-            onError={(message) => toast({ title: 'Ошибка', description: message, variant: 'destructive' })}
-          />
+          {(() => {
+            const selectedLe = legalEntities.find(le => String(le.id) === selectedLeId);
+            const leName = (selectedLe?.name || payment.legal_entity_name || '').trim().toLowerCase();
+            const isCashLegalEntity = leName === 'наличные';
+            return (
+              <InvoiceUploadDropzone
+                fileUrl={invoiceFileUrl}
+                fileName={invoiceFileName}
+                isUploading={isUploadingInvoice}
+                onFileSelected={uploadInvoiceFile}
+                onRemove={handleRemoveInvoice}
+                onError={(message) => toast({ title: 'Ошибка', description: message, variant: 'destructive' })}
+                label={isCashLegalEntity ? 'Загрузка чека' : 'Загрузка счёта'}
+                dropzoneText={isCashLegalEntity ? 'Перетащите файл чека сюда' : 'Перетащите файл счёта сюда'}
+              />
+            );
+          })()}
         </div>
 
         <DialogFooter>
