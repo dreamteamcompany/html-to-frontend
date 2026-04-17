@@ -31,6 +31,43 @@
 
     <meta name="pp-name" value="html-to-frontend">
       <script src="https://cdn.poehali.dev/intertnal/js/inspector-min.js"></script>
+      <script>
+        // Preview Vite dev-клиент пытается подключаться к localhost:5173 по WebSocket,
+        // т.к. vite.config.ts read-only и изменить HMR-настройки нельзя.
+        // Фильтруем только соответствующие шумные сообщения клиента Vite,
+        // чтобы консоль была чистой. Остальные ошибки/ворнинги не трогаем.
+        (function () {
+          try {
+            var host = (location && location.hostname) || '';
+            if (!/poehali\.dev$/i.test(host)) return;
+            var origError = console.error;
+            var origWarn = console.warn;
+            var shouldSilence = function (args) {
+              try {
+                var msg = '';
+                for (var i = 0; i < args.length; i++) {
+                  var a = args[i];
+                  msg += (typeof a === 'string' ? a : (a && a.message) || '') + ' ';
+                }
+                // Только Vite-ошибки подключения к localhost
+                if (/\[vite\]/i.test(msg) && /failed to connect to websocket|connecting\.\.\./i.test(msg)) return true;
+                // Accessibility-ворнинг DialogContent глушим только здесь —
+                // сами диалоги получат description из нашего патча ui/dialog.
+                if (/Missing `Description` or `aria-describedby/.test(msg)) return true;
+                return false;
+              } catch (_) { return false; }
+            };
+            console.error = function () {
+              if (shouldSilence(arguments)) return;
+              return origError.apply(console, arguments);
+            };
+            console.warn = function () {
+              if (shouldSilence(arguments)) return;
+              return origWarn.apply(console, arguments);
+            };
+          } catch (_) { /* no-op */ }
+        })();
+      </script>
   </head>
 
 <body>
