@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Payment, CustomField, CashReceipt } from '@/types/payment';
@@ -148,7 +148,7 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [receiptsState, setReceiptsState] = useState<Record<number, CashReceipt[]>>({});
 
-  const getReceipts = useCallback((p: Payment): CashReceipt[] => {
+  const getReceipts = (p: Payment): CashReceipt[] => {
     if (receiptsState[p.id] !== undefined) return receiptsState[p.id];
     const fromPayload = (p.cash_receipts as CashReceipt[] | undefined) ?? [];
     if (fromPayload.length > 0) return fromPayload;
@@ -162,37 +162,29 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
       }];
     }
     return [];
-  }, [receiptsState]);
-
-  const handleReceiptsUpdated = useCallback((paymentId: number) => (next: CashReceipt[]) => {
+  };
+  const handleReceiptsUpdated = (paymentId: number) => (next: CashReceipt[]) => {
     setReceiptsState(prev => ({ ...prev, [paymentId]: next }));
-  }, []);
+  };
+  const isCashApproved = (p: Payment) =>
+    ((p.payment_type as string | undefined) || '').toLowerCase() === 'cash' && p.status === 'approved';
 
-  const isCashApproved = useCallback((p: Payment) =>
-    ((p.payment_type as string | undefined) || '').toLowerCase() === 'cash' && p.status === 'approved',
-  []);
-
-  const handleSort = useCallback((key: SortKey) => {
-    setSortKey(prevKey => {
-      if (prevKey === key) {
-        setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'));
-        return prevKey;
-      }
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
       setSortDir('asc');
-      return key;
-    });
-  }, []);
+    }
+  };
 
   const sorted = useMemo(
     () => sortKey ? sortPayments(payments, sortKey, sortDir) : payments,
     [payments, sortKey, sortDir],
   );
 
-  const showActionsColumn = useMemo(
-    () => payments.some(p =>
-      hasActionsForPayment(p, isPlannedPayments, showApproveReject, showRevoke, showResubmit, onSubmitForApproval, onDelete, onApprove, onReject, onRevoke, onResubmit, onPaymentClick)
-    ),
-    [payments, isPlannedPayments, showApproveReject, showRevoke, showResubmit, onSubmitForApproval, onDelete, onApprove, onReject, onRevoke, onResubmit, onPaymentClick],
+  const showActionsColumn = payments.some(p =>
+    hasActionsForPayment(p, isPlannedPayments, showApproveReject, showRevoke, showResubmit, onSubmitForApproval, onDelete, onApprove, onReject, onRevoke, onResubmit, onPaymentClick)
   );
 
   const hp = { activeKey: sortKey, dir: sortDir, onClick: handleSort };
