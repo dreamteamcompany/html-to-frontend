@@ -14,6 +14,13 @@ export interface PaymentDocument {
   uploaded_at: string;
 }
 
+export interface CashReceipt {
+  id: number;
+  file_url: string;
+  file_name?: string;
+  uploaded_at: string;
+}
+
 export interface Payment {
   id: number;
   category_id: number;
@@ -42,6 +49,7 @@ export interface Payment {
   payment_type?: string;
   cash_receipt_url?: string;
   cash_receipt_uploaded_at?: string;
+  cash_receipts?: CashReceipt[];
   created_at?: string;
   submitted_at?: string;
   rejection_comment?: string;

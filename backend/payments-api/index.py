@@ -209,6 +209,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             payment_ids = [row['id'] for row in rows]
             custom_fields_map = {}
             documents_map = {}
+            cash_receipts_map = {}
             if payment_ids:
                 ids_placeholder = ','.join(['%s'] * len(payment_ids))
                 cur.execute(f"""
@@ -234,6 +235,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         doc['uploaded_at'] = doc['uploaded_at'].isoformat()
                     documents_map.setdefault(pid, []).append(doc)
 
+                cur.execute(f"""
+                    SELECT id, payment_id, file_url, file_name, uploaded_at
+                    FROM {SCHEMA}.payment_cash_receipts
+                    WHERE payment_id IN ({ids_placeholder})
+                    ORDER BY uploaded_at ASC, id ASC
+                """, tuple(payment_ids))
+                for r_row in cur.fetchall():
+                    rd = dict(r_row)
+                    pid = rd.pop('payment_id')
+                    if rd.get('uploaded_at'):
+                        rd['uploaded_at'] = rd['uploaded_at'].isoformat()
+                    cash_receipts_map.setdefault(pid, []).append(rd)
+
             for row in rows:
                 payment = dict(row)
                 payment['amount'] = float(payment['amount'])
@@ -257,6 +271,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 payment['custom_fields'] = custom_fields_map.get(payment['id'], [])
                 payment['documents'] = documents_map.get(payment['id'], [])
+                payment['cash_receipts'] = cash_receipts_map.get(payment['id'], [])
                 payments.append(payment)
             
             cur.close()
@@ -468,7 +483,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             query_params = event.get('queryStringParameters') or {}
             action = query_params.get('action')
 
-            # Отдельное действие: загрузка/удаление чека для наличного платежа
+            # Отдельное действие: работа с чеками наличного платежа (до 10 шт)
             if action == 'cash_receipt':
                 try:
                     body = json.loads(event.get('body', '{}'))
@@ -477,8 +492,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return response(400, {'error': 'Неверный формат тела запроса'})
 
                 payment_id = body.get('payment_id')
-                receipt_url = body.get('cash_receipt_url')
                 receipt_action = body.get('receipt_action', 'upload')  # upload | delete
+                receipt_url = body.get('cash_receipt_url')
+                receipt_id = body.get('receipt_id')
+                file_name = body.get('file_name')
 
                 if not payment_id:
                     conn.close()
@@ -510,45 +527,121 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return response(403, {'error': 'Чек доступен только для наличных платежей'})
 
                 if receipt_action == 'delete':
+                    if not receipt_id:
+                        cur.close()
+                        conn.close()
+                        return response(400, {'error': 'Не указан receipt_id'})
+
                     cur.execute(
-                        f"""UPDATE {SCHEMA}.payments
-                            SET cash_receipt_url = NULL,
-                                cash_receipt_uploaded_at = NULL
-                            WHERE id = %s""",
+                        f"SELECT id, payment_id FROM {SCHEMA}.payment_cash_receipts WHERE id = %s",
+                        (receipt_id,)
+                    )
+                    r_row = cur.fetchone()
+                    if not r_row or r_row['payment_id'] != payment_id:
+                        cur.close()
+                        conn.close()
+                        return response(404, {'error': 'Чек не найден'})
+
+                    remove_sql = f"DELETE FROM {SCHEMA}.payment_cash_receipts WHERE id = %s AND payment_id = %s"
+                    cur.execute(remove_sql, (receipt_id, payment_id))
+                    conn.commit()
+                    cur.execute(
+                        f"""SELECT id, file_url, file_name, uploaded_at
+                            FROM {SCHEMA}.payment_cash_receipts
+                            WHERE payment_id = %s
+                            ORDER BY uploaded_at ASC, id ASC""",
                         (payment_id,)
                     )
-                    conn.commit()
+                    receipts = []
+                    for rr in cur.fetchall():
+                        rd = dict(rr)
+                        if rd.get('uploaded_at'):
+                            rd['uploaded_at'] = rd['uploaded_at'].isoformat()
+                        receipts.append(rd)
                     cur.close()
                     conn.close()
                     return response(200, {
                         'success': True,
                         'payment_id': payment_id,
-                        'cash_receipt_url': None,
-                        'cash_receipt_uploaded_at': None,
+                        'receipts': receipts,
                     })
 
-                # upload / replace
+                if receipt_action == 'list':
+                    cur.execute(
+                        f"""SELECT id, file_url, file_name, uploaded_at
+                            FROM {SCHEMA}.payment_cash_receipts
+                            WHERE payment_id = %s
+                            ORDER BY uploaded_at ASC, id ASC""",
+                        (payment_id,)
+                    )
+                    receipts = []
+                    for rr in cur.fetchall():
+                        rd = dict(rr)
+                        if rd.get('uploaded_at'):
+                            rd['uploaded_at'] = rd['uploaded_at'].isoformat()
+                        receipts.append(rd)
+                    cur.close()
+                    conn.close()
+                    return response(200, {
+                        'success': True,
+                        'payment_id': payment_id,
+                        'receipts': receipts,
+                    })
+
+                # upload (добавить новый чек)
                 if not receipt_url or not isinstance(receipt_url, str):
                     cur.close()
                     conn.close()
                     return response(400, {'error': 'Не указан URL чека'})
 
+                cur.execute(
+                    f"SELECT COUNT(*) AS cnt FROM {SCHEMA}.payment_cash_receipts WHERE payment_id = %s",
+                    (payment_id,)
+                )
+                cnt_row = cur.fetchone()
+                current_count = int(cnt_row['cnt']) if cnt_row else 0
+                if current_count >= 10:
+                    cur.close()
+                    conn.close()
+                    return response(400, {'error': 'Достигнут лимит: не более 10 чеков на платёж'})
+
+                if not file_name:
+                    raw_name = receipt_url.split('/')[-1]
+                    parts = raw_name.split('_')
+                    file_name = '_'.join(parts[2:]) if len(parts) > 2 else raw_name
+
                 uploaded_at = datetime.now()
                 cur.execute(
-                    f"""UPDATE {SCHEMA}.payments
-                        SET cash_receipt_url = %s,
-                            cash_receipt_uploaded_at = %s
-                        WHERE id = %s""",
-                    (receipt_url, uploaded_at, payment_id)
+                    f"""INSERT INTO {SCHEMA}.payment_cash_receipts
+                            (payment_id, file_url, file_name, uploaded_at, uploaded_by)
+                        VALUES (%s, %s, %s, %s, %s)
+                        RETURNING id""",
+                    (payment_id, receipt_url, file_name, uploaded_at, payload['user_id'])
                 )
+                new_id = cur.fetchone()['id']
                 conn.commit()
+
+                cur.execute(
+                    f"""SELECT id, file_url, file_name, uploaded_at
+                        FROM {SCHEMA}.payment_cash_receipts
+                        WHERE payment_id = %s
+                        ORDER BY uploaded_at ASC, id ASC""",
+                    (payment_id,)
+                )
+                receipts = []
+                for rr in cur.fetchall():
+                    rd = dict(rr)
+                    if rd.get('uploaded_at'):
+                        rd['uploaded_at'] = rd['uploaded_at'].isoformat()
+                    receipts.append(rd)
+
                 cur.close()
                 conn.close()
                 return response(200, {
                     'success': True,
                     'payment_id': payment_id,
-                    'cash_receipt_url': receipt_url,
-                    'cash_receipt_uploaded_at': uploaded_at.isoformat(),
+                    'receipt_id': new_id,
+                    'receipts': receipts,
                 })
 
             # Редактирование разрешённых полей согласованного платежа (только для администраторов)
