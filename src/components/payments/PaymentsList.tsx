@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Payment, CustomField } from '@/types/payment';
+import CashReceiptBlock from './CashReceiptBlock';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PaymentsListProps {
   payments: Payment[];
@@ -141,8 +143,24 @@ const SortHeader = ({
 };
 
 const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForApproval, onRevoke, onResubmit, onDelete, onPaymentClick, isPlannedPayments = false, showApproveReject = false, showRevoke = false, showResubmit = false }: PaymentsListProps) => {
+  const { user } = useAuth();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [receiptState, setReceiptState] = useState<Record<number, { url: string | null; uploadedAt: string | null }>>({});
+
+  const getReceiptUrl = (p: Payment): string | null => {
+    if (receiptState[p.id] !== undefined) return receiptState[p.id].url;
+    return (p.cash_receipt_url as string | undefined) ?? null;
+  };
+  const getReceiptUploadedAt = (p: Payment): string | null => {
+    if (receiptState[p.id] !== undefined) return receiptState[p.id].uploadedAt;
+    return (p.cash_receipt_uploaded_at as string | undefined) ?? null;
+  };
+  const handleReceiptUpdated = (paymentId: number) => (url: string | null, uploadedAt: string | null) => {
+    setReceiptState(prev => ({ ...prev, [paymentId]: { url, uploadedAt } }));
+  };
+  const isCashApproved = (p: Payment) =>
+    ((p.payment_type as string | undefined) || '').toLowerCase() === 'cash' && p.status === 'approved';
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -215,7 +233,28 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                         <span className="font-bold text-lg text-foreground">{payment.amount.toLocaleString('ru-RU')} ₽</span>
                       </td>
                       <td className="p-4">
-                        {getStatusBadge(payment.status)}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {getStatusBadge(payment.status)}
+                          {isCashApproved(payment) && (
+                            getReceiptUrl(payment) ? (
+                              <span
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                                title="Чек прикреплён"
+                              >
+                                <Icon name="ReceiptText" size={11} />
+                                Чек
+                              </span>
+                            ) : payment.created_by === user?.id ? (
+                              <span
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                                title="Загрузите чек об оплате"
+                              >
+                                <Icon name="AlertCircle" size={11} />
+                                Нет чека
+                              </span>
+                            ) : null
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 font-medium text-foreground/80">
                         {new Date(payment.planned_date || payment.payment_date || '').toLocaleDateString('ru-RU', {
@@ -343,6 +382,20 @@ const PaymentsList = ({ payments, loading, onApprove, onReject, onSubmitForAppro
                       </div>
                       {!isPlannedPayments && getStatusBadge(payment.status)}
                     </div>
+                    {isCashApproved(payment) && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <CashReceiptBlock
+                          paymentId={payment.id}
+                          paymentStatus={payment.status}
+                          paymentType={payment.payment_type as string | undefined}
+                          createdBy={payment.created_by as number | undefined}
+                          receiptUrl={getReceiptUrl(payment)}
+                          receiptUploadedAt={getReceiptUploadedAt(payment)}
+                          onUpdated={handleReceiptUpdated(payment.id)}
+                          compact
+                        />
+                      </div>
+                    )}
                     <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                       {isPlannedPayments && onSubmitForApproval && (
                         <button

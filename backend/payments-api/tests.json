@@ -19,6 +19,16 @@
         "error": "Unauthorized"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test PATCH cash_receipt unauthorized",
+      "method": "PATCH",
+      "path": "/?action=cash_receipt",
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "Unauthorized"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

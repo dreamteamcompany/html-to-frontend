@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import Icon from '@/components/ui/icon';
 import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
 import LinkedPlannedPaymentModal from './LinkedPlannedPaymentModal';
+import CashReceiptBlock from './CashReceiptBlock';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Payment, PaymentDocument } from './paymentDetailsTypes';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
@@ -28,9 +29,16 @@ const PaymentDetailsSidebar = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showDocsPanel, setShowDocsPanel] = useState(false);
   const [linkedModalOpen, setLinkedModalOpen] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(payment.cash_receipt_url ?? null);
+  const [receiptUploadedAt, setReceiptUploadedAt] = useState<string | null>(payment.cash_receipt_uploaded_at ?? null);
 
   const handlePlannedUpdated = useCallback(() => {
     invalidatePaymentsCache();
+  }, []);
+
+  const handleReceiptUpdated = useCallback((url: string | null, uploadedAt: string | null) => {
+    setReceiptUrl(url);
+    setReceiptUploadedAt(uploadedAt);
   }, []);
 
   const docs: PaymentDocument[] = payment.documents && payment.documents.length > 0
@@ -157,6 +165,16 @@ const PaymentDetailsSidebar = ({
             )}
           </div>
         )}
+
+        <CashReceiptBlock
+          paymentId={payment.id}
+          paymentStatus={payment.status}
+          paymentType={payment.payment_type}
+          createdBy={payment.created_by}
+          receiptUrl={receiptUrl}
+          receiptUploadedAt={receiptUploadedAt}
+          onUpdated={handleReceiptUpdated}
+        />
       </div>
 
       {!isPlannedPayment && (

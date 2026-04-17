@@ -39,6 +39,9 @@ export interface Payment {
   invoice_date?: string;
   invoice_file_url?: string;
   invoice_file_uploaded_at?: string;
+  payment_type?: string;
+  cash_receipt_url?: string;
+  cash_receipt_uploaded_at?: string;
   created_at?: string;
   submitted_at?: string;
   rejection_comment?: string;

@@ -191,7 +191,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     p.invoice_file_url,
                     p.invoice_file_uploaded_at,
                     p.payment_type,
-                    p.cash_receipt_url
+                    p.cash_receipt_url,
+                    p.cash_receipt_uploaded_at
                 FROM {SCHEMA}.payments p
                 LEFT JOIN {SCHEMA}.categories c ON p.category_id = c.id
                 LEFT JOIN {SCHEMA}.legal_entities le ON p.legal_entity_id = le.id
@@ -251,6 +252,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     payment['invoice_date'] = payment['invoice_date'].isoformat()
                 if payment.get('invoice_file_uploaded_at'):
                     payment['invoice_file_uploaded_at'] = payment['invoice_file_uploaded_at'].isoformat()
+                if payment.get('cash_receipt_uploaded_at'):
+                    payment['cash_receipt_uploaded_at'] = payment['cash_receipt_uploaded_at'].isoformat()
                 
                 payment['custom_fields'] = custom_fields_map.get(payment['id'], [])
                 payment['documents'] = documents_map.get(payment['id'], [])
@@ -462,6 +465,92 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return response(200, result)
         
         elif method == 'PATCH':
+            query_params = event.get('queryStringParameters') or {}
+            action = query_params.get('action')
+
+            # Отдельное действие: загрузка/удаление чека для наличного платежа
+            if action == 'cash_receipt':
+                try:
+                    body = json.loads(event.get('body', '{}'))
+                except Exception:
+                    conn.close()
+                    return response(400, {'error': 'Неверный формат тела запроса'})
+
+                payment_id = body.get('payment_id')
+                receipt_url = body.get('cash_receipt_url')
+                receipt_action = body.get('receipt_action', 'upload')  # upload | delete
+
+                if not payment_id:
+                    conn.close()
+                    return response(400, {'error': 'Не указан payment_id'})
+
+                cur.execute(
+                    f'SELECT created_by, status, payment_type FROM {SCHEMA}.payments WHERE id = %s',
+                    (payment_id,)
+                )
+                pay_row = cur.fetchone()
+                if not pay_row:
+                    cur.close()
+                    conn.close()
+                    return response(404, {'error': 'Платёж не найден'})
+
+                if pay_row['created_by'] != payload['user_id']:
+                    cur.close()
+                    conn.close()
+                    return response(403, {'error': 'Чек может загружать только создатель платежа'})
+
+                if pay_row['status'] != 'approved':
+                    cur.close()
+                    conn.close()
+                    return response(403, {'error': 'Чек можно прикрепить только к согласованному платежу'})
+
+                if (pay_row['payment_type'] or '').lower() != 'cash':
+                    cur.close()
+                    conn.close()
+                    return response(403, {'error': 'Чек доступен только для наличных платежей'})
+
+                if receipt_action == 'delete':
+                    cur.execute(
+                        f"""UPDATE {SCHEMA}.payments
+                            SET cash_receipt_url = NULL,
+                                cash_receipt_uploaded_at = NULL
+                            WHERE id = %s""",
+                        (payment_id,)
+                    )
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    return response(200, {
+                        'success': True,
+                        'payment_id': payment_id,
+                        'cash_receipt_url': None,
+                        'cash_receipt_uploaded_at': None,
+                    })
+
+                # upload / replace
+                if not receipt_url or not isinstance(receipt_url, str):
+                    cur.close()
+                    conn.close()
+                    return response(400, {'error': 'Не указан URL чека'})
+
+                uploaded_at = datetime.now()
+                cur.execute(
+                    f"""UPDATE {SCHEMA}.payments
+                        SET cash_receipt_url = %s,
+                            cash_receipt_uploaded_at = %s
+                        WHERE id = %s""",
+                    (receipt_url, uploaded_at, payment_id)
+                )
+                conn.commit()
+                cur.close()
+                conn.close()
+                return response(200, {
+                    'success': True,
+                    'payment_id': payment_id,
+                    'cash_receipt_url': receipt_url,
+                    'cash_receipt_uploaded_at': uploaded_at.isoformat(),
+                })
+
             # Редактирование разрешённых полей согласованного платежа (только для администраторов)
             if not is_admin_user(conn, payload['user_id']):
                 conn.close()
