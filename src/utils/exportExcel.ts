@@ -452,13 +452,31 @@ export const exportTabPaymentsToExcel = (payments: Payment[], sheetLabel: string
     'Назначение',
     'Сумма (₽)',
     'Статус',
+    'Количество чеков',
+    'Ссылки на чеки',
   ];
 
   const headerRow = `<row r="1">${HEADERS.map(h => headerCell(h)).join('')}</row>`;
 
+  const getReceiptsInfo = (p: Payment): { count: number; urls: string } => {
+    const list = Array.isArray(p.cash_receipts) ? p.cash_receipts : [];
+    if (list.length > 0) {
+      const urls = list.map(r => r.file_url).filter(Boolean);
+      return { count: urls.length, urls: urls.join('\n') };
+    }
+    if (p.cash_receipt_url) {
+      return { count: 1, urls: p.cash_receipt_url };
+    }
+    return { count: 0, urls: '' };
+  };
+
   const dataRows = payments.map((p, i) => {
     const rowNum = i + 2;
     const dateVal = p.payment_date || p.planned_date || '';
+    const isCashApproved = (p.payment_type || '').toLowerCase() === 'cash' && p.status === 'approved';
+    const { count: receiptsCount, urls: receiptsUrls } = getReceiptsInfo(p);
+    const receiptsCountCell = isCashApproved ? String(receiptsCount) : '—';
+    const receiptsUrlsCell = isCashApproved && receiptsUrls ? receiptsUrls : '—';
     return `<row r="${rowNum}">
       ${cell(dateVal ? fmtDate(dateVal) : '—')}
       ${cell(p.category_name || '—')}
@@ -469,17 +487,27 @@ export const exportTabPaymentsToExcel = (payments: Payment[], sheetLabel: string
       ${cell(p.description || '—')}
       ${cell(fmtAmount(p.amount))}
       ${cell(TAB_STATUS_LABEL[p.status || ''] || p.status || '—')}
+      ${cell(receiptsCountCell)}
+      ${cell(receiptsUrlsCell)}
     </row>`;
   });
+
+  const totalReceipts = payments.reduce((s, p) => {
+    const isCashApproved = (p.payment_type || '').toLowerCase() === 'cash' && p.status === 'approved';
+    if (!isCashApproved) return s;
+    return s + getReceiptsInfo(p).count;
+  }, 0);
 
   const totalRow = `<row r="${payments.length + 2}">
     ${cell('ИТОГО')}${cell('')}${cell('')}${cell('')}${cell('')}${cell('')}${cell('')}
     ${cell(fmtAmount(payments.reduce((s, p) => s + p.amount, 0)))}
     ${cell('')}
+    ${cell(String(totalReceipts))}
+    ${cell('')}
   </row>`;
 
   const sheetData = [headerRow, ...dataRows, totalRow].join('\n');
-  const colWidths = [16, 20, 22, 22, 22, 22, 32, 16, 18]
+  const colWidths = [16, 20, 22, 22, 22, 22, 32, 16, 18, 18, 40]
     .map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`)
     .join('');
 
