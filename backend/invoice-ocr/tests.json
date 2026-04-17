@@ -16,6 +16,36 @@
         "error": "string"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Invalid base64 in upload_only mode",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "file": "not-a-base64-$$$",
+        "fileName": "receipt.pdf",
+        "upload_only": true
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Disallowed extension in upload_only mode",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "file": "aGVsbG8=",
+        "fileName": "document.exe",
+        "upload_only": true
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

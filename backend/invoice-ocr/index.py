@@ -32,13 +32,65 @@ def handler(event: dict, context) -> dict:
     if method != 'POST':
         return resp(405, {'error': 'Method not allowed'})
 
-    body = json.loads(event.get('body', '{}') or '{}')
+    try:
+        body = json.loads(event.get('body', '{}') or '{}')
+    except (ValueError, TypeError):
+        return resp(400, {'error': 'Invalid JSON body'})
+
     file_data = body.get('file')
     file_name = body.get('fileName', 'invoice.jpg')
     user_id = body.get('user_id')
+    upload_only = bool(body.get('upload_only'))
 
     if not file_data:
         return resp(400, {'error': 'File data is required'})
+
+    # ===== Режим "только загрузка" (без OCR / GPT) =====
+    if upload_only:
+        try:
+            if ',' in file_data:
+                file_data_clean = file_data.split(',')[1]
+            else:
+                file_data_clean = file_data
+            try:
+                file_bytes = base64.b64decode(file_data_clean)
+            except Exception:
+                return resp(400, {'error': 'Некорректный base64 файла'})
+
+            max_bytes = 20 * 1024 * 1024
+            if len(file_bytes) > max_bytes:
+                return resp(400, {'error': 'Файл превышает допустимый размер (20 МБ)'})
+
+            name_lower = (file_name or '').lower()
+            if name_lower.endswith('.pdf'):
+                content_type = 'application/pdf'
+            elif name_lower.endswith('.png'):
+                content_type = 'image/png'
+            elif name_lower.endswith('.jpg') or name_lower.endswith('.jpeg'):
+                content_type = 'image/jpeg'
+            else:
+                return resp(400, {'error': 'Допустимы только PDF, JPG и PNG'})
+
+            aws_key = os.environ.get('AWS_ACCESS_KEY_ID')
+            aws_secret = os.environ.get('AWS_SECRET_ACCESS_KEY')
+            if not aws_key or not aws_secret:
+                return resp(500, {'error': 'S3 credentials are not configured'})
+
+            s3 = boto3.client(
+                's3',
+                endpoint_url='https://bucket.poehali.dev',
+                aws_access_key_id=aws_key,
+                aws_secret_access_key=aws_secret,
+            )
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            safe_name = (file_name or 'file').replace('/', '_').replace('\\', '_')
+            s3_key = f'invoices/{timestamp}_{safe_name}'
+            s3.put_object(Bucket='files', Key=s3_key, Body=file_bytes, ContentType=content_type)
+            cdn_url = f"https://cdn.poehali.dev/projects/{aws_key}/bucket/{s3_key}"
+            return resp(200, {'file_url': cdn_url, 'file_name': file_name})
+        except Exception as e:
+            import sys; print(f"[UPLOAD ONLY ERROR] {e}", file=sys.stderr, flush=True)
+            return resp(500, {'error': 'Не удалось сохранить файл'})
 
     all_candidates = [
         os.environ.get('YANDEX_GPT_API_KEY', ''),
