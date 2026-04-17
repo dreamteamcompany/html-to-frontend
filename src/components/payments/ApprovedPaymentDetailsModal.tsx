@@ -31,6 +31,36 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
     setLocalPayment(payment);
   }, [payment]);
 
+  // Подгружаем актуальный список файлов платежа (чтобы отображение не зависело от кэша источника)
+  useEffect(() => {
+    const paymentId = payment?.id;
+    if (!paymentId || !token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API_ENDPOINTS.paymentsApi}?action=invoice_files`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Token': token,
+          },
+          body: JSON.stringify({ payment_id: paymentId, sub_action: 'list' }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        if (Array.isArray(data.documents)) {
+          setLocalPayment((prev) => (prev ? { ...prev, documents: data.documents } : prev));
+        }
+      } catch {
+        // тихо игнорируем — показ продолжит работать на данных из пропса
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [payment?.id, token]);
+
   // Состояние редактирования отдела (inline, в шапке поля)
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isEditingDept, setIsEditingDept] = useState(false);

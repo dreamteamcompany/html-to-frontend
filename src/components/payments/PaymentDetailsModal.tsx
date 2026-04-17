@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Icon from '@/components/ui/icon';
 import { API_ENDPOINTS } from '@/config/api';
 import { apiFetch } from '@/utils/api';
-import { Payment, PaymentDetailsModalProps, PaymentView } from './paymentDetailsTypes';
+import { useAuth } from '@/contexts/AuthContext';
+import { PaymentDetailsModalProps, PaymentView, PaymentDocument } from './paymentDetailsTypes';
 import PaymentDetailsInfo from './PaymentDetailsInfo';
 import PaymentDetailsSidebar from './PaymentDetailsSidebar';
 
@@ -27,7 +28,9 @@ const getStatusBadge = (status?: string) => {
 };
 
 const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove, onReject, onEdit, isPlannedPayment }: PaymentDetailsModalProps) => {
+  const { token } = useAuth();
   const [views, setViews] = useState<PaymentView[]>([]);
+  const [freshDocuments, setFreshDocuments] = useState<PaymentDocument[] | null>(null);
 
   useEffect(() => {
     if (!payment) return;
@@ -39,7 +42,42 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
       .catch(() => {});
   }, [payment?.id]);
 
-  if (!payment) return null;
+  useEffect(() => {
+    const paymentId = payment?.id;
+    setFreshDocuments(null);
+    if (!paymentId || !token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API_ENDPOINTS.paymentsApi}?action=invoice_files`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Token': token,
+          },
+          body: JSON.stringify({ payment_id: paymentId, sub_action: 'list' }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data.documents)) {
+          setFreshDocuments(data.documents as PaymentDocument[]);
+        }
+      } catch {
+        // не критично
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [payment?.id, token]);
+
+  const paymentWithDocs = useMemo(() => {
+    if (!payment) return payment;
+    if (!freshDocuments) return payment;
+    return { ...payment, documents: freshDocuments };
+  }, [payment, freshDocuments]);
+
+  if (!paymentWithDocs) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 z-50">
@@ -47,8 +85,8 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
         {/* Шапка */}
         <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0">
           <div className="flex items-center gap-2 min-w-0 flex-wrap">
-            <h2 className="text-base sm:text-xl font-semibold text-foreground break-words">Детали платежа #{payment.id}</h2>
-            <div className="flex-shrink-0">{getStatusBadge(payment.status)}</div>
+            <h2 className="text-base sm:text-xl font-semibold text-foreground break-words">Детали платежа #{paymentWithDocs.id}</h2>
+            <div className="flex-shrink-0">{getStatusBadge(paymentWithDocs.status)}</div>
           </div>
           <button
             onClick={onClose}
@@ -61,13 +99,13 @@ const PaymentDetailsModal = ({ payment, onClose, onSubmitForApproval, onApprove,
         {/* Тело — на мобиле скролл всего содержимого, на десктопе — две колонки со своими скроллами */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
           <PaymentDetailsInfo
-            payment={payment}
+            payment={paymentWithDocs}
             views={views}
             isPlannedPayment={isPlannedPayment}
             onEdit={onEdit}
           />
           <PaymentDetailsSidebar
-            payment={payment}
+            payment={paymentWithDocs}
             isPlannedPayment={isPlannedPayment}
             onClose={onClose}
             onSubmitForApproval={onSubmitForApproval}

@@ -175,9 +175,22 @@ const DrillDownModal = ({ filter, onClose }: Props) => {
     service_name: selectedPayment.service_name,
     department_id: selectedPayment.department_id,
     department_name: selectedPayment.department_name,
+    contractor_id: selectedPayment.contractor_id as number | undefined,
     contractor_name: selectedPayment.contractor_name,
+    legal_entity_id: selectedPayment.legal_entity_id as number | undefined,
     legal_entity_name: selectedPayment.legal_entity_name,
+    invoice_number: selectedPayment.invoice_number as string | undefined,
+    invoice_date: selectedPayment.invoice_date as string | undefined,
+    invoice_file_url: selectedPayment.invoice_file_url as string | undefined,
+    invoice_file_uploaded_at: selectedPayment.invoice_file_uploaded_at as string | undefined,
+    created_by: selectedPayment.created_by as number | undefined,
+    created_by_name: selectedPayment.created_by_name as string | undefined,
     created_at: selectedPayment.created_at as string | undefined,
+    submitted_at: selectedPayment.submitted_at as string | undefined,
+    ceo_approved_at: selectedPayment.ceo_approved_at as string | undefined,
+    tech_director_approved_at: selectedPayment.tech_director_approved_at as string | undefined,
+    custom_fields: selectedPayment.custom_fields as ApprovedPayment['custom_fields'],
+    documents: selectedPayment.documents as ApprovedPayment['documents'],
   } : null;
 
   return (
