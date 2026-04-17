@@ -14,7 +14,6 @@ interface InvoiceUploadDropzoneProps {
   onRemove?: () => void;
   onError?: (message: string) => void;
   label?: string;
-  dropzoneText?: string;
 }
 
 const getDisplayName = (fileUrl: string): string => {
@@ -31,7 +30,6 @@ const InvoiceUploadDropzone = ({
   onRemove,
   onError,
   label = 'Загрузка счёта',
-  dropzoneText = 'Перетащите файл счёта сюда',
 }: InvoiceUploadDropzoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -151,7 +149,7 @@ const InvoiceUploadDropzone = ({
           ) : (
             <div className="space-y-2">
               <Icon name="Upload" size={36} className="mx-auto text-muted-foreground" />
-              <p className="text-sm font-semibold">{dropzoneText}</p>
+              <p className="text-sm font-semibold">Перетащите файл счёта сюда</p>
               <p className="text-xs text-muted-foreground">
                 или нажмите для выбора (JPG, PNG, PDF · до 20 МБ)
               </p>
