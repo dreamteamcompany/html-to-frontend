@@ -108,7 +108,10 @@ const ApprovedPaymentEditModal = ({ open, payment, onClose, onSaved }: ApprovedP
       setInvoiceFileUrl(fileUrl);
       setInvoiceFileName(file.name);
       setInvoiceFileDirty(true);
-      toast({ title: 'Файл загружен', description: 'Нажмите "Сохранить", чтобы применить изменения' });
+      toast({
+        title: 'Файл загружен',
+        description: `«${file.name}» прикреплён. Нажмите «Сохранить», чтобы применить изменения`,
+      });
     } catch (e) {
       toast({
         title: 'Ошибка загрузки',
