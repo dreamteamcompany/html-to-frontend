@@ -1,6 +1,6 @@
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PaymentComments from './PaymentComments';
 import PaymentAuditLog from './PaymentAuditLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -64,15 +64,49 @@ interface PendingApprovalsModalProps {
   onRevoke?: () => void;
 }
 
-const PendingApprovalsModal = ({ payment, onClose, onApprove, onReject, onRevoke }: PendingApprovalsModalProps) => {
+const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onReject, onRevoke }: PendingApprovalsModalProps) => {
   const { token, user } = useAuth();
   const { toast } = useToast();
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
   const [revokeComment, setRevokeComment] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
   const [showDocsPanel, setShowDocsPanel] = useState(false);
+  const [freshDocuments, setFreshDocuments] = useState<PaymentDocument[] | null>(null);
 
-  if (!payment) return null;
+  useEffect(() => {
+    const paymentId = paymentProp?.id;
+    setFreshDocuments(null);
+    if (!paymentId || !token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API_ENDPOINTS.paymentsApi}?action=invoice_files`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Token': token,
+          },
+          body: JSON.stringify({ payment_id: paymentId, sub_action: 'list' }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data.documents)) {
+          setFreshDocuments(data.documents as PaymentDocument[]);
+        }
+      } catch {
+        // не критично, покажем то, что пришло в props
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [paymentProp?.id, token]);
+
+  if (!paymentProp) return null;
+
+  const payment: Payment = freshDocuments
+    ? { ...paymentProp, documents: freshDocuments }
+    : paymentProp;
 
   const isCreator = user?.id === payment.created_by;
   const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin');
