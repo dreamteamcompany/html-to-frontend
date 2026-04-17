@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { translateFetchError } from '@/utils/api';
 import { Payment } from './ApprovedPaymentInfo';
+import InvoiceUploadDropzone from './InvoiceUploadDropzone';
 
 interface LegalEntity {
   id: number;
@@ -39,6 +40,10 @@ const ApprovedPaymentEditModal = ({ open, payment, onClose, onSaved }: ApprovedP
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
   const [selectedLeId, setSelectedLeId] = useState<string>('');
   const [invoiceNumber, setInvoiceNumber] = useState<string>('');
+  const [invoiceFileUrl, setInvoiceFileUrl] = useState<string | null>(null);
+  const [invoiceFileName, setInvoiceFileName] = useState<string | null>(null);
+  const [invoiceFileDirty, setInvoiceFileDirty] = useState(false);
+  const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -46,6 +51,10 @@ const ApprovedPaymentEditModal = ({ open, payment, onClose, onSaved }: ApprovedP
     setSelectedDeptId(payment.department_id ? String(payment.department_id) : 'none');
     setSelectedLeId(payment.legal_entity_id ? String(payment.legal_entity_id) : 'none');
     setInvoiceNumber(payment.invoice_number || '');
+    setInvoiceFileUrl(payment.invoice_file_url || null);
+    setInvoiceFileName(null);
+    setInvoiceFileDirty(false);
+    setIsUploadingInvoice(false);
     loadDictionaries();
   }, [open]);
 
@@ -75,6 +84,48 @@ const ApprovedPaymentEditModal = ({ open, payment, onClose, onSaved }: ApprovedP
     }
   };
 
+  const uploadInvoiceFile = async (file: File) => {
+    setIsUploadingInvoice(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
+        reader.readAsDataURL(file);
+      });
+
+      const resp = await fetch(API_ENDPOINTS.invoiceOcr, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: base64, fileName: file.name, upload_only: true }),
+      });
+
+      if (!resp.ok) throw new Error('Ошибка загрузки файла');
+      const data = await resp.json();
+      const fileUrl = data.file_url;
+      if (!fileUrl) throw new Error('Сервер не вернул ссылку на файл');
+
+      setInvoiceFileUrl(fileUrl);
+      setInvoiceFileName(file.name);
+      setInvoiceFileDirty(true);
+      toast({ title: 'Файл загружен', description: 'Нажмите "Сохранить", чтобы применить изменения' });
+    } catch (e) {
+      toast({
+        title: 'Ошибка загрузки',
+        description: translateFetchError(e, 'Не удалось загрузить файл'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingInvoice(false);
+    }
+  };
+
+  const handleRemoveInvoice = () => {
+    setInvoiceFileUrl(null);
+    setInvoiceFileName(null);
+    setInvoiceFileDirty(true);
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -84,6 +135,13 @@ const ApprovedPaymentEditModal = ({ open, payment, onClose, onSaved }: ApprovedP
         legal_entity_id: selectedLeId === 'none' ? null : Number(selectedLeId),
         invoice_number: invoiceNumber.trim() || null,
       };
+
+      if (invoiceFileDirty) {
+        body.invoice_file_url = invoiceFileUrl;
+        if (invoiceFileUrl && invoiceFileName) {
+          body.invoice_file_name = invoiceFileName;
+        }
+      }
 
       const res = await fetch(API_ENDPOINTS.paymentsApi, {
         method: 'PATCH',
@@ -111,6 +169,8 @@ const ApprovedPaymentEditModal = ({ open, payment, onClose, onSaved }: ApprovedP
         legal_entity_id: result.legal_entity_id,
         legal_entity_name: result.legal_entity_name ?? undefined,
         invoice_number: result.invoice_number ?? undefined,
+        invoice_file_url: result.invoice_file_url ?? undefined,
+        invoice_file_uploaded_at: result.invoice_file_uploaded_at ?? undefined,
       });
 
       onClose();
@@ -126,8 +186,8 @@ const ApprovedPaymentEditModal = ({ open, payment, onClose, onSaved }: ApprovedP
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v && !isSaving) onClose(); }}>
-      <DialogContent className="max-w-md">
+    <Dialog open={open} onOpenChange={(v) => { if (!v && !isSaving && !isUploadingInvoice) onClose(); }}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Редактировать платёж #{payment.id}</DialogTitle>
         </DialogHeader>
@@ -171,13 +231,22 @@ const ApprovedPaymentEditModal = ({ open, payment, onClose, onSaved }: ApprovedP
               placeholder="Введите номер счёта"
             />
           </div>
+
+          <InvoiceUploadDropzone
+            fileUrl={invoiceFileUrl}
+            fileName={invoiceFileName}
+            isUploading={isUploadingInvoice}
+            onFileSelected={uploadInvoiceFile}
+            onRemove={handleRemoveInvoice}
+            onError={(message) => toast({ title: 'Ошибка', description: message, variant: 'destructive' })}
+          />
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSaving}>
+          <Button variant="outline" onClick={onClose} disabled={isSaving || isUploadingInvoice}>
             Отмена
           </Button>
-          <Button onClick={handleSave} disabled={isSaving || isLoadingDicts}>
+          <Button onClick={handleSave} disabled={isSaving || isLoadingDicts || isUploadingInvoice}>
             {isSaving ? 'Сохранение...' : 'Сохранить'}
           </Button>
         </DialogFooter>

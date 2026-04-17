@@ -659,13 +659,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             new_department_id = body.get('department_id')
             new_legal_entity_id = body.get('legal_entity_id')
             new_invoice_number = body.get('invoice_number')
+            new_invoice_file_url = body.get('invoice_file_url') if 'invoice_file_url' in body else None
+            new_invoice_file_name = body.get('invoice_file_name')
 
             if not payment_id:
                 conn.close()
                 return response(400, {'error': 'Не указан payment_id'})
 
             cur.execute(
-                f'SELECT id, department_id, legal_entity_id, invoice_number, status FROM {SCHEMA}.payments WHERE id = %s',
+                f'SELECT id, department_id, legal_entity_id, invoice_number, invoice_file_url, status FROM {SCHEMA}.payments WHERE id = %s',
                 (payment_id,)
             )
             existing = cur.fetchone()
@@ -730,6 +732,27 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     f'Номер счёта: «{old_invoice_number or "не указан"}» → «{new_invoice_number or "не указан"}»'
                 )
 
+            # Обновление файла счёта (загрузка/замена/удаление)
+            invoice_doc_changed = False
+            if 'invoice_file_url' in body:
+                old_file_url = existing['invoice_file_url']
+                if new_invoice_file_url:
+                    update_parts.append('invoice_file_url = %s')
+                    update_values.append(new_invoice_file_url)
+                    update_parts.append('invoice_file_uploaded_at = %s')
+                    update_values.append(datetime.now())
+                    if old_file_url:
+                        audit_changes.append('Файл счёта: заменён')
+                    else:
+                        audit_changes.append('Файл счёта: загружен')
+                    invoice_doc_changed = True
+                else:
+                    update_parts.append('invoice_file_url = NULL')
+                    update_parts.append('invoice_file_uploaded_at = NULL')
+                    if old_file_url:
+                        audit_changes.append('Файл счёта: удалён')
+                        invoice_doc_changed = True
+
             if not update_parts:
                 cur.close()
                 conn.close()
@@ -740,6 +763,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 f'UPDATE {SCHEMA}.payments SET {", ".join(update_parts)} WHERE id = %s',
                 tuple(update_values)
             )
+
+            # Работа с записями документов счёта
+            if invoice_doc_changed:
+                if new_invoice_file_url:
+                    # Проверяем, нет ли уже такой записи
+                    cur.execute(
+                        f"SELECT id FROM {SCHEMA}.payment_documents WHERE payment_id = %s AND file_url = %s",
+                        (payment_id, new_invoice_file_url)
+                    )
+                    if not cur.fetchone():
+                        if new_invoice_file_name:
+                            file_name = new_invoice_file_name
+                        else:
+                            raw_name = new_invoice_file_url.split('/')[-1]
+                            parts = raw_name.split('_')
+                            file_name = '_'.join(parts[2:]) if len(parts) > 2 else raw_name
+                        cur.execute(
+                            f"""INSERT INTO {SCHEMA}.payment_documents
+                                    (payment_id, file_name, file_url, document_type, uploaded_at, uploaded_by)
+                                VALUES (%s, %s, %s, 'invoice', %s, %s)""",
+                            (payment_id, file_name, new_invoice_file_url, datetime.now(), payload['user_id'])
+                        )
 
             # Получаем данные администратора
             cur.execute(
@@ -792,6 +837,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'legal_entity_id': updated['legal_entity_id'] if updated else new_legal_entity_id,
                 'legal_entity_name': updated['legal_entity_name'] if updated else None,
                 'invoice_number': updated['invoice_number'] if updated else new_invoice_number,
+                'invoice_file_url': updated['invoice_file_url'] if updated else new_invoice_file_url,
+                'invoice_file_uploaded_at': (
+                    updated['invoice_file_uploaded_at'].isoformat()
+                    if updated and updated.get('invoice_file_uploaded_at')
+                    else None
+                ),
             })
 
         elif method == 'DELETE':
