@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_payment_documents_payment_id ON t_p61788166_html_to_frontend.payment_documents(payment_id);

@@ -8,6 +8,11 @@ from typing import Dict, Any
 from datetime import datetime
 from pydantic import BaseModel, Field
 
+try:
+    import boto3
+except Exception:
+    boto3 = None
+
 SCHEMA = 't_p61788166_html_to_frontend'
 
 def log(msg):
@@ -82,6 +87,89 @@ def check_user_permission(conn, user_id: int, required_permission: str) -> bool:
         return result['count'] > 0
     finally:
         cur.close()
+
+def extract_s3_key_from_url(file_url: str) -> str:
+    """Извлекает S3 key из CDN-ссылки вида https://cdn.poehali.dev/projects/{KEY}/bucket/{path}"""
+    if not file_url or not isinstance(file_url, str):
+        return ''
+    marker = '/bucket/'
+    idx = file_url.find(marker)
+    if idx == -1:
+        return ''
+    return file_url[idx + len(marker):]
+
+
+def delete_from_s3(file_url: str) -> bool:
+    """Удаляет файл из S3 по CDN-ссылке. Возвращает True при успехе. Ошибки не прерывают поток."""
+    try:
+        if not boto3:
+            return False
+        key = extract_s3_key_from_url(file_url)
+        if not key:
+            return False
+        aws_key = os.environ.get('AWS_ACCESS_KEY_ID')
+        aws_secret = os.environ.get('AWS_SECRET_ACCESS_KEY')
+        if not aws_key or not aws_secret:
+            return False
+        s3 = boto3.client(
+            's3',
+            endpoint_url='https://bucket.poehali.dev',
+            aws_access_key_id=aws_key,
+            aws_secret_access_key=aws_secret,
+        )
+        s3.delete_object(Bucket='files', Key=key)
+        return True
+    except Exception as e:
+        log(f'[S3 DELETE ERROR] {e}')
+        return False
+
+
+def derive_file_name(file_url: str, file_name: str | None) -> str:
+    if file_name:
+        return file_name
+    raw = (file_url or '').split('/')[-1] or 'Файл'
+    parts = raw.split('_')
+    return '_'.join(parts[2:]) if len(parts) > 2 else raw
+
+
+def fetch_payment_documents(cur, payment_id: int) -> list:
+    cur.execute(
+        f"""SELECT id, file_url, file_name, document_type, uploaded_at, uploaded_by
+            FROM {SCHEMA}.payment_documents
+            WHERE payment_id = %s
+            ORDER BY uploaded_at ASC, id ASC""",
+        (payment_id,)
+    )
+    docs = []
+    for r in cur.fetchall():
+        d = dict(r)
+        if d.get('uploaded_at'):
+            d['uploaded_at'] = d['uploaded_at'].isoformat()
+        docs.append(d)
+    return docs
+
+
+def write_audit_approval(cur, payment_id: int, user_id: int, comment: str):
+    """Пишет запись в approvals как аудит-событие по платежу."""
+    cur.execute(f"""
+        SELECT r.name FROM {SCHEMA}.roles r
+        JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
+        WHERE ur.user_id = %s LIMIT 1
+    """, (user_id,))
+    role_row = cur.fetchone()
+    approver_role = role_row['name'] if role_row else 'Пользователь'
+    try:
+        import pytz
+        moscow_tz = pytz.timezone('Europe/Moscow')
+        now_moscow = datetime.now(moscow_tz)
+    except Exception:
+        now_moscow = datetime.now()
+    cur.execute(
+        f"""INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s)""",
+        (payment_id, user_id, approver_role, 'updated', comment, now_moscow)
+    )
+
 
 def is_admin_user(conn, user_id: int) -> bool:
     cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -642,6 +730,211 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'payment_id': payment_id,
                     'receipt_id': new_id,
                     'receipts': receipts,
+                })
+
+            # Отдельное действие: работа с файлами счёта/чека платежа (до 10 шт., все форматы)
+            if action == 'invoice_files':
+                try:
+                    body = json.loads(event.get('body', '{}'))
+                except Exception:
+                    conn.close()
+                    return response(400, {'error': 'Неверный формат тела запроса'})
+
+                payment_id = body.get('payment_id')
+                sub_action = body.get('sub_action') or 'list'  # list | upload | delete | replace
+                file_url = body.get('file_url')
+                file_name_in = body.get('file_name')
+                document_id = body.get('document_id')
+
+                if not payment_id:
+                    conn.close()
+                    return response(400, {'error': 'Не указан payment_id'})
+
+                cur.execute(
+                    f'SELECT created_by, status FROM {SCHEMA}.payments WHERE id = %s',
+                    (payment_id,)
+                )
+                pay_row = cur.fetchone()
+                if not pay_row:
+                    cur.close()
+                    conn.close()
+                    return response(404, {'error': 'Платёж не найден'})
+
+                is_admin = is_admin_user(conn, payload['user_id'])
+                is_owner = pay_row['created_by'] == payload['user_id']
+                if not is_admin and not is_owner:
+                    cur.close()
+                    conn.close()
+                    return response(403, {'error': 'Нет прав на управление файлами платежа'})
+
+                if sub_action == 'list':
+                    docs = fetch_payment_documents(cur, payment_id)
+                    cur.close()
+                    conn.close()
+                    return response(200, {'success': True, 'payment_id': payment_id, 'documents': docs})
+
+                if sub_action == 'delete':
+                    if not document_id:
+                        cur.close()
+                        conn.close()
+                        return response(400, {'error': 'Не указан document_id'})
+                    cur.execute(
+                        f"SELECT id, file_url, file_name FROM {SCHEMA}.payment_documents WHERE id = %s AND payment_id = %s",
+                        (document_id, payment_id)
+                    )
+                    doc = cur.fetchone()
+                    if not doc:
+                        cur.close()
+                        conn.close()
+                        return response(404, {'error': 'Файл не найден'})
+                    cur.execute(
+                        f"DELETE FROM {SCHEMA}.payment_documents WHERE id = %s AND payment_id = %s",
+                        (document_id, payment_id)
+                    )
+                    delete_from_s3(doc['file_url'])
+
+                    # Если удалён файл, совпадающий с payments.invoice_file_url — подменим на другой/NULL
+                    cur.execute(
+                        f"SELECT invoice_file_url FROM {SCHEMA}.payments WHERE id = %s",
+                        (payment_id,)
+                    )
+                    p_row = cur.fetchone()
+                    if p_row and p_row['invoice_file_url'] == doc['file_url']:
+                        cur.execute(
+                            f"""SELECT file_url, uploaded_at FROM {SCHEMA}.payment_documents
+                                WHERE payment_id = %s
+                                ORDER BY uploaded_at ASC, id ASC LIMIT 1""",
+                            (payment_id,)
+                        )
+                        next_doc = cur.fetchone()
+                        if next_doc:
+                            cur.execute(
+                                f"""UPDATE {SCHEMA}.payments
+                                    SET invoice_file_url = %s, invoice_file_uploaded_at = %s
+                                    WHERE id = %s""",
+                                (next_doc['file_url'], next_doc['uploaded_at'], payment_id)
+                            )
+                        else:
+                            cur.execute(
+                                f"""UPDATE {SCHEMA}.payments
+                                    SET invoice_file_url = NULL, invoice_file_uploaded_at = NULL
+                                    WHERE id = %s""",
+                                (payment_id,)
+                            )
+
+                    write_audit_approval(
+                        cur, payment_id, payload['user_id'],
+                        f'Файл «{doc["file_name"] or "без имени"}» удалён'
+                    )
+                    conn.commit()
+                    docs = fetch_payment_documents(cur, payment_id)
+                    cur.close()
+                    conn.close()
+                    return response(200, {'success': True, 'payment_id': payment_id, 'documents': docs})
+
+                if sub_action == 'replace':
+                    if not document_id or not file_url:
+                        cur.close()
+                        conn.close()
+                        return response(400, {'error': 'Не указан document_id или file_url'})
+                    cur.execute(
+                        f"SELECT id, file_url, file_name FROM {SCHEMA}.payment_documents WHERE id = %s AND payment_id = %s",
+                        (document_id, payment_id)
+                    )
+                    doc = cur.fetchone()
+                    if not doc:
+                        cur.close()
+                        conn.close()
+                        return response(404, {'error': 'Файл не найден'})
+                    new_name = derive_file_name(file_url, file_name_in)
+                    now = datetime.now()
+                    cur.execute(
+                        f"""UPDATE {SCHEMA}.payment_documents
+                            SET file_url = %s, file_name = %s, uploaded_at = %s, uploaded_by = %s
+                            WHERE id = %s AND payment_id = %s""",
+                        (file_url, new_name, now, payload['user_id'], document_id, payment_id)
+                    )
+                    # Синхронизируем payments.invoice_file_url, если он указывал на заменяемый файл
+                    cur.execute(
+                        f"SELECT invoice_file_url FROM {SCHEMA}.payments WHERE id = %s",
+                        (payment_id,)
+                    )
+                    p_row = cur.fetchone()
+                    if p_row and p_row['invoice_file_url'] == doc['file_url']:
+                        cur.execute(
+                            f"""UPDATE {SCHEMA}.payments
+                                SET invoice_file_url = %s, invoice_file_uploaded_at = %s
+                                WHERE id = %s""",
+                            (file_url, now, payment_id)
+                        )
+                    # Удаляем старый физический файл из S3 (если CDN-ссылка)
+                    if doc['file_url'] and doc['file_url'] != file_url:
+                        delete_from_s3(doc['file_url'])
+                    write_audit_approval(
+                        cur, payment_id, payload['user_id'],
+                        f'Файл «{doc["file_name"] or "без имени"}» заменён на «{new_name}»'
+                    )
+                    conn.commit()
+                    docs = fetch_payment_documents(cur, payment_id)
+                    cur.close()
+                    conn.close()
+                    return response(200, {'success': True, 'payment_id': payment_id, 'documents': docs})
+
+                # upload (добавить новый файл)
+                if not file_url or not isinstance(file_url, str):
+                    cur.close()
+                    conn.close()
+                    return response(400, {'error': 'Не указан file_url'})
+
+                cur.execute(
+                    f"SELECT COUNT(*) AS cnt FROM {SCHEMA}.payment_documents WHERE payment_id = %s",
+                    (payment_id,)
+                )
+                cnt_row = cur.fetchone()
+                current_count = int(cnt_row['cnt']) if cnt_row else 0
+                if current_count >= 10:
+                    cur.close()
+                    conn.close()
+                    return response(400, {'error': 'Достигнут лимит: не более 10 файлов на платёж'})
+
+                new_name = derive_file_name(file_url, file_name_in)
+                now = datetime.now()
+                cur.execute(
+                    f"""INSERT INTO {SCHEMA}.payment_documents
+                            (payment_id, file_name, file_url, document_type, uploaded_at, uploaded_by)
+                        VALUES (%s, %s, %s, 'invoice', %s, %s)
+                        RETURNING id""",
+                    (payment_id, new_name, file_url, now, payload['user_id'])
+                )
+                new_id = cur.fetchone()['id']
+
+                # Если в payments ещё не был привязан главный файл — подставим этот
+                cur.execute(
+                    f"SELECT invoice_file_url FROM {SCHEMA}.payments WHERE id = %s",
+                    (payment_id,)
+                )
+                p_row = cur.fetchone()
+                if p_row and not p_row['invoice_file_url']:
+                    cur.execute(
+                        f"""UPDATE {SCHEMA}.payments
+                            SET invoice_file_url = %s, invoice_file_uploaded_at = %s
+                            WHERE id = %s""",
+                        (file_url, now, payment_id)
+                    )
+
+                write_audit_approval(
+                    cur, payment_id, payload['user_id'],
+                    f'Добавлен файл «{new_name}»'
+                )
+                conn.commit()
+                docs = fetch_payment_documents(cur, payment_id)
+                cur.close()
+                conn.close()
+                return response(200, {
+                    'success': True,
+                    'payment_id': payment_id,
+                    'document_id': new_id,
+                    'documents': docs,
                 })
 
             # Редактирование разрешённых полей согласованного платежа (только для администраторов)
