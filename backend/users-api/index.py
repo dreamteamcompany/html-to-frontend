@@ -72,6 +72,28 @@ def verify_token_and_permission(event: Dict[str, Any], conn, required_permission
     
     return payload, None
 
+def verify_token_and_any_permission(event: Dict[str, Any], conn, required_permissions: List[str]) -> tuple:
+    """Проверяет токен и наличие хотя бы одного из указанных прав"""
+    payload, error = verify_token(event, conn)
+    if error:
+        return None, error
+    
+    cur = conn.cursor()
+    cur.execute(f"""
+        SELECT COUNT(*) FROM {SCHEMA}.permissions p
+        JOIN {SCHEMA}.role_permissions rp ON p.id = rp.permission_id
+        JOIN {SCHEMA}.user_roles ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = %s AND p.name = ANY(%s)
+    """, (payload['user_id'], list(required_permissions)))
+    
+    has_permission = cur.fetchone()[0] > 0
+    cur.close()
+    
+    if not has_permission:
+        return None, response(403, {'error': 'Forbidden'})
+    
+    return payload, None
+
 class RoleRequest(BaseModel):
     """Модель запроса роли"""
     name: str = Field(..., min_length=1, max_length=255)
@@ -132,7 +154,7 @@ def handle_users_endpoint(event: Dict[str, Any], conn, method: str, path: str) -
         user_id = int(path_parts[-1])
     
     if method == 'GET':
-        payload, error = verify_token_and_permission(event, conn, 'users:read')
+        payload, error = verify_token_and_any_permission(event, conn, ['users:read', 'users.view_all'])
         if error:
             return error
         

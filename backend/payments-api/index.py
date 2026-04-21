@@ -238,7 +238,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 cur2.close()
                 is_ceo = 'CEO' in user_roles_list or 'Генеральный директор' in user_roles_list
                 is_approver_role = check_user_permission(conn, payload['user_id'], 'approvals.read')
-                if not is_admin and not is_ceo and not is_approver_role:
+                has_view_all = check_user_permission(conn, payload['user_id'], 'payments.view_all')
+                if not is_admin and not is_ceo and not is_approver_role and not has_view_all:
                     conn.close()
                     return response(403, {'error': 'Недостаточно прав для просмотра всех платежей'})
                 where_clause = ""
