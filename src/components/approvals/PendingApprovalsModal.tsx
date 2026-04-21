@@ -59,8 +59,8 @@ interface Payment {
 interface PendingApprovalsModalProps {
   payment: Payment | null;
   onClose: () => void;
-  onApprove: (paymentId: number, comment?: string) => void;
-  onReject: (paymentId: number, comment?: string) => void;
+  onApprove?: (paymentId: number, comment?: string) => void;
+  onReject?: (paymentId: number, comment?: string) => void;
   onRevoke?: () => void;
 }
 
@@ -299,24 +299,30 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
               )}
             </div>
 
-            <div className="border-t border-border p-4 sm:p-6">
-              <div className="flex gap-2 sm:gap-3">
-                <button
-                  onClick={handleApprove}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  <Icon name="Check" size={18} />
-                  Согласовать
-                </button>
-                <button
-                  onClick={handleReject}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  <Icon name="X" size={18} />
-                  Отклонить
-                </button>
+            {(onApprove || onReject) && (
+              <div className="border-t border-border p-4 sm:p-6">
+                <div className="flex gap-2 sm:gap-3">
+                  {onApprove && (
+                    <button
+                      onClick={handleApprove}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Icon name="Check" size={18} />
+                      Согласовать
+                    </button>
+                  )}
+                  {onReject && (
+                    <button
+                      onClick={handleReject}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Icon name="X" size={18} />
+                      Отклонить
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-border lg:overflow-hidden overflow-x-hidden min-h-[400px]">

@@ -23,9 +23,10 @@ import { usePaymentsFilter } from '@/hooks/usePaymentsFilter';
 interface PendingApprovalsTabProps {
   openPaymentId?: number | null;
   onOpenPaymentIdHandled?: () => void;
+  canApproveReject?: boolean;
 }
 
-const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingApprovalsTabProps = {}) => {
+const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled, canApproveReject = false }: PendingApprovalsTabProps = {}) => {
   usePendingApprovals();
   const { payments, loading, approveProgress, handleApprove, handleApproveAll, handleReject } = usePendingApprovalsData();
   const [approvingAll, setApprovingAll] = useState(false);
@@ -130,7 +131,7 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
         />
       )}
 
-      {filteredPayments.length > 1 && (
+      {canApproveReject && filteredPayments.length > 1 && (
         <div className="flex flex-col gap-3">
           <div className="flex justify-end">
             <button
@@ -183,8 +184,8 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
         loading={loading}
         payments={filteredPayments}
         searchQuery={searchQuery}
-        handleApprove={handleApprove}
-        handleReject={handleReject}
+        handleApprove={canApproveReject ? handleApprove : undefined}
+        handleReject={canApproveReject ? handleReject : undefined}
         getStatusBadge={getStatusBadge}
         onPaymentClick={setSelectedPayment}
       />
@@ -192,8 +193,8 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled }: PendingA
       <PendingApprovalsModal
         payment={selectedPayment}
         onClose={() => setSelectedPayment(null)}
-        onApprove={handleModalApprove}
-        onReject={handleModalReject}
+        onApprove={canApproveReject ? handleModalApprove : undefined}
+        onReject={canApproveReject ? handleModalReject : undefined}
         onRevoke={() => {
           // Перезагружаем данные после отзыва
           window.location.reload();

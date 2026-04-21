@@ -15,6 +15,8 @@ const PaymentsInner = () => {
   const { user } = useAuth();
   const { payments: allPayments } = useAllPaymentsCache();
   const isCEO = user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор');
+  const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin');
+  const canApproveReject = isCEO || isAdmin;
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState(isCEO ? 'pending' : 'my');
@@ -188,7 +190,11 @@ const PaymentsInner = () => {
             )}
 
             <TabsContent value="pending" className="mt-0">
-              <PendingApprovalsTab openPaymentId={activeTab === 'pending' ? openPaymentId : null} onOpenPaymentIdHandled={() => setOpenPaymentId(null)} />
+              <PendingApprovalsTab
+                openPaymentId={activeTab === 'pending' ? openPaymentId : null}
+                onOpenPaymentIdHandled={() => setOpenPaymentId(null)}
+                canApproveReject={canApproveReject}
+              />
             </TabsContent>
 
             <TabsContent value="approved" className="mt-0">

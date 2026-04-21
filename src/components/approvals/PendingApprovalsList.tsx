@@ -32,8 +32,8 @@ interface PendingApprovalsListProps {
   loading: boolean;
   payments: Payment[];
   searchQuery: string;
-  handleApprove: (paymentId: number) => void;
-  handleReject: (paymentId: number) => void;
+  handleApprove?: (paymentId: number) => void;
+  handleReject?: (paymentId: number) => void;
   getStatusBadge: (status?: string) => JSX.Element | null;
   onPaymentClick: (payment: Payment) => void;
 }
@@ -137,28 +137,34 @@ const PendingApprovalsList = ({
                   <div className="text-sm text-muted-foreground mb-1">Сумма платежа</div>
                   <div className="text-2xl font-bold">{payment.amount.toLocaleString('ru-RU')} ₽</div>
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleApprove(payment.id);
-                    }}
-                    className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
-                  >
-                    <Icon name="Check" size={18} />
-                    Одобрить
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleReject(payment.id);
-                    }}
-                    className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
-                  >
-                    <Icon name="X" size={18} />
-                    Отклонить
-                  </button>
-                </div>
+                {(handleApprove || handleReject) && (
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    {handleApprove && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApprove(payment.id);
+                        }}
+                        className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
+                      >
+                        <Icon name="Check" size={18} />
+                        Одобрить
+                      </button>
+                    )}
+                    {handleReject && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReject(payment.id);
+                        }}
+                        className="flex-1 sm:flex-none px-6 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
+                      >
+                        <Icon name="X" size={18} />
+                        Отклонить
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
