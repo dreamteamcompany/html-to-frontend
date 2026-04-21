@@ -179,7 +179,11 @@ const PaymentsInner = () => {
 
             {!isCEO && (
             <TabsContent value="my" className="mt-0">
-              <MyPaymentsTab openPaymentId={activeTab === 'my' ? openPaymentId : null} onOpenPaymentIdHandled={() => setOpenPaymentId(null)} />
+              <MyPaymentsTab
+                openPaymentId={activeTab === 'my' ? openPaymentId : null}
+                onOpenPaymentIdHandled={() => setOpenPaymentId(null)}
+                onAfterSubmitForApproval={() => setActiveTab('pending')}
+              />
             </TabsContent>
             )}
 

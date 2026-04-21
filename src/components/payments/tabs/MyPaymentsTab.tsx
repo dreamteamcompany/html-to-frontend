@@ -22,9 +22,10 @@ import { exportTabPaymentsToExcel } from '@/utils/exportExcel';
 interface MyPaymentsTabProps {
   openPaymentId?: number | null;
   onOpenPaymentIdHandled?: () => void;
+  onAfterSubmitForApproval?: () => void;
 }
 
-const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: MyPaymentsTabProps = {}) => {
+const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled, onAfterSubmitForApproval }: MyPaymentsTabProps = {}) => {
   const { token } = useAuth();
   const { toast } = useToast();
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
@@ -150,6 +151,7 @@ const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: MyPaymentsTabP
         });
         loadPayments();
         setTimeout(refreshNotifications, 1500);
+        onAfterSubmitForApproval?.();
       } else {
         const error = await response.json();
         toast({
