@@ -338,6 +338,15 @@ def refresh_service_balance(conn, service_id: int) -> dict:
                 'body': json.dumps({'error': 'Service not found'})
             }
         
+        if not service.get('api_endpoint'):
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({
+                    'error': 'Для этого сервиса не задан API endpoint, автоматическое обновление баланса недоступно'
+                })
+            }
+        
         try:
             balance_data = fetch_service_balance(
                 service['service_name'],
