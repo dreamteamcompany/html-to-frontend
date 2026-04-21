@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { translateApiError } from '@/utils/api';
@@ -55,12 +55,17 @@ const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: MyPaymentsTabP
     }
   }, [openPaymentId, payments]);
 
+  const draftPayments = useMemo(
+    () => payments.filter(p => !p.status || p.status === 'draft'),
+    [payments]
+  );
+
   const {
     filters, setFilter, clearFilters,
     showFilters, setShowFilters,
     filteredPayments, options,
     activeCount, totalCount,
-  } = usePaymentsFilter(payments, 'my');
+  } = usePaymentsFilter(draftPayments, 'my');
 
   const handlePaymentSaved = useCallback(() => {
     loadPayments();
