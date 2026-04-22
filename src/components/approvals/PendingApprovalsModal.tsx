@@ -183,7 +183,7 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
       <div className="bg-card border border-border rounded-xl w-full max-w-[1400px] h-[95vh] sm:h-[90vh] flex flex-col">
-        <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
+        <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0">
           <h2 className="text-lg sm:text-xl font-semibold text-foreground break-words">Детали платежа #{payment.id}</h2>
           <button
             onClick={onClose}
@@ -193,12 +193,12 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-          <div className="w-full lg:w-1/2 lg:border-r border-border flex flex-col overflow-y-auto overflow-x-hidden lg:overflow-hidden">
-            <div className="lg:flex-1 lg:overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+          <div className="w-full lg:w-1/2 lg:border-r border-border flex flex-col overflow-x-hidden lg:overflow-y-auto">
+            <div className="lg:flex-1 p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-                <div className="bg-primary/20 p-2 sm:p-3 rounded-lg flex-shrink-0">
-                  <span className="text-xl sm:text-2xl">{payment.category_icon}</span>
+                <div className="bg-primary/20 p-2 sm:p-3 rounded-lg flex-shrink-0 text-primary">
+                  <Icon name={payment.category_icon} fallback="Tag" size={24} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 break-words">{payment.category_name}</h3>
