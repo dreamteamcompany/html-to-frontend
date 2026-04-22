@@ -9,53 +9,82 @@ const PushNotificationPrompt = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
 
   useEffect(() => {
+    if (!user || !token) {
+      setShowPrompt(false);
+      return;
+    }
     if ('Notification' in window) {
       setPermission(Notification.permission);
       if (Notification.permission === 'default') {
         const hasAsked = localStorage.getItem('notification-asked');
         if (!hasAsked) {
-          setTimeout(() => setShowPrompt(true), 3000);
+          const timer = setTimeout(() => setShowPrompt(true), 3000);
+          return () => clearTimeout(timer);
         }
       }
     }
-  }, []);
+  }, [user, token]);
 
   const requestPermission = async () => {
     if (!('Notification' in window)) {
       alert('Ваш браузер не поддерживает уведомления');
+      localStorage.setItem('notification-asked', 'true');
+      setShowPrompt(false);
       return;
     }
 
     try {
-      const permission = await Notification.requestPermission();
-      setPermission(permission);
+      const result = await Notification.requestPermission();
+      setPermission(result);
       localStorage.setItem('notification-asked', 'true');
 
-      if (permission === 'granted') {
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(
-            'BEl62iUYgUivxIkv69yViEuiBIa-Ib37gp65h_-6bQr7GKW8u24mC8j3bqTXcEHFUmfwgJjTVEg7OHhpLp3sxmk'
-          ),
-        });
-
-        await fetch('https://functions.poehali.dev/cc67e884-8946-4bcd-939d-ea3c195a6598?endpoint=subscribe-push', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Auth-Token': token,
-          },
-          body: JSON.stringify({
-            subscription: subscription.toJSON(),
-            user_id: user?.id,
-          }),
-        });
-
+      if (result !== 'granted') {
         setShowPrompt(false);
+        return;
       }
+
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        alert('Ваш браузер не поддерживает push-уведомления');
+        setShowPrompt(false);
+        return;
+      }
+
+      const registration = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<ServiceWorkerRegistration>((_, reject) =>
+          setTimeout(() => reject(new Error('Service Worker timeout')), 5000)
+        ),
+      ]);
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(
+          'BEl62iUYgUivxIkv69yViEuiBIa-Ib37gp65h_-6bQr7GKW8u24mC8j3bqTXcEHFUmfwgJjTVEg7OHhpLp3sxmk'
+        ),
+      });
+
+      if (user && token) {
+        try {
+          await fetch('https://functions.poehali.dev/cc67e884-8946-4bcd-939d-ea3c195a6598?endpoint=subscribe-push', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Auth-Token': token,
+            },
+            body: JSON.stringify({
+              subscription: subscription.toJSON(),
+              user_id: user.id,
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to send push subscription to server:', err);
+        }
+      }
+
+      setShowPrompt(false);
     } catch (error) {
       console.error('Error requesting notification permission:', error);
+      setShowPrompt(false);
     }
   };
 
@@ -75,7 +104,7 @@ const PushNotificationPrompt = () => {
     localStorage.setItem('notification-asked', 'true');
   };
 
-  if (!showPrompt || permission !== 'default') {
+  if (!user || !token || !showPrompt || permission !== 'default') {
     return null;
   }
 
