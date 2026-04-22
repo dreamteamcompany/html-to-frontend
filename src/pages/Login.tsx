@@ -162,7 +162,7 @@ const Login = () => {
                 autoCorrect="off"
                 autoCapitalize="off"
                 spellCheck={false}
-                className="bg-background/80 border-border/60 text-foreground placeholder:text-muted-foreground/50 focus:border-[#7551e9] focus:ring-[#7551e9]/20"
+                className="bg-background/80 border-white/10 text-foreground placeholder:text-muted-foreground/50 focus:border-[#7551e9] focus:ring-[#7551e9]/20"
               />
             </div>
 
@@ -176,7 +176,7 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="bg-background/80 border-border/60 text-foreground placeholder:text-muted-foreground/50 focus:border-[#7551e9] focus:ring-[#7551e9]/20"
+                className="bg-background/80 border-white/10 text-foreground placeholder:text-muted-foreground/50 focus:border-[#7551e9] focus:ring-[#7551e9]/20"
               />
             </div>
 
