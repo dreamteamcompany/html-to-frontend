@@ -1,16 +1,25 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
+const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/auth'];
+
 const PushNotificationPrompt = () => {
-  const { user, token } = useAuth();
+  const { user, token, loading } = useAuth();
+  const location = useLocation();
   const [showPrompt, setShowPrompt] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>('default');
 
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    (route) => location.pathname === route || location.pathname.startsWith(`${route}/`)
+  );
+  const isAuthenticated = Boolean(user && token);
+
   useEffect(() => {
-    if (!user || !token) {
+    if (loading || !isAuthenticated || isPublicRoute) {
       setShowPrompt(false);
       return;
     }
@@ -24,7 +33,7 @@ const PushNotificationPrompt = () => {
         }
       }
     }
-  }, [user, token]);
+  }, [loading, isAuthenticated, isPublicRoute]);
 
   const requestPermission = async () => {
     if (!('Notification' in window)) {
@@ -113,7 +122,7 @@ const PushNotificationPrompt = () => {
     localStorage.setItem('notification-asked', 'true');
   };
 
-  if (!user || !token || !showPrompt || permission !== 'default') {
+  if (loading || !isAuthenticated || isPublicRoute || !showPrompt || permission !== 'default') {
     return null;
   }
 

@@ -60,9 +60,9 @@ const App = () => {
           <NotificationsProvider>
           <Toaster />
           <Sonner />
-          <PushNotificationPrompt />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <SwNavigationHandler />
+            <PushNotificationPrompt />
             <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/bitrix-callback" element={<BitrixCallback />} />
