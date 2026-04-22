@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationsContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { translateApiError } from '@/utils/api';
+import { invalidatePaymentsCacheStore, loadPaymentsCache } from '@/contexts/paymentsCacheStore';
 
 interface UsePaymentActionsParams {
   loadPayments: () => void;
@@ -80,6 +81,10 @@ export const usePaymentActions = ({ loadPayments, onAfterSubmitForApproval }: Us
           description: 'Платёж отправлен на согласование',
         });
         loadPayments();
+        invalidatePaymentsCacheStore();
+        loadPaymentsCache(true).catch(() => {
+          // если не удалось — ничего страшного, при следующем обращении подтянется
+        });
         setTimeout(refreshNotifications, 1500);
         onAfterSubmitForApproval?.();
       } else {
