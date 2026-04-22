@@ -84,7 +84,7 @@ const Login = () => {
   if (autoBitrix && !error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1729] to-[#1b254b] p-4">
-        <Card className="w-full max-w-md border-0 bg-card/95 backdrop-blur-xl shadow-lg">
+        <Card className="w-full max-w-md border border-white/5 bg-card/95 backdrop-blur-xl shadow-lg">
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <Logo className="h-12 w-auto text-white mb-2" />
             <Icon name="Loader2" size={40} className="animate-spin text-[#7551e9]" />
@@ -97,7 +97,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1729] to-[#1b254b] p-4">
-      <Card className="w-full max-w-md border-0 bg-card/95 backdrop-blur-xl shadow-lg">
+      <Card className="w-full max-w-md border border-white/5 bg-card/95 backdrop-blur-xl shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto mb-4 flex items-center justify-center">
             <Logo className="h-12 w-auto text-white" />
