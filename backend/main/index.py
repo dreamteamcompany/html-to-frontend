@@ -21,6 +21,7 @@ from urllib.parse import urlencode
 
 SCHEMA = 't_p61788166_html_to_frontend'
 VERSION = '2.8.0'
+APP_BASE_URL = 'https://finance-km.ru'
 
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
@@ -3910,6 +3911,211 @@ def handle_stats(event: Dict[str, Any], conn) -> Dict[str, Any]:
         cur.close()
         return response(500, {'error': 'Internal server error'})
 
+def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id: int) -> None:
+    """Отправляет сообщение от бота в Битрикс24 пользователю (упрощённая версия для уведомлений о комментариях)."""
+    webhook_url = os.environ.get('BITRIX_WEBHOOK_URL', '').rstrip('/')
+    bot_id = os.environ.get('BITRIX_BOT_ID', '')
+    bot_client_id = os.environ.get('BITRIX_BOT_CLIENT_ID', '')
+
+    if not webhook_url or not bitrix_user_id:
+        log(f'[COMMENT-NOTIFY] Missing config: webhook={bool(webhook_url)}, user={bitrix_user_id}')
+        return
+
+    payment_url = f'{APP_BASE_URL}/payments?payment_id={payment_id}&auto_bitrix=1'
+
+    keyboard = json.dumps([
+        {
+            'TEXT': 'Перейти к платежу',
+            'LINK': payment_url,
+            'BG_COLOR': '#29619b',
+            'TEXT_COLOR': '#ffffff',
+            'DISPLAY': 'LINE',
+        }
+    ])
+
+    fallback_message = f"{message}\n[url={payment_url}]Перейти к платежу[/url]"
+
+    if bot_id:
+        url = f'{webhook_url}/imbot.message.add.json'
+        base_payload = {
+            'BOT_ID': bot_id,
+            'DIALOG_ID': str(bitrix_user_id),
+            'MESSAGE': message,
+            'KEYBOARD': keyboard,
+        }
+        attempts = []
+        if bot_client_id:
+            attempts.append({**base_payload, 'CLIENT_ID': bot_client_id})
+        attempts.append({
+            'BOT_ID': bot_id,
+            'FROM_USER_ID': bot_id,
+            'TO_USER_ID': str(bitrix_user_id),
+            'MESSAGE': message,
+            'KEYBOARD': keyboard,
+        })
+        attempts.append(base_payload)
+
+        for idx, payload in enumerate(attempts):
+            try:
+                post_data = json.dumps(payload).encode('utf-8')
+                req = urllib.request.Request(url, data=post_data, headers={'Content-Type': 'application/json'}, method='POST')
+                resp = urllib.request.urlopen(req, timeout=10)
+                result = json.loads(resp.read().decode())
+                log(f'[COMMENT-NOTIFY] imbot.message.add attempt {idx+1} to user {bitrix_user_id}: {result}')
+                if result.get('result'):
+                    return
+            except Exception as e:
+                log(f'[COMMENT-NOTIFY] imbot.message.add attempt {idx+1} failed for user {bitrix_user_id}: {e}')
+
+    try:
+        im_data = json.dumps({
+            'DIALOG_ID': str(bitrix_user_id),
+            'MESSAGE': fallback_message,
+            'SYSTEM': 'N',
+        }).encode('utf-8')
+        im_url = f'{webhook_url}/im.message.add.json'
+        req3 = urllib.request.Request(im_url, data=im_data, headers={'Content-Type': 'application/json'}, method='POST')
+        resp3 = urllib.request.urlopen(req3, timeout=10)
+        result3 = json.loads(resp3.read().decode())
+        log(f'[COMMENT-NOTIFY] im.message.add to user {bitrix_user_id}: {result3}')
+        if result3.get('result'):
+            return
+    except Exception as e:
+        log(f'[COMMENT-NOTIFY] im.message.add failed for user {bitrix_user_id}: {e}')
+
+    try:
+        notify_data = json.dumps({
+            'to': str(bitrix_user_id),
+            'message': fallback_message,
+            'type': 'SYSTEM',
+        }).encode('utf-8')
+        notify_url = f'{webhook_url}/im.notify.system.add.json'
+        req2 = urllib.request.Request(notify_url, data=notify_data, headers={'Content-Type': 'application/json'}, method='POST')
+        resp2 = urllib.request.urlopen(req2, timeout=10)
+        result2 = json.loads(resp2.read().decode())
+        log(f'[COMMENT-NOTIFY] im.notify.system.add to user {bitrix_user_id}: {result2}')
+    except Exception as e2:
+        log(f'[COMMENT-NOTIFY] im.notify.system.add failed for user {bitrix_user_id}: {e2}')
+
+
+def notify_comment_recipients(conn, payment_id: int, author_id: int, comment_text: str) -> None:
+    """
+    Шлёт Битрикс-уведомление о новом комментарии к платежу.
+    Правило: коммент от Финансиста -> уведомление CEO-согласующему;
+             коммент от CEO       -> уведомление Финансисту (автору платежа).
+    Отправляется только если платёж сейчас на согласовании.
+    """
+    try:
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute(f"""
+            SELECT r.name
+            FROM {SCHEMA}.user_roles ur
+            JOIN {SCHEMA}.roles r ON r.id = ur.role_id
+            WHERE ur.user_id = %s
+        """, (author_id,))
+        author_roles = {row['name'] for row in cur.fetchall()}
+
+        is_author_ceo = 'CEO' in author_roles
+        is_author_financier = 'Финансист' in author_roles
+
+        if not is_author_ceo and not is_author_financier:
+            cur.close()
+            return
+
+        cur.execute(f"""
+            SELECT p.id, p.description, p.amount, p.status, p.created_by, p.service_id
+            FROM {SCHEMA}.payments p
+            WHERE p.id = %s
+        """, (payment_id,))
+        payment = cur.fetchone()
+        if not payment:
+            cur.close()
+            return
+
+        if payment['status'] not in ('pending_ceo', 'pending_tech_director'):
+            cur.close()
+            return
+
+        cur.execute(f"SELECT full_name, username FROM {SCHEMA}.users WHERE id = %s", (author_id,))
+        author_row = cur.fetchone()
+        author_name = (author_row.get('full_name') or author_row.get('username') or 'Пользователь') if author_row else 'Пользователь'
+
+        recipients_bitrix_ids: List[str] = []
+
+        if is_author_financier:
+            final_approver_id = None
+            if payment.get('service_id'):
+                cur.execute(f"""
+                    SELECT final_approver_id FROM {SCHEMA}.services WHERE id = %s
+                """, (payment['service_id'],))
+                svc = cur.fetchone()
+                if svc:
+                    final_approver_id = svc.get('final_approver_id')
+
+            if final_approver_id:
+                cur.execute(f"""
+                    SELECT DISTINCT u.bitrix_id
+                    FROM {SCHEMA}.users u
+                    JOIN {SCHEMA}.user_roles ur ON ur.user_id = u.id
+                    JOIN {SCHEMA}.roles r ON r.id = ur.role_id
+                    WHERE u.id = %s
+                      AND r.name = 'CEO'
+                      AND u.is_active = true
+                      AND u.bitrix_id IS NOT NULL AND u.bitrix_id != ''
+                """, (final_approver_id,))
+                rows = cur.fetchall()
+                recipients_bitrix_ids = [r['bitrix_id'] for r in rows if r.get('bitrix_id')]
+
+        elif is_author_ceo:
+            creator_id = payment.get('created_by')
+            if creator_id:
+                cur.execute(f"""
+                    SELECT DISTINCT u.bitrix_id
+                    FROM {SCHEMA}.users u
+                    JOIN {SCHEMA}.user_roles ur ON ur.user_id = u.id
+                    JOIN {SCHEMA}.roles r ON r.id = ur.role_id
+                    WHERE u.id = %s
+                      AND r.name = 'Финансист'
+                      AND u.is_active = true
+                      AND u.bitrix_id IS NOT NULL AND u.bitrix_id != ''
+                """, (creator_id,))
+                rows = cur.fetchall()
+                recipients_bitrix_ids = [r['bitrix_id'] for r in rows if r.get('bitrix_id')]
+
+        cur.close()
+
+        if not recipients_bitrix_ids:
+            log(f'[COMMENT-NOTIFY] no recipients for payment {payment_id}, author {author_id}')
+            return
+
+        description = payment.get('description') or ''
+        try:
+            amount_str = f"{float(payment.get('amount') or 0):,.0f}".replace(',', ' ')
+        except Exception:
+            amount_str = str(payment.get('amount') or '')
+
+        short_text = (comment_text or '').strip()
+        if len(short_text) > 500:
+            short_text = short_text[:500] + '…'
+
+        message = (
+            f"💬 Новый комментарий к платежу №{payment_id}\n"
+            f"Сумма: {amount_str} ₽\n"
+            f"Описание: {description}\n"
+            f"Автор комментария: {author_name}\n\n"
+            f"«{short_text}»"
+        )
+
+        for bitrix_id in recipients_bitrix_ids:
+            try:
+                send_bitrix_bot_message_simple(str(bitrix_id), message, payment_id)
+            except Exception as e:
+                log(f'[COMMENT-NOTIFY] send failed to {bitrix_id}: {e}')
+    except Exception as e:
+        log(f'[COMMENT-NOTIFY] unexpected error: {e}')
+
+
 # Comments handlers
 def handle_comments(method: str, event: Dict[str, Any], conn, current_user: Dict[str, Any]) -> Dict[str, Any]:
     if method == 'GET':
@@ -3972,7 +4178,12 @@ def handle_comments(method: str, event: Dict[str, Any], conn, current_user: Dict
             new_comment = cur.fetchone()
             conn.commit()
             cur.close()
-            
+
+            try:
+                notify_comment_recipients(conn, int(payment_id), int(current_user['id']), comment_text)
+            except Exception as notify_err:
+                log(f"[COMMENT-NOTIFY] dispatch error: {notify_err}")
+
             return response(201, dict(new_comment))
         except Exception as e:
             log(f"[COMMENTS POST ERROR] {e}")
