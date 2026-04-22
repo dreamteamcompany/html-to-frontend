@@ -130,7 +130,11 @@ const Login = () => {
               </>
             ) : (
               <>
-                <Icon name="Building2" size={18} className="text-[#2fc7f7]" />
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#2fc7f7] text-white shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-3 h-3" fill="currentColor" aria-hidden="true">
+                    <path d="M7 4h6.5a4.5 4.5 0 0 1 2.7 8.1A5 5 0 0 1 13.5 21H7V4zm3 3v4.2h3.2a2.1 2.1 0 0 0 0-4.2H10zm0 7v5h3.3a2.5 2.5 0 0 0 0-5H10z" />
+                  </svg>
+                </span>
                 Войти через Битрикс24
               </>
             )}
