@@ -7,6 +7,7 @@ import UsersHeader from '@/components/users/UsersHeader';
 import UserFormDialog from '@/components/users/UserFormDialog';
 import UsersTable from '@/components/users/UsersTable';
 import UsersMobileList from '@/components/users/UsersMobileList';
+import { Switch } from '@/components/ui/switch';
 import { API_ENDPOINTS } from '@/config/api';
 import { translateApiError } from '@/utils/api';
 
@@ -38,6 +39,7 @@ const Users = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
+  const [showBlocked, setShowBlocked] = useState(false);
   const { token, hasPermission, user: currentUser, checkAuth } = useAuth();
 
   const {
@@ -226,6 +228,8 @@ const Users = () => {
     setDialogOpen(true);
   };
 
+  const visibleUsers = showBlocked ? users : users.filter(u => u.is_active);
+
   return (
     <div className="flex min-h-screen">
       <PaymentsSidebar
@@ -254,6 +258,16 @@ const Users = () => {
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Пользователи</h1>
             <p className="text-sm md:text-base text-muted-foreground">Управление пользователями системы</p>
           </div>
+          <div className="flex items-center gap-3">
+            <label htmlFor="show-blocked-users" className="flex items-center gap-2 cursor-pointer select-none">
+              <Switch
+                id="show-blocked-users"
+                checked={showBlocked}
+                onCheckedChange={setShowBlocked}
+              />
+              <span className="text-sm text-muted-foreground">Показывать заблокированных</span>
+            </label>
+          </div>
           <UserFormDialog
             dialogOpen={dialogOpen}
             setDialogOpen={setDialogOpen}
@@ -274,16 +288,20 @@ const Users = () => {
               <div className="p-8 text-center text-muted-foreground">
                 Нет пользователей. Добавьте первого пользователя.
               </div>
+            ) : visibleUsers.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                Нет активных пользователей. Включите «Показывать заблокированных», чтобы увидеть остальных.
+              </div>
             ) : (
               <>
                 <UsersTable
-                  users={users}
+                  users={visibleUsers}
                   onEdit={handleEditUser}
                   onToggleStatus={toggleUserStatus}
                   onDelete={handleDeleteUser}
                 />
                 <UsersMobileList
-                  users={users}
+                  users={visibleUsers}
                   onEdit={handleEditUser}
                   onToggleStatus={toggleUserStatus}
                   onDelete={handleDeleteUser}
