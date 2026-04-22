@@ -1,52 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
 import { API_ENDPOINTS } from '@/config/api';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-
-interface BackupHistoryItem {
-  action: string;
-  username: string;
-  created_at: string;
-  metadata: { tables?: number; rows?: number; file?: string; size_mb?: number };
-}
-
-interface S3Backup {
-  key: string;
-  name: string;
-  size_mb: number;
-  created_at: string;
-  url: string;
-}
-
-const SCHEDULE_LABELS: Record<string, string> = {
-  off: 'Отключено',
-  daily: 'Ежедневно',
-  weekly: 'Еженедельно',
-  monthly: 'Ежемесячно',
-};
+import ManualBackupCard from './settings/ManualBackupCard';
+import AutoBackupCard from './settings/AutoBackupCard';
+import BackupHistoryCard from './settings/BackupHistoryCard';
+import { BackupHistoryItem, S3Backup, SCHEDULE_LABELS } from './settings/types';
 
 const Settings = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
@@ -116,14 +78,6 @@ const Settings = () => {
       loadAutoSettings();
     }
   }, [isAdmin, loadHistory, loadAutoSettings]);
-
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleString('ru-RU', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    });
-  };
 
   const handleSaveSchedule = async (value: string) => {
     setSchedule(value);
@@ -303,243 +257,40 @@ const Settings = () => {
 
         <div className="grid gap-6">
           {isAdmin && (
-            <Card className="border border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="DatabaseBackup" fallback="Database" size={24} className="text-[#7551e9]" />
-                  Ручное копирование
-                </CardTitle>
-                <CardDescription>
-                  Скачайте копию на устройство или восстановите из файла
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button onClick={handleExportBackup} disabled={exporting} className="bg-[#7551e9] hover:bg-[#6341d4] text-white">
-                    {exporting ? (
-                      <><Icon name="Loader2" size={18} className="mr-2 animate-spin" />Скачивание...</>
-                    ) : (
-                      <><Icon name="Download" size={18} className="mr-2" />Скачать резервную копию</>
-                    )}
-                  </Button>
-
-                  <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileSelect} className="hidden" />
-
-                  <Button
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-500"
-                  >
-                    <Icon name="Upload" size={18} className="mr-2" />
-                    Восстановить из копии
-                  </Button>
-                </div>
-
-                {pendingFile && (
-                  <AlertDialog open={!!pendingFile} onOpenChange={(open) => { if (!open) { setPendingFile(null); setRestoreConfirmText(''); } }}>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-2">
-                          <Icon name="AlertTriangle" size={24} className="text-amber-500" />
-                          Восстановление из резервной копии
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Файл: <strong>{pendingFile.name}</strong>
-                          <br /><br />
-                          Все текущие данные будут заменены на данные из файла. Это действие необратимо.
-                          <br /><br />
-                          Для подтверждения введите: <strong>ВОССТАНОВИТЬ</strong>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <div className="py-4">
-                        <Input
-                          value={restoreConfirmText}
-                          onChange={(e) => setRestoreConfirmText(e.target.value)}
-                          placeholder="Введите ВОССТАНОВИТЬ"
-                          className="font-mono"
-                        />
-                      </div>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => { setPendingFile(null); setRestoreConfirmText(''); }}>Отмена</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleRestoreBackup}
-                          disabled={importing || restoreConfirmText !== 'ВОССТАНОВИТЬ'}
-                          className="bg-amber-600 text-white hover:bg-amber-700"
-                        >
-                          {importing ? 'Восстановление...' : 'Восстановить'}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-              </CardContent>
-            </Card>
+            <ManualBackupCard
+              exporting={exporting}
+              importing={importing}
+              pendingFile={pendingFile}
+              setPendingFile={setPendingFile}
+              restoreConfirmText={restoreConfirmText}
+              setRestoreConfirmText={setRestoreConfirmText}
+              fileInputRef={fileInputRef}
+              handleExportBackup={handleExportBackup}
+              handleFileSelect={handleFileSelect}
+              handleRestoreBackup={handleRestoreBackup}
+            />
           )}
 
           {isAdmin && (
-            <Card className="border border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="CalendarClock" size={24} className="text-emerald-500" />
-                  Автоматическое копирование
-                </CardTitle>
-                <CardDescription>
-                  Бэкапы создаются автоматически и сохраняются в облачное хранилище
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium mb-1.5 block">Частота</label>
-                    <Select value={schedule} onValueChange={handleSaveSchedule} disabled={savingSchedule}>
-                      <SelectTrigger className="w-full sm:w-[220px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="off">Отключено</SelectItem>
-                        <SelectItem value="daily">Ежедневно</SelectItem>
-                        <SelectItem value="weekly">Еженедельно</SelectItem>
-                        <SelectItem value="monthly">Ежемесячно</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-end gap-3">
-                    <Button
-                      onClick={handleRunBackupNow}
-                      disabled={runningBackup}
-                      variant="outline"
-                      className="border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-500"
-                    >
-                      {runningBackup ? (
-                        <><Icon name="Loader2" size={18} className="mr-2 animate-spin" />Создание...</>
-                      ) : (
-                        <><Icon name="Play" size={18} className="mr-2" />Создать сейчас</>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                {lastAutoBackup && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Icon name="Clock" size={16} />
-                    <span>Последний автобэкап: {formatDate(lastAutoBackup)}</span>
-                  </div>
-                )}
-
-                {autoLoading ? (
-                  <div className="flex items-center gap-2 text-muted-foreground py-2">
-                    <Icon name="Loader2" size={18} className="animate-spin" />
-                    <span className="text-sm">Загрузка...</span>
-                  </div>
-                ) : s3Backups.length > 0 ? (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-muted-foreground">Сохранённые копии в облаке</h4>
-                    <div className="rounded-lg border border-border overflow-hidden">
-                      {s3Backups.map((backup) => (
-                        <div
-                          key={backup.key}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="p-1.5 rounded bg-emerald-500/10 flex-shrink-0">
-                              <Icon name="FileJson" fallback="File" size={16} className="text-emerald-500" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">{backup.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {formatDate(backup.created_at)} · {backup.size_mb} МБ
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <a
-                              href={backup.url}
-                              download
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-[#7551e9]/10 text-[#7551e9] hover:bg-[#7551e9]/20 transition-colors"
-                            >
-                              <Icon name="Download" size={14} />
-                              Скачать
-                            </a>
-                            <button
-                              onClick={() => handleDeleteBackup(backup.key)}
-                              disabled={deletingKey === backup.key}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-50"
-                            >
-                              <Icon name={deletingKey === backup.key ? "Loader2" : "Trash2"} size={14} className={deletingKey === backup.key ? "animate-spin" : ""} />
-                              Удалить
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Автоматических копий пока нет</p>
-                )}
-              </CardContent>
-            </Card>
+            <AutoBackupCard
+              schedule={schedule}
+              savingSchedule={savingSchedule}
+              runningBackup={runningBackup}
+              lastAutoBackup={lastAutoBackup}
+              autoLoading={autoLoading}
+              s3Backups={s3Backups}
+              deletingKey={deletingKey}
+              handleSaveSchedule={handleSaveSchedule}
+              handleRunBackupNow={handleRunBackupNow}
+              handleDeleteBackup={handleDeleteBackup}
+            />
           )}
 
           {isAdmin && (
-            <Card className="border border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="History" size={24} className="text-muted-foreground" />
-                  История операций
-                </CardTitle>
-                <CardDescription>Последние действия с резервными копиями</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {historyLoading ? (
-                  <div className="flex items-center gap-2 text-muted-foreground py-4">
-                    <Icon name="Loader2" size={18} className="animate-spin" />
-                    <span className="text-sm">Загрузка...</span>
-                  </div>
-                ) : history.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-4">Операций с резервными копиями пока не было</p>
-                ) : (
-                  <div className="space-y-3">
-                    {history.map((item, idx) => (
-                      <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3 border-b border-border last:border-0">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${
-                            item.action === 'export' ? 'bg-[#7551e9]/10' :
-                            item.action === 'auto_export' ? 'bg-emerald-500/10' :
-                            'bg-amber-500/10'
-                          }`}>
-                            <Icon
-                              name={item.action === 'export' || item.action === 'auto_export' ? 'Download' : 'Upload'}
-                              size={18}
-                              className={
-                                item.action === 'export' ? 'text-[#7551e9]' :
-                                item.action === 'auto_export' ? 'text-emerald-500' :
-                                'text-amber-500'
-                              }
-                            />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">
-                              {item.action === 'export' ? 'Скачивание копии' :
-                               item.action === 'auto_export' ? 'Автоматический бэкап' :
-                               item.action === 'delete_backup' ? 'Удаление копии' :
-                               'Восстановление из копии'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {item.username || 'Администратор'}
-                              {item.metadata?.tables ? ` · ${item.metadata.tables} табл.` : ''}
-                              {item.metadata?.rows ? `, ${item.metadata.rows} записей` : ''}
-                              {item.metadata?.size_mb ? ` · ${item.metadata.size_mb} МБ` : ''}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-muted-foreground sm:text-right">{formatDate(item.created_at)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <BackupHistoryCard
+              history={history}
+              historyLoading={historyLoading}
+            />
           )}
         </div>
       </main>
