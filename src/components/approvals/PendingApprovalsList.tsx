@@ -79,12 +79,12 @@ const PendingApprovalsList = ({
     <div className="space-y-4">
       {payments.map((payment) => (
         <Card key={payment.id} className="border-white/5 bg-card shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-white/10 transition-all cursor-pointer" onClick={() => onPaymentClick(payment)}>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="flex-1 space-y-3">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                    <Icon name={payment.category_icon} size={24} />
+              <div className="flex-1 space-y-3 w-full min-w-0">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                    <Icon name={payment.category_icon} size={22} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -138,8 +138,8 @@ const PendingApprovalsList = ({
                 </div>
               </div>
               
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:border-l lg:border-white/10 lg:pl-6">
-                <div className="text-center sm:text-right">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto lg:border-l lg:border-white/10 lg:pl-6">
+                <div className="text-left sm:text-right">
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Сумма платежа</div>
                   <div className="text-3xl font-extrabold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</div>
                 </div>
