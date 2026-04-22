@@ -105,18 +105,47 @@ const Login = () => {
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">Вход в систему</CardTitle>
           <CardDescription className="text-muted-foreground/90 text-sm">
-            Введите логин и пароль для доступа
+            Служба технической поддержки
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {(error) && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
-                <Icon name="AlertCircle" size={16} />
-                {error}
-              </div>
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
+              <Icon name="AlertCircle" size={16} />
+              {error}
+            </div>
+          )}
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full bg-background/60 border-border/60 text-foreground hover:bg-background/80 hover:text-foreground hover:border-border"
+            disabled={bitrixLoading}
+            onClick={handleBitrixLogin}
+          >
+            {bitrixLoading ? (
+              <>
+                <Icon name="Loader2" size={18} className="animate-spin" />
+                Подключение...
+              </>
+            ) : (
+              <>
+                <Icon name="Building2" size={18} className="text-[#2fc7f7]" />
+                Войти через Битрикс24
+              </>
             )}
-            
+          </Button>
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border/40" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-card px-3 text-muted-foreground/60">или</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-foreground font-medium">Логин</Label>
               <Input
@@ -179,35 +208,6 @@ const Login = () => {
               )}
             </Button>
           </form>
-
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border/40" />
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-card px-3 text-muted-foreground/60">или</span>
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full border-[#2fc7f7]/40 text-[#2fc7f7] hover:bg-[#2fc7f7]/10 hover:text-[#2fc7f7] hover:border-[#2fc7f7]/60"
-            disabled={bitrixLoading}
-            onClick={handleBitrixLogin}
-          >
-            {bitrixLoading ? (
-              <>
-                <Icon name="Loader2" size={18} className="animate-spin" />
-                Подключение...
-              </>
-            ) : (
-              <>
-                <Icon name="Building2" size={18} />
-                Войти через Битрикс24
-              </>
-            )}
-          </Button>
         </CardContent>
       </Card>
     </div>
