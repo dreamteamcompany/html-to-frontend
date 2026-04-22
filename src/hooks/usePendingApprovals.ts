@@ -42,20 +42,27 @@ export const usePendingApprovals = () => {
         }),
       ]);
 
-      if (!paymentsRes.ok || !servicesRes.ok) return;
+      if (!paymentsRes.ok) return;
 
       const paymentsData = await paymentsRes.json();
-      const servicesData = await servicesRes.json();
-
       const allPayments = Array.isArray(paymentsData) ? paymentsData : [];
-      const servicesRaw = Array.isArray(servicesData) ? servicesData : (servicesData?.services ?? []);
-      const services: Service[] = Array.isArray(servicesRaw) ? servicesRaw : [];
 
       const totalPending = allPayments.filter(
         (payment: Payment) =>
           payment.status === 'pending_ceo' || payment.status === 'pending_tech_director'
       ).length;
       setTotalPendingCount(totalPending);
+
+      let services: Service[] = [];
+      if (servicesRes.ok) {
+        try {
+          const servicesData = await servicesRes.json();
+          const servicesRaw = Array.isArray(servicesData) ? servicesData : (servicesData?.services ?? []);
+          services = Array.isArray(servicesRaw) ? servicesRaw : [];
+        } catch {
+          services = [];
+        }
+      }
 
       const myPendingPayments = allPayments.filter((payment: Payment) => {
         if (!payment.status || !payment.service_id) return false;
