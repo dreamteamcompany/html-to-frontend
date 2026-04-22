@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { translateApiError, translateFetchError } from '@/utils/api';
 import DetailsModalShell from '@/components/payments/shared/DetailsModalShell';
+import { loadPaymentsCache, getPaymentsCacheSnapshot } from '@/contexts/paymentsCacheStore';
 
 interface CustomField {
   id: number;
@@ -73,12 +74,32 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
   const [isRevoking, setIsRevoking] = useState(false);
   const [showDocsPanel, setShowDocsPanel] = useState(false);
   const [freshDocuments, setFreshDocuments] = useState<PaymentDocument[] | null>(null);
+  const [fullPayment, setFullPayment] = useState<Payment | null>(null);
 
   useEffect(() => {
     const paymentId = paymentProp?.id;
     setFreshDocuments(null);
+    setFullPayment(null);
     if (!paymentId || !token) return;
     let cancelled = false;
+
+    const snap = getPaymentsCacheSnapshot();
+    if (snap) {
+      const cached = snap.find(p => p.id === paymentId) as Payment | undefined;
+      if (cached) setFullPayment(cached);
+    }
+
+    (async () => {
+      try {
+        const list = await loadPaymentsCache();
+        if (cancelled) return;
+        const fresh = (list as Payment[]).find(p => p.id === paymentId);
+        if (fresh) setFullPayment(fresh);
+      } catch {
+        // если не удалось догрузить — остаёмся с props
+      }
+    })();
+
     (async () => {
       try {
         const res = await fetch(`${API_ENDPOINTS.paymentsApi}?action=invoice_files`, {
@@ -105,9 +126,13 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
 
   if (!paymentProp) return null;
 
-  const payment: Payment = freshDocuments
-    ? { ...paymentProp, documents: freshDocuments }
+  const basePayment: Payment = fullPayment
+    ? { ...paymentProp, ...fullPayment }
     : paymentProp;
+
+  const payment: Payment = freshDocuments
+    ? { ...basePayment, documents: freshDocuments }
+    : basePayment;
 
   const isCreator = user?.id === payment.created_by;
   const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin');
