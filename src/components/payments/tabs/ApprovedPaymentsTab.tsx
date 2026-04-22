@@ -185,12 +185,12 @@ const ApprovedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Approved
               className="border-border bg-card shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:border-primary/40 transition-all cursor-pointer"
               onClick={() => setSelectedPayment(payment)}
             >
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                        <Icon name={payment.category_icon} size={24} />
+                  <div className="flex-1 space-y-3 w-full min-w-0">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                        <Icon name={payment.category_icon} size={22} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -200,7 +200,7 @@ const ApprovedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Approved
                           </span>
                         </div>
                         <p className="text-base font-semibold text-foreground mb-3">{payment.description}</p>
-                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-foreground/70">
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-foreground/80">
                           {payment.service_name && (
                             <div className="flex items-center gap-1">
                               <Icon name="Briefcase" size={14} />
@@ -234,7 +234,7 @@ const ApprovedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Approved
                     </div>
                   </div>
                   
-                  <div className="text-center lg:text-right lg:border-l lg:border-border lg:pl-6 space-y-3">
+                  <div className="text-left lg:text-right w-full lg:w-auto lg:border-l lg:border-border lg:pl-6 space-y-3">
                     <div>
                       <div className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Сумма платежа</div>
                       <div className="text-3xl font-extrabold text-primary">{formatAmount(payment.amount)}</div>

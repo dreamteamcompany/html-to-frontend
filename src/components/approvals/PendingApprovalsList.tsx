@@ -92,7 +92,7 @@ const PendingApprovalsList = ({
                       {getStatusBadge(payment.status)}
                     </div>
                     <p className="text-base font-semibold text-foreground mb-3">{payment.description}</p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-foreground/80">
                       {payment.service_name && (
                         <div className="flex items-center gap-1">
                           <Icon name="Briefcase" size={14} />
