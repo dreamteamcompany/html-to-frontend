@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -27,7 +28,7 @@ const PushNotificationPrompt = () => {
 
   const requestPermission = async () => {
     if (!('Notification' in window)) {
-      alert('Ваш браузер не поддерживает уведомления');
+      toast.error('Ваш браузер не поддерживает уведомления');
       localStorage.setItem('notification-asked', 'true');
       setShowPrompt(false);
       return;
@@ -38,13 +39,19 @@ const PushNotificationPrompt = () => {
       setPermission(result);
       localStorage.setItem('notification-asked', 'true');
 
+      if (result === 'denied') {
+        toast.error('Уведомления заблокированы в настройках браузера');
+        setShowPrompt(false);
+        return;
+      }
+
       if (result !== 'granted') {
         setShowPrompt(false);
         return;
       }
 
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        alert('Ваш браузер не поддерживает push-уведомления');
+        toast.error('Ваш браузер не поддерживает push-уведомления');
         setShowPrompt(false);
         return;
       }
@@ -81,9 +88,11 @@ const PushNotificationPrompt = () => {
         }
       }
 
+      toast.success('Уведомления успешно включены');
       setShowPrompt(false);
     } catch (error) {
       console.error('Error requesting notification permission:', error);
+      toast.error('Не удалось включить уведомления');
       setShowPrompt(false);
     }
   };
