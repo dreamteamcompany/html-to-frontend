@@ -1,289 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-
-import * as pdfjsLib from 'pdfjs-dist';
-import FUNC2URL from '@/../backend/func2url.json';
 import { API_ENDPOINTS } from '@/config/api';
-import { translateFetchError } from '@/utils/api';
+import { usePaymentFormState, CustomFieldDefinition } from './paymentForm/usePaymentFormState';
+import { useInvoiceFileUpload } from './paymentForm/useInvoiceFileUpload';
+import { useInvoiceOCR } from './paymentForm/useInvoiceOCR';
+import { validatePaymentForm } from './paymentForm/validators';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-
-interface CustomFieldDefinition {
-  id: number;
-  name: string;
-  field_type: string;
-  options: string;
-}
-
-export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess: () => void, loadContractors?: () => Promise<unknown>, loadLegalEntities?: () => Promise<unknown>) => {
+export const usePaymentForm = (
+  customFields: CustomFieldDefinition[],
+  onSuccess: () => void,
+  loadContractors?: () => Promise<unknown>,
+  loadLegalEntities?: () => Promise<unknown>,
+) => {
   const { token, user } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
-  const [invoicePreview, setInvoicePreview] = useState<string | null>(null);
-  const [isProcessingInvoice, setIsProcessingInvoice] = useState(false);
-  const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
-  const [formData, setFormData] = useState<Record<string, string | undefined>>({
-    category_id: '',
-    description: '',
-    amount: '',
-    legal_entity_id: '',
-    contractor_id: '',
-    department_id: '',
-    service_id: '',
-    invoice_number: '',
-    invoice_date: '',
-    invoice_file_url: '',
+
+  const { formData, setFormData, resetForm } = usePaymentFormState(customFields);
+
+  const { isProcessingInvoice, handleExtractDataFromFile } = useInvoiceOCR({
+    token,
+    userId: user?.id,
+    onUrlReady: (file_url) => setFormData(prev => ({ ...prev, invoice_file_url: file_url })),
+    onFieldsExtracted: (updates) => setFormData(prev => ({ ...prev, ...updates })),
+    onToast: (opts) => toast(opts),
+    loadContractors,
+    loadLegalEntities,
   });
 
-  useEffect(() => {
-    const initialData: Record<string, string | undefined> = {
-      category_id: '',
-      description: '',
-      amount: '',
-      legal_entity_id: '',
-      contractor_id: '',
-      department_id: '',
-      service_id: '',
-      invoice_number: '',
-      invoice_date: '',
-      invoice_file_url: '',
-    };
-    customFields.forEach((field) => {
-      initialData[`custom_field_${field.id}`] = '';
-    });
-    setFormData(initialData);
-  }, [customFields]);
-
-  const handleFileSelect = async (file: File | null) => {
-    if (!file) {
-      setInvoiceFile(null);
-      setInvoicePreview(null);
-      // НЕ сбрасываем invoice_file_url — файл уже загружен в S3
-      // Пользователь может выбрать новый файл, который перезапишет URL
-      return;
-    }
-
-    setInvoiceFile(file);
-    
-    if (file.type === 'application/pdf') {
-      setInvoicePreview('preview.pdf');
-    } else {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setInvoicePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-
-    toast({
-      title: 'Файл загружен',
-      description: 'Сохраняю документ и начинаю распознавание...',
-    });
-
-    // Загружаем файл через backend (base64) — без CORS-проблем presigned PUT
-    setIsUploadingInvoice(true);
-    try {
-      const fileBase64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-      const uploadRes = await fetch(FUNC2URL['upload-presigned-url'], {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
-        body: JSON.stringify({ file_name: file.name, file_type: file.type, file_data: fileBase64 }),
-      });
-      if (uploadRes.ok) {
-        const { file_url } = await uploadRes.json();
-        if (file_url) setFormData(prev => ({ ...prev, invoice_file_url: file_url }));
-      }
-    } catch (err) {
-      console.error('Direct upload failed');
-    } finally {
-      setIsUploadingInvoice(false);
-    }
-    
-    // Запускаем OCR для автозаполнения полей (не критично если упадёт)
-    setTimeout(() => {
-      handleExtractDataFromFile(file);
-    }, 500);
-  };
-
-  const convertPdfToImage = async (file: File): Promise<string> => {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    const page = await pdf.getPage(1);
-    
-    const viewport = page.getViewport({ scale: 2.0 });
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    
-    if (!context) throw new Error('Canvas context not available');
-    
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    
-    await page.render({
-      canvasContext: context,
-      viewport: viewport,
-    }).promise;
-    
-    return canvas.toDataURL('image/png');
-  };
-
-  const handleExtractDataFromFile = async (file: File) => {
-    setIsProcessingInvoice(true);
-
-    try {
-      const isPdf = file.type === 'application/pdf';
-
-      if (!isPdf && !file.type.startsWith('image/')) {
-        toast({
-          title: 'Неверный формат',
-          description: 'Поддерживаются PDF и изображения (JPG, PNG)',
-          variant: 'destructive',
-        });
-        setIsProcessingInvoice(false);
-        return;
-      }
-
-      toast({
-        title: 'Шаг 1: Загрузка файла',
-        description: 'Сохраняю документ на сервер...',
-      });
-
-      let base64: string;
-      if (isPdf) {
-        base64 = await convertPdfToImage(file);
-      } else {
-        base64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-      }
-
-      toast({
-        title: 'Шаг 2: Анализ документа',
-        description: 'Отправляю в Yandex GPT для распознавания...',
-      });
-
-      const ocrResponse = await fetch(FUNC2URL['invoice-ocr'], {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          file: base64,
-          fileName: file.name,
-          user_id: user?.id || null,
-        }),
-      });
-
-      let ocrData: Record<string, unknown> = {};
-      if (!ocrResponse.ok) {
-        const errorData = await ocrResponse.json().catch(() => ({}));
-        if (errorData.file_url) {
-          setFormData(prev => ({ ...prev, invoice_file_url: errorData.file_url as string }));
-          toast({
-            title: 'Файл прикреплён',
-            description: 'Документ сохранён, но распознавание данных не удалось',
-          });
-          return;
-        }
-        throw new Error((errorData as { error?: string }).error || 'Ошибка при обработке документа');
-      }
-
-      ocrData = await ocrResponse.json();
-      const extracted = (ocrData.extracted_data as Record<string, unknown>) || {};
-      // OCR result received
-
-      const updates: Record<string, string | undefined> = {};
-
-      if (ocrData.warning && !ocrData.extracted_data) {
-        toast({
-          title: 'Файл загружен',
-          description: ocrData.warning as string,
-          variant: 'destructive',
-        });
-        setFormData(prev => ({ ...prev, ...updates }));
-        return;
-      }
-
-      if (extracted.amount) {
-        const cleaned = (extracted.amount as string | number).toString().replace(/\s/g, '').replace(',', '.');
-        updates.amount = cleaned;
-      }
-
-      if (extracted.invoice_number) {
-        updates.invoice_number = extracted.invoice_number as string;
-      }
-
-      if (extracted.invoice_date) {
-        updates.invoice_date = extracted.invoice_date as string;
-      }
-
-      if (extracted.description) updates.description = extracted.description as string;
-      if (extracted.service_id) updates.service_id = (extracted.service_id as number).toString();
-      if (extracted.category_id) updates.category_id = (extracted.category_id as number).toString();
-      if (extracted.department_id) updates.department_id = (extracted.department_id as number).toString();
-      if (extracted.legal_entity_id) {
-        updates.legal_entity_id = (extracted.legal_entity_id as number).toString();
-      }
-
-      if (extracted.contractor_id) {
-        updates.contractor_id = (extracted.contractor_id as number).toString();
-      } else if (extracted.contractor_name) {
-        try {
-          const res = await fetch(`${FUNC2URL['main']}?endpoint=contractors`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
-            body: JSON.stringify({ name: extracted.contractor_name, inn: extracted.contractor_inn || '' }),
-          });
-          if (res.ok) {
-            const nc = await res.json();
-            updates.contractor_id = nc.id?.toString();
-            if (loadContractors) await loadContractors();
-          }
-        } catch (err) {
-          console.error('Auto-create contractor failed:', err);
-        }
-      }
-
-      if (!extracted.legal_entity_id && extracted.legal_entity_name) {
-        try {
-          const res = await fetch(`${FUNC2URL['main']}?endpoint=legal-entities`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
-            body: JSON.stringify({ name: extracted.legal_entity_name, inn: extracted.legal_entity_inn || '' }),
-          });
-          if (res.ok) {
-            const nle = await res.json();
-            updates.legal_entity_id = nle.id?.toString();
-            if (loadLegalEntities) await loadLegalEntities();
-          }
-        } catch (err) {
-          console.error('Auto-create legal entity failed:', err);
-        }
-      }
-
-      setFormData(prev => ({ ...prev, ...updates }));
-
-      toast({
-        title: 'Шаг 3: Данные сохранены',
-        description: 'Все поля автоматически заполнены из счёта',
-      });
-    } catch (err) {
-      console.error('Failed to process invoice:', err);
-      toast({
-        title: 'Ошибка',
-        description: translateFetchError(err, 'Не удалось распознать счёт'),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsProcessingInvoice(false);
-    }
-  };
+  const {
+    invoiceFile,
+    invoicePreview,
+    isUploadingInvoice,
+    handleFileSelect,
+    resetFile,
+  } = useInvoiceFileUpload({
+    token,
+    onUrlReady: (file_url) => setFormData(prev => ({ ...prev, invoice_file_url: file_url })),
+    onToast: (opts) => toast(opts),
+    onAfterUpload: (file) => { handleExtractDataFromFile(file); },
+  });
 
   const handleExtractData = async () => {
     if (!invoiceFile) return;
@@ -292,46 +49,13 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.service_id) {
-      toast({
-        title: 'Ошибка',
-        description: 'Выберите сервис из списка',
-        variant: 'destructive',
-      });
+
+    const validationError = validatePaymentForm(formData);
+    if (validationError) {
+      toast({ ...validationError, variant: 'destructive' });
       return;
     }
 
-    if (!formData.category_id) {
-      toast({
-        title: 'Ошибка',
-        description: 'Выберите категорию из списка',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      toast({
-        title: 'Ошибка',
-        description: 'Укажите корректную сумму',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (formData.invoice_date) {
-      const year = new Date(formData.invoice_date).getFullYear();
-      if (year < 2000 || year > 2099) {
-        toast({
-          title: 'Ошибка',
-          description: 'Дата должна быть между 2000 и 2099 годом',
-          variant: 'destructive',
-        });
-        return;
-      }
-    }
-    
     try {
       const customFieldsData: Record<string, string> = {};
       customFields.forEach(field => {
@@ -369,24 +93,8 @@ export const usePaymentForm = (customFields: CustomFieldDefinition[], onSuccess:
           description: 'Платёж добавлен',
         });
         setDialogOpen(false);
-        const resetData: Record<string, string | undefined> = {
-          category_id: '',
-          description: '',
-          amount: '',
-          legal_entity_id: '',
-          contractor_id: '',
-          department_id: '',
-          service_id: '',
-          invoice_number: '',
-          invoice_date: '',
-          invoice_file_url: '',
-        };
-        customFields.forEach(field => {
-          resetData[`custom_field_${field.id}`] = '';
-        });
-        setFormData(resetData);
-        setInvoiceFile(null);
-        setInvoicePreview(null);
+        resetForm();
+        resetFile();
         onSuccess();
       } else {
         const error = await response.json();

@@ -1,8 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
-import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import {
+  loadPaymentsCache,
+  invalidatePaymentsCacheStore,
+  removePaymentFromCache,
+  paymentsCacheSubscribe,
+  getPaymentsCacheSnapshot,
+} from '@/contexts/paymentsCacheStore';
 
 interface AllPaymentsCacheState {
   payments: Payment[];
@@ -14,46 +18,16 @@ interface AllPaymentsCacheState {
 
 const AllPaymentsCacheContext = createContext<AllPaymentsCacheState | null>(null);
 
-let globalFetchPromise: Promise<Payment[]> | null = null;
-let globalCache: Payment[] | null = null;
-let globalCacheTime = 0;
-const CACHE_TTL_MS = 30_000;
-
 export const AllPaymentsCacheProvider = ({ children }: { children: ReactNode }) => {
-  const [payments, setPayments] = useState<Payment[]>(globalCache ?? []);
-  const [loading, setLoading] = useState(!globalCache);
+  const [payments, setPayments] = useState<Payment[]>(() => getPaymentsCacheSnapshot() ?? []);
+  const [loading, setLoading] = useState(!getPaymentsCacheSnapshot());
   const [error, setError] = useState(false);
 
   const load = useCallback(async (force = false) => {
-    const now = Date.now();
-    if (!force && globalCache && now - globalCacheTime < CACHE_TTL_MS) {
-      setPayments(globalCache);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(false);
-
-    if (!globalFetchPromise) {
-      globalFetchPromise = apiFetch(`${API_ENDPOINTS.paymentsApi}?scope=all`)
-        .then(r => r.json())
-        .then((data): Payment[] => {
-          const list: Payment[] = Array.isArray(data) ? data : [];
-          list.sort((a, b) => new Date(b.payment_date || 0).getTime() - new Date(a.payment_date || 0).getTime());
-          globalCache = list;
-          globalCacheTime = Date.now();
-          return list;
-        })
-        .catch(err => {
-          globalFetchPromise = null;
-          throw err;
-        })
-        .finally(() => { globalFetchPromise = null; });
-    }
-
     try {
-      const list = await globalFetchPromise;
+      const list = await loadPaymentsCache(force);
       setPayments(list);
     } catch {
       setError(true);
@@ -63,20 +37,23 @@ export const AllPaymentsCacheProvider = ({ children }: { children: ReactNode }) 
   }, []);
 
   const refresh = useCallback(() => {
-    globalCache = null;
-    invalidatePaymentsCache();
+    invalidatePaymentsCacheStore();
     load(true);
   }, [load]);
 
   const removePayment = useCallback((id: number) => {
-    setPayments(prev => {
-      const next = prev.filter(p => p.id !== id);
-      globalCache = next;
-      return next;
-    });
+    removePaymentFromCache(id);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const unsubscribe = paymentsCacheSubscribe(() => {
+      const snap = getPaymentsCacheSnapshot();
+      if (snap) setPayments(snap);
+      else setPayments([]);
+    });
+    load();
+    return unsubscribe;
+  }, [load]);
 
   return (
     <AllPaymentsCacheContext.Provider value={{ payments, loading, error, refresh, removePayment }}>

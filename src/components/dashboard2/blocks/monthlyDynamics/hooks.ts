@@ -1,29 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { parsePaymentDate } from '../../dashboardUtils';
 import { PaymentRecord, UnitType } from './types';
 import { getChartConfig, buildData } from './chartConfig';
+import { useResponsiveState as useSharedResponsiveState } from '@/hooks/useResponsiveState';
 
-export const useResponsiveState = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isLight, setIsLight] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
-    const check = () => setIsLight(document.documentElement.classList.contains('light'));
-    check();
-    const observer = new MutationObserver(check);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  return { isMobile, isLight };
-};
+export const useResponsiveState = () => useSharedResponsiveState(640);
 
 interface DynamicsDataResult {
   chartData: number[];

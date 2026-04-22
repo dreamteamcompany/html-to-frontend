@@ -1,8 +1,19 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
-import { apiFetch } from '@/utils/api';
-import { API_ENDPOINTS } from '@/config/api';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  loadPaymentsCache,
+  invalidatePaymentsCacheStore,
+  paymentsCacheSubscribe,
+  getPaymentsCacheSnapshot,
+  ensureUserScope,
+} from '@/contexts/paymentsCacheStore';
 
+/**
+ * PaymentRecord — исторический локальный тип этого контекста.
+ * Сохраняется как алиас слабо типизированной записи платежа,
+ * совместимый с Payment (через индексную сигнатуру).
+ * Внешние модули проекта импортируют этот тип — переезд будет постепенным.
+ */
 export interface PaymentRecord {
   id: number;
   status: string;
@@ -32,48 +43,25 @@ interface PaymentsCacheState {
 
 const PaymentsCacheContext = createContext<PaymentsCacheState | null>(null);
 
-let globalFetchPromise: Promise<PaymentRecord[]> | null = null;
-let globalCache: PaymentRecord[] | null = null;
-let globalCacheTime = 0;
-const CACHE_TTL_MS = 30_000;
-
 export const invalidatePaymentsCache = () => {
-  globalCache = null;
-  globalCacheTime = 0;
+  invalidatePaymentsCacheStore();
 };
 
 export const PaymentsCacheProvider = ({ children }: { children: ReactNode }) => {
-  const [payments, setPayments] = useState<PaymentRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initialSnap = getPaymentsCacheSnapshot();
+  const [payments, setPayments] = useState<PaymentRecord[]>(
+    (initialSnap as unknown as PaymentRecord[] | null) ?? [],
+  );
+  const [loading, setLoading] = useState(!initialSnap);
   const [error, setError] = useState(false);
   const { user } = useAuth();
-  const prevUserIdRef = useRef<number | null | undefined>(undefined);
 
   const load = useCallback(async (force = false) => {
-    const now = Date.now();
-    if (!force && globalCache && now - globalCacheTime < CACHE_TTL_MS) {
-      setPayments(globalCache);
-      setLoading(false);
-      return;
-    }
-
-    if (!globalFetchPromise) {
-      globalFetchPromise = apiFetch(`${API_ENDPOINTS.paymentsApi}?scope=all`)
-        .then(r => r.json())
-        .then((data): PaymentRecord[] => {
-          const list = Array.isArray(data) ? data : (data.payments ?? []);
-          globalCache = list;
-          globalCacheTime = Date.now();
-          return list;
-        })
-        .finally(() => { globalFetchPromise = null; });
-    }
-
     setLoading(true);
     setError(false);
     try {
-      const list = await globalFetchPromise;
-      setPayments(list);
+      const list = await loadPaymentsCache(force);
+      setPayments(list as unknown as PaymentRecord[]);
     } catch {
       setError(true);
     } finally {
@@ -82,19 +70,23 @@ export const PaymentsCacheProvider = ({ children }: { children: ReactNode }) => 
   }, []);
 
   const refresh = useCallback(() => {
-    globalCache = null;
+    invalidatePaymentsCacheStore();
     load(true);
   }, [load]);
 
   useEffect(() => {
-    const currentUserId = user?.id ?? null;
-    if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== currentUserId) {
-      globalCache = null;
-      globalCacheTime = 0;
-      globalFetchPromise = null;
+    const unsubscribe = paymentsCacheSubscribe(() => {
+      const snap = getPaymentsCacheSnapshot();
+      setPayments((snap as unknown as PaymentRecord[] | null) ?? []);
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const userChanged = ensureUserScope(user?.id ?? null);
+    if (userChanged) {
       setPayments([]);
     }
-    prevUserIdRef.current = currentUserId;
     load();
   }, [user?.id, load]);
 

@@ -1,7 +1,7 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import MyPaymentsTab from '@/components/payments/tabs/MyPaymentsTab';
 import PendingApprovalsTab from '@/components/payments/tabs/PendingApprovalsTab';
@@ -10,71 +10,37 @@ import RejectedPaymentsTab from '@/components/payments/tabs/RejectedPaymentsTab'
 import { useAuth } from '@/contexts/AuthContext';
 import { AllPaymentsCacheProvider, useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 import { useSearchParams } from 'react-router-dom';
+import PaymentsTabsBar from './payments/PaymentsTabsBar';
+import { usePaymentCounters } from './payments/usePaymentCounters';
+import { useContentSwipe } from './payments/useContentSwipe';
+import { usePaymentDeepLink } from './payments/usePaymentDeepLink';
 
 const PaymentsInner = () => {
   const { user } = useAuth();
   const { payments: allPayments } = useAllPaymentsCache();
-  const isCEO = user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор');
-  const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin');
+  const isCEO = user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор') ?? false;
+  const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin') ?? false;
   const canApproveReject = isCEO || isAdmin;
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState(isCEO ? 'pending' : 'my');
   const [searchParams, setSearchParams] = useSearchParams();
-  const [openPaymentId, setOpenPaymentId] = useState<number | null>(null);
 
-  useEffect(() => {
-    const pid = searchParams.get('payment_id');
-    if (pid) {
-      const id = parseInt(pid, 10);
-      if (!isNaN(id)) {
-        setOpenPaymentId(id);
-        const found = allPayments.find(p => p.id === id);
-        if (found?.status === 'approved') {
-          setActiveTab('approved');
-        } else if (found?.status === 'rejected') {
-          setActiveTab('rejected');
-        } else if (found?.status && found.status.startsWith('pending_')) {
-          setActiveTab('pending');
-        } else if (found) {
-          setActiveTab(isCEO ? 'pending' : 'my');
-        } else {
-          setActiveTab('pending');
-        }
-        setSearchParams({}, { replace: true });
-      }
-    }
-  }, [allPayments.length]);
-  const swipeStartX = useRef<number | null>(null);
-  const swipeStartY = useRef<number | null>(null);
+  const { openPaymentId, setOpenPaymentId } = usePaymentDeepLink({
+    allPayments,
+    isCEO,
+    searchParams,
+    setSearchParams,
+    setActiveTab,
+  });
 
   const tabs = isCEO
     ? ['pending', 'approved', 'rejected']
     : ['my', 'pending', 'approved', 'rejected'];
 
-  const counters = useMemo(() => ({
-    my: allPayments.filter(p => !p.status || p.status === 'draft').length,
-    pending: allPayments.filter(p => p.status && p.status.startsWith('pending_')).length,
-    approved: allPayments.filter(p => p.status === 'approved').length,
-    rejected: allPayments.filter(p => p.status === 'rejected').length,
-  }), [allPayments]);
+  const counters = usePaymentCounters(allPayments);
 
-  const handleContentTouchStart = (e: React.TouchEvent) => {
-    swipeStartX.current = e.touches[0].clientX;
-    swipeStartY.current = e.touches[0].clientY;
-  };
-
-  const handleContentTouchEnd = (e: React.TouchEvent) => {
-    if (swipeStartX.current === null || swipeStartY.current === null) return;
-    const dx = e.changedTouches[0].clientX - swipeStartX.current;
-    const dy = e.changedTouches[0].clientY - swipeStartY.current;
-    swipeStartX.current = null;
-    swipeStartY.current = null;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    const idx = tabs.indexOf(activeTab);
-    if (dx < 0 && idx < tabs.length - 1) setActiveTab(tabs[idx + 1]);
-    if (dx > 0 && idx > 0) setActiveTab(tabs[idx - 1]);
-  };
+  const { handleContentTouchStart, handleContentTouchEnd } = useContentSwipe(tabs, activeTab, setActiveTab);
 
   const {
     menuOpen,
@@ -98,7 +64,7 @@ const PaymentsInner = () => {
       />
 
       {menuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         />
@@ -126,67 +92,16 @@ const PaymentsInner = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full justify-start border-b border-white/10 rounded-none bg-transparent p-0 h-auto mb-6 overflow-scroll">
-              {!isCEO && (
-              <TabsTrigger 
-                value="my" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-              >
-                <Icon name="FileText" size={18} className="mr-2" />
-                Мои платежи
-                {counters.my > 0 && (
-                  <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
-                    {counters.my}
-                  </span>
-                )}
-              </TabsTrigger>
-              )}
-              <TabsTrigger 
-                value="pending" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 relative"
-              >
-                <Icon name="Clock" size={18} className="mr-2" />
-                На согласовании
-                {counters.pending > 0 && (
-                  <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
-                    {counters.pending}
-                  </span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger 
-                value="approved" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-              >
-                <Icon name="CheckCircle" size={18} className="mr-2" />
-                Согласованные
-                {counters.approved > 0 && (
-                  <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
-                    {counters.approved}
-                  </span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger 
-                value="rejected" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-              >
-                <Icon name="XCircle" size={18} className="mr-2" />
-                Отклонённые
-                {counters.rejected > 0 && (
-                  <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
-                    {counters.rejected}
-                  </span>
-                )}
-              </TabsTrigger>
-            </TabsList>
+            <PaymentsTabsBar isCEO={isCEO} counters={counters} />
 
             {!isCEO && (
-            <TabsContent value="my" className="mt-0">
-              <MyPaymentsTab
-                openPaymentId={activeTab === 'my' ? openPaymentId : null}
-                onOpenPaymentIdHandled={() => setOpenPaymentId(null)}
-                onAfterSubmitForApproval={() => setActiveTab('pending')}
-              />
-            </TabsContent>
+              <TabsContent value="my" className="mt-0">
+                <MyPaymentsTab
+                  openPaymentId={activeTab === 'my' ? openPaymentId : null}
+                  onOpenPaymentIdHandled={() => setOpenPaymentId(null)}
+                  onAfterSubmitForApproval={() => setActiveTab('pending')}
+                />
+              </TabsContent>
             )}
 
             <TabsContent value="pending" className="mt-0">

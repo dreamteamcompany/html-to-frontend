@@ -22,6 +22,25 @@ export interface CashReceipt {
   uploaded_at: string;
 }
 
+/**
+ * Возможные значения статуса платежа.
+ * - draft: черновик
+ * - pending_* : на согласовании у одного из согласующих (CEO / CFO / ИБ / Tech Director и т.д.)
+ *   Используется шаблонный тип, чтобы код вида status.startsWith('pending_') оставался безопасным.
+ * - approved: согласован
+ * - rejected: отклонён
+ * - revoked: отозван (декларативно, фактически переходит в draft)
+ * - pending / pending_approval: легаси-значения (сохраняются для совместимости со старыми записями)
+ */
+export type PaymentStatus =
+  | 'draft'
+  | `pending_${string}`
+  | 'approved'
+  | 'rejected'
+  | 'revoked'
+  | 'pending'
+  | 'pending_approval';
+
 export interface Payment {
   id: number;
   category_id: number;
@@ -33,7 +52,7 @@ export interface Payment {
   planned_date?: string;
   legal_entity_id?: number;
   legal_entity_name?: string;
-  status?: string;
+  status?: PaymentStatus;
   created_by?: number;
   created_by_name?: string;
   service_id?: number;
