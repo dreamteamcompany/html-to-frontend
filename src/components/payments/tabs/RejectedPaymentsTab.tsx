@@ -168,7 +168,7 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
                           <h3 className="text-lg font-semibold text-foreground">{payment.category_name}</h3>
                           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-800 dark:text-red-300">✗ Отклонено</span>
                         </div>
-                        <p className="font-medium text-foreground/80 text-sm mb-2">{payment.description}</p>
+                        <p className="text-base font-semibold text-foreground mb-3">{payment.description}</p>
                         <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-foreground/70">
                           {payment.service_name && (
                             <div className="flex items-center gap-1">
@@ -194,7 +194,7 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
                           </div>
                         </div>
                         {payment.legal_entity_name && (
-                          <div className="flex items-center gap-1 mt-2 text-sm font-medium text-foreground/70">
+                          <div className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-md border border-primary/40 bg-primary/10 text-sm font-semibold text-foreground">
                             <Icon name="Landmark" size={14} />
                             <span>{payment.legal_entity_name}</span>
                           </div>
@@ -206,7 +206,7 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
                   <div className="text-center lg:text-right lg:border-l lg:border-border lg:pl-6 space-y-3">
                     <div>
                       <div className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Сумма платежа</div>
-                      <div className="text-2xl font-bold text-foreground">{formatAmount(payment.amount)}</div>
+                      <div className="text-3xl font-extrabold text-primary">{formatAmount(payment.amount)}</div>
                     </div>
                     <button
                       onClick={(e) => {

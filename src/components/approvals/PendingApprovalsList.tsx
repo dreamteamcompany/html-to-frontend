@@ -91,7 +91,7 @@ const PendingApprovalsList = ({
                       <h3 className="text-lg font-semibold">{payment.category_name}</h3>
                       {getStatusBadge(payment.status)}
                     </div>
-                    <p className="text-muted-foreground text-sm mb-2">{payment.description}</p>
+                    <p className="text-base font-semibold text-foreground mb-3">{payment.description}</p>
                     <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
                       {payment.service_name && (
                         <div className="flex items-center gap-1">
@@ -129,7 +129,7 @@ const PendingApprovalsList = ({
                       </div>
                     </div>
                     {payment.legal_entity_name && (
-                      <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
+                      <div className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-md border border-primary/40 bg-primary/10 text-sm font-semibold text-foreground">
                         <Icon name="Landmark" size={14} />
                         <span>{payment.legal_entity_name}</span>
                       </div>
@@ -140,8 +140,8 @@ const PendingApprovalsList = ({
               
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:border-l lg:border-white/10 lg:pl-6">
                 <div className="text-center sm:text-right">
-                  <div className="text-sm text-muted-foreground mb-1">Сумма платежа</div>
-                  <div className="text-2xl font-bold">{payment.amount.toLocaleString('ru-RU')} ₽</div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Сумма платежа</div>
+                  <div className="text-3xl font-extrabold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</div>
                 </div>
                 {(handleApprove || handleReject) && (
                   <div className="flex gap-2 w-full sm:w-auto">
