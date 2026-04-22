@@ -1708,7 +1708,7 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             return response(200, new_payment_data)
         
         elif method == 'DELETE':
-            payload, error = verify_token_and_permission(event, conn, 'payments.delete')
+            payload, error = verify_token_and_permission(event, conn, 'payments.remove')
             if error:
                 return error
             
