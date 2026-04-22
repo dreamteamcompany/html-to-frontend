@@ -176,6 +176,12 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
                               <span>{payment.service_name}</span>
                             </div>
                           )}
+                          {payment.legal_entity_name && (
+                            <div className="flex items-center gap-1">
+                              <Icon name="Landmark" size={14} />
+                              <span>{payment.legal_entity_name}</span>
+                            </div>
+                          )}
                           {payment.contractor_name && (
                             <div className="flex items-center gap-1">
                               <Icon name="Building2" size={14} />
