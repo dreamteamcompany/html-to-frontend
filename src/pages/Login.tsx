@@ -84,7 +84,7 @@ const Login = () => {
   if (autoBitrix && !error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1729] to-[#1b254b] p-4">
-        <Card className="w-full max-w-md border-[#7551e9]/30 bg-card/95 backdrop-blur-xl shadow-[0_8px_40px_rgba(117,81,233,0.18)]">
+        <Card className="w-full max-w-md border-border/40 bg-card/95 backdrop-blur-xl shadow-lg">
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <Logo className="h-12 w-auto text-white mb-2" />
             <Icon name="Loader2" size={40} className="animate-spin text-[#7551e9]" />
@@ -97,8 +97,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f1729] to-[#1b254b] p-4">
-      <Card className="w-full max-w-md border-[#7551e9]/30 bg-card/95 backdrop-blur-xl shadow-[0_8px_40px_rgba(117,81,233,0.18)]">
-        <div style={{ height: '4px', background: 'linear-gradient(90deg, #7551e9, #a78bfa)', borderRadius: '8px 8px 0 0' }} />
+      <Card className="w-full max-w-md border-border/40 bg-card/95 backdrop-blur-xl shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto mb-4 flex items-center justify-center">
             <Logo className="h-12 w-auto text-white" />
