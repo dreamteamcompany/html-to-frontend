@@ -176,12 +176,6 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
                               <span>{payment.service_name}</span>
                             </div>
                           )}
-                          {payment.legal_entity_name && (
-                            <div className="flex items-center gap-1">
-                              <Icon name="Landmark" size={14} />
-                              <span>{payment.legal_entity_name}</span>
-                            </div>
-                          )}
                           {payment.contractor_name && (
                             <div className="flex items-center gap-1">
                               <Icon name="Building2" size={14} />
@@ -199,6 +193,12 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
                             <span>{formatDate(payment.payment_date)}</span>
                           </div>
                         </div>
+                        {payment.legal_entity_name && (
+                          <div className="flex items-center gap-1 mt-2 text-sm font-medium text-foreground/70">
+                            <Icon name="Landmark" size={14} />
+                            <span>{payment.legal_entity_name}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
