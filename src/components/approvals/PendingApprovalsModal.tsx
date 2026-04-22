@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { translateApiError, translateFetchError } from '@/utils/api';
 import DetailsModalShell from '@/components/payments/shared/DetailsModalShell';
-import { loadPaymentsCache, getPaymentsCacheSnapshot } from '@/contexts/paymentsCacheStore';
+import { loadPaymentsCache, getPaymentsCacheSnapshot, refreshPaymentsCacheStore } from '@/contexts/paymentsCacheStore';
 
 interface CustomField {
   id: number;
@@ -192,6 +192,7 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
 
       setShowRevokeDialog(false);
       setRevokeComment('');
+      refreshPaymentsCacheStore();
       if (onRevoke) onRevoke();
       onClose();
     } catch (error) {

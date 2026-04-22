@@ -43,6 +43,16 @@ export const invalidatePaymentsCacheStore = () => {
   notify();
 };
 
+/**
+ * Сбрасывает кеш и сразу инициирует перезагрузку (force).
+ * Удобно вызывать после мутаций, чтобы счётчики/вкладки обновились немедленно.
+ * Ошибки подавляются — при следующем обращении данные подтянутся.
+ */
+export const refreshPaymentsCacheStore = (): Promise<void> => {
+  invalidatePaymentsCacheStore();
+  return loadPaymentsCache(true).then(() => undefined).catch(() => undefined);
+};
+
 export const setPaymentsCache = (next: Payment[]) => {
   cache = next;
   cacheTime = Date.now();

@@ -5,6 +5,7 @@ import { API_ENDPOINTS } from '@/config/api';
 import { useToast } from '@/hooks/use-toast';
 import { translateApiError, translateFetchError } from '@/utils/api';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { refreshPaymentsCacheStore } from '@/contexts/paymentsCacheStore';
 import ApprovedPaymentInfo, { Payment, Department } from './ApprovedPaymentInfo';
 import ApprovedPaymentSidebar from './ApprovedPaymentSidebar';
 import ApprovedPaymentRevokeDialog from './ApprovedPaymentRevokeDialog';
@@ -184,6 +185,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
 
       setShowRevokeDialog(false);
       setRevokeComment('');
+      refreshPaymentsCacheStore();
       if (onRevoked) onRevoked();
       onClose();
     } catch (error) {
