@@ -33,8 +33,9 @@ const PaymentsSidebar = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const { pendingCount } = usePendingApprovals();
+  const { pendingCount, totalPendingCount } = usePendingApprovals();
   const isCEO = user?.roles?.some(r => r.name === 'CEO') && !user?.roles?.some(r => r.name === 'Администратор' || r.name === 'Admin');
+  const ceoPendingBadge = isCEO && totalPendingCount > 0 ? totalPendingCount : 0;
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -92,7 +93,15 @@ const PaymentsSidebar = ({
           <li>
             <Link to="/payments" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/payments') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
               <Icon name="CreditCard" size={20} />
-              <span>Платежи</span>
+              <span className="flex-1">Платежи</span>
+              {ceoPendingBadge > 0 && (
+                <span
+                  title={`Ожидают согласования: ${ceoPendingBadge}`}
+                  className={`min-w-[22px] h-[22px] px-1.5 inline-flex items-center justify-center rounded-full text-xs font-semibold ${isActive('/payments') ? 'bg-white text-primary' : 'bg-primary text-white'}`}
+                >
+                  {ceoPendingBadge > 99 ? '99+' : ceoPendingBadge}
+                </span>
+              )}
             </Link>
           </li>
         )}

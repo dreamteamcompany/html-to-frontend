@@ -25,6 +25,7 @@ export const usePendingApprovals = () => {
   const { toast } = useToast();
   const [pendingCount, setPendingCount] = useState(0);
   const [pendingPayments, setPendingPayments] = useState<Payment[]>([]);
+  const [totalPendingCount, setTotalPendingCount] = useState(0);
   const previousCountRef = useRef<number>(0);
   const isInitialLoad = useRef(true);
   const notifiedIdsRef = useRef<Set<number>>(new Set());
@@ -49,6 +50,12 @@ export const usePendingApprovals = () => {
       const allPayments = Array.isArray(paymentsData) ? paymentsData : [];
       const servicesRaw = Array.isArray(servicesData) ? servicesData : (servicesData?.services ?? []);
       const services: Service[] = Array.isArray(servicesRaw) ? servicesRaw : [];
+
+      const totalPending = allPayments.filter(
+        (payment: Payment) =>
+          payment.status === 'pending_ceo' || payment.status === 'pending_tech_director'
+      ).length;
+      setTotalPendingCount(totalPending);
 
       const myPendingPayments = allPayments.filter((payment: Payment) => {
         if (!payment.status || !payment.service_id) return false;
@@ -119,6 +126,7 @@ export const usePendingApprovals = () => {
   return {
     pendingCount,
     pendingPayments,
+    totalPendingCount,
     requestNotificationPermission,
   };
 };
