@@ -26,7 +26,7 @@ const ApprovedPaymentSidebar = ({ payment, auditKey }: ApprovedPaymentSidebarPro
       : [];
 
   return (
-    <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-border overflow-hidden overflow-x-hidden">
+    <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-border lg:overflow-hidden overflow-x-hidden">
       <div className="p-4 sm:p-6 border-b border-border">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">

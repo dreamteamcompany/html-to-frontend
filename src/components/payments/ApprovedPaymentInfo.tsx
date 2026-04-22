@@ -87,7 +87,7 @@ const ApprovedPaymentInfo = ({
   onRevokeClick,
 }: ApprovedPaymentInfoProps) => {
   return (
-    <div className="w-full lg:w-1/2 lg:border-r border-border overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-3 sm:space-y-4">
+    <div className="w-full lg:w-1/2 lg:border-r border-border lg:overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-3 sm:space-y-4">
       <div className="flex items-start gap-3 sm:gap-4 min-w-0">
         <div className="bg-primary/20 p-2 sm:p-3 rounded-lg flex-shrink-0">
           <Icon name={payment.category_icon} size={24} />

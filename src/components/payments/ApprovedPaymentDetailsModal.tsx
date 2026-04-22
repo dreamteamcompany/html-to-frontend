@@ -208,7 +208,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
       <div className="bg-card border border-border rounded-xl w-full max-w-[1200px] max-h-[95vh] sm:max-h-[90vh] flex flex-col">
-        <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
+        <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-wrap">
             <h2 className="text-lg sm:text-xl font-semibold text-foreground break-words">Детали платежа #{localPayment.id}</h2>
             <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-500/15 text-green-700 dark:text-green-100 flex-shrink-0">✓ Одобрено CEO</span>
@@ -233,7 +233,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
           <ApprovedPaymentInfo
             payment={localPayment}
             isAdmin={!!isAdmin}
