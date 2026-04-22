@@ -9,6 +9,7 @@ import ApprovedPaymentInfo, { Payment, Department } from './ApprovedPaymentInfo'
 import ApprovedPaymentSidebar from './ApprovedPaymentSidebar';
 import ApprovedPaymentRevokeDialog from './ApprovedPaymentRevokeDialog';
 import ApprovedPaymentEditModal from './ApprovedPaymentEditModal';
+import DetailsModalShell from './shared/DetailsModalShell';
 
 interface ApprovedPaymentDetailsModalProps {
   payment: Payment | null;
@@ -206,55 +207,57 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-card border border-border rounded-xl w-full max-w-[1200px] max-h-[95vh] sm:max-h-[90vh] flex flex-col">
-        <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0">
-          <div className="flex items-center gap-3 min-w-0 flex-wrap">
-            <h2 className="text-lg sm:text-xl font-semibold text-foreground break-words">Детали платежа #{localPayment.id}</h2>
-            <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-500/15 text-green-700 dark:text-green-100 flex-shrink-0">✓ Одобрено CEO</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {isAdmin && (
+    <>
+      <DetailsModalShell
+        variant="center-auto"
+        maxWidth="1200px"
+        header={
+          <>
+            <div className="flex items-center gap-3 min-w-0 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground break-words">Детали платежа #{localPayment.id}</h2>
+              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-500/15 text-green-700 dark:text-green-100 flex-shrink-0">✓ Одобрено CEO</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  title="Редактировать платёж"
+                >
+                  <Icon name="Pencil" size={14} />
+                  Редактировать
+                </button>
+              )}
               <button
-                onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                title="Редактировать платёж"
+                onClick={onClose}
+                className="text-foreground/60 hover:text-foreground transition-colors"
               >
-                <Icon name="Pencil" size={14} />
-                Редактировать
+                <Icon name="X" size={20} />
               </button>
-            )}
-            <button
-              onClick={onClose}
-              className="text-foreground/60 hover:text-foreground transition-colors"
-            >
-              <Icon name="X" size={20} />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
-          <ApprovedPaymentInfo
-            payment={localPayment}
-            isAdmin={!!isAdmin}
-            canRevoke={!!canRevoke}
-            currentDeptName={currentDeptName}
-            isEditingDept={isEditingDept}
-            isSavingDept={isSavingDept}
-            selectedDeptId={selectedDeptId}
-            departments={departments}
-            onStartEditDept={handleStartEditDept}
-            onCancelEditDept={handleCancelEditDept}
-            onSaveDept={handleSaveDept}
-            onSelectDept={setSelectedDeptId}
-            onRevokeClick={handleRevokeClick}
-          />
-          <ApprovedPaymentSidebar
-            payment={localPayment}
-            auditKey={auditKey}
-          />
-        </div>
-      </div>
+            </div>
+          </>
+        }
+      >
+        <ApprovedPaymentInfo
+          payment={localPayment}
+          isAdmin={!!isAdmin}
+          canRevoke={!!canRevoke}
+          currentDeptName={currentDeptName}
+          isEditingDept={isEditingDept}
+          isSavingDept={isSavingDept}
+          selectedDeptId={selectedDeptId}
+          departments={departments}
+          onStartEditDept={handleStartEditDept}
+          onCancelEditDept={handleCancelEditDept}
+          onSaveDept={handleSaveDept}
+          onSelectDept={setSelectedDeptId}
+          onRevokeClick={handleRevokeClick}
+        />
+        <ApprovedPaymentSidebar
+          payment={localPayment}
+          auditKey={auditKey}
+        />
+      </DetailsModalShell>
 
       <ApprovedPaymentRevokeDialog
         open={showRevokeDialog}
@@ -273,7 +276,7 @@ const ApprovedPaymentDetailsModal = ({ payment, onClose, onRevoked }: ApprovedPa
           onSaved={handleEditSaved}
         />
       )}
-    </div>
+    </>
   );
 };
 

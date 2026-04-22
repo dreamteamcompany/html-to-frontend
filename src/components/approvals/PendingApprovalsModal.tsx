@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { translateApiError, translateFetchError } from '@/utils/api';
+import DetailsModalShell from '@/components/payments/shared/DetailsModalShell';
 
 interface CustomField {
   id: number;
@@ -181,19 +182,22 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-card border border-border rounded-xl w-full max-w-[1400px] h-[95vh] sm:h-[90vh] flex flex-col">
-        <div className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0">
-          <h2 className="text-lg sm:text-xl font-semibold text-foreground break-words">Детали платежа #{payment.id}</h2>
-          <button
-            onClick={onClose}
-            className="text-foreground/60 hover:text-foreground transition-colors flex-shrink-0"
-          >
-            <Icon name="X" size={20} />
-          </button>
-        </div>
-
-        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+    <>
+      <DetailsModalShell
+        variant="center"
+        maxWidth="1400px"
+        header={
+          <>
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground break-words">Детали платежа #{payment.id}</h2>
+            <button
+              onClick={onClose}
+              className="text-foreground/60 hover:text-foreground transition-colors flex-shrink-0"
+            >
+              <Icon name="X" size={20} />
+            </button>
+          </>
+        }
+      >
           <div className="w-full lg:w-1/2 lg:border-r border-border flex flex-col overflow-x-hidden lg:overflow-y-auto">
             <div className="lg:flex-1 p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div className="flex items-start gap-3 sm:gap-4 min-w-0">
@@ -445,8 +449,7 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
               </div>
             )}
           </div>
-        </div>
-      </div>
+      </DetailsModalShell>
 
       <Dialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
         <DialogContent>
@@ -492,7 +495,7 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
 
