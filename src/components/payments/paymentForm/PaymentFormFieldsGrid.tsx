@@ -163,26 +163,15 @@ const PaymentFormFieldsGrid = ({
           />
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="description">Назначение платежа *</Label>
-          <Input
-            id="description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="Описание платежа"
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="comment">Комментарий</Label>
-          <Input
-            id="comment"
-            value={formData.comment || ''}
-            onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
-            placeholder="Дополнительная информация"
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">Назначение платежа *</Label>
+        <Input
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Описание платежа"
+          required
+        />
       </div>
     </>
   );
