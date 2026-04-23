@@ -42,7 +42,7 @@ const IntegrationConfigForm = ({
   return (
     <div className="space-y-4 py-4">
       <div className="space-y-2">
-        <Label htmlFor="service_name" className="text-white">
+        <Label htmlFor="service_name" className="text-foreground dark:text-white">
           Название в системе
         </Label>
         <Input
@@ -50,12 +50,12 @@ const IntegrationConfigForm = ({
           value={formData.service_name}
           onChange={(e) => setFormData({ ...formData, service_name: e.target.value })}
           placeholder="Например: Timeweb Cloud (основной)"
-          className="bg-white/5 border-white/10 text-white"
+          className="bg-foreground/5 dark:bg-white/5 border-border dark:border-white/10 text-foreground dark:text-white"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" className="text-white">
+        <Label htmlFor="description" className="text-foreground dark:text-white">
           Описание (необязательно)
         </Label>
         <Textarea
@@ -67,12 +67,12 @@ const IntegrationConfigForm = ({
         />
       </div>
 
-      <div className="border-t border-white/10 pt-4 space-y-3">
-        <h4 className="text-sm font-medium text-white">Данные для подключения</h4>
+      <div className="border-t border-border dark:border-white/10 pt-4 space-y-3">
+        <h4 className="text-sm font-medium text-foreground dark:text-white">Данные для подключения</h4>
         
         {selectedService.fields.map((field) => (
           <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name} className="text-white">
+            <Label htmlFor={field.name} className="text-foreground dark:text-white">
               {field.label}
             </Label>
             <Input
@@ -89,15 +89,15 @@ const IntegrationConfigForm = ({
                 })
               }
               placeholder={field.placeholder}
-              className="bg-white/5 border-white/10 text-white"
+              className="bg-foreground/5 dark:bg-white/5 border-border dark:border-white/10 text-foreground dark:text-white"
             />
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+      <div className="grid grid-cols-2 gap-4 border-t border-border dark:border-white/10 pt-4">
         <div className="space-y-2">
-          <Label htmlFor="threshold_warning" className="text-white">
+          <Label htmlFor="threshold_warning" className="text-foreground dark:text-white">
             Порог предупреждения
           </Label>
           <Input
@@ -107,12 +107,12 @@ const IntegrationConfigForm = ({
             onChange={(e) =>
               setFormData({ ...formData, threshold_warning: parseFloat(e.target.value) || 0 })
             }
-            className="bg-white/5 border-white/10 text-white"
+            className="bg-foreground/5 dark:bg-white/5 border-border dark:border-white/10 text-foreground dark:text-white"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="threshold_critical" className="text-white">
+          <Label htmlFor="threshold_critical" className="text-foreground dark:text-white">
             Критический порог
           </Label>
           <Input
@@ -122,7 +122,7 @@ const IntegrationConfigForm = ({
             onChange={(e) =>
               setFormData({ ...formData, threshold_critical: parseFloat(e.target.value) || 0 })
             }
-            className="bg-white/5 border-white/10 text-white"
+            className="bg-foreground/5 dark:bg-white/5 border-border dark:border-white/10 text-foreground dark:text-white"
           />
         </div>
       </div>
@@ -141,7 +141,7 @@ const IntegrationConfigForm = ({
           variant="outline"
           onClick={onBack}
           disabled={adding || testing}
-          className="border-white/10 text-white hover:bg-white/5"
+          className="border-border dark:border-white/10 text-foreground dark:text-white hover:bg-foreground/5 dark:hover:bg-white/5"
         >
           Назад
         </Button>
@@ -149,7 +149,7 @@ const IntegrationConfigForm = ({
           variant="outline"
           onClick={onTest}
           disabled={!isFormValid() || testing || adding}
-          className="border-blue-500/20 text-blue-400 hover:bg-blue-500/10"
+          className="border-blue-500/20 text-blue-700 dark:text-blue-400 hover:bg-blue-500/10"
         >
           {testing ? (
             <>

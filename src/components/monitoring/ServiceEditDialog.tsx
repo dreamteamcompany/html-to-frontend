@@ -53,7 +53,7 @@ const ServiceEditDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0f1535] border-white/10 text-white">
+      <DialogContent className="bg-card dark:bg-[#0f1535] border-border dark:border-white/10 text-foreground dark:text-white">
         <DialogHeader>
           <DialogTitle>Настройки сервиса</DialogTitle>
         </DialogHeader>

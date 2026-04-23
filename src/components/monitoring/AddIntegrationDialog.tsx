@@ -145,9 +145,9 @@ export default function AddIntegrationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-[#0f1535] border-white/10">
+      <DialogContent className="sm:max-w-[500px] bg-card dark:bg-[#0f1535] border-border dark:border-white/10">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
+          <DialogTitle className="text-foreground dark:text-white flex items-center gap-2">
             {step === 'configure' && (
               <Button
                 variant="ghost"
