@@ -1741,8 +1741,15 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 cur.close()
                 return response(403, {'error': 'Вы можете удалять только свои платежи'})
             
-            # Удаляем связанные записи из custom_field_values
+            # Удаляем связанные записи из всех таблиц с FK на payments
+            cur.execute(f'DELETE FROM {SCHEMA}.notifications WHERE payment_id = %s', (payment_id,))
+            cur.execute(f'DELETE FROM {SCHEMA}.payment_documents WHERE payment_id = %s', (payment_id,))
+            cur.execute(f'DELETE FROM {SCHEMA}.approvals WHERE payment_id = %s', (payment_id,))
+            cur.execute(f'DELETE FROM {SCHEMA}.payment_comments WHERE payment_id = %s', (payment_id,))
             cur.execute(f'DELETE FROM {SCHEMA}.custom_field_values WHERE payment_id = %s', (payment_id,))
+            cur.execute(f'DELETE FROM {SCHEMA}.payment_custom_field_values WHERE payment_id = %s', (payment_id,))
+            cur.execute(f'DELETE FROM {SCHEMA}.payment_custom_values WHERE payment_id = %s', (payment_id,))
+            cur.execute(f'UPDATE {SCHEMA}.planned_payments SET converted_to_payment_id = NULL WHERE converted_to_payment_id = %s', (payment_id,))
             
             # Удаляем платёж
             cur.execute(f'DELETE FROM {SCHEMA}.payments WHERE id = %s', (payment_id,))
