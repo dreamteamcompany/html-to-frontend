@@ -65,7 +65,7 @@ const Dashboard2StatsCards = () => {
 
   const ChangeTag = ({ value, label }: { value: number | null; label?: string }) => {
     if (value === null) return (
-      <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: 'rgba(200, 210, 230, 0.75)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', gap: '6px', color: 'hsl(var(--muted-foreground))' }}>
         <Icon name="Minus" size={14} /> Нет данных
       </div>
     );
@@ -92,9 +92,9 @@ const Dashboard2StatsCards = () => {
           <Card key={i} style={cardStyle('#7551e9')}>
             <CardContent className="p-6">
               <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-white/10 rounded w-3/4" />
-                <div className="h-8 bg-white/10 rounded w-1/2" />
-                <div className="h-3 bg-white/10 rounded w-2/3" />
+                <div className="h-4 bg-foreground/10 dark:bg-white/10 rounded w-3/4" />
+                <div className="h-8 bg-foreground/10 dark:bg-white/10 rounded w-1/2" />
+                <div className="h-3 bg-foreground/10 dark:bg-white/10 rounded w-2/3" />
               </div>
             </CardContent>
           </Card>
@@ -113,14 +113,14 @@ const Dashboard2StatsCards = () => {
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Общие IT Расходы</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: 'hsl(var(--foreground))' }}>Общие IT Расходы</div>
               <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px' }}>Утверждённые платежи</div>
             </div>
             <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(117,81,233,0.1)', color: '#7551e9', border: '1px solid rgba(117,81,233,0.2)' }}>
               <Icon name="Server" size={20} />
             </div>
           </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>
+          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: 'hsl(var(--foreground))' }}>
             {stats.total === 0 ? '—' : fmt(stats.total)}
           </div>
           <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', marginBottom: '12px' }}>Сумма за выбранный период</div>
@@ -132,14 +132,14 @@ const Dashboard2StatsCards = () => {
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Серверная Инфраструктура</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: 'hsl(var(--foreground))' }}>Серверная Инфраструктура</div>
               <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px' }}>Расходы на серверы</div>
             </div>
             <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(1,181,116,0.1)', color: '#01b574', border: '1px solid rgba(1,181,116,0.2)' }}>
               <Icon name="Database" size={20} />
             </div>
           </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>
+          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: 'hsl(var(--foreground))' }}>
             {stats.serverTotal === 0 ? '—' : fmt(stats.serverTotal)}
           </div>
           <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', marginBottom: '12px' }}>
@@ -153,14 +153,14 @@ const Dashboard2StatsCards = () => {
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Коммуникационные Сервисы</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: 'hsl(var(--foreground))' }}>Коммуникационные Сервисы</div>
               <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px' }}>Телефония и мессенджеры</div>
             </div>
             <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(57,101,255,0.1)', color: '#3965ff', border: '1px solid rgba(57,101,255,0.2)' }}>
               <Icon name="MessageCircle" size={20} />
             </div>
           </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>
+          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: 'hsl(var(--foreground))' }}>
             {stats.commTotal === 0 ? '—' : fmt(stats.commTotal)}
           </div>
           <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', marginBottom: '12px' }}>
@@ -176,14 +176,14 @@ const Dashboard2StatsCards = () => {
         <CardContent className="p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#fff' }}>Всего Платежей</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: 'hsl(var(--foreground))' }}>Всего Платежей</div>
               <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px' }}>История операций</div>
             </div>
             <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,181,71,0.1)', color: '#ffb547', border: '1px solid rgba(255,181,71,0.2)' }}>
               <Icon name="Box" size={20} />
             </div>
           </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>
+          <div style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: 'hsl(var(--foreground))' }}>
             {stats.count}
           </div>
           <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '14px', marginBottom: '12px' }}>платежей за выбранный период</div>

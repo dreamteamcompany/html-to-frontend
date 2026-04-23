@@ -136,6 +136,10 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
@@ -158,14 +162,33 @@
   border-radius: 4px;
 }
 
+.light
+  [data-radix-popper-content-wrapper]
+  .overflow-y-auto::-webkit-scrollbar-thumb,
+.light [cmdk-list]::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
 [data-radix-popper-content-wrapper]
   .overflow-y-auto::-webkit-scrollbar-thumb:hover,
 [cmdk-list]::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.35);
 }
 
+.light
+  [data-radix-popper-content-wrapper]
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.light [cmdk-list]::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
 [data-radix-popper-content-wrapper] .overflow-y-auto,
 [cmdk-list] {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.light [data-radix-popper-content-wrapper] .overflow-y-auto,
+.light [cmdk-list] {
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }

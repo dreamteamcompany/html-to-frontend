@@ -29,7 +29,7 @@ const UserAvatar = ({ photoUrl, name, size = 'md', className = '' }: UserAvatarP
       <img
         src={photoUrl}
         alt={name || ''}
-        className={`${s.container} rounded-full object-cover border-2 border-white/10 flex-shrink-0 ${className}`}
+        className={`${s.container} rounded-full object-cover border-2 border-border dark:border-white/10 flex-shrink-0 ${className}`}
         onError={() => setImgError(true)}
         loading="lazy"
       />

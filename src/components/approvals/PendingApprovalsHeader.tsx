@@ -54,7 +54,7 @@ const PendingApprovalsHeader = ({
             <Icon name="Filter" size={16} />
             <span className="hidden sm:inline">Фильтры</span>
             {activeFiltersCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                 {activeFiltersCount}
               </span>
             )}

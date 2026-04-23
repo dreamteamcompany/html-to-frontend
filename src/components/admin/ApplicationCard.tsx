@@ -171,7 +171,7 @@ const ApplicationCard = (props: ApplicationCardProps) => {
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground mb-2">Результат</p>
                   {app.result ? (
-                    <span className="inline-block px-4 py-2 rounded-lg text-base font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-md">
+                    <span className="inline-block px-4 py-2 rounded-lg text-base font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 shadow-md">
                       {resultLabel(app.result)}
                     </span>
                   ) : (

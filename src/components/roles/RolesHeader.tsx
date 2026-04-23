@@ -14,11 +14,11 @@ const RolesHeader = ({ menuOpen, setMenuOpen, onAddClick }: RolesHeaderProps) =>
       <header className="hidden">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="lg:hidden p-2 text-white"
+          className="lg:hidden p-2 text-foreground dark:text-white"
         >
           <Icon name="Menu" size={24} />
         </button>
-        <div className="flex items-center gap-3 bg-card border border-white/10 rounded-[15px] px-4 md:px-5 py-2 md:py-[10px] w-full sm:w-[300px] lg:w-[400px]">
+        <div className="flex items-center gap-3 bg-card border border-border dark:border-white/10 rounded-[15px] px-4 md:px-5 py-2 md:py-[10px] w-full sm:w-[300px] lg:w-[400px]">
           <Icon name="Search" size={20} className="text-muted-foreground" />
           <Input 
             type="text" 
@@ -26,7 +26,7 @@ const RolesHeader = ({ menuOpen, setMenuOpen, onAddClick }: RolesHeaderProps) =>
             className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
           />
         </div>
-        <div className="flex items-center gap-2 md:gap-3 px-3 md:px-[15px] py-2 md:py-[10px] rounded-[12px] bg-white/5 border border-white/10">
+        <div className="flex items-center gap-2 md:gap-3 px-3 md:px-[15px] py-2 md:py-[10px] rounded-[12px] bg-foreground/5 dark:bg-white/5 border border-border dark:border-white/10">
           <div className="w-8 h-8 md:w-9 md:h-9 rounded-[10px] bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold text-white text-sm md:text-base">
             А
           </div>
