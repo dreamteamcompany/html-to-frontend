@@ -32,6 +32,7 @@ import Settings from "./pages/Settings";
 import CategoryPayments from "./pages/CategoryPayments";
 import PlannedPayments from "./pages/PlannedPayments";
 import Monitoring from "./pages/Monitoring";
+import CEOGuide from "./pages/CEOGuide";
 
 import NotFound from "./pages/NotFound";
 
@@ -85,6 +86,7 @@ const App = () => {
             <Route path="/category/:categoryId" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><CategoryPayments /></ProtectedRoute>} />
             <Route path="/planned-payments" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><PlannedPayments /></ProtectedRoute>} />
             <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
+            <Route path="/ceo-guide" element={<ProtectedRoute><CEOGuide /></ProtectedRoute>} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

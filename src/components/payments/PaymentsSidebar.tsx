@@ -115,6 +115,15 @@ const PaymentsSidebar = ({
           </li>
         )}
 
+        {isCEO && (
+          <li>
+            <Link to="/ceo-guide" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/ceo-guide') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+              <Icon name="BookOpen" size={20} />
+              <span>Инструкция</span>
+            </Link>
+          </li>
+        )}
+
         {!isCEO && (hasPermission('legal_entities', 'read') || hasPermission('categories', 'read') || hasPermission('custom_fields', 'read') || hasPermission('contractors', 'read') || hasPermission('customer_departments', 'read') || hasPermission('services', 'read') || hasPermission('saving_reasons', 'read')) && (
           <li>
             <button 
