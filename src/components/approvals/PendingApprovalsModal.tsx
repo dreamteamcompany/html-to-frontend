@@ -1,62 +1,15 @@
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import PaymentComments from './PaymentComments';
-import PaymentAuditLog from './PaymentAuditLog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_ENDPOINTS } from '@/config/api';
 import { translateApiError, translateFetchError } from '@/utils/api';
 import DetailsModalShell from '@/components/payments/shared/DetailsModalShell';
 import { loadPaymentsCache, getPaymentsCacheSnapshot, refreshPaymentsCacheStore } from '@/contexts/paymentsCacheStore';
-
-interface CustomField {
-  id: number;
-  name: string;
-  field_type: string;
-  value: string;
-}
-
-interface PaymentDocument {
-  id: number;
-  payment_id: number;
-  file_name: string;
-  file_url: string;
-  document_type: string;
-  uploaded_at: string;
-}
-
-interface Payment {
-  id: number;
-  category_id: number;
-  category_name: string;
-  category_icon: string;
-  description: string;
-  amount: number;
-  payment_date: string;
-  legal_entity_id?: number;
-  legal_entity_name?: string;
-  status?: string;
-  created_by?: number;
-  created_by_name?: string;
-  service_id?: number;
-  service_name?: string;
-  contractor_name?: string;
-  contractor_id?: number;
-  department_name?: string;
-  department_id?: number;
-  invoice_number?: string;
-  invoice_date?: string;
-  invoice_file_url?: string;
-  invoice_file_uploaded_at?: string;
-  created_at?: string;
-  submitted_at?: string;
-  custom_fields?: CustomField[];
-  documents?: PaymentDocument[];
-}
+import { Payment, PaymentDocument } from './pendingTypes';
+import PendingPaymentInfo from './PendingPaymentInfo';
+import PendingPaymentSidebar from './PendingPaymentSidebar';
+import PendingRevokeDialog from './PendingRevokeDialog';
 
 interface PendingApprovalsModalProps {
   payment: Payment | null;
@@ -72,7 +25,6 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
   const [revokeComment, setRevokeComment] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
-  const [showDocsPanel, setShowDocsPanel] = useState(false);
   const [freshDocuments, setFreshDocuments] = useState<PaymentDocument[] | null>(null);
   const [fullPayment, setFullPayment] = useState<Payment | null>(null);
 
@@ -224,303 +176,32 @@ const PendingApprovalsModal = ({ payment: paymentProp, onClose, onApprove, onRej
           </>
         }
       >
-          <div className="w-full lg:w-1/2 lg:border-r border-border flex flex-col overflow-x-hidden lg:overflow-y-auto">
-            <div className="lg:flex-1 p-4 sm:p-6 space-y-3 sm:space-y-4">
-              <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-                <div className="bg-primary/20 p-2 sm:p-3 rounded-lg flex-shrink-0 text-primary">
-                  <Icon name={payment.category_icon} fallback="Tag" size={24} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 break-words">{payment.category_name}</h3>
-                  <p className="text-2xl sm:text-3xl font-bold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</p>
-                </div>
-              </div>
-
-              {payment.description && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Описание</p>
-                  <p className="font-semibold text-foreground break-words">{payment.description}</p>
-                </div>
-              )}
-
-              {payment.legal_entity_name && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Юридическое лицо</p>
-                  <p className="font-semibold text-foreground break-words">{payment.legal_entity_name}</p>
-                </div>
-              )}
-
-              {payment.contractor_name && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Контрагент</p>
-                  <p className="font-semibold text-foreground break-words">{payment.contractor_name}</p>
-                </div>
-              )}
-
-              {payment.department_name && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Отдел-заказчик</p>
-                  <p className="font-semibold text-foreground break-words">{payment.department_name}</p>
-                </div>
-              )}
-
-              {payment.service_name && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Сервис</p>
-                  <p className="font-semibold text-foreground break-words">{payment.service_name}</p>
-                </div>
-              )}
-
-              {payment.invoice_number && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Номер счёта</p>
-                  <p className="font-semibold text-foreground break-words">{payment.invoice_number}</p>
-                </div>
-              )}
-
-              {payment.created_by_name && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Создал заявку</p>
-                  <p className="font-semibold text-foreground break-words">{payment.created_by_name}</p>
-                </div>
-              )}
-
-              {payment.custom_fields && payment.custom_fields.length > 0 && (
-                <>
-                  {payment.custom_fields.map((field) => (
-                    <div key={field.id}>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">{field.name}</p>
-                      {field.field_type === 'file' && field.value ? (
-                        <div className="rounded-lg border border-border p-3 bg-primary/5">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
-                              <span className="text-sm font-semibold text-foreground break-words">
-                                {field.value.split('/').pop()?.split('_').slice(2).join('_') || 'Файл'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <a
-                                href={field.value}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                              >
-                                <Icon name="Eye" size={14} />
-                                Просмотр
-                              </a>
-                              <a
-                                href={field.value}
-                                download
-                                className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground"
-                              >
-                                <Icon name="Download" size={14} />
-                                Скачать
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="font-semibold text-foreground break-words">{field.value}</p>
-                      )}
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-
-            {(onApprove || onReject) && (
-              <div className="border-t border-border p-4 sm:p-6">
-                <div className="flex gap-2 sm:gap-3">
-                  {onApprove && (
-                    <button
-                      onClick={handleApprove}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Icon name="Check" size={18} />
-                      Согласовать
-                    </button>
-                  )}
-                  {onReject && (
-                    <button
-                      onClick={handleReject}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Icon name="X" size={18} />
-                      Отклонить
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-border lg:overflow-hidden overflow-x-hidden min-h-[400px]">
-            <div className="p-4 sm:p-6 border-b border-border">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="font-semibold text-foreground/70">Дата платежа:</span>
-                  <span className="font-semibold text-foreground">{new Date(payment.payment_date).toLocaleDateString('ru-RU')}</span>
-                </div>
-                {payment.submitted_at && (
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-foreground/70">Дата отправки:</span>
-                    <span className="font-semibold text-foreground">{new Date(payment.submitted_at).toLocaleDateString('ru-RU')}</span>
-                  </div>
-                )}
-                {payment.invoice_date && (
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-foreground/70">Дата счёта:</span>
-                    <span className="font-semibold text-foreground">{new Date(payment.invoice_date).toLocaleDateString('ru-RU')}</span>
-                  </div>
-                )}
-                {payment.created_at && (
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-foreground/70">Создана:</span>
-                    <span className="font-semibold text-foreground">{new Date(payment.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-                  </div>
-                )}
-              </div>
-
-              {(() => {
-                const docs: PaymentDocument[] = payment.documents && payment.documents.length > 0
-                  ? payment.documents
-                  : payment.invoice_file_url
-                    ? [{
-                        id: 0,
-                        payment_id: payment.id,
-                        file_name: payment.invoice_file_url.split('/').pop()?.split('_').slice(2).join('_') || 'Счёт',
-                        file_url: payment.invoice_file_url,
-                        document_type: 'invoice',
-                        uploaded_at: payment.invoice_file_uploaded_at || payment.created_at || '',
-                      }]
-                    : [];
-                if (docs.length === 0) return null;
-                return (
-                  <div className="mt-3">
-                    <button
-                      onClick={() => setShowDocsPanel(v => !v)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-semibold text-primary w-full"
-                    >
-                      <Icon name="FileText" size={16} />
-                      <span>Счёт</span>
-                      {docs.length > 1 && (
-                        <span className="ml-1 bg-primary text-white text-xs rounded-full px-1.5 py-0.5 leading-none">{docs.length}</span>
-                      )}
-                      <Icon name={showDocsPanel ? 'ChevronUp' : 'ChevronDown'} size={14} className="ml-auto" />
-                    </button>
-                    {showDocsPanel && (
-                      <div className="mt-2 rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
-                        {docs.map((doc) => (
-                          <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2.5">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Icon name="FileText" size={15} className="text-primary flex-shrink-0" />
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold text-foreground break-words">{doc.file_name}</p>
-                                <p className="text-xs font-medium text-foreground/60">
-                                  {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ru-RU') : ''}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
-                                <Icon name="Eye" size={14} />
-                                Открыть
-                              </a>
-                              <a href={doc.file_url} download className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground">
-                                <Icon name="Download" size={14} />
-                                Скачать
-                              </a>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <Tabs defaultValue="comments" className="flex-1 flex flex-col">
-                <TabsList className="mx-4 mt-2">
-                  <TabsTrigger value="comments" className="flex items-center gap-2">
-                    <Icon name="MessageSquare" size={16} />
-                    Обсуждение
-                  </TabsTrigger>
-                  <TabsTrigger value="history" className="flex items-center gap-2">
-                    <Icon name="History" size={16} />
-                    История
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="comments" className="flex-1 overflow-hidden mt-0">
-                  <PaymentComments paymentId={payment.id} />
-                </TabsContent>
-                <TabsContent value="history" className="flex-1 overflow-hidden p-4">
-                  <PaymentAuditLog paymentId={payment.id} />
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            {canRevoke && (
-              <div className="border-t border-border p-4">
-                <Button
-                  onClick={handleRevokeClick}
-                  variant="outline"
-                  className="w-full border-orange-500/50 text-orange-700 dark:text-orange-400 hover:bg-orange-500/10 font-semibold"
-                >
-                  <Icon name="RotateCcw" size={16} className="mr-2" />
-                  Отозвать платёж
-                </Button>
-              </div>
-            )}
-          </div>
+        <PendingPaymentInfo
+          payment={payment}
+          onApprove={onApprove}
+          onReject={onReject}
+          onApproveClick={handleApprove}
+          onRejectClick={handleReject}
+        />
+        <PendingPaymentSidebar
+          payment={payment}
+          canRevoke={!!canRevoke}
+          onRevokeClick={handleRevokeClick}
+        />
       </DetailsModalShell>
 
-      <Dialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Отзыв платежа</DialogTitle>
-            <DialogDescription>
-              Платёж будет возвращён в черновики. Укажите причину отзыва.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Причина отзыва <span className="text-red-500">*</span>
-              </label>
-              <Textarea
-                value={revokeComment}
-                onChange={(e) => setRevokeComment(e.target.value)}
-                placeholder="Укажите причину отзыва платежа..."
-                rows={4}
-                className="resize-none"
-              />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={() => {
-                setShowRevokeDialog(false);
-                setRevokeComment('');
-              }}
-              variant="outline"
-              className="flex-1"
-              disabled={isRevoking}
-            >
-              Отмена
-            </Button>
-            <Button
-              onClick={handleRevokeConfirm}
-              className="flex-1 bg-orange-600 hover:bg-orange-700"
-              disabled={isRevoking || !revokeComment.trim()}
-            >
-              {isRevoking ? 'Отзыв...' : 'Отозвать'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PendingRevokeDialog
+        open={showRevokeDialog}
+        onOpenChange={setShowRevokeDialog}
+        comment={revokeComment}
+        onCommentChange={setRevokeComment}
+        isRevoking={isRevoking}
+        onCancel={() => {
+          setShowRevokeDialog(false);
+          setRevokeComment('');
+        }}
+        onConfirm={handleRevokeConfirm}
+      />
     </>
   );
 };
