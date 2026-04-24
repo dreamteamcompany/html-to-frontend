@@ -4,7 +4,7 @@ import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
 import LinkedPlannedPaymentModal from './LinkedPlannedPaymentModal';
 import CashReceiptBlock from './CashReceiptBlock';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Payment, PaymentDocument, CashReceipt } from './paymentDetailsTypes';
+import { Payment, CashReceipt } from './paymentDetailsTypes';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 
 interface PaymentDetailsSidebarProps {
@@ -27,7 +27,6 @@ const PaymentDetailsSidebar = ({
   onEdit,
 }: PaymentDetailsSidebarProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [showDocsPanel, setShowDocsPanel] = useState(false);
   const [linkedModalOpen, setLinkedModalOpen] = useState(false);
   const [receipts, setReceipts] = useState<CashReceipt[]>(payment.cash_receipts ?? []);
 
@@ -38,19 +37,6 @@ const PaymentDetailsSidebar = ({
   const handleReceiptsUpdated = useCallback((next: CashReceipt[]) => {
     setReceipts(next);
   }, []);
-
-  const docs: PaymentDocument[] = payment.documents && payment.documents.length > 0
-    ? payment.documents
-    : payment.invoice_file_url
-      ? [{
-          id: 0,
-          payment_id: payment.id,
-          file_name: payment.invoice_file_url.split('/').pop()?.split('_').slice(2).join('_') || 'Счёт',
-          file_url: payment.invoice_file_url,
-          document_type: 'invoice',
-          uploaded_at: payment.invoice_file_uploaded_at || payment.created_at || '',
-        }]
-      : [];
 
   const showActions =
     ((!payment.status || payment.status === 'draft' || payment.status === 'rejected') && onSubmitForApproval) ||
@@ -104,63 +90,6 @@ const PaymentDetailsSidebar = ({
               <span>Запланированный платёж</span>
               <Icon name="ArrowRight" size={14} className="ml-auto opacity-60" />
             </button>
-          </div>
-        )}
-
-        {docs.length > 0 && (
-          <div className="mt-3">
-            <button
-              onClick={() => setShowDocsPanel(v => !v)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-semibold text-primary w-full"
-            >
-              <Icon name="FileText" size={16} />
-              <span>Счёт</span>
-              {docs.length > 1 && (
-                <span className="ml-1 bg-primary text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
-                  {docs.length}
-                </span>
-              )}
-              <Icon name={showDocsPanel ? 'ChevronUp' : 'ChevronDown'} size={14} className="ml-auto" />
-            </button>
-
-            {showDocsPanel && (
-              <div className="mt-2 rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
-                {docs.map((doc) => (
-                  <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2.5">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Icon name="FileText" size={15} className="text-primary flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground break-words">{doc.file_name}</p>
-                        <p className="text-xs font-medium text-foreground/60">
-                          {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ru-RU') : ''}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <a
-                        href={doc.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                        title="Просмотреть"
-                      >
-                        <Icon name="Eye" size={14} />
-                        Открыть
-                      </a>
-                      <a
-                        href={doc.file_url}
-                        download
-                        className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground"
-                        title="Скачать"
-                      >
-                        <Icon name="Download" size={14} />
-                        Скачать
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
