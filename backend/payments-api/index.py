@@ -516,11 +516,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             category_name = category['name']
             
+            # Нормализация пустых строк в None для полей date/nullable
+            def _nn(v):
+                if v is None:
+                    return None
+                if isinstance(v, str) and v.strip() == '':
+                    return None
+                return v
+
+            norm_payment_date = _nn(pay_req.payment_date)
+            norm_invoice_date = _nn(pay_req.invoice_date)
+            norm_invoice_number = _nn(pay_req.invoice_number)
+            norm_invoice_file_url = _nn(pay_req.invoice_file_url)
+
             # Приоритет: payment_date из запроса → invoice_date → текущая дата
-            update_payment_date = pay_req.payment_date or pay_req.invoice_date or datetime.now().strftime('%Y-%m-%d')
-            
-            file_uploaded_at = datetime.now().isoformat() if pay_req.invoice_file_url else None
-            log(f"[PUT] parsed pay_req.invoice_file_url={pay_req.invoice_file_url!r} file_uploaded_at={file_uploaded_at}")
+            update_payment_date = norm_payment_date or norm_invoice_date or datetime.now().strftime('%Y-%m-%d')
+
+            file_uploaded_at = datetime.now().isoformat() if norm_invoice_file_url else None
+            log(f"[PUT] parsed pay_req.invoice_file_url={norm_invoice_file_url!r} file_uploaded_at={file_uploaded_at} invoice_date={norm_invoice_date!r}")
             cur.execute(f"""
                 UPDATE {SCHEMA}.payments 
                 SET category = %s, category_id = %s, amount = %s, description = %s, 
@@ -532,8 +545,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 RETURNING id, category_id, amount, description, payment_date, created_at, status, invoice_file_url, invoice_file_uploaded_at
             """, (category_name, pay_req.category_id, pay_req.amount, pay_req.description, 
                   update_payment_date, pay_req.legal_entity_id, pay_req.contractor_id, 
-                  pay_req.department_id, pay_req.service_id, pay_req.invoice_number, 
-                  pay_req.invoice_date, pay_req.invoice_file_url, file_uploaded_at, payment_id))
+                  pay_req.department_id, pay_req.service_id, norm_invoice_number, 
+                  norm_invoice_date, norm_invoice_file_url, file_uploaded_at, payment_id))
             
             row = cur.fetchone()
             if not row:
@@ -552,18 +565,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         (payment_id, field_id, str(field_value))
                     )
             
-            if pay_req.invoice_file_url:
+            if norm_invoice_file_url:
                 cur.execute(
                     f"SELECT id FROM {SCHEMA}.payment_documents WHERE payment_id = %s AND file_url = %s",
-                    (payment_id, pay_req.invoice_file_url)
+                    (payment_id, norm_invoice_file_url)
                 )
                 if not cur.fetchone():
-                    raw_name = pay_req.invoice_file_url.split('/')[-1]
+                    raw_name = norm_invoice_file_url.split('/')[-1]
                     parts = raw_name.split('_')
                     file_name = '_'.join(parts[2:]) if len(parts) > 2 else raw_name
                     cur.execute(
                         f"INSERT INTO {SCHEMA}.payment_documents (payment_id, file_name, file_url, document_type, uploaded_at, uploaded_by) VALUES (%s, %s, %s, 'invoice', %s, %s)",
-                        (payment_id, file_name, pay_req.invoice_file_url, file_uploaded_at, payload['user_id'])
+                        (payment_id, file_name, norm_invoice_file_url, file_uploaded_at, payload['user_id'])
                     )
             
             conn.commit()
