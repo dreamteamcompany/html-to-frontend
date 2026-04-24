@@ -1186,12 +1186,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             """, (payload['user_id'],))
             _user_roles = [row['name'] for row in cur_roles.fetchall()]
             cur_roles.close()
-            _roles_norm = {(r or '').strip().lower() for r in _user_roles}
-            is_financier = 'финансист' in _roles_norm or 'financier' in _roles_norm
-            is_ceo = 'ceo' in _roles_norm or 'директор' in _roles_norm or 'генеральный директор' in _roles_norm
-            # CEO считаем «админом» по умолчанию (у него полный доступ по описанию роли)
-            if is_ceo:
-                is_admin = True
+            is_financier = 'Финансист' in _user_roles or 'Financier' in _user_roles
 
             cur.execute(f'SELECT created_by, status FROM {SCHEMA}.payments WHERE id = %s', (payment_id,))
             payment_row = cur.fetchone()
@@ -1200,16 +1195,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 conn.close()
                 return response(404, {'error': 'Платёж не найден'})
 
-            log(f"[DELETE] user={payload.get('user_id')} payment_id={payment_id} payment_owner={payment_row['created_by']} status={payment_row['status']} is_admin={is_admin} is_financier={is_financier} roles={_user_roles}")
-
             # Финансист может удалять только черновики (как и обычный пользователь),
-            # админ/CEO — в любом статусе.
+            # админ — в любом статусе.
             if not is_admin and payment_row['status'] != 'draft':
                 cur.close()
                 conn.close()
                 return response(403, {'error': 'Можно удалять только платежи со статусом "Черновик"'})
 
-            # Удалять чужие платежи могут админ, CEO и финансист (только черновики у финансиста).
+            # Удалять чужие платежи могут админ и финансист (только черновики у финансиста).
             if not is_admin and not is_financier and payment_row['created_by'] != payload['user_id']:
                 cur.close()
                 conn.close()
