@@ -29,6 +29,16 @@ const PaymentsInner = () => {
   const canApproveReject = isCEO || isAdmin;
   const canRevokeToDraft = isAdmin || isFinancier;
 
+  // Временная диагностика: показать, какие роли видит фронт для текущего пользователя.
+  if (typeof window !== 'undefined') {
+     
+    console.log('[PAYMENTS_DIAG]', {
+      userId: user?.id,
+      rolesRaw: user?.roles,
+      isCEO, isAdmin, isFinancier, canRevokeToDraft,
+    });
+  }
+
   // Удаление платежа админом из статуса «На согласовании».
   // Подтверждение делает диалог в PendingApprovalsTab — здесь только запрос.
   const handleAdminDeletePending = useCallback(async (paymentId: number) => {
