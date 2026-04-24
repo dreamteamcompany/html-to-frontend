@@ -50,6 +50,14 @@ export const usePaymentForm = (
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isUploadingInvoice) {
+      toast({
+        title: 'Подождите',
+        description: 'Файл счёта ещё загружается',
+      });
+      return;
+    }
+
     const validationError = validatePaymentForm(formData);
     if (validationError) {
       toast({ ...validationError, variant: 'destructive' });

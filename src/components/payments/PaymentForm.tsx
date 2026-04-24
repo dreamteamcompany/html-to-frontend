@@ -140,8 +140,15 @@ const PaymentForm = ({
             formData={formData}
             setFormData={setFormData}
           />
-          <Button type="submit" className="w-full">
-            Добавить
+          <Button type="submit" className="w-full" disabled={isUploadingInvoice}>
+            {isUploadingInvoice ? (
+              <>
+                <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                Загружаем счёт...
+              </>
+            ) : (
+              'Добавить'
+            )}
           </Button>
         </form>
       </DialogContent>

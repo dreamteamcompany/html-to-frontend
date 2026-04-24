@@ -270,8 +270,17 @@ const CashPaymentForm = ({ categories, customerDepartments, services, onSuccess 
                 disabled={isUploading}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
-                <Icon name="Send" size={16} className="mr-2" />
-                Отправить на согласование
+                {isUploading ? (
+                  <>
+                    <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                    Загружаем чек...
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Send" size={16} className="mr-2" />
+                    Отправить на согласование
+                  </>
+                )}
               </Button>
             </div>
           </form>
