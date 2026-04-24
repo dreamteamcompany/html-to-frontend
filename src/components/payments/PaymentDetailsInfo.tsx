@@ -245,6 +245,87 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
         </div>
       )}
 
+      {(() => {
+        const invoiceDocs = (payment.documents || []).filter(
+          d => d && d.file_url && (!d.document_type || d.document_type === 'invoice')
+        );
+        const urls = new Set(invoiceDocs.map(d => d.file_url));
+        const hasMainFile = !!payment.invoice_file_url && !urls.has(payment.invoice_file_url);
+        if (!hasMainFile && invoiceDocs.length === 0) return null;
+
+        const prettyName = (url: string, fallback?: string) => {
+          if (fallback) return fallback;
+          try {
+            const last = url.split('/').pop() || 'Файл счёта';
+            const decoded = decodeURIComponent(last);
+            const parts = decoded.split('_');
+            return parts.length > 2 ? parts.slice(2).join('_') : decoded;
+          } catch {
+            return 'Файл счёта';
+          }
+        };
+
+        const renderRow = (url: string, name: string, uploadedAt?: string, key?: string | number) => (
+          <div
+            key={key ?? url}
+            className="rounded-lg border border-border p-3 bg-primary/5"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground break-words">{name}</p>
+                  {uploadedAt && (
+                    <p className="text-[11px] font-medium text-foreground/60">
+                      {new Date(uploadedAt).toLocaleString('ru-RU')}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                >
+                  <Icon name="Eye" size={14} />
+                  Просмотр
+                </a>
+                <a
+                  href={url}
+                  download
+                  className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground"
+                >
+                  <Icon name="Download" size={14} />
+                  Скачать
+                </a>
+              </div>
+            </div>
+          </div>
+        );
+
+        return (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Счёт</p>
+            <div className="space-y-2">
+              {hasMainFile && payment.invoice_file_url && renderRow(
+                payment.invoice_file_url,
+                prettyName(payment.invoice_file_url),
+                payment.invoice_file_uploaded_at,
+                'main'
+              )}
+              {invoiceDocs.map(doc => renderRow(
+                doc.file_url,
+                prettyName(doc.file_url, doc.file_name),
+                doc.uploaded_at,
+                doc.id
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {payment.created_by_name && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Создал заявку</p>
