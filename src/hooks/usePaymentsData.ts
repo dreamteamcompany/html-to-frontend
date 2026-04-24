@@ -1,17 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { Payment } from '@/types/payment';
 import { useDictionaryContext } from '@/contexts/DictionaryContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Module-level cache for personal payments (draft/my)
-let myPaymentsCache: Payment[] | null = null;
-let myPaymentsCacheTime = 0;
+// Раздельный кэш по scope, чтобы данные ролей не пересекались
+const paymentsCacheByScope: Record<string, { data: Payment[] | null; time: number }> = {
+  my: { data: null, time: 0 },
+  all: { data: null, time: 0 },
+};
 const MY_CACHE_TTL = 30_000;
 
 export const invalidateMyPaymentsCache = () => {
-  myPaymentsCache = null;
-  myPaymentsCacheTime = 0;
+  paymentsCacheByScope.my = { data: null, time: 0 };
+  paymentsCacheByScope.all = { data: null, time: 0 };
 };
 
 interface Category {
@@ -66,24 +70,39 @@ interface Service {
 
 export const usePaymentsData = () => {
   const dictionary = useDictionaryContext();
-  const [payments, setPayments] = useState<Payment[]>(myPaymentsCache ?? []);
-  const [loading, setLoading] = useState(!myPaymentsCache);
+  const { user } = useAuth();
+
+  // Админы и Финансисты видят все черновики (scope=all),
+  // остальные пользователи — только свои (scope=my).
+  const scope = useMemo<'my' | 'all'>(() => {
+    const roles = user?.roles ?? [];
+    const isAdmin = roles.some(r => r.name === 'Администратор' || r.name === 'Admin');
+    const isFinancier = roles.some(r => r.name === 'Финансист' || r.name === 'Financier');
+    return isAdmin || isFinancier ? 'all' : 'my';
+  }, [user]);
+
+  const cache = paymentsCacheByScope[scope];
+  const [payments, setPayments] = useState<Payment[]>(cache.data ?? []);
+  const [loading, setLoading] = useState(!cache.data);
 
   const loadPayments = useCallback((force = false) => {
+    const bucket = paymentsCacheByScope[scope];
     const now = Date.now();
-    if (!force && myPaymentsCache && now - myPaymentsCacheTime < MY_CACHE_TTL) {
-      setPayments(myPaymentsCache);
+    if (!force && bucket.data && now - bucket.time < MY_CACHE_TTL) {
+      setPayments(bucket.data);
       setLoading(false);
       return;
     }
     setLoading(true);
-    apiFetch(API_ENDPOINTS.paymentsApi)
+    const url = scope === 'all'
+      ? `${API_ENDPOINTS.paymentsApi}?scope=all`
+      : API_ENDPOINTS.paymentsApi;
+    apiFetch(url)
       .then(res => res.json())
       .then(data => {
         const list = Array.isArray(data) ? data : [];
         list.sort((a, b) => new Date(b.payment_date || 0).getTime() - new Date(a.payment_date || 0).getTime());
-        myPaymentsCache = list;
-        myPaymentsCacheTime = Date.now();
+        paymentsCacheByScope[scope] = { data: list, time: Date.now() };
         setPayments(list);
         setLoading(false);
       })
@@ -92,7 +111,7 @@ export const usePaymentsData = () => {
         setPayments([]);
         setLoading(false);
       });
-  }, []);
+  }, [scope]);
 
   const loadContractors = useCallback(async () => {
     await dictionary.refresh('contractors');
@@ -109,9 +128,9 @@ export const usePaymentsData = () => {
   }, [loadPayments]);
 
   const forceLoadPayments = useCallback(() => {
-    myPaymentsCache = null;
+    paymentsCacheByScope[scope] = { data: null, time: 0 };
     loadPayments(true);
-  }, [loadPayments]);
+  }, [loadPayments, scope]);
 
   return {
     payments,
