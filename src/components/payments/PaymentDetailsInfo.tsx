@@ -268,26 +268,28 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
         const renderRow = (url: string, name: string, uploadedAt?: string, key?: string | number) => (
           <div
             key={key ?? url}
-            className="rounded-lg border border-border p-3 bg-primary/5"
+            className="rounded-xl border-2 border-primary/40 p-3 bg-primary/10 shadow-sm hover:bg-primary/15 transition-colors"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/20 flex-shrink-0">
+                  <Icon name="FileText" size={18} className="text-primary" />
+                </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground break-words">{name}</p>
+                  <p className="text-sm font-semibold text-foreground break-words leading-tight">{name}</p>
                   {uploadedAt && (
-                    <p className="text-[11px] font-medium text-foreground/60">
-                      {new Date(uploadedAt).toLocaleString('ru-RU')}
+                    <p className="text-[11px] font-medium text-foreground/60 mt-0.5">
+                      загружен {new Date(uploadedAt).toLocaleString('ru-RU')}
                     </p>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <a
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  className="flex items-center gap-1 text-xs font-semibold text-white bg-primary hover:bg-primary/90 px-3 py-1.5 rounded-md transition-colors"
                 >
                   <Icon name="Eye" size={14} />
                   Просмотр
@@ -295,7 +297,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
                 <a
                   href={url}
                   download
-                  className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground"
+                  className="flex items-center gap-1 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border px-3 py-1.5 rounded-md transition-colors"
                 >
                   <Icon name="Download" size={14} />
                   Скачать
@@ -307,7 +309,10 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
 
         return (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Счёт</p>
+            <div className="flex items-center gap-1.5 mb-2">
+              <Icon name="Paperclip" size={12} className="text-primary" />
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Счёт</p>
+            </div>
             <div className="space-y-2">
               {hasMainFile && payment.invoice_file_url && renderRow(
                 payment.invoice_file_url,
