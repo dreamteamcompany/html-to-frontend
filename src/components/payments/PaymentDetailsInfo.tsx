@@ -265,6 +265,25 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
           }
         };
 
+        const handleDownload = async (url: string, suggestedName: string) => {
+          try {
+            const res = await fetch(url, { mode: 'cors' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const blob = await res.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = objectUrl;
+            a.download = suggestedName || 'invoice';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+          } catch (err) {
+            console.error('Download failed, fallback to open:', err);
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+        };
+
         const renderRow = (url: string, name: string, uploadedAt?: string, key?: string | number) => (
           <div
             key={key ?? url}
@@ -294,14 +313,14 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
                   <Icon name="Eye" size={14} />
                   Просмотр
                 </a>
-                <a
-                  href={url}
-                  download
+                <button
+                  type="button"
+                  onClick={() => handleDownload(url, name)}
                   className="flex items-center gap-1 text-xs font-semibold text-foreground bg-background hover:bg-muted border border-border px-3 py-1.5 rounded-md transition-colors"
                 >
                   <Icon name="Download" size={14} />
                   Скачать
-                </a>
+                </button>
               </div>
             </div>
           </div>
