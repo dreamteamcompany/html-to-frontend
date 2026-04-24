@@ -450,6 +450,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             try:
                 body = json.loads(event.get('body', '{}'))
                 payment_id = body.get('payment_id') or body.get('id')
+                log(f"[PUT] user={payload.get('user_id')} payment_id={payment_id} has_invoice_file_url={bool(body.get('invoice_file_url'))} invoice_file_url={body.get('invoice_file_url')!r}")
                 
                 # Извлекаем ID из пути, если он есть
                 path = event.get('path', '')
@@ -499,6 +500,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 # Полное обновление платежа
                 pay_req = PaymentRequest(**body)
             except Exception as e:
+                log(f"[PUT] Validation error: {e}")
                 conn.close()
                 return response(400, {'error': f'Validation error: {str(e)}'})
             
@@ -518,6 +520,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             update_payment_date = pay_req.payment_date or pay_req.invoice_date or datetime.now().strftime('%Y-%m-%d')
             
             file_uploaded_at = datetime.now().isoformat() if pay_req.invoice_file_url else None
+            log(f"[PUT] parsed pay_req.invoice_file_url={pay_req.invoice_file_url!r} file_uploaded_at={file_uploaded_at}")
             cur.execute(f"""
                 UPDATE {SCHEMA}.payments 
                 SET category = %s, category_id = %s, amount = %s, description = %s, 

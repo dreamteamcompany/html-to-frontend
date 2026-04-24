@@ -203,29 +203,53 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
         }
       });
 
-      await apiFetch(`${API_ENDPOINTS.paymentsApi}`, {
+      const invoiceUrl = (formData.invoice_file_url || '').trim();
+      const payload = {
+        payment_id: payment.id,
+        category_id: formData.category_id ? parseInt(formData.category_id) : undefined,
+        description: formData.description,
+        amount: formData.amount ? parseFloat(formData.amount) : undefined,
+        payment_date: formData.payment_date,
+        legal_entity_id: formData.legal_entity_id ? parseInt(formData.legal_entity_id) : undefined,
+        service_id: formData.service_id ? parseInt(formData.service_id) : undefined,
+        contractor_id: formData.contractor_id ? parseInt(formData.contractor_id) : undefined,
+        department_id: formData.department_id ? parseInt(formData.department_id) : undefined,
+        invoice_number: formData.invoice_number,
+        invoice_date: formData.invoice_date,
+        invoice_file_url: invoiceUrl || null,
+        custom_fields: customFieldsData,
+      };
+      console.log('[EditPaymentModal] PUT payload', payload);
+
+      const res = await apiFetch(`${API_ENDPOINTS.paymentsApi}`, {
         method: 'PUT',
-        body: JSON.stringify({
-          payment_id: payment.id,
-          category_id: formData.category_id ? parseInt(formData.category_id) : undefined,
-          description: formData.description,
-          amount: formData.amount ? parseFloat(formData.amount) : undefined,
-          payment_date: formData.payment_date,
-          legal_entity_id: formData.legal_entity_id ? parseInt(formData.legal_entity_id) : undefined,
-          service_id: formData.service_id ? parseInt(formData.service_id) : undefined,
-          contractor_id: formData.contractor_id ? parseInt(formData.contractor_id) : undefined,
-          department_id: formData.department_id ? parseInt(formData.department_id) : undefined,
-          invoice_number: formData.invoice_number,
-          invoice_date: formData.invoice_date,
-          invoice_file_url: formData.invoice_file_url || null,
-          custom_fields: customFieldsData,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
+
+      if (!res.ok) {
+        let serverError = '';
+        try {
+          const errData = await res.json();
+          serverError = (errData && (errData.error || errData.message)) || '';
+        } catch { /* not JSON */ }
+        console.error('[EditPaymentModal] PUT failed', res.status, serverError);
+        toast({
+          title: 'Не удалось сохранить платёж',
+          description: serverError || `Ошибка сервера (${res.status}). Попробуйте ещё раз.`,
+          variant: 'destructive',
+        });
+        return;
+      }
 
       onSuccess();
     } catch (error) {
       console.error('Failed to update payment:', error);
-      alert('Не удалось обновить платёж');
+      toast({
+        title: 'Ошибка сети',
+        description: 'Не удалось обновить платёж. Проверьте подключение и попробуйте снова.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
