@@ -462,15 +462,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(400, {'error': 'Payment ID is required'})
 
-                # Проверяем ownership платежа (только создатель или администратор)
+                # Проверяем ownership платежа (создатель, администратор или финансист)
                 is_admin = is_admin_user(conn, payload['user_id'])
+                cur_roles = conn.cursor(cursor_factory=RealDictCursor)
+                cur_roles.execute(f"""
+                    SELECT r.name FROM {SCHEMA}.roles r
+                    JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
+                    WHERE ur.user_id = %s
+                """, (payload['user_id'],))
+                _user_roles = [row['name'] for row in cur_roles.fetchall()]
+                cur_roles.close()
+                is_financier = 'Финансист' in _user_roles or 'Financier' in _user_roles
                 cur.execute(f'SELECT created_by, status FROM {SCHEMA}.payments WHERE id = %s', (payment_id,))
                 existing_payment = cur.fetchone()
                 if not existing_payment:
                     cur.close()
                     conn.close()
                     return response(404, {'error': 'Платёж не найден'})
-                if not is_admin and existing_payment['created_by'] != payload['user_id']:
+                if not is_admin and not is_financier and existing_payment['created_by'] != payload['user_id']:
                     cur.close()
                     conn.close()
                     return response(403, {'error': 'Вы можете редактировать только свои платежи'})
