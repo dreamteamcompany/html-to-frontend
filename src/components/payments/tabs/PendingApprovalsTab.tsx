@@ -226,6 +226,12 @@ const PendingApprovalsTab = ({
         </AlertDialogContent>
       </AlertDialog>
 
+      {!loading && filteredPayments.length > 0 && (
+        <div className="text-sm font-semibold text-foreground/70">
+          Найдено платежей: {filteredPayments.length} • Общая сумма: {filteredPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₽
+        </div>
+      )}
+
       <PendingApprovalsList
         loading={loading}
         payments={filteredPayments}
