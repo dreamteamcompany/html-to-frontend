@@ -3,6 +3,7 @@ import { apiFetch } from '@/utils/api';
 import { API_ENDPOINTS } from '@/config/api';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import FUNC2URL from '@/../backend/func2url.json';
 import {
   EditPayment,
@@ -20,6 +21,7 @@ import EditPaymentDocuments from './EditPaymentDocuments';
 
 const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps) => {
   const { token } = useAuth();
+  const { toast } = useToast();
   const [formData, setFormData] = useState<Record<string, string | undefined>>({
     category_id: '',
     description: '',
@@ -117,6 +119,17 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const uploadUrl = (FUNC2URL as Record<string, string>)['upload-presigned-url'];
+    if (!uploadUrl) {
+      toast({
+        title: 'Сервис загрузки недоступен',
+        description: 'Обновите страницу и попробуйте снова. Если ошибка повторится — обратитесь к администратору.',
+        variant: 'destructive',
+      });
+      e.target.value = '';
+      return;
+    }
+
     setIsUploadingFile(true);
     try {
       const fileBase64 = await new Promise<string>((resolve) => {
@@ -125,22 +138,51 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
         reader.readAsDataURL(file);
       });
 
-      const uploadRes = await fetch(FUNC2URL['upload-presigned-url'], {
+      const uploadRes = await fetch(uploadUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
         body: JSON.stringify({ file_name: file.name, file_type: file.type, file_data: fileBase64 }),
       });
 
-      if (!uploadRes.ok) throw new Error('Не удалось загрузить файл');
+      if (!uploadRes.ok) {
+        let serverError = '';
+        try {
+          const errData = await uploadRes.json();
+          serverError = (errData && (errData.error || errData.message)) || '';
+        } catch {
+          /* non-JSON response */
+        }
+        toast({
+          title: 'Не удалось сохранить файл',
+          description: serverError || `Ошибка сервера (${uploadRes.status}). Попробуйте ещё раз или выберите другой файл.`,
+          variant: 'destructive',
+        });
+        return;
+      }
 
       const { file_url } = await uploadRes.json();
-      if (!file_url) throw new Error('Сервер не вернул URL файла');
+      if (!file_url) {
+        toast({
+          title: 'Ошибка загрузки',
+          description: 'Сервер не вернул ссылку на файл. Попробуйте ещё раз.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
       setFormData(prev => ({ ...prev, invoice_file_url: file_url }));
       setUploadedFileName(file.name);
+      toast({
+        title: 'Файл счёта сохранён',
+        description: 'Документ прикреплён к платежу',
+      });
     } catch (err) {
       console.error('File upload failed:', err);
-      alert('Не удалось загрузить файл. Попробуйте снова.');
+      toast({
+        title: 'Ошибка сети',
+        description: 'Не удалось загрузить файл. Проверьте подключение и попробуйте снова.',
+        variant: 'destructive',
+      });
     } finally {
       setIsUploadingFile(false);
       e.target.value = '';

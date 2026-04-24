@@ -40,7 +40,7 @@ ALLOWED_TYPES = {
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 def handler(event: dict, context) -> dict:
-    '''Загрузка файла в S3. Принимает base64-encoded файл, сохраняет в хранилище, возвращает публичный URL.'''
+    '''Загрузка файла счёта в S3. Принимает base64-encoded файл, сохраняет в хранилище, возвращает публичный CDN-URL.'''
 
     method = event.get('httpMethod', 'GET')
 
