@@ -35,6 +35,7 @@ interface PendingApprovalsListProps {
   handleApprove?: (paymentId: number) => void;
   handleReject?: (paymentId: number) => void;
   handleDelete?: (paymentId: number) => void;
+  handleRevoke?: (paymentId: number) => void;
   getStatusBadge: (status?: string) => JSX.Element | null;
   onPaymentClick: (payment: Payment) => void;
 }
@@ -46,6 +47,7 @@ const PendingApprovalsList = ({
   handleApprove,
   handleReject,
   handleDelete,
+  handleRevoke,
   getStatusBadge,
   onPaymentClick,
 }: PendingApprovalsListProps) => {
@@ -145,7 +147,7 @@ const PendingApprovalsList = ({
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Сумма платежа</div>
                   <div className="text-3xl font-extrabold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</div>
                 </div>
-                {(handleApprove || handleReject || handleDelete) && (
+                {(handleApprove || handleReject || handleDelete || handleRevoke) && (
                   <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                     {handleApprove && (
                       <button
@@ -169,6 +171,19 @@ const PendingApprovalsList = ({
                       >
                         <Icon name="X" size={18} />
                         Отклонить
+                      </button>
+                    )}
+                    {handleRevoke && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRevoke(payment.id);
+                        }}
+                        title="Вернуть платёж в черновики"
+                        className="flex-1 sm:flex-none px-4 py-3 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 transition-colors font-semibold flex items-center justify-center gap-2"
+                      >
+                        <Icon name="Undo2" size={18} />
+                        Вернуть в черновики
                       </button>
                     )}
                     {handleDelete && (

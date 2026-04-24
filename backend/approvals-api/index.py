@@ -645,6 +645,7 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
     user_roles = [row['name'] for row in cur.fetchall()]
     is_admin = 'Администратор' in user_roles or 'Admin' in user_roles
     is_ceo = 'CEO' in user_roles or 'Генеральный директор' in user_roles
+    is_financier = 'Финансист' in user_roles or 'Financier' in user_roles
     
     # Определяем новый статус
     if approval_action.action == 'submit':
@@ -663,22 +664,34 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
         new_status = 'approved'
     elif approval_action.action == 'revoke':
         # Проверяем, что платёж можно отозвать (на согласовании или одобрен)
-        if payment['status'] not in ('pending_ceo', 'pending_tech_director', 'approved'):
+        current_status = str(payment.get('status') or '')
+        is_pending = current_status.startswith('pending_')
+        is_approved_status = current_status == 'approved'
+        if not is_pending and not is_approved_status:
             cur.close()
             return response(400, {'error': 'Можно отозвать только платежи на согласовании или одобренные'})
-        
-        # Проверяем, что отзывает создатель платежа, администратор или CEO
+
+        # Кто может отозвать:
+        #  - создатель, администратор или CEO — в любом допустимом статусе
+        #  - финансист — только из статусов "На согласовании" (pending_*)
         is_creator = payment.get('created_by') == user_id
-        
-        if not is_creator and not is_admin and not is_ceo:
+
+        if not is_creator and not is_admin and not is_ceo and not (is_financier and is_pending):
             cur.close()
-            return response(403, {'error': 'Только создатель платежа, администратор или CEO может его отозвать'})
-        
-        # Проверяем наличие причины отзыва
+            return response(403, {'error': 'Недостаточно прав для отзыва этого платежа'})
+
+        # Причина отзыва: если не передана — подставляем стандартный комментарий
+        # (нужно для аудита; бэк не принимает пустой comment).
         if not approval_action.comment or not approval_action.comment.strip():
-            cur.close()
-            return response(400, {'error': 'Причина отзыва обязательна'})
-        
+            if is_admin:
+                approval_action.comment = 'Возвращено в черновики администратором'
+            elif is_financier:
+                approval_action.comment = 'Возвращено в черновики финансистом'
+            elif is_ceo:
+                approval_action.comment = 'Возвращено в черновики CEO'
+            else:
+                approval_action.comment = 'Возвращено в черновики автором'
+
         new_status = 'draft'  # Возвращаем в черновики
     elif approval_action.action == 'reject':
         # Администратор и CEO могут отклонять любые платежи

@@ -25,7 +25,9 @@ const PaymentsInner = () => {
   const { toast } = useToast();
   const isCEO = user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор') ?? false;
   const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin') ?? false;
+  const isFinancier = user?.roles?.some(role => role.name === 'Финансист' || role.name === 'Financier') ?? false;
   const canApproveReject = isCEO || isAdmin;
+  const canRevokeToDraft = isAdmin || isFinancier;
 
   // Удаление платежа админом из статуса «На согласовании».
   // Подтверждение делает диалог в PendingApprovalsTab — здесь только запрос.
@@ -47,6 +49,34 @@ const PaymentsInner = () => {
         toast({
           title: 'Ошибка',
           description: translateApiError(err.error) || 'Не удалось удалить платёж',
+          variant: 'destructive',
+        });
+      }
+    } catch {
+      toast({ title: 'Ошибка сети', description: 'Проверьте подключение к интернету', variant: 'destructive' });
+    }
+  }, [token, toast, refreshAllPayments]);
+
+  // Возврат pending-платежа в черновики (доступно админу и финансисту).
+  const handleRevokePending = useCallback(async (paymentId: number) => {
+    try {
+      const res = await fetch(API_ENDPOINTS.approvalsApi, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({ payment_id: paymentId, action: 'revoke', comment: '' }),
+      });
+      if (res.ok) {
+        toast({ title: 'Успешно', description: 'Платёж возвращён в черновики' });
+        invalidateMyPaymentsCache();
+        refreshAllPayments();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({
+          title: 'Ошибка',
+          description: translateApiError(err.error) || 'Не удалось вернуть платёж в черновики',
           variant: 'destructive',
         });
       }
@@ -143,7 +173,9 @@ const PaymentsInner = () => {
                 onOpenPaymentIdHandled={() => setOpenPaymentId(null)}
                 canApproveReject={canApproveReject}
                 isAdmin={isAdmin}
+                canRevokeToDraft={canRevokeToDraft}
                 onDeletePayment={isAdmin ? handleAdminDeletePending : undefined}
+                onRevokePayment={canRevokeToDraft ? handleRevokePending : undefined}
               />
             </TabsContent>
 

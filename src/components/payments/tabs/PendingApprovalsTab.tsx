@@ -25,7 +25,9 @@ interface PendingApprovalsTabProps {
   onOpenPaymentIdHandled?: () => void;
   canApproveReject?: boolean;
   isAdmin?: boolean;
+  canRevokeToDraft?: boolean;
   onDeletePayment?: (paymentId: number) => Promise<void> | void;
+  onRevokePayment?: (paymentId: number) => Promise<void> | void;
 }
 
 const PendingApprovalsTab = ({
@@ -33,7 +35,9 @@ const PendingApprovalsTab = ({
   onOpenPaymentIdHandled,
   canApproveReject = false,
   isAdmin = false,
+  canRevokeToDraft = false,
   onDeletePayment,
+  onRevokePayment,
 }: PendingApprovalsTabProps = {}) => {
   usePendingApprovals();
   const { payments, loading, approveProgress, handleApprove, handleApproveAll, handleReject } = usePendingApprovalsData();
@@ -41,6 +45,8 @@ const PendingApprovalsTab = ({
   const [showConfirm, setShowConfirm] = useState(false);
   const [deletePaymentId, setDeletePaymentId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [revokePaymentId, setRevokePaymentId] = useState<number | null>(null);
+  const [isRevoking, setIsRevoking] = useState(false);
   
   const {
     filters,
@@ -111,6 +117,21 @@ const PendingApprovalsTab = ({
     } finally {
       setIsDeleting(false);
       setDeletePaymentId(null);
+    }
+  };
+
+  const handleRevokeClick = (paymentId: number) => {
+    setRevokePaymentId(paymentId);
+  };
+
+  const handleRevokeConfirm = async () => {
+    if (revokePaymentId == null || !onRevokePayment) return;
+    setIsRevoking(true);
+    try {
+      await onRevokePayment(revokePaymentId);
+    } finally {
+      setIsRevoking(false);
+      setRevokePaymentId(null);
     }
   };
 
@@ -212,6 +233,7 @@ const PendingApprovalsTab = ({
         handleApprove={canApproveReject ? handleApprove : undefined}
         handleReject={canApproveReject ? handleReject : undefined}
         handleDelete={isAdmin && onDeletePayment ? handleAdminDeleteClick : undefined}
+        handleRevoke={canRevokeToDraft && onRevokePayment ? handleRevokeClick : undefined}
         getStatusBadge={getStatusBadge}
         onPaymentClick={setSelectedPayment}
       />
@@ -242,6 +264,30 @@ const PendingApprovalsTab = ({
               className="bg-red-600 hover:bg-red-500 text-white"
             >
               {isDeleting ? 'Удаляем...' : 'Удалить платёж'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={revokePaymentId !== null}
+        onOpenChange={(open) => { if (!open) setRevokePaymentId(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Вернуть платёж в черновики?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Платёж будет отозван с согласования и возвращён в статус «Черновик». Вы уверены?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRevoking}>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRevokeConfirm}
+              disabled={isRevoking}
+              className="bg-amber-600 hover:bg-amber-500 text-white"
+            >
+              {isRevoking ? 'Возвращаем...' : 'Вернуть в черновики'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
