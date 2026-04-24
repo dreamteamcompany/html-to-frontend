@@ -24,13 +24,23 @@ interface PendingApprovalsTabProps {
   openPaymentId?: number | null;
   onOpenPaymentIdHandled?: () => void;
   canApproveReject?: boolean;
+  isAdmin?: boolean;
+  onDeletePayment?: (paymentId: number) => Promise<void> | void;
 }
 
-const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled, canApproveReject = false }: PendingApprovalsTabProps = {}) => {
+const PendingApprovalsTab = ({
+  openPaymentId,
+  onOpenPaymentIdHandled,
+  canApproveReject = false,
+  isAdmin = false,
+  onDeletePayment,
+}: PendingApprovalsTabProps = {}) => {
   usePendingApprovals();
   const { payments, loading, approveProgress, handleApprove, handleApproveAll, handleReject } = usePendingApprovalsData();
   const [approvingAll, setApprovingAll] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [deletePaymentId, setDeletePaymentId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const {
     filters,
@@ -87,6 +97,21 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled, canApprove
     setApprovingAll(true);
     await handleApproveAll(ids);
     setApprovingAll(false);
+  };
+
+  const handleAdminDeleteClick = (paymentId: number) => {
+    setDeletePaymentId(paymentId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deletePaymentId == null || !onDeletePayment) return;
+    setIsDeleting(true);
+    try {
+      await onDeletePayment(deletePaymentId);
+    } finally {
+      setIsDeleting(false);
+      setDeletePaymentId(null);
+    }
   };
 
   return (
@@ -186,6 +211,7 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled, canApprove
         searchQuery={searchQuery}
         handleApprove={canApproveReject ? handleApprove : undefined}
         handleReject={canApproveReject ? handleReject : undefined}
+        handleDelete={isAdmin && onDeletePayment ? handleAdminDeleteClick : undefined}
         getStatusBadge={getStatusBadge}
         onPaymentClick={setSelectedPayment}
       />
@@ -196,6 +222,30 @@ const PendingApprovalsTab = ({ openPaymentId, onOpenPaymentIdHandled, canApprove
         onApprove={canApproveReject ? handleModalApprove : undefined}
         onReject={canApproveReject ? handleModalReject : undefined}
       />
+
+      <AlertDialog
+        open={deletePaymentId !== null}
+        onOpenChange={(open) => { if (!open) setDeletePaymentId(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить платёж на согласовании?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Платёж сейчас находится на согласовании. Удаление безвозвратно отменит процесс согласования и удалит платёж. Это действие нельзя отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-500 text-white"
+            >
+              {isDeleting ? 'Удаляем...' : 'Удалить платёж'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

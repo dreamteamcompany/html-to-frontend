@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
@@ -10,17 +10,50 @@ import RejectedPaymentsTab from '@/components/payments/tabs/RejectedPaymentsTab'
 import { useAuth } from '@/contexts/AuthContext';
 import { AllPaymentsCacheProvider, useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
 import { useSearchParams } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { API_ENDPOINTS } from '@/config/api';
+import { translateApiError } from '@/utils/api';
+import { invalidateMyPaymentsCache } from '@/hooks/usePaymentsData';
 import PaymentsTabsBar from './payments/PaymentsTabsBar';
 import { usePaymentCounters } from './payments/usePaymentCounters';
 import { useContentSwipe } from './payments/useContentSwipe';
 import { usePaymentDeepLink } from './payments/usePaymentDeepLink';
 
 const PaymentsInner = () => {
-  const { user } = useAuth();
-  const { payments: allPayments } = useAllPaymentsCache();
+  const { user, token } = useAuth();
+  const { payments: allPayments, refresh: refreshAllPayments } = useAllPaymentsCache();
+  const { toast } = useToast();
   const isCEO = user?.roles?.some(role => role.name === 'CEO' || role.name === 'Генеральный директор') ?? false;
   const isAdmin = user?.roles?.some(role => role.name === 'Администратор' || role.name === 'Admin') ?? false;
   const canApproveReject = isCEO || isAdmin;
+
+  // Удаление платежа админом из статуса «На согласовании».
+  // Подтверждение делает диалог в PendingApprovalsTab — здесь только запрос.
+  const handleAdminDeletePending = useCallback(async (paymentId: number) => {
+    try {
+      const res = await fetch(`${API_ENDPOINTS.main}?endpoint=payments&id=${paymentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+      });
+      if (res.ok) {
+        toast({ title: 'Успешно', description: 'Платёж удалён' });
+        invalidateMyPaymentsCache();
+        refreshAllPayments();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({
+          title: 'Ошибка',
+          description: translateApiError(err.error) || 'Не удалось удалить платёж',
+          variant: 'destructive',
+        });
+      }
+    } catch {
+      toast({ title: 'Ошибка сети', description: 'Проверьте подключение к интернету', variant: 'destructive' });
+    }
+  }, [token, toast, refreshAllPayments]);
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState(isCEO ? 'pending' : 'my');
@@ -109,6 +142,8 @@ const PaymentsInner = () => {
                 openPaymentId={activeTab === 'pending' ? openPaymentId : null}
                 onOpenPaymentIdHandled={() => setOpenPaymentId(null)}
                 canApproveReject={canApproveReject}
+                isAdmin={isAdmin}
+                onDeletePayment={isAdmin ? handleAdminDeletePending : undefined}
               />
             </TabsContent>
 

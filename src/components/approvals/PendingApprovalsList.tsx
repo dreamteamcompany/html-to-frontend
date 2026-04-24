@@ -34,6 +34,7 @@ interface PendingApprovalsListProps {
   searchQuery: string;
   handleApprove?: (paymentId: number) => void;
   handleReject?: (paymentId: number) => void;
+  handleDelete?: (paymentId: number) => void;
   getStatusBadge: (status?: string) => JSX.Element | null;
   onPaymentClick: (payment: Payment) => void;
 }
@@ -44,6 +45,7 @@ const PendingApprovalsList = ({
   searchQuery,
   handleApprove,
   handleReject,
+  handleDelete,
   getStatusBadge,
   onPaymentClick,
 }: PendingApprovalsListProps) => {
@@ -143,8 +145,8 @@ const PendingApprovalsList = ({
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Сумма платежа</div>
                   <div className="text-3xl font-extrabold text-primary">{payment.amount.toLocaleString('ru-RU')} ₽</div>
                 </div>
-                {(handleApprove || handleReject) && (
-                  <div className="flex gap-2 w-full sm:w-auto">
+                {(handleApprove || handleReject || handleDelete) && (
+                  <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                     {handleApprove && (
                       <button
                         onClick={(e) => {
@@ -167,6 +169,19 @@ const PendingApprovalsList = ({
                       >
                         <Icon name="X" size={18} />
                         Отклонить
+                      </button>
+                    )}
+                    {handleDelete && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(payment.id);
+                        }}
+                        title="Удалить платёж (только для администратора)"
+                        className="flex-1 sm:flex-none px-4 py-3 rounded-lg bg-red-500/15 text-red-800 dark:text-red-300 hover:bg-red-500/25 transition-colors font-semibold flex items-center justify-center gap-2"
+                      >
+                        <Icon name="Trash2" size={18} />
+                        Удалить
                       </button>
                     )}
                   </div>
