@@ -266,8 +266,9 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
         };
 
         const handleDownload = async (url: string, suggestedName: string) => {
+          const proxied = `https://functions.poehali.dev/fcc54a8e-db90-42b9-a27f-0cb8b29693a0?url=${encodeURIComponent(url)}&name=${encodeURIComponent(suggestedName || 'invoice')}`;
           try {
-            const res = await fetch(url, { mode: 'cors' });
+            const res = await fetch(proxied);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const blob = await res.blob();
             const objectUrl = URL.createObjectURL(blob);
@@ -279,8 +280,12 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
             a.remove();
             setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
           } catch (err) {
-            console.error('Download failed, fallback to open:', err);
-            window.open(url, '_blank', 'noopener,noreferrer');
+            console.error('Download failed:', err);
+            toast({
+              title: 'Не удалось скачать файл',
+              description: 'Попробуйте ещё раз или откройте файл через «Просмотр» и сохраните из браузера.',
+              variant: 'destructive',
+            });
           }
         };
 
