@@ -65,6 +65,49 @@ const PendingPaymentInfo = ({ payment, onApprove, onReject, onApproveClick, onRe
           </div>
         )}
 
+        {(() => {
+          const invoiceDoc = payment.documents && payment.documents.length > 0
+            ? payment.documents.find(d => d.document_type === 'invoice') || payment.documents[0]
+            : null;
+          const fileUrl = invoiceDoc?.file_url || payment.invoice_file_url;
+          if (!fileUrl) return null;
+          const fileName = invoiceDoc?.file_name
+            || fileUrl.split('/').pop()?.split('_').slice(2).join('_')
+            || 'Счёт';
+          return (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Файл счёта</p>
+              <div className="rounded-lg border border-border p-3 bg-primary/5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Icon name="FileText" size={16} className="text-primary flex-shrink-0" />
+                    <span className="text-sm font-semibold text-foreground break-words">{fileName}</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <a
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                    >
+                      <Icon name="Eye" size={14} />
+                      Просмотр
+                    </a>
+                    <a
+                      href={fileUrl}
+                      download
+                      className="flex items-center gap-1 text-xs font-semibold text-foreground/70 hover:text-foreground"
+                    >
+                      <Icon name="Download" size={14} />
+                      Скачать
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {payment.created_by_name && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Создал заявку</p>
