@@ -1150,7 +1150,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             })
 
         elif method == 'DELETE':
-            if not check_user_permission(conn, payload['user_id'], 'payments.delete'):
+            if not check_user_permission(conn, payload['user_id'], 'payments.remove'):
                 conn.close()
                 return response(403, {'error': 'Forbidden'})
             
@@ -1162,6 +1162,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(400, {'error': 'Payment ID is required'})
 
             is_admin = is_admin_user(conn, payload['user_id'])
+            cur_roles = conn.cursor(cursor_factory=RealDictCursor)
+            cur_roles.execute(f"""
+                SELECT r.name FROM {SCHEMA}.roles r
+                JOIN {SCHEMA}.user_roles ur ON r.id = ur.role_id
+                WHERE ur.user_id = %s
+            """, (payload['user_id'],))
+            _user_roles = [row['name'] for row in cur_roles.fetchall()]
+            cur_roles.close()
+            is_financier = 'Финансист' in _user_roles or 'Financier' in _user_roles
 
             cur.execute(f'SELECT created_by, status FROM {SCHEMA}.payments WHERE id = %s', (payment_id,))
             payment_row = cur.fetchone()
@@ -1170,12 +1179,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 conn.close()
                 return response(404, {'error': 'Платёж не найден'})
 
+            # Финансист может удалять только черновики (как и обычный пользователь),
+            # админ — в любом статусе.
             if not is_admin and payment_row['status'] != 'draft':
                 cur.close()
                 conn.close()
                 return response(403, {'error': 'Можно удалять только платежи со статусом "Черновик"'})
 
-            if not is_admin and payment_row['created_by'] != payload['user_id']:
+            # Удалять чужие платежи могут админ и финансист (только черновики у финансиста).
+            if not is_admin and not is_financier and payment_row['created_by'] != payload['user_id']:
                 cur.close()
                 conn.close()
                 return response(403, {'error': 'Вы можете удалять только свои платежи'})
