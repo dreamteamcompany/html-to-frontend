@@ -94,6 +94,10 @@ export const useCashPaymentForm = (onSuccess: () => void) => {
       toast({ title: 'Ошибка', description: 'Выберите категорию', variant: 'destructive' });
       return;
     }
+    if (!formData.department_id) {
+      toast({ title: 'Ошибка', description: 'Выберите отдел-заказчик', variant: 'destructive' });
+      return;
+    }
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       toast({ title: 'Ошибка', description: 'Укажите корректную сумму', variant: 'destructive' });
       return;
@@ -102,7 +106,7 @@ export const useCashPaymentForm = (onSuccess: () => void) => {
       toast({ title: 'Ошибка', description: 'Укажите дату оплаты', variant: 'destructive' });
       return;
     }
-    if (!formData.description) {
+    if (!formData.description || !formData.description.trim()) {
       toast({ title: 'Ошибка', description: 'Укажите назначение платежа', variant: 'destructive' });
       return;
     }

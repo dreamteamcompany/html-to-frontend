@@ -54,12 +54,32 @@ export const usePlannedPaymentForm = (
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.category_id || !formData.amount || !formData.description || !formData.planned_date) {
-      toast({
-        title: 'Ошибка',
-        description: 'Заполните обязательные поля: категория, сумма, описание, дата планирования',
-        variant: 'destructive',
-      });
+    if (!formData.service_id) {
+      toast({ title: 'Ошибка', description: 'Выберите сервис', variant: 'destructive' });
+      return;
+    }
+    if (!formData.category_id) {
+      toast({ title: 'Ошибка', description: 'Выберите категорию', variant: 'destructive' });
+      return;
+    }
+    if (!formData.legal_entity_id) {
+      toast({ title: 'Ошибка', description: 'Выберите юридическое лицо', variant: 'destructive' });
+      return;
+    }
+    if (!formData.department_id) {
+      toast({ title: 'Ошибка', description: 'Выберите отдел-заказчик', variant: 'destructive' });
+      return;
+    }
+    if (!formData.description || !formData.description.trim()) {
+      toast({ title: 'Ошибка', description: 'Укажите назначение платежа', variant: 'destructive' });
+      return;
+    }
+    if (!formData.amount) {
+      toast({ title: 'Ошибка', description: 'Укажите сумму', variant: 'destructive' });
+      return;
+    }
+    if (!formData.planned_date) {
+      toast({ title: 'Ошибка', description: 'Укажите дату планирования', variant: 'destructive' });
       return;
     }
 

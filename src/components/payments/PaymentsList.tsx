@@ -16,6 +16,7 @@ interface PaymentsListProps {
   onRevoke?: (paymentId: number) => void;
   onResubmit?: (paymentId: number) => void;
   onDelete?: (paymentId: number) => void;
+  onEdit?: (payment: Payment) => void;
   onPaymentClick?: (payment: Payment) => void;
   isPlannedPayments?: boolean;
   showApproveReject?: boolean;
@@ -32,6 +33,7 @@ const PaymentsList = ({
   onRevoke,
   onResubmit,
   onDelete,
+  onEdit,
   onPaymentClick,
   isPlannedPayments = false,
   showApproveReject = false,
@@ -44,7 +46,7 @@ const PaymentsList = ({
 
   const flags: PaymentActionFlags = { isPlannedPayments, showApproveReject, showRevoke, showResubmit };
   const handlers: PaymentActionHandlers = {
-    onApprove, onReject, onSubmitForApproval, onRevoke, onResubmit, onDelete, onPaymentClick,
+    onApprove, onReject, onSubmitForApproval, onRevoke, onResubmit, onDelete, onEdit, onPaymentClick,
   };
 
   return (

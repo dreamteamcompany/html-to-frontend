@@ -192,7 +192,7 @@ const PlannedPaymentForm = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="legal_entity_id">Юридическое лицо</Label>
+              <Label htmlFor="legal_entity_id">Юридическое лицо *</Label>
               <Select
                 value={formData.legal_entity_id || ''}
                 onValueChange={(value) =>
@@ -280,7 +280,7 @@ const PlannedPaymentForm = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="department_id">Отдел-заказчик</Label>
+              <Label htmlFor="department_id">Отдел-заказчик *</Label>
               <Select
                 value={formData.department_id || ''}
                 onValueChange={(value) =>
@@ -303,7 +303,7 @@ const PlannedPaymentForm = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="service_id">Сервис</Label>
+              <Label htmlFor="service_id">Сервис *</Label>
               <Select
                 value={formData.service_id || ''}
                 onValueChange={(value) =>

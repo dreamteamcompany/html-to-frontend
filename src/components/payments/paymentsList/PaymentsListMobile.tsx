@@ -23,7 +23,7 @@ const PaymentsListMobile = ({
   isCashApproved,
 }: PaymentsListMobileProps) => {
   const { isPlannedPayments, showApproveReject, showRevoke, showResubmit } = flags;
-  const { onApprove, onReject, onSubmitForApproval, onRevoke, onResubmit, onDelete, onPaymentClick } = handlers;
+  const { onApprove, onReject, onSubmitForApproval, onRevoke, onResubmit, onDelete, onEdit, onPaymentClick } = handlers;
 
   return (
     <div className="md:hidden space-y-3 p-4">
@@ -96,6 +96,16 @@ const PaymentsListMobile = ({
                   className="flex-1 px-3 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 font-medium"
                 >
                   Отправить на согласование
+                </button>
+              )}
+              {!isPlannedPayments && (!payment.status || payment.status === 'draft') && onEdit && !showApproveReject && !showRevoke && !showResubmit && (
+                <button
+                  onClick={() => onEdit(payment)}
+                  className="px-3 py-2 text-sm rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 font-semibold flex items-center gap-1 justify-center"
+                  title="Редактировать черновик"
+                >
+                  <Icon name="Pencil" size={16} />
+                  Редактировать
                 </button>
               )}
               {!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit && (

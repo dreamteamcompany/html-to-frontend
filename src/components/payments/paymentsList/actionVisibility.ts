@@ -7,6 +7,7 @@ export interface PaymentActionHandlers {
   onRevoke?: (paymentId: number) => void;
   onResubmit?: (paymentId: number) => void;
   onDelete?: (paymentId: number) => void;
+  onEdit?: (payment: Payment) => void;
   onPaymentClick?: (payment: Payment) => void;
 }
 
@@ -23,11 +24,12 @@ export const hasActionsForPayment = (
   handlers: PaymentActionHandlers,
 ): boolean => {
   const { isPlannedPayments, showApproveReject, showRevoke, showResubmit } = flags;
-  const { onSubmitForApproval, onDelete, onApprove, onReject, onRevoke, onResubmit, onPaymentClick } = handlers;
+  const { onSubmitForApproval, onDelete, onEdit, onApprove, onReject, onRevoke, onResubmit, onPaymentClick } = handlers;
 
   if (isPlannedPayments && onSubmitForApproval) return true;
   if (!isPlannedPayments && (!payment.status || payment.status === 'draft' || payment.status?.startsWith('pending_')) && onSubmitForApproval && !showApproveReject && !showRevoke && !showResubmit) return true;
   if (!isPlannedPayments && payment.status === 'draft' && onDelete && !showApproveReject && !showRevoke && !showResubmit) return true;
+  if (!isPlannedPayments && (!payment.status || payment.status === 'draft') && onEdit && !showApproveReject && !showRevoke && !showResubmit) return true;
   if (showApproveReject && onApprove) return true;
   if (showApproveReject && onReject) return true;
   if (showRevoke && onRevoke) return true;

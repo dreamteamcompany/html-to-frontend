@@ -160,7 +160,7 @@ const CashPaymentForm = ({ categories, customerDepartments, services, onSuccess 
 
               {/* Отдел-заказчик */}
               <div className="space-y-2">
-                <Label>Отдел-заказчик</Label>
+                <Label>Отдел-заказчик *</Label>
                 <SearchableSelect
                   options={departmentOptions}
                   value={formData.department_id}

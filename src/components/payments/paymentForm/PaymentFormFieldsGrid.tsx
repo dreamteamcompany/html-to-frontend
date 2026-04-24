@@ -71,7 +71,7 @@ const PaymentFormFieldsGrid = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Юридическое лицо</Label>
+          <Label>Юридическое лицо *</Label>
           <SearchableSelect
             options={legalEntityOptions}
             value={formData.legal_entity_id || ''}
@@ -93,7 +93,7 @@ const PaymentFormFieldsGrid = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Отдел-заказчик</Label>
+          <Label>Отдел-заказчик *</Label>
           <SearchableSelect
             options={departmentOptions}
             value={formData.department_id || ''}

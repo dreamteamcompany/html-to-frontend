@@ -2,8 +2,10 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { usePaymentsData } from '@/hooks/usePaymentsData';
 import { usePaymentForm } from '@/hooks/usePaymentForm';
 import { useAllPaymentsCache } from '@/contexts/AllPaymentsCacheContext';
+import { useAuth } from '@/contexts/AuthContext';
 import PaymentsList from '@/components/payments/PaymentsList';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
+import EditPaymentModal from '@/components/payments/EditPaymentModal';
 import PaymentsFilterPanel from '@/components/payments/PaymentsFilterPanel';
 import { usePaymentsFilter } from '@/hooks/usePaymentsFilter';
 import { Payment } from '@/types/payment';
@@ -19,7 +21,14 @@ interface MyPaymentsTabProps {
 
 const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled, onAfterSubmitForApproval }: MyPaymentsTabProps = {}) => {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const { refresh } = useAllPaymentsCache();
+  const { user } = useAuth();
+
+  const isFinancier = useMemo(
+    () => !!user?.roles?.some(r => r.name === 'Финансист' || r.name === 'Financier'),
+    [user]
+  );
 
   const {
     payments,
@@ -132,6 +141,7 @@ const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled, onAfterSubmitFor
         loading={loading}
         onSubmitForApproval={handleSubmitForApproval}
         onDelete={handleDelete}
+        onEdit={isFinancier ? setEditingPayment : undefined}
         onPaymentClick={setSelectedPayment}
       />
 
@@ -140,6 +150,17 @@ const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled, onAfterSubmitFor
         onClose={() => setSelectedPayment(null)}
         onSubmitForApproval={handleSubmitForApproval}
       />
+
+      {editingPayment && (
+        <EditPaymentModal
+          payment={editingPayment as unknown as import('@/components/payments/editPaymentTypes').EditPayment}
+          onClose={() => setEditingPayment(null)}
+          onSuccess={() => {
+            setEditingPayment(null);
+            handlePaymentSaved();
+          }}
+        />
+      )}
     </div>
   );
 };
