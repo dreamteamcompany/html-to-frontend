@@ -51,10 +51,40 @@ export const useInvoiceFileUpload = ({ token, onUrlReady, onToast, onAfterUpload
       });
       if (uploadRes.ok) {
         const { file_url } = await uploadRes.json();
-        if (file_url) onUrlReady(file_url);
+        if (file_url) {
+          onUrlReady(file_url);
+          onToast({
+            title: 'Файл счёта сохранён',
+            description: 'Документ прикреплён к платежу',
+          });
+        } else {
+          onToast({
+            title: 'Ошибка загрузки',
+            description: 'Сервер не вернул ссылку на файл. Попробуйте выбрать файл ещё раз.',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        let serverError = '';
+        try {
+          const errData = await uploadRes.json();
+          serverError = (errData && (errData.error || errData.message)) || '';
+        } catch {
+          /* non-JSON response */
+        }
+        onToast({
+          title: 'Не удалось сохранить файл',
+          description: serverError || `Ошибка сервера (${uploadRes.status}). Попробуйте ещё раз или выберите другой файл.`,
+          variant: 'destructive',
+        });
       }
     } catch (err) {
-      console.error('Direct upload failed');
+      console.error('Direct upload failed', err);
+      onToast({
+        title: 'Ошибка сети',
+        description: 'Не удалось загрузить файл. Проверьте подключение и попробуйте снова.',
+        variant: 'destructive',
+      });
     } finally {
       setIsUploadingInvoice(false);
     }
