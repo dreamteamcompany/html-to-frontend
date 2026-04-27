@@ -40,7 +40,8 @@ def handler(event: dict, context) -> dict:
     file_data = body.get('file')
     file_name = body.get('fileName', 'invoice.jpg')
     user_id = body.get('user_id')
-    upload_only = bool(body.get('upload_only'))
+    # Распознавание через Yandex GPT отключено — всегда работаем в режиме "только загрузка".
+    upload_only = True
 
     if not file_data:
         return resp(400, {'error': 'File data is required'})
