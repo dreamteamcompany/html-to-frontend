@@ -31,8 +31,9 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
   const [selectedPayment, setSelectedPayment] = useState<ExtendedPayment | null>(null);
   const [editingPayment, setEditingPayment] = useState<ExtendedPayment | null>(null);
 
-  // Кнопка «Отправить на повторное согласование» доступна только Финансисту и Администратору.
-  // Для CEO/Генерального директора и прочих ролей кнопка скрыта.
+  // Кнопки «Отправить на повторное согласование» и «Редактировать платёж»
+  // в отклонённых доступны только Финансисту и Администратору.
+  // Для CEO/Генерального директора и прочих ролей кнопки скрыты.
   const canResubmit = useMemo(
     () => !!user?.roles?.some(r =>
       r.name === 'Финансист' ||
@@ -42,6 +43,7 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
     ),
     [user]
   );
+  const canEditRejected = canResubmit;
 
   const payments = useMemo(() =>
     (allPayments as ExtendedPayment[]).filter(p => p.status === 'rejected'),
@@ -245,10 +247,10 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
         payment={selectedPayment}
         onClose={() => setSelectedPayment(null)}
         onSubmitForApproval={canResubmit ? handleResubmit : undefined}
-        onEdit={(payment) => {
+        onEdit={canEditRejected ? (payment) => {
           setEditingPayment(payment as ExtendedPayment);
           setSelectedPayment(null);
-        }}
+        } : undefined}
       />
 
       <EditPaymentModal
