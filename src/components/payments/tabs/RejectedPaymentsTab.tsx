@@ -12,6 +12,7 @@ import { invalidateMyPaymentsCache } from '@/hooks/usePaymentsData';
 import { exportTabPaymentsToExcel } from '@/utils/exportExcel';
 import PaymentsFilterPanel from '@/components/payments/PaymentsFilterPanel';
 import { usePaymentsFilter } from '@/hooks/usePaymentsFilter';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ExtendedPayment extends Payment {
   rejected_at?: string;
@@ -25,9 +26,22 @@ interface RejectedPaymentsTabProps {
 
 const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: RejectedPaymentsTabProps = {}) => {
   const { payments: allPayments, loading, refresh } = useAllPaymentsCache();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<ExtendedPayment | null>(null);
   const [editingPayment, setEditingPayment] = useState<ExtendedPayment | null>(null);
+
+  // Кнопка «Отправить на повторное согласование» доступна только Финансисту и Администратору.
+  // Для CEO/Генерального директора и прочих ролей кнопка скрыта.
+  const canResubmit = useMemo(
+    () => !!user?.roles?.some(r =>
+      r.name === 'Финансист' ||
+      r.name === 'Financier' ||
+      r.name === 'Администратор' ||
+      r.name === 'Admin'
+    ),
+    [user]
+  );
 
   const payments = useMemo(() =>
     (allPayments as ExtendedPayment[]).filter(p => p.status === 'rejected'),
@@ -208,15 +222,17 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
                       <div className="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1">Сумма платежа</div>
                       <div className="text-3xl font-extrabold text-primary">{formatAmount(payment.amount)}</div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleResubmit(payment.id);
-                      }}
-                      className="px-4 py-2 text-sm rounded bg-blue-500/15 hover:bg-blue-500/25 text-blue-800 dark:text-blue-300 font-semibold w-full lg:w-auto"
-                    >
-                      Отправить на повторное согласование
-                    </button>
+                    {canResubmit && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleResubmit(payment.id);
+                        }}
+                        className="px-4 py-2 text-sm rounded bg-blue-500/15 hover:bg-blue-500/25 text-blue-800 dark:text-blue-300 font-semibold w-full lg:w-auto"
+                      >
+                        Отправить на повторное согласование
+                      </button>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -228,7 +244,7 @@ const RejectedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Rejected
       <PaymentDetailsModal
         payment={selectedPayment}
         onClose={() => setSelectedPayment(null)}
-        onSubmitForApproval={handleResubmit}
+        onSubmitForApproval={canResubmit ? handleResubmit : undefined}
         onEdit={(payment) => {
           setEditingPayment(payment as ExtendedPayment);
           setSelectedPayment(null);
