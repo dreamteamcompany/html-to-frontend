@@ -13,6 +13,43 @@ export const useInvoiceFileUpload = ({ token, onUrlReady, onToast, onAfterUpload
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [invoicePreview, setInvoicePreview] = useState<string | null>(null);
   const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
+  const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
+
+  const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+  const MAX_SIZE_BYTES = 20 * 1024 * 1024;
+
+  const addAdditionalFiles = (files: File[]) => {
+    const accepted: File[] = [];
+    for (const file of files) {
+      const typeOk = ACCEPTED_TYPES.includes(file.type) || file.type === 'image/jpg';
+      if (!typeOk) {
+        onToast({
+          title: 'Неподдерживаемый формат',
+          description: `Файл «${file.name}» пропущен. Допустимы PDF, JPG, PNG.`,
+          variant: 'destructive',
+        });
+        continue;
+      }
+      if (file.size > MAX_SIZE_BYTES) {
+        onToast({
+          title: 'Файл слишком большой',
+          description: `«${file.name}» превышает 20 МБ и пропущен.`,
+          variant: 'destructive',
+        });
+        continue;
+      }
+      accepted.push(file);
+    }
+    if (accepted.length > 0) {
+      setAdditionalFiles(prev => [...prev, ...accepted]);
+    }
+  };
+
+  const removeAdditionalFile = (index: number) => {
+    setAdditionalFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const resetAdditional = () => setAdditionalFiles([]);
 
   const handleFileSelect = async (file: File | null) => {
     if (!file) {
@@ -100,6 +137,7 @@ export const useInvoiceFileUpload = ({ token, onUrlReady, onToast, onAfterUpload
   const resetFile = () => {
     setInvoiceFile(null);
     setInvoicePreview(null);
+    setAdditionalFiles([]);
   };
 
   return {
@@ -108,5 +146,9 @@ export const useInvoiceFileUpload = ({ token, onUrlReady, onToast, onAfterUpload
     isUploadingInvoice,
     handleFileSelect,
     resetFile,
+    additionalFiles,
+    addAdditionalFiles,
+    removeAdditionalFile,
+    resetAdditional,
   };
 };

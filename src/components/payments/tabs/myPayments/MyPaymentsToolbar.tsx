@@ -35,6 +35,9 @@ interface MyPaymentsToolbarProps {
   fileName?: string;
   fileType?: string;
   invoiceFileUrl?: string;
+  additionalFiles?: File[];
+  addAdditionalFiles?: (files: File[]) => void;
+  removeAdditionalFile?: (index: number) => void;
 
   // CashPayment
   handlePaymentSaved: () => void;
@@ -65,6 +68,9 @@ const MyPaymentsToolbar = ({
   fileName,
   fileType,
   invoiceFileUrl,
+  additionalFiles,
+  addAdditionalFiles,
+  removeAdditionalFile,
   handlePaymentSaved,
   loading,
   paymentsCount,
@@ -91,6 +97,9 @@ const MyPaymentsToolbar = ({
       fileName={fileName}
       fileType={fileType}
       invoiceFileUrl={invoiceFileUrl}
+      additionalFiles={additionalFiles}
+      addAdditionalFiles={addAdditionalFiles}
+      removeAdditionalFile={removeAdditionalFile}
     />
 
     <CashPaymentForm

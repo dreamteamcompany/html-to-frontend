@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/config/api';
+import FUNC2URL from '@/../backend/func2url.json';
 import { usePaymentFormState, CustomFieldDefinition } from './paymentForm/usePaymentFormState';
 import { useInvoiceFileUpload } from './paymentForm/useInvoiceFileUpload';
 import { useInvoiceOCR } from './paymentForm/useInvoiceOCR';
+import { fileToDataUrl } from './paymentForm/pdfUtils';
 import { validatePaymentForm } from './paymentForm/validators';
 
 export const usePaymentForm = (
@@ -35,6 +37,9 @@ export const usePaymentForm = (
     isUploadingInvoice,
     handleFileSelect,
     resetFile,
+    additionalFiles,
+    addAdditionalFiles,
+    removeAdditionalFile,
   } = useInvoiceFileUpload({
     token,
     onUrlReady: (file_url) => setFormData(prev => ({ ...prev, invoice_file_url: file_url })),
@@ -96,6 +101,59 @@ export const usePaymentForm = (
       });
 
       if (response.ok) {
+        let createdPaymentId: number | null = null;
+        try {
+          const data = await response.json();
+          createdPaymentId = data?.id ?? null;
+        } catch {
+          /* ответ без тела/JSON — пропускаем догрузку */
+        }
+
+        if (createdPaymentId && additionalFiles.length > 0) {
+          const uploadUrl = (FUNC2URL as Record<string, string>)['upload-presigned-url'];
+          let okCount = 0;
+          let failCount = 0;
+          for (const file of additionalFiles) {
+            try {
+              const base64 = await fileToDataUrl(file);
+              const upRes = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+                body: JSON.stringify({ file_name: file.name, file_type: file.type, file_data: base64 }),
+              });
+              if (!upRes.ok) { failCount++; continue; }
+              const { file_url } = await upRes.json();
+              if (!file_url) { failCount++; continue; }
+
+              const attachRes = await fetch(`${API_ENDPOINTS.paymentsApi}?action=invoice_files`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+                body: JSON.stringify({
+                  payment_id: createdPaymentId,
+                  sub_action: 'upload',
+                  file_url,
+                  file_name: file.name,
+                }),
+              });
+              if (attachRes.ok) okCount++; else failCount++;
+            } catch {
+              failCount++;
+            }
+          }
+          if (okCount > 0) {
+            toast({
+              title: 'Дополнительные файлы прикреплены',
+              description: `Добавлено файлов: ${okCount}${failCount ? `, не удалось: ${failCount}` : ''}`,
+            });
+          } else if (failCount > 0) {
+            toast({
+              title: 'Не все файлы прикреплены',
+              description: `Не удалось загрузить: ${failCount}. Платёж создан, файлы можно добавить через редактирование.`,
+              variant: 'destructive',
+            });
+          }
+        }
+
         toast({
           title: 'Успешно',
           description: 'Платёж добавлен',
@@ -137,5 +195,8 @@ export const usePaymentForm = (
     fileName: invoiceFile?.name,
     fileType: invoiceFile?.type,
     invoiceFileUrl: formData.invoice_file_url || '',
+    additionalFiles,
+    addAdditionalFiles,
+    removeAdditionalFile,
   };
 };

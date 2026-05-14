@@ -18,6 +18,9 @@ import {
 } from './editPaymentTypes';
 import EditPaymentFields from './EditPaymentFields';
 import EditPaymentDocuments from './EditPaymentDocuments';
+import InvoiceFilesManager, { MAX_INVOICE_FILES } from './InvoiceFilesManager';
+import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
+import { translateFetchError } from '@/utils/api';
 
 const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps) => {
   const { token } = useAuth();
@@ -44,6 +47,9 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
   const [loading, setLoading] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<PaymentDocument[]>([]);
+  const [isFilesBusy, setIsFilesBusy] = useState(false);
+  const [busyDocumentId, setBusyDocumentId] = useState<number | null>(null);
 
   useEffect(() => {
     if (payment) {
@@ -84,6 +90,9 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
 
     setFormData(data);
     setUploadedFileName(null);
+    setDocuments(Array.isArray(payment.documents) ? payment.documents : []);
+    setIsFilesBusy(false);
+    setBusyDocumentId(null);
   };
 
   const loadDictionaries = async () => {
@@ -113,6 +122,125 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
     } catch (error) {
       console.error('Failed to load dictionaries:', error);
     }
+  };
+
+  const uploadToStorage = async (file: File): Promise<string> => {
+    const uploadUrl = (FUNC2URL as Record<string, string>)['upload-presigned-url'];
+    if (!uploadUrl) throw new Error('Сервис загрузки недоступен');
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
+      reader.readAsDataURL(file);
+    });
+    const res = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+      body: JSON.stringify({ file_name: file.name, file_type: file.type, file_data: base64 }),
+    });
+    if (!res.ok) throw new Error('Ошибка загрузки файла в хранилище');
+    const data = await res.json();
+    if (!data.file_url) throw new Error('Сервер не вернул ссылку на файл');
+    return data.file_url as string;
+  };
+
+  const callInvoiceFiles = async (body: Record<string, unknown>) => {
+    if (!payment) throw new Error('Платёж не выбран');
+    const res = await fetch(`${API_ENDPOINTS.paymentsApi}?action=invoice_files`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+      body: JSON.stringify({ payment_id: payment.id, ...body }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Ошибка операции с файлом');
+    }
+    return res.json();
+  };
+
+  const handleAddInvoiceFile = async (file: File) => {
+    if (!payment) return;
+    if (documents.length >= MAX_INVOICE_FILES) {
+      toast({
+        title: 'Лимит',
+        description: `Достигнут лимит ${MAX_INVOICE_FILES} файлов на платёж`,
+        variant: 'destructive',
+      });
+      return;
+    }
+    setIsFilesBusy(true);
+    try {
+      const fileUrl = await uploadToStorage(file);
+      const data = await callInvoiceFiles({
+        sub_action: 'upload',
+        file_url: fileUrl,
+        file_name: file.name,
+      });
+      setDocuments(Array.isArray(data.documents) ? data.documents : []);
+      invalidatePaymentsCache();
+      toast({ title: 'Файл добавлен', description: `«${file.name}» прикреплён к платежу` });
+    } catch (e) {
+      toast({
+        title: 'Ошибка загрузки',
+        description: translateFetchError(e, 'Не удалось загрузить файл'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsFilesBusy(false);
+    }
+  };
+
+  const handleReplaceInvoiceFile = async (documentId: number, file: File) => {
+    setIsFilesBusy(true);
+    setBusyDocumentId(documentId);
+    try {
+      const fileUrl = await uploadToStorage(file);
+      const data = await callInvoiceFiles({
+        sub_action: 'replace',
+        document_id: documentId,
+        file_url: fileUrl,
+        file_name: file.name,
+      });
+      setDocuments(Array.isArray(data.documents) ? data.documents : []);
+      invalidatePaymentsCache();
+      toast({ title: 'Файл заменён', description: `Новый файл: «${file.name}»` });
+    } catch (e) {
+      toast({
+        title: 'Ошибка замены',
+        description: translateFetchError(e, 'Не удалось заменить файл'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsFilesBusy(false);
+      setBusyDocumentId(null);
+    }
+  };
+
+  const handleDeleteInvoiceFile = async (documentId: number) => {
+    setIsFilesBusy(true);
+    setBusyDocumentId(documentId);
+    try {
+      const data = await callInvoiceFiles({
+        sub_action: 'delete',
+        document_id: documentId,
+      });
+      setDocuments(Array.isArray(data.documents) ? data.documents : []);
+      invalidatePaymentsCache();
+      toast({ title: 'Файл удалён' });
+    } catch (e) {
+      toast({
+        title: 'Ошибка удаления',
+        description: translateFetchError(e, 'Не удалось удалить файл'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsFilesBusy(false);
+      setBusyDocumentId(null);
+    }
+  };
+
+  const handleFilesError = (message: string) => {
+    toast({ title: 'Файл не добавлен', description: message, variant: 'destructive' });
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -299,18 +427,32 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
             customFields={customFields}
           />
 
-          <EditPaymentDocuments
-            existingDocs={existingDocs}
-            currentFileUrl={currentFileUrl}
-            uploadedFileName={uploadedFileName}
-            displayFileName={displayFileName}
-            isUploadingFile={isUploadingFile}
-            onFileChange={handleFileChange}
-            onCancelNewFile={() => {
-              setFormData(prev => ({ ...prev, invoice_file_url: payment.invoice_file_url || '' }));
-              setUploadedFileName(null);
-            }}
-          />
+          {documents.length > 0 ? (
+            <InvoiceFilesManager
+              label="Документы (счёт)"
+              dropzoneText="Перетащите файлы счёта сюда или нажмите для выбора"
+              documents={documents}
+              isBusy={isFilesBusy}
+              busyDocumentId={busyDocumentId}
+              onUpload={handleAddInvoiceFile}
+              onReplace={handleReplaceInvoiceFile}
+              onDelete={handleDeleteInvoiceFile}
+              onError={handleFilesError}
+            />
+          ) : (
+            <EditPaymentDocuments
+              existingDocs={existingDocs}
+              currentFileUrl={currentFileUrl}
+              uploadedFileName={uploadedFileName}
+              displayFileName={displayFileName}
+              isUploadingFile={isUploadingFile}
+              onFileChange={handleFileChange}
+              onCancelNewFile={() => {
+                setFormData(prev => ({ ...prev, invoice_file_url: payment.invoice_file_url || '' }));
+                setUploadedFileName(null);
+              }}
+            />
+          )}
 
           <div className="flex gap-3 pt-4">
             <button

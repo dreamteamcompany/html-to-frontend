@@ -86,6 +86,9 @@ const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled, onAfterSubmitFor
     fileName,
     fileType,
     invoiceFileUrl,
+    additionalFiles,
+    addAdditionalFiles,
+    removeAdditionalFile,
   } = usePaymentForm(customFields, handlePaymentSaved, loadContractors, loadLegalEntities);
 
   const { handleSubmitForApproval, handleDelete } = usePaymentActions({
@@ -115,6 +118,9 @@ const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled, onAfterSubmitFor
         fileName={fileName}
         fileType={fileType}
         invoiceFileUrl={invoiceFileUrl}
+        additionalFiles={additionalFiles}
+        addAdditionalFiles={addAdditionalFiles}
+        removeAdditionalFile={removeAdditionalFile}
         handlePaymentSaved={handlePaymentSaved}
         loading={loading}
         paymentsCount={payments.length}

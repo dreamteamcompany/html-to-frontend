@@ -42,6 +42,9 @@ interface PaymentFormProps {
   fileName?: string;
   fileType?: string;
   invoiceFileUrl?: string;
+  additionalFiles?: File[];
+  addAdditionalFiles?: (files: File[]) => void;
+  removeAdditionalFile?: (index: number) => void;
 }
 
 const PaymentForm = ({
@@ -64,6 +67,9 @@ const PaymentForm = ({
   fileName,
   fileType,
   invoiceFileUrl,
+  additionalFiles,
+  addAdditionalFiles,
+  removeAdditionalFile,
 }: PaymentFormProps) => {
   const { hasPermission } = useAuth();
 
@@ -124,6 +130,9 @@ const PaymentForm = ({
             fileName={fileName}
             fileType={fileType}
             invoiceFileUrl={invoiceFileUrl}
+            additionalFiles={additionalFiles}
+            addAdditionalFiles={addAdditionalFiles}
+            removeAdditionalFile={removeAdditionalFile}
           />
           <PaymentFormFieldsGrid
             formData={formData}
