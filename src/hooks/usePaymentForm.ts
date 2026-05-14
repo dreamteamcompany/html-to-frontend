@@ -111,35 +111,40 @@ export const usePaymentForm = (
 
         if (createdPaymentId && additionalFiles.length > 0) {
           const uploadUrl = (FUNC2URL as Record<string, string>)['upload-presigned-url'];
+          const paymentId = createdPaymentId;
+
+          const uploadSingle = async (file: File): Promise<boolean> => {
+            const base64 = await fileToDataUrl(file);
+            const upRes = await fetch(uploadUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+              body: JSON.stringify({ file_name: file.name, file_type: file.type, file_data: base64 }),
+            });
+            if (!upRes.ok) return false;
+            const { file_url } = await upRes.json();
+            if (!file_url) return false;
+
+            const attachRes = await fetch(`${API_ENDPOINTS.paymentsApi}?action=invoice_files`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+              body: JSON.stringify({
+                payment_id: paymentId,
+                sub_action: 'upload',
+                file_url,
+                file_name: file.name,
+              }),
+            });
+            return attachRes.ok;
+          };
+
+          const results = await Promise.allSettled(additionalFiles.map(uploadSingle));
           let okCount = 0;
           let failCount = 0;
-          for (const file of additionalFiles) {
-            try {
-              const base64 = await fileToDataUrl(file);
-              const upRes = await fetch(uploadUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
-                body: JSON.stringify({ file_name: file.name, file_type: file.type, file_data: base64 }),
-              });
-              if (!upRes.ok) { failCount++; continue; }
-              const { file_url } = await upRes.json();
-              if (!file_url) { failCount++; continue; }
-
-              const attachRes = await fetch(`${API_ENDPOINTS.paymentsApi}?action=invoice_files`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
-                body: JSON.stringify({
-                  payment_id: createdPaymentId,
-                  sub_action: 'upload',
-                  file_url,
-                  file_name: file.name,
-                }),
-              });
-              if (attachRes.ok) okCount++; else failCount++;
-            } catch {
-              failCount++;
-            }
+          for (const r of results) {
+            if (r.status === 'fulfilled' && r.value) okCount++;
+            else failCount++;
           }
+
           if (okCount > 0) {
             toast({
               title: 'Дополнительные файлы прикреплены',
