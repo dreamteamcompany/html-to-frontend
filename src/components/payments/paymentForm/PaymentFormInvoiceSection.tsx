@@ -41,6 +41,7 @@ const PaymentFormInvoiceSection = ({
         fileName={fileName}
         fileType={fileType}
         existingFileUrl={!invoicePreview ? invoiceFileUrl : undefined}
+        onExtraFiles={addAdditionalFiles}
       />
 
       {hasPrimaryFile && addAdditionalFiles && removeAdditionalFile && (

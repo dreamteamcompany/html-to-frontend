@@ -12,9 +12,10 @@ interface InvoiceUploadProps {
   fileName?: string;
   fileType?: string;
   existingFileUrl?: string;
+  onExtraFiles?: (files: File[]) => void;
 }
 
-const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading, previewUrl, fileName, fileType, existingFileUrl }: InvoiceUploadProps) => {
+const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading, previewUrl, fileName, fileType, existingFileUrl, onExtraFiles }: InvoiceUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [replacing, setReplacing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,24 +36,34 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading,
     setIsDragging(false);
   };
 
+  const acceptFiles = (rawFiles: FileList | File[]) => {
+    const filtered = Array.from(rawFiles).filter(
+      (f) => f.type === 'application/pdf' || f.type.startsWith('image/'),
+    );
+    if (filtered.length === 0) return;
+    const [first, ...rest] = filtered;
+    onFileSelect(first);
+    if (rest.length > 0 && onExtraFiles) {
+      onExtraFiles(rest);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
 
     const files = e.dataTransfer.files;
-    if (files && files[0]) {
-      const file = files[0];
-      if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
-        onFileSelect(file);
-      }
+    if (files && files.length) {
+      acceptFiles(files);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files[0]) {
-      onFileSelect(files[0]);
+    if (files && files.length) {
+      acceptFiles(files);
     }
+    e.target.value = '';
   };
 
   const handleClick = () => {
@@ -89,6 +100,7 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading,
           ref={fileInputRef}
           type="file"
           accept="image/*,application/pdf"
+          multiple
           onChange={handleFileChange}
           className="hidden"
         />
@@ -181,9 +193,9 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading,
           <div className="space-y-3">
             <Icon name="Upload" size={48} className="mx-auto text-muted-foreground" />
             <div>
-              <p className="text-sm font-medium">Перетащите файл счёта сюда</p>
+              <p className="text-sm font-medium">Перетащите файлы счёта сюда</p>
               <p className="text-xs text-muted-foreground mt-1">
-                или нажмите для выбора (JPG, PNG, PDF)
+                или нажмите для выбора — можно выделить несколько (JPG, PNG, PDF)
               </p>
             </div>
           </div>
