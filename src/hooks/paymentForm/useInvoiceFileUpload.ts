@@ -1,6 +1,14 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import FUNC2URL from '@/../backend/func2url.json';
 import { fileToDataUrl } from './pdfUtils';
+
+export type AdditionalFileStatus = 'pending' | 'uploading' | 'attaching' | 'done' | 'error';
+
+export interface AdditionalFileProgress {
+  status: AdditionalFileStatus;
+  percent: number;
+  errorMessage?: string;
+}
 
 interface UseInvoiceFileUploadParams {
   token: string | null;
@@ -14,6 +22,22 @@ export const useInvoiceFileUpload = ({ token, onUrlReady, onToast, onAfterUpload
   const [invoicePreview, setInvoicePreview] = useState<string | null>(null);
   const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
   const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
+  const [additionalProgress, setAdditionalProgress] = useState<Record<number, AdditionalFileProgress>>({});
+
+  const setProgressFor = useCallback((index: number, patch: Partial<AdditionalFileProgress>) => {
+    setAdditionalProgress(prev => ({
+      ...prev,
+      [index]: {
+        status: prev[index]?.status ?? 'pending',
+        percent: prev[index]?.percent ?? 0,
+        ...patch,
+      },
+    }));
+  }, []);
+
+  const resetAdditionalProgress = useCallback(() => {
+    setAdditionalProgress({});
+  }, []);
 
   const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
   const MAX_SIZE_BYTES = 20 * 1024 * 1024;
@@ -47,9 +71,21 @@ export const useInvoiceFileUpload = ({ token, onUrlReady, onToast, onAfterUpload
 
   const removeAdditionalFile = (index: number) => {
     setAdditionalFiles(prev => prev.filter((_, i) => i !== index));
+    setAdditionalProgress(prev => {
+      const next: Record<number, AdditionalFileProgress> = {};
+      Object.entries(prev).forEach(([k, v]) => {
+        const i = Number(k);
+        if (i < index) next[i] = v;
+        else if (i > index) next[i - 1] = v;
+      });
+      return next;
+    });
   };
 
-  const resetAdditional = () => setAdditionalFiles([]);
+  const resetAdditional = () => {
+    setAdditionalFiles([]);
+    setAdditionalProgress({});
+  };
 
   const handleFileSelect = async (file: File | null) => {
     if (!file) {
@@ -138,6 +174,7 @@ export const useInvoiceFileUpload = ({ token, onUrlReady, onToast, onAfterUpload
     setInvoiceFile(null);
     setInvoicePreview(null);
     setAdditionalFiles([]);
+    setAdditionalProgress({});
   };
 
   return {
@@ -150,5 +187,8 @@ export const useInvoiceFileUpload = ({ token, onUrlReady, onToast, onAfterUpload
     addAdditionalFiles,
     removeAdditionalFile,
     resetAdditional,
+    additionalProgress,
+    setProgressFor,
+    resetAdditionalProgress,
   };
 };

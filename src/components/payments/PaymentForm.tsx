@@ -45,6 +45,7 @@ interface PaymentFormProps {
   additionalFiles?: File[];
   addAdditionalFiles?: (files: File[]) => void;
   removeAdditionalFile?: (index: number) => void;
+  additionalProgress?: Record<number, import('@/hooks/paymentForm/useInvoiceFileUpload').AdditionalFileProgress>;
 }
 
 const PaymentForm = ({
@@ -70,6 +71,7 @@ const PaymentForm = ({
   additionalFiles,
   addAdditionalFiles,
   removeAdditionalFile,
+  additionalProgress,
 }: PaymentFormProps) => {
   const { hasPermission } = useAuth();
 
@@ -133,6 +135,7 @@ const PaymentForm = ({
             additionalFiles={additionalFiles}
             addAdditionalFiles={addAdditionalFiles}
             removeAdditionalFile={removeAdditionalFile}
+            additionalProgress={additionalProgress}
           />
           <PaymentFormFieldsGrid
             formData={formData}

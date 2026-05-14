@@ -89,6 +89,7 @@ const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled, onAfterSubmitFor
     additionalFiles,
     addAdditionalFiles,
     removeAdditionalFile,
+    additionalProgress,
   } = usePaymentForm(customFields, handlePaymentSaved, loadContractors, loadLegalEntities);
 
   const { handleSubmitForApproval, handleDelete } = usePaymentActions({
@@ -121,6 +122,7 @@ const MyPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled, onAfterSubmitFor
         additionalFiles={additionalFiles}
         addAdditionalFiles={addAdditionalFiles}
         removeAdditionalFile={removeAdditionalFile}
+        additionalProgress={additionalProgress}
         handlePaymentSaved={handlePaymentSaved}
         loading={loading}
         paymentsCount={payments.length}

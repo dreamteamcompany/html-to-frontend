@@ -40,6 +40,9 @@ export const usePaymentForm = (
     additionalFiles,
     addAdditionalFiles,
     removeAdditionalFile,
+    additionalProgress,
+    setProgressFor,
+    resetAdditionalProgress,
   } = useInvoiceFileUpload({
     token,
     onUrlReady: (file_url) => setFormData(prev => ({ ...prev, invoice_file_url: file_url })),
@@ -113,31 +116,98 @@ export const usePaymentForm = (
           const uploadUrl = (FUNC2URL as Record<string, string>)['upload-presigned-url'];
           const paymentId = createdPaymentId;
 
-          const uploadSingle = async (file: File): Promise<boolean> => {
-            const base64 = await fileToDataUrl(file);
-            const upRes = await fetch(uploadUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
-              body: JSON.stringify({ file_name: file.name, file_type: file.type, file_data: base64 }),
-            });
-            if (!upRes.ok) return false;
-            const { file_url } = await upRes.json();
-            if (!file_url) return false;
+          // Сбрасываем прошлые статусы (если был повтор) и ставим всем «в очереди»
+          resetAdditionalProgress();
+          additionalFiles.forEach((_, i) => {
+            setProgressFor(i, { status: 'pending', percent: 0, errorMessage: undefined });
+          });
 
-            const attachRes = await fetch(`${API_ENDPOINTS.paymentsApi}?action=invoice_files`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
-              body: JSON.stringify({
-                payment_id: paymentId,
-                sub_action: 'upload',
-                file_url,
+          const xhrSendBase64 = (index: number, file: File, base64: string): Promise<string> =>
+            new Promise((resolve, reject) => {
+              const xhr = new XMLHttpRequest();
+              xhr.open('POST', uploadUrl, true);
+              xhr.setRequestHeader('Content-Type', 'application/json');
+              xhr.setRequestHeader('X-Auth-Token', token || '');
+
+              xhr.upload.onprogress = (evt) => {
+                if (evt.lengthComputable) {
+                  const percent = Math.min(99, Math.round((evt.loaded / evt.total) * 100));
+                  setProgressFor(index, { status: 'uploading', percent });
+                }
+              };
+              xhr.upload.onloadstart = () => {
+                setProgressFor(index, { status: 'uploading', percent: 1 });
+              };
+              xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  try {
+                    const data = JSON.parse(xhr.responseText || '{}');
+                    if (data.file_url) {
+                      setProgressFor(index, { status: 'attaching', percent: 100 });
+                      resolve(data.file_url as string);
+                    } else {
+                      reject(new Error('Сервер не вернул ссылку'));
+                    }
+                  } catch (e) {
+                    reject(e instanceof Error ? e : new Error('Ошибка разбора ответа'));
+                  }
+                } else {
+                  reject(new Error(`Ошибка сервера (${xhr.status})`));
+                }
+              };
+              xhr.onerror = () => reject(new Error('Ошибка сети'));
+              xhr.onabort = () => reject(new Error('Загрузка прервана'));
+
+              xhr.send(JSON.stringify({
                 file_name: file.name,
-              }),
+                file_type: file.type,
+                file_data: base64,
+              }));
             });
-            return attachRes.ok;
+
+          const xhrUpload = async (index: number, file: File): Promise<string> => {
+            const base64 = await fileToDataUrl(file);
+            return xhrSendBase64(index, file, base64);
           };
 
-          const results = await Promise.allSettled(additionalFiles.map(uploadSingle));
+          const uploadSingle = async (index: number, file: File): Promise<boolean> => {
+            try {
+              const fileUrl = await xhrUpload(index, file);
+              const attachRes = await fetch(`${API_ENDPOINTS.paymentsApi}?action=invoice_files`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token || '' },
+                body: JSON.stringify({
+                  payment_id: paymentId,
+                  sub_action: 'upload',
+                  file_url: fileUrl,
+                  file_name: file.name,
+                }),
+              });
+              if (attachRes.ok) {
+                setProgressFor(index, { status: 'done', percent: 100 });
+                return true;
+              }
+              let serverError = '';
+              try {
+                const errData = await attachRes.json();
+                serverError = (errData && (errData.error || errData.message)) || '';
+              } catch { /* empty */ }
+              setProgressFor(index, {
+                status: 'error',
+                percent: 100,
+                errorMessage: serverError || `Ошибка прикрепления (${attachRes.status})`,
+              });
+              return false;
+            } catch (err) {
+              const message = err instanceof Error ? err.message : 'Не удалось загрузить файл';
+              setProgressFor(index, { status: 'error', percent: 0, errorMessage: message });
+              return false;
+            }
+          };
+
+          const results = await Promise.allSettled(
+            additionalFiles.map((file, i) => uploadSingle(i, file)),
+          );
           let okCount = 0;
           let failCount = 0;
           for (const r of results) {
@@ -203,5 +273,7 @@ export const usePaymentForm = (
     additionalFiles,
     addAdditionalFiles,
     removeAdditionalFile,
+    additionalProgress,
+    resetAdditionalProgress,
   };
 };

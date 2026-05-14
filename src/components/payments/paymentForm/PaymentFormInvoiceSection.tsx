@@ -1,5 +1,6 @@
 import InvoiceUpload from '../InvoiceUpload';
 import AdditionalInvoiceFiles from './AdditionalInvoiceFiles';
+import type { AdditionalFileProgress } from '@/hooks/paymentForm/useInvoiceFileUpload';
 
 interface PaymentFormInvoiceSectionProps {
   handleFileSelect: (file: File | null) => void;
@@ -13,6 +14,7 @@ interface PaymentFormInvoiceSectionProps {
   additionalFiles?: File[];
   addAdditionalFiles?: (files: File[]) => void;
   removeAdditionalFile?: (index: number) => void;
+  additionalProgress?: Record<number, AdditionalFileProgress>;
 }
 
 const PaymentFormInvoiceSection = ({
@@ -27,6 +29,7 @@ const PaymentFormInvoiceSection = ({
   additionalFiles,
   addAdditionalFiles,
   removeAdditionalFile,
+  additionalProgress,
 }: PaymentFormInvoiceSectionProps) => {
   const hasPrimaryFile = !!invoicePreview || !!invoiceFileUrl;
 
@@ -50,6 +53,7 @@ const PaymentFormInvoiceSection = ({
           onAdd={addAdditionalFiles}
           onRemove={removeAdditionalFile}
           disabled={isUploadingInvoice || isProcessingInvoice}
+          progress={additionalProgress}
         />
       )}
     </div>

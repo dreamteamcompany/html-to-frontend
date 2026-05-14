@@ -38,6 +38,7 @@ interface MyPaymentsToolbarProps {
   additionalFiles?: File[];
   addAdditionalFiles?: (files: File[]) => void;
   removeAdditionalFile?: (index: number) => void;
+  additionalProgress?: Record<number, import('@/hooks/paymentForm/useInvoiceFileUpload').AdditionalFileProgress>;
 
   // CashPayment
   handlePaymentSaved: () => void;
@@ -71,6 +72,7 @@ const MyPaymentsToolbar = ({
   additionalFiles,
   addAdditionalFiles,
   removeAdditionalFile,
+  additionalProgress,
   handlePaymentSaved,
   loading,
   paymentsCount,
@@ -100,6 +102,7 @@ const MyPaymentsToolbar = ({
       additionalFiles={additionalFiles}
       addAdditionalFiles={addAdditionalFiles}
       removeAdditionalFile={removeAdditionalFile}
+      additionalProgress={additionalProgress}
     />
 
     <CashPaymentForm
