@@ -12,9 +12,10 @@ interface InvoiceUploadProps {
   fileName?: string;
   fileType?: string;
   existingFileUrl?: string;
+  onExtraFiles?: (files: File[]) => void;
 }
 
-const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading, previewUrl, fileName, fileType, existingFileUrl }: InvoiceUploadProps) => {
+const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading, previewUrl, fileName, fileType, existingFileUrl, onExtraFiles }: InvoiceUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [replacing, setReplacing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,11 +36,27 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading,
     setIsDragging(false);
   };
 
-  const pickFirstFile = (rawFiles: FileList | File[]): File | null => {
+  const splitFiles = (rawFiles: FileList | File[]): { first: File | null; rest: File[] } => {
     const filtered = Array.from(rawFiles).filter(
       (f) => f.type === 'application/pdf' || f.type.startsWith('image/'),
     );
-    return filtered[0] || null;
+    if (filtered.length === 0) return { first: null, rest: [] };
+    const [first, ...rest] = filtered;
+    return { first, rest };
+  };
+
+  const dispatchFiles = (rawFiles: FileList | File[]) => {
+    const { first, rest } = splitFiles(rawFiles);
+    if (!first) return;
+    onFileSelect(first);
+    // Дополнительные файлы передаём отложенно, чтобы не смешивать setState
+    // первого файла (основная загрузка/OCR) с обновлением списка доп. файлов
+    // в одном цикле обновлений React — это убирает гонку, из-за которой
+    // ранее ломалась отправка формы.
+    if (rest.length > 0 && onExtraFiles) {
+      const extras = rest;
+      setTimeout(() => onExtraFiles(extras), 0);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -48,16 +65,14 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading,
 
     const files = e.dataTransfer.files;
     if (files && files.length) {
-      const first = pickFirstFile(files);
-      if (first) onFileSelect(first);
+      dispatchFiles(files);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length) {
-      const first = pickFirstFile(files);
-      if (first) onFileSelect(first);
+      dispatchFiles(files);
     }
   };
 
@@ -95,6 +110,7 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading,
           ref={fileInputRef}
           type="file"
           accept="image/*,application/pdf"
+          multiple
           onChange={handleFileChange}
           className="hidden"
         />
@@ -187,9 +203,9 @@ const InvoiceUpload = ({ onFileSelect, onExtractData, isProcessing, isUploading,
           <div className="space-y-3">
             <Icon name="Upload" size={48} className="mx-auto text-muted-foreground" />
             <div>
-              <p className="text-sm font-medium">Перетащите файл счёта сюда</p>
+              <p className="text-sm font-medium">Перетащите файлы счёта сюда</p>
               <p className="text-xs text-muted-foreground mt-1">
-                или нажмите для выбора (JPG, PNG, PDF)
+                или нажмите для выбора — можно выделить несколько (JPG, PNG, PDF)
               </p>
             </div>
           </div>
