@@ -54,11 +54,6 @@ export const usePaymentForm = (
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[PaymentForm] submit', {
-      isUploadingInvoice,
-      additionalFiles: additionalFiles.length,
-      formKeys: Object.keys(formData),
-    });
 
     if (isUploadingInvoice) {
       toast({
@@ -70,7 +65,6 @@ export const usePaymentForm = (
 
     const validationError = validatePaymentForm(formData);
     if (validationError) {
-      console.warn('[PaymentForm] validation failed', validationError);
       toast({ ...validationError, variant: 'destructive' });
       return;
     }
