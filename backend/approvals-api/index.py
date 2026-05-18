@@ -260,8 +260,28 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
     cur.close()
     return response(200, {'payments': payments})
 
-def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
-    """Отправляет сообщение от бота в Битрикс24 пользователю"""
+def _save_bitrix_message_link(conn, bitrix_user_id: str, bitrix_message_id: str, payment_id: int, purpose: str = 'approval'):
+    """Сохраняет связку сообщения Битрикса с платежом для последующей обработки нажатий/reply."""
+    if not bitrix_message_id or not bitrix_user_id:
+        return
+    try:
+        cur = conn.cursor()
+        cur.execute(f"""
+            INSERT INTO {SCHEMA}.bitrix_message_links (bitrix_user_id, bitrix_message_id, payment_id, purpose)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (bitrix_user_id, bitrix_message_id) DO NOTHING
+        """, (str(bitrix_user_id), str(bitrix_message_id), payment_id, purpose))
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        log(f'[BITRIX-BOT] Failed to save message link: {e}')
+
+def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int, with_actions: bool = False, conn=None):
+    """Отправляет сообщение от бота в Битрикс24 пользователю.
+
+    with_actions=True добавляет кнопки Согласовать / Отклонить / Комментарий
+    и сохраняет message_id в БД для последующей обработки нажатий.
+    """
     webhook_url = os.environ.get('BITRIX_WEBHOOK_URL', '').rstrip('/')
     bot_id = os.environ.get('BITRIX_BOT_ID', '')
     bot_client_id = os.environ.get('BITRIX_BOT_CLIENT_ID', '')
@@ -272,16 +292,52 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
 
     payment_url = f'{APP_BASE_URL}/payments?payment_id={payment_id}&auto_bitrix=1'
 
-    keyboard = json.dumps([
-        {
-            'TEXT': 'Перейти к платежу',
-            'LINK': payment_url,
-            'BG_COLOR': '#29619b',
-            'TEXT_COLOR': '#ffffff',
-            'DISPLAY': 'LINE',
-        }
-    ])
+    if with_actions:
+        keyboard_buttons = [
+            {
+                'TEXT': '✅ Согласовать',
+                'COMMAND': 'approve',
+                'COMMAND_PARAMS': f'payment_id={payment_id}',
+                'BG_COLOR': '#25b770',
+                'TEXT_COLOR': '#ffffff',
+                'DISPLAY': 'LINE',
+            },
+            {
+                'TEXT': '❌ Отклонить',
+                'COMMAND': 'reject',
+                'COMMAND_PARAMS': f'payment_id={payment_id}',
+                'BG_COLOR': '#d94f4f',
+                'TEXT_COLOR': '#ffffff',
+                'DISPLAY': 'LINE',
+            },
+            {
+                'TEXT': '💬 Комментарий',
+                'COMMAND': 'comment',
+                'COMMAND_PARAMS': f'payment_id={payment_id}',
+                'BG_COLOR': '#7a7a7a',
+                'TEXT_COLOR': '#ffffff',
+                'DISPLAY': 'LINE',
+            },
+            {
+                'TEXT': 'Перейти к платежу',
+                'LINK': payment_url,
+                'BG_COLOR': '#29619b',
+                'TEXT_COLOR': '#ffffff',
+                'DISPLAY': 'LINE',
+            },
+        ]
+    else:
+        keyboard_buttons = [
+            {
+                'TEXT': 'Перейти к платежу',
+                'LINK': payment_url,
+                'BG_COLOR': '#29619b',
+                'TEXT_COLOR': '#ffffff',
+                'DISPLAY': 'LINE',
+            }
+        ]
 
+    keyboard = json.dumps(keyboard_buttons)
     fallback_message = f"{message}\n[url={payment_url}]Перейти к платежу[/url]"
 
     if bot_id:
@@ -312,7 +368,10 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
                 resp = urllib.request.urlopen(req, timeout=10)
                 result = json.loads(resp.read().decode())
                 log(f'[BITRIX-BOT] imbot.message.add attempt {idx+1} to user {bitrix_user_id}: {result}')
-                if result.get('result'):
+                msg_id = result.get('result')
+                if msg_id:
+                    if with_actions and conn is not None:
+                        _save_bitrix_message_link(conn, bitrix_user_id, str(msg_id), payment_id, 'approval')
                     return
             except urllib.error.HTTPError as e:
                 error_body = ''
@@ -336,7 +395,10 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int):
         resp3 = urllib.request.urlopen(req3, timeout=10)
         result3 = json.loads(resp3.read().decode())
         log(f'[BITRIX-BOT] im.message.add to user {bitrix_user_id}: {result3}')
-        if result3.get('result'):
+        msg_id3 = result3.get('result')
+        if msg_id3:
+            if with_actions and conn is not None:
+                _save_bitrix_message_link(conn, bitrix_user_id, str(msg_id3), payment_id, 'approval')
             return
     except Exception as e:
         log(f'[BITRIX-BOT] im.message.add failed for user {bitrix_user_id}: {e}')
@@ -450,10 +512,11 @@ def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int,
     log(f'[BITRIX-BOT] Recipients for action={action}: {recipients_bitrix_ids}')
 
     seen = set()
+    with_actions = (action == 'submit')
     for bx_id in recipients_bitrix_ids:
         if bx_id not in seen:
             seen.add(bx_id)
-            send_bitrix_bot_message(bx_id, msg, payment_id)
+            send_bitrix_bot_message(bx_id, msg, payment_id, with_actions=with_actions, conn=conn)
 
 
 def create_approval_notifications(conn, payment_id: int, action: str, actor_id: int):

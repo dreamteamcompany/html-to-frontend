@@ -1,0 +1,40 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Unknown event ignored",
+      "method": "POST",
+      "path": "/",
+      "headers": {"Content-Type": "application/json"},
+      "body": {"event": "ONUNKNOWN", "data": {}},
+      "expectedStatus": 200,
+      "expectedBody": {"ignored": true},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Command without payment_id",
+      "method": "POST",
+      "path": "/",
+      "headers": {"Content-Type": "application/json"},
+      "body": {"event": "ONIMCOMMANDADD", "data": {"COMMAND": "approve", "USER_ID": "999999"}},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": false},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Message without user mapping ignored",
+      "method": "POST",
+      "path": "/",
+      "headers": {"Content-Type": "application/json"},
+      "body": {"event": "ONIMBOTMESSAGEADD", "data": {"FROM_USER_ID": "999999", "MESSAGE": "+"}},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": false},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
