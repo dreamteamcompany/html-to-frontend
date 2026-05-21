@@ -17,7 +17,6 @@ import {
   PaymentDocument,
 } from './editPaymentTypes';
 import EditPaymentFields from './EditPaymentFields';
-import EditPaymentDocuments from './EditPaymentDocuments';
 import InvoiceFilesManager, { MAX_INVOICE_FILES } from './InvoiceFilesManager';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { translateFetchError } from '@/utils/api';
@@ -90,7 +89,19 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
 
     setFormData(data);
     setUploadedFileName(null);
-    setDocuments(Array.isArray(payment.documents) ? payment.documents : []);
+    const initialDocs: PaymentDocument[] = Array.isArray(payment.documents) && payment.documents.length > 0
+      ? payment.documents
+      : payment.invoice_file_url
+        ? [{
+            id: 0,
+            payment_id: payment.id,
+            file_name: payment.invoice_file_url.split('/').pop()?.split('_').slice(2).join('_') || 'Счёт',
+            file_url: payment.invoice_file_url,
+            document_type: 'invoice',
+            uploaded_at: '',
+          }]
+        : [];
+    setDocuments(initialDocs);
     setIsFilesBusy(false);
     setBusyDocumentId(null);
   };
@@ -385,23 +396,6 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
 
   if (!payment) return null;
 
-  const existingDocs: PaymentDocument[] = payment.documents && payment.documents.length > 0
-    ? payment.documents
-    : payment.invoice_file_url
-      ? [{
-          id: 0,
-          payment_id: payment.id,
-          file_name: payment.invoice_file_url.split('/').pop()?.split('_').slice(2).join('_') || 'Счёт',
-          file_url: payment.invoice_file_url,
-          document_type: 'invoice',
-          uploaded_at: '',
-        }]
-      : [];
-
-  const currentFileUrl = formData.invoice_file_url;
-  const displayFileName = uploadedFileName
-    || (currentFileUrl ? currentFileUrl.split('/').pop()?.split('_').slice(2).join('_') || currentFileUrl.split('/').pop() : null);
-
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-card border border-white/10 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -427,32 +421,17 @@ const EditPaymentModal = ({ payment, onClose, onSuccess }: EditPaymentModalProps
             customFields={customFields}
           />
 
-          {documents.length > 0 ? (
-            <InvoiceFilesManager
-              label="Документы (счёт)"
-              dropzoneText="Перетащите файлы счёта сюда или нажмите для выбора"
-              documents={documents}
-              isBusy={isFilesBusy}
-              busyDocumentId={busyDocumentId}
-              onUpload={handleAddInvoiceFile}
-              onReplace={handleReplaceInvoiceFile}
-              onDelete={handleDeleteInvoiceFile}
-              onError={handleFilesError}
-            />
-          ) : (
-            <EditPaymentDocuments
-              existingDocs={existingDocs}
-              currentFileUrl={currentFileUrl}
-              uploadedFileName={uploadedFileName}
-              displayFileName={displayFileName}
-              isUploadingFile={isUploadingFile}
-              onFileChange={handleFileChange}
-              onCancelNewFile={() => {
-                setFormData(prev => ({ ...prev, invoice_file_url: payment.invoice_file_url || '' }));
-                setUploadedFileName(null);
-              }}
-            />
-          )}
+          <InvoiceFilesManager
+            label="Документы (счёт)"
+            dropzoneText="Перетащите файлы счёта сюда или нажмите для выбора"
+            documents={documents}
+            isBusy={isFilesBusy}
+            busyDocumentId={busyDocumentId}
+            onUpload={handleAddInvoiceFile}
+            onReplace={handleReplaceInvoiceFile}
+            onDelete={handleDeleteInvoiceFile}
+            onError={handleFilesError}
+          />
 
           <div className="flex gap-3 pt-4">
             <button
