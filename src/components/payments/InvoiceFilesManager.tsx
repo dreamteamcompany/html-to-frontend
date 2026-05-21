@@ -98,17 +98,22 @@ const InvoiceFilesManager = ({
   };
 
   const onReplaceChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const filesList = e.target.files;
+    const files = filesList ? Array.from(filesList) : [];
     const docId = replacingId;
     if (replaceInputRef.current) replaceInputRef.current.value = '';
     setReplacingId(null);
-    if (!file || !docId) return;
-    const err = validateFile(file);
+    if (!files.length || !docId) return;
+    const [firstFile, ...restFiles] = files;
+    const err = validateFile(firstFile);
     if (err) {
       onError?.(err);
-      return;
+    } else {
+      await onReplace(docId, firstFile);
     }
-    await onReplace(docId, file);
+    if (restFiles.length) {
+      await handleAddFiles(restFiles);
+    }
   };
 
   const handleDelete = (documentId: number) => {
@@ -135,6 +140,7 @@ const InvoiceFilesManager = ({
         ref={replaceInputRef}
         type="file"
         accept={ACCEPT_ATTR}
+        multiple
         onChange={onReplaceChange}
         className="hidden"
       />
