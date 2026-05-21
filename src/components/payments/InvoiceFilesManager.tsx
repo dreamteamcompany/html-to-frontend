@@ -3,7 +3,7 @@ import Icon from '@/components/ui/icon';
 import { Label } from '@/components/ui/label';
 import { PaymentDocument } from './ApprovedPaymentInfo';
 
-export const MAX_INVOICE_FILES = 10;
+export const MAX_INVOICE_FILES = 25;
 const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const ACCEPT_ATTR = '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png';
 const MAX_SIZE_BYTES = 20 * 1024 * 1024;

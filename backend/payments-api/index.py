@@ -759,7 +759,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'receipts': receipts,
                 })
 
-            # Отдельное действие: работа с файлами счёта/чека платежа (до 10 шт., все форматы)
+            # Отдельное действие: работа с файлами счёта/чека платежа (до 25 шт., все форматы)
             if action == 'invoice_files':
                 try:
                     body = json.loads(event.get('body', '{}'))
@@ -919,10 +919,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 )
                 cnt_row = cur.fetchone()
                 current_count = int(cnt_row['cnt']) if cnt_row else 0
-                if current_count >= 10:
+                if current_count >= 25:
                     cur.close()
                     conn.close()
-                    return response(400, {'error': 'Достигнут лимит: не более 10 файлов на платёж'})
+                    return response(400, {'error': 'Достигнут лимит: не более 25 файлов на платёж'})
 
                 new_name = derive_file_name(file_url, file_name_in)
                 now = datetime.now()
