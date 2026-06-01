@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "Привязка обработчика бота",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "callback_url": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
