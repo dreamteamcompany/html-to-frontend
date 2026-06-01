@@ -301,6 +301,8 @@ def handle_command_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
     payment_id = _extract_payment_id_from_params(params_raw)
     bitrix_user_id = str(payload.get('USER_ID') or payload.get('FROM_USER_ID') or payload.get('user_id') or '')
 
+    log(f'[CALLBACK] command keys={list(payload.keys())[:20]} command={command!r} payment_id={payment_id} user={bitrix_user_id!r} params_raw={params_raw!r}')
+
     if not bitrix_user_id or not command or not payment_id:
         return response(200, {'ok': False, 'reason': 'missing_fields'})
 
@@ -405,7 +407,7 @@ def handler(event: dict, context) -> dict:
     event_name = (body.get('event') or body.get('EVENT') or '').upper()
     payload = _get_payload(body)
 
-    log(f'[CALLBACK] event={event_name} keys={list(body.keys())[:10]}')
+    log(f'[CALLBACK] event={event_name} keys={list(body.keys())[:10]} payload_keys={list(payload.keys())[:20] if isinstance(payload, dict) else payload}')
 
     conn = psycopg2.connect(DSN)
     try:
