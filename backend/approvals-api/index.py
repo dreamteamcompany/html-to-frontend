@@ -295,6 +295,15 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int, 
     if with_actions:
         keyboard_buttons = [
             {
+                'TEXT': '✅✅✅  СОГЛАСОВАТЬ ВСЕ ПЛАТЕЖИ  ✅✅✅',
+                'COMMAND': 'approve_all',
+                'COMMAND_PARAMS': 'all=1',
+                'BG_COLOR': '#0b8a3e',
+                'TEXT_COLOR': '#ffffff',
+                'DISPLAY': 'BLOCK',
+            },
+            {'TYPE': 'NEWLINE'},
+            {
                 'TEXT': '✅ Согласовать',
                 'COMMAND': 'approve',
                 'COMMAND_PARAMS': f'payment_id={payment_id}',

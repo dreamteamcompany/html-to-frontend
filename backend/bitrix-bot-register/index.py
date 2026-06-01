@@ -125,6 +125,7 @@ def handler(event: Dict[str, Any], context) -> Dict[str, Any]:
         ('approve', 'Согласовать платёж'),
         ('reject', 'Отклонить платёж'),
         ('comment', 'Оставить комментарий к платежу'),
+        ('approve_all', 'Согласовать все платежи'),
     ]
     command_results = {}
     for cmd, title in commands:

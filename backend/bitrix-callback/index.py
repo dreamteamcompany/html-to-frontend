@@ -227,6 +227,22 @@ def _approve_or_reject(conn, payment_id: int, user_id: int, action: str) -> Dict
     return {'ok': True}
 
 
+def _approve_all_pending(conn, user_id: int) -> Dict[str, Any]:
+    """Согласует все платежи, ожидающие согласования CEO (status = 'pending_ceo')."""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(f"SELECT id FROM {SCHEMA}.payments WHERE status = 'pending_ceo' ORDER BY id")
+    rows = cur.fetchall()
+    cur.close()
+
+    payment_ids = [r['id'] for r in rows]
+    approved = 0
+    for pid in payment_ids:
+        result = _approve_or_reject(conn, pid, user_id, 'approve')
+        if result.get('ok'):
+            approved += 1
+    return {'ok': True, 'approved': approved, 'total': len(payment_ids)}
+
+
 def _add_payment_comment(conn, payment_id: int, user_id: int, text: str) -> None:
     if not text or not text.strip():
         return
@@ -348,7 +364,9 @@ def handle_command_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
 
     log(f'[CALLBACK] command keys={list(payload.keys())[:20]} command={command!r} payment_id={payment_id} user={bitrix_user_id!r} params_raw={params_raw!r}')
 
-    if not bitrix_user_id or not command or not payment_id:
+    is_bulk = command == 'approve_all'
+
+    if not bitrix_user_id or not command or (not payment_id and not is_bulk):
         return response(200, {'ok': False, 'reason': 'missing_fields'})
 
     user = _find_user_by_bitrix_id(conn, bitrix_user_id)
@@ -359,6 +377,14 @@ def handle_command_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
     if not _user_has_role(conn, user['id'], ('CEO', 'Генеральный директор', 'Администратор', 'Admin')):
         _send_bot_text(bitrix_user_id, 'У вас нет прав на согласование платежей.')
         return response(200, {'ok': False, 'reason': 'forbidden'})
+
+    if command == 'approve_all':
+        result = _approve_all_pending(conn, user['id'])
+        if result['total'] == 0:
+            _send_bot_text(bitrix_user_id, 'Нет платежей, ожидающих согласования.')
+        else:
+            _send_bot_text(bitrix_user_id, f"✅ Согласовано платежей: {result['approved']} из {result['total']}.")
+        return response(200, {'ok': True, 'approved': result['approved'], 'total': result['total']})
 
     summary = _payment_summary(conn, payment_id)
 
