@@ -38,6 +38,28 @@ def response(status: int, body: Any) -> Dict[str, Any]:
     }
 
 
+def _split_keys(raw_key: str) -> list:
+    """Разбивает ключ вида 'data[COMMAND][12][COMMAND_PARAMS]' в ['data','COMMAND','12','COMMAND_PARAMS'].
+    Также корректно обрабатывает формат после parse_qs: 'COMMAND][12][COMMAND_PARAMS'."""
+    normalized = raw_key.replace(']', '')
+    parts = normalized.split('[')
+    return [p for p in parts if p != '']
+
+
+def _assign_nested(root: Dict[str, Any], raw_key: str, value: Any) -> None:
+    keys = _split_keys(raw_key)
+    if not keys:
+        return
+    cur = root
+    for key in keys[:-1]:
+        nxt = cur.get(key)
+        if not isinstance(nxt, dict):
+            nxt = {}
+            cur[key] = nxt
+        cur = nxt
+    cur[keys[-1]] = value
+
+
 def _parse_event_body(event: Dict[str, Any]) -> Dict[str, Any]:
     body_raw = event.get('body') or ''
     if event.get('isBase64Encoded'):
@@ -57,17 +79,10 @@ def _parse_event_body(event: Dict[str, Any]) -> Dict[str, Any]:
 
     if 'application/x-www-form-urlencoded' in ctype or '=' in body_raw:
         parsed = urllib.parse.parse_qs(body_raw, keep_blank_values=True)
-        flat: Dict[str, Any] = {}
-        for k, v in parsed.items():
-            flat[k] = v[0] if len(v) == 1 else v
         nested: Dict[str, Any] = {}
-        for k, v in flat.items():
-            if '[' in k and k.endswith(']'):
-                head, _, rest = k.partition('[')
-                sub = rest[:-1]
-                nested.setdefault(head, {})[sub] = v
-            else:
-                nested[k] = v
+        for k, v in parsed.items():
+            value = v[0] if len(v) == 1 else v
+            _assign_nested(nested, k, value)
         return nested
 
     try:
@@ -296,10 +311,40 @@ def _extract_payment_id_from_params(params: Any) -> Optional[int]:
 
 def handle_command_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
     """Обрабатывает нажатие кнопки (COMMAND) в сообщении Битрикса."""
-    command = (payload.get('COMMAND') or payload.get('command') or '').strip().lower()
-    params_raw = payload.get('COMMAND_PARAMS') or payload.get('command_params') or payload.get('PARAMS')
+    cmd_obj: Dict[str, Any] = {}
+    raw_command = payload.get('COMMAND') or payload.get('command')
+    if isinstance(raw_command, dict):
+        for v in raw_command.values():
+            if isinstance(v, dict):
+                cmd_obj = v
+                break
+
+    command = str(
+        cmd_obj.get('COMMAND')
+        or (raw_command if isinstance(raw_command, str) else '')
+        or payload.get('command')
+        or ''
+    ).strip().lower()
+
+    params_raw = (
+        cmd_obj.get('COMMAND_PARAMS')
+        or payload.get('COMMAND_PARAMS')
+        or payload.get('command_params')
+    )
     payment_id = _extract_payment_id_from_params(params_raw)
-    bitrix_user_id = str(payload.get('USER_ID') or payload.get('FROM_USER_ID') or payload.get('user_id') or '')
+
+    params_obj = payload.get('PARAMS') if isinstance(payload.get('PARAMS'), dict) else {}
+    user_obj = payload.get('USER') if isinstance(payload.get('USER'), dict) else {}
+    bitrix_user_id = str(
+        cmd_obj.get('USER_ID')
+        or params_obj.get('FROM_USER_ID')
+        or params_obj.get('AUTHOR_ID')
+        or user_obj.get('ID')
+        or payload.get('USER_ID')
+        or payload.get('FROM_USER_ID')
+        or payload.get('user_id')
+        or ''
+    )
 
     log(f'[CALLBACK] command keys={list(payload.keys())[:20]} command={command!r} payment_id={payment_id} user={bitrix_user_id!r} params_raw={params_raw!r}')
 
@@ -350,18 +395,27 @@ def handle_command_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def handle_message_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
     """Обрабатывает текстовое сообщение пользователя боту (reply или ожидание комментария)."""
+    params = payload.get('PARAMS') if isinstance(payload.get('PARAMS'), dict) else {}
     bitrix_user_id = str(
         payload.get('FROM_USER_ID')
         or payload.get('USER_ID')
         or payload.get('user_id')
+        or params.get('FROM_USER_ID')
+        or params.get('AUTHOR_ID')
         or ''
     )
-    message_text = (payload.get('MESSAGE') or payload.get('message') or '').strip()
+    message_text = str(
+        payload.get('MESSAGE')
+        or payload.get('message')
+        or params.get('MESSAGE')
+        or ''
+    ).strip()
 
     reply_to_id = payload.get('REPLY_ID')
-    params = payload.get('PARAMS')
-    if not reply_to_id and isinstance(params, dict):
+    if not reply_to_id and params:
         reply_to_id = params.get('REPLY_ID') or params.get('REPLY_TO_ID')
+
+    log(f'[CALLBACK] message user={bitrix_user_id!r} text_len={len(message_text)} reply={reply_to_id!r}')
 
     if not bitrix_user_id or not message_text:
         return response(200, {'ok': False, 'reason': 'empty'})
