@@ -71,10 +71,41 @@ def handler(event: Dict[str, Any], context) -> Dict[str, Any]:
     bot_id = os.environ.get('BITRIX_BOT_ID', '')
     bot_client_id = os.environ.get('BITRIX_BOT_CLIENT_ID', '')
 
-    if not webhook_url or not bot_id:
+    if not webhook_url:
         return response(400, {
             'ok': False,
-            'error': 'BITRIX_WEBHOOK_URL или BITRIX_BOT_ID не настроены',
+            'error': 'BITRIX_WEBHOOK_URL не настроен',
+        })
+
+    qs = event.get('queryStringParameters') or {}
+    if str(qs.get('info', '')) in ('1', 'true', 'yes'):
+        domain = ''
+        user_id = ''
+        webhook_code = ''
+        try:
+            parts = webhook_url.split('/rest/')
+            domain = parts[0].replace('https://', '').replace('http://', '')
+            rest = parts[1].split('/') if len(parts) > 1 else []
+            if len(rest) >= 1:
+                user_id = rest[0]
+            if len(rest) >= 2:
+                code = rest[1]
+                webhook_code = (code[:3] + '***' + code[-3:]) if len(code) > 6 else '***'
+        except Exception:
+            pass
+        return response(200, {
+            'ok': True,
+            'mode': 'info',
+            'domain': domain,
+            'webhook_user_id': user_id,
+            'webhook_code_masked': webhook_code,
+            'hint': 'Найди в Битриксе входящий вебхук, созданный пользователем с этим ID, на этом домене. Добавь ему право imbot.',
+        })
+
+    if not bot_id:
+        return response(400, {
+            'ok': False,
+            'error': 'BITRIX_BOT_ID не настроен',
         })
 
     update_payload: Dict[str, Any] = {
