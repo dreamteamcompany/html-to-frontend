@@ -79,23 +79,36 @@ def handler(event: Dict[str, Any], context) -> Dict[str, Any]:
 
     update_payload: Dict[str, Any] = {
         'BOT_ID': bot_id,
-        'EVENT_MESSAGE_ADD': CALLBACK_URL,
-        'EVENT_WELCOME_MESSAGE': CALLBACK_URL,
-        'EVENT_BOT_DELETE': CALLBACK_URL,
-        'EVENT_HANDLER': CALLBACK_URL,
+        'FIELDS': {
+            'EVENT_MESSAGE_ADD': CALLBACK_URL,
+            'EVENT_WELCOME_MESSAGE': CALLBACK_URL,
+            'EVENT_BOT_DELETE': CALLBACK_URL,
+        },
     }
     if bot_client_id:
         update_payload['CLIENT_ID'] = bot_client_id
 
     update_result = _bitrix_call(webhook_url, 'imbot.update', update_payload)
 
-    command_payload: Dict[str, Any] = {
-        'BOT_ID': bot_id,
-        'EVENT_COMMAND_ADD': CALLBACK_URL,
-    }
-    if bot_client_id:
-        command_payload['CLIENT_ID'] = bot_client_id
-    command_result = _bitrix_call(webhook_url, 'imbot.command.update', command_payload)
+    commands = [
+        ('approve', 'Согласовать платёж'),
+        ('reject', 'Отклонить платёж'),
+        ('comment', 'Оставить комментарий к платежу'),
+    ]
+    command_results = {}
+    for cmd, title in commands:
+        cmd_payload: Dict[str, Any] = {
+            'BOT_ID': bot_id,
+            'COMMAND': cmd,
+            'COMMON': 'N',
+            'HIDDEN': 'Y',
+            'EXTRANET_SUPPORT': 'N',
+            'EVENT_COMMAND_ADD': CALLBACK_URL,
+            'LANG': [{'LANGUAGE_ID': 'ru', 'TITLE': title, 'PARAMS': ''}],
+        }
+        if bot_client_id:
+            cmd_payload['CLIENT_ID'] = bot_client_id
+        command_results[cmd] = _bitrix_call(webhook_url, 'imbot.command.register', cmd_payload)
 
     ok = bool(update_result.get('result'))
 
@@ -104,6 +117,6 @@ def handler(event: Dict[str, Any], context) -> Dict[str, Any]:
         'callback_url': CALLBACK_URL,
         'bot_id': bot_id,
         'imbot_update': update_result,
-        'imbot_command_update': command_result,
-        'hint': 'Если ok=true — обработчик нажатий кнопок привязан. Нажми кнопку в Битриксе и проверь логи bitrix-callback.',
+        'imbot_command_register': command_results,
+        'hint': 'Если ok=true — обработчик событий бота привязан. Нажми кнопку в Битриксе и проверь логи bitrix-callback.',
     })
