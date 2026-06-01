@@ -304,7 +304,7 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int, 
             },
             {'TYPE': 'NEWLINE'},
             {
-                'TEXT': '✅ Согласовать',
+                'TEXT': 'Согласовать',
                 'COMMAND': 'approve',
                 'COMMAND_PARAMS': f'payment_id={payment_id}',
                 'BG_COLOR': '#25b770',
