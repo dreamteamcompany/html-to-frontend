@@ -508,6 +508,18 @@ def send_bitrix_notifications(conn, payment_id: int, action: str, actor_id: int,
         for row in cur.fetchall():
             recipients_bitrix_ids.append(row['bitrix_id'])
 
+        # Уведомляем инициатора счёта о согласовании/отклонении/отзыве
+        creator_id = payment['created_by']
+        if creator_id and creator_id != actor_id:
+            cur.execute(f"""
+                SELECT bitrix_id FROM {SCHEMA}.users
+                WHERE id = %s AND bitrix_id IS NOT NULL AND bitrix_id != ''
+                  AND is_active = true
+            """, (creator_id,))
+            creator_row = cur.fetchone()
+            if creator_row and creator_row['bitrix_id']:
+                recipients_bitrix_ids.append(creator_row['bitrix_id'])
+
         emoji = {'approve': '✅', 'reject': '❌', 'revoke': '↩️'}.get(action, '📋')
         msg = f"{emoji} Счёт {action_label}\nКто: {actor_name}\n\n{details_block}"
         if comment:
