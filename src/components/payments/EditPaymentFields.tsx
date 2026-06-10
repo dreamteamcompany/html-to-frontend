@@ -32,7 +32,7 @@ const EditPaymentFields = ({
           <SearchableSelect
             options={services.map(s => ({ value: s.id.toString(), label: s.name }))}
             value={formData.service_id || ''}
-            onChange={(value) => {
+            onValueChange={(value) => {
               const service = services.find(s => s.id.toString() === value);
               setFormData(prev => ({
                 ...prev,
@@ -49,7 +49,7 @@ const EditPaymentFields = ({
           <SearchableSelect
             options={categories.map(c => ({ value: c.id.toString(), label: c.name }))}
             value={formData.category_id || ''}
-            onChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
             placeholder="Выберите категорию"
           />
         </div>
@@ -59,7 +59,7 @@ const EditPaymentFields = ({
           <SearchableSelect
             options={legalEntities.map(le => ({ value: le.id.toString(), label: le.name }))}
             value={formData.legal_entity_id || ''}
-            onChange={(value) => setFormData(prev => ({ ...prev, legal_entity_id: value }))}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, legal_entity_id: value }))}
             placeholder="Выберите юр. лицо"
           />
         </div>
@@ -69,7 +69,7 @@ const EditPaymentFields = ({
           <SearchableSelect
             options={contractors.map(c => ({ value: c.id.toString(), label: c.name }))}
             value={formData.contractor_id || ''}
-            onChange={(value) => setFormData(prev => ({ ...prev, contractor_id: value }))}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, contractor_id: value }))}
             placeholder="Выберите контрагента"
           />
         </div>
@@ -79,7 +79,7 @@ const EditPaymentFields = ({
           <SearchableSelect
             options={departments.map(d => ({ value: d.id.toString(), label: d.name }))}
             value={formData.department_id || ''}
-            onChange={(value) => setFormData(prev => ({ ...prev, department_id: value }))}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, department_id: value }))}
             placeholder="Выберите отдел"
           />
         </div>
