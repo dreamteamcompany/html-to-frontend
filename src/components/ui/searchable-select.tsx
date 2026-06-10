@@ -70,6 +70,11 @@ const SearchableSelect = ({
                     onValueChange(undefined);
                     setOpen(false);
                   }}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    onValueChange(undefined);
+                    setOpen(false);
+                  }}
                   className="text-muted-foreground"
                 >
                   <Icon name="X" size={14} className="mr-2" />
@@ -81,6 +86,11 @@ const SearchableSelect = ({
                   key={option.value}
                   value={option.label}
                   onSelect={() => {
+                    onValueChange(option.value);
+                    setOpen(false);
+                  }}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
                     onValueChange(option.value);
                     setOpen(false);
                   }}
