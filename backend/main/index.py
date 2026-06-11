@@ -3940,14 +3940,15 @@ def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id
         }
     ])
 
-    fallback_message = f"{message}\n[url={payment_url}]Перейти к платежу[/url]"
+    full_message = f"{message}\n[url={payment_url}]Перейти к платежу[/url]"
+    fallback_message = full_message
 
     if bot_id:
         url = f'{webhook_url}/imbot.message.add.json'
         base_payload = {
             'BOT_ID': bot_id,
             'DIALOG_ID': str(bitrix_user_id),
-            'MESSAGE': message,
+            'MESSAGE': full_message,
             'KEYBOARD': keyboard,
         }
         attempts = []
@@ -3957,7 +3958,7 @@ def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id
             'BOT_ID': bot_id,
             'FROM_USER_ID': bot_id,
             'TO_USER_ID': str(bitrix_user_id),
-            'MESSAGE': message,
+            'MESSAGE': full_message,
             'KEYBOARD': keyboard,
         })
         attempts.append(base_payload)
