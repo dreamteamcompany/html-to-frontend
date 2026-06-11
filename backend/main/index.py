@@ -4074,6 +4074,20 @@ def notify_comment_recipients(conn, payment_id: int, author_id: int, comment_tex
                 rows = cur.fetchall()
                 recipients_bitrix_ids = [r['bitrix_id'] for r in rows if r.get('bitrix_id')]
 
+            # Фоллбэк: у сервиса не назначен CEO-согласующий — уведомляем всех CEO
+            if not recipients_bitrix_ids:
+                cur.execute(f"""
+                    SELECT DISTINCT u.bitrix_id
+                    FROM {SCHEMA}.users u
+                    JOIN {SCHEMA}.user_roles ur ON ur.user_id = u.id
+                    JOIN {SCHEMA}.roles r ON r.id = ur.role_id
+                    WHERE r.name = 'CEO'
+                      AND u.is_active = true
+                      AND u.bitrix_id IS NOT NULL AND u.bitrix_id != ''
+                """)
+                rows = cur.fetchall()
+                recipients_bitrix_ids = [r['bitrix_id'] for r in rows if r.get('bitrix_id')]
+
         elif is_author_ceo:
             creator_id = payment.get('created_by')
             if creator_id:
