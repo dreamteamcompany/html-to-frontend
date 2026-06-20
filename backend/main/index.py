@@ -26,6 +26,26 @@ APP_BASE_URL = 'https://finance-km.ru'
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
 
+def get_clinic_id(event: Dict[str, Any]) -> Optional[int]:
+    '''Возвращает clinic_id из заголовка X-Clinic-Id (контекст портала клиники).
+    None означает общий портал (записи с clinic_id IS NULL).'''
+    headers = event.get('headers', {}) or {}
+    raw = headers.get('X-Clinic-Id') or headers.get('x-clinic-id')
+    if raw is None or str(raw).strip() == '':
+        return None
+    try:
+        return int(raw)
+    except (ValueError, TypeError):
+        return None
+
+def clinic_sql(clinic_id: Optional[int], alias: str = '') -> str:
+    '''SQL-условие изоляции по клинике. Общий портал видит только clinic_id IS NULL,
+    портал клиники — только свои записи. Значение подставляется как int (безопасно).'''
+    col = f'{alias}.clinic_id' if alias else 'clinic_id'
+    if clinic_id is None:
+        return f'{col} IS NULL'
+    return f'{col} = {int(clinic_id)}'
+
 # Pydantic models for validation
 class PaymentRequest(BaseModel):
     category_id: int = Field(..., gt=0)
@@ -4611,6 +4631,141 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
     finally:
         cur.close()
 
+def handle_clinics(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
+    '''Обработка запросов к справочнику клиник. Клиники — сущность верхнего уровня,
+    список НЕ фильтруется по clinic_id (клиники видны на уровне общей системы).'''
+    cur = conn.cursor()
+
+    try:
+        if method == 'GET':
+            payload, error = verify_token_and_permission(event, conn, 'clinics.read')
+            if error:
+                return error
+
+            cur.execute(f'''SELECT id, name, description, is_active, created_at
+                          FROM {SCHEMA}.clinics ORDER BY name''')
+            rows = cur.fetchall()
+            clinics = [
+                {
+                    'id': row[0],
+                    'name': row[1],
+                    'description': row[2] or '',
+                    'is_active': row[3],
+                    'created_at': row[4].isoformat() if row[4] else None
+                }
+                for row in rows
+            ]
+            return response(200, clinics)
+
+        elif method == 'POST':
+            payload, error = verify_token_and_permission(event, conn, 'clinics.create')
+            if error:
+                return error
+
+            body = json.loads(event.get('body', '{}'))
+            name = (body.get('name') or '').strip()
+            description = (body.get('description') or '').strip()
+            is_active = body.get('is_active', True)
+
+            if not name:
+                return response(400, {'error': 'Name is required'})
+
+            cur.execute(
+                f"""INSERT INTO {SCHEMA}.clinics (name, description, is_active)
+                   VALUES (%s, %s, %s)
+                   RETURNING id, name, description, is_active, created_at""",
+                (name, description, is_active)
+            )
+            row = cur.fetchone()
+            conn.commit()
+            create_audit_log(conn, 'clinic', row[0], 'created', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), new_values={'name': row[1], 'description': row[2] or ''})
+
+            return response(201, {
+                'id': row[0],
+                'name': row[1],
+                'description': row[2] or '',
+                'is_active': row[3],
+                'created_at': row[4].isoformat() if row[4] else None
+            })
+
+        elif method == 'PUT':
+            payload, error = verify_token_and_permission(event, conn, 'clinics.update')
+            if error:
+                return error
+
+            body = json.loads(event.get('body', '{}'))
+            clinic_id = body.get('id')
+            name = (body.get('name') or '').strip()
+            description = (body.get('description') or '').strip()
+            is_active = body.get('is_active', True)
+
+            if not clinic_id or not name:
+                return response(400, {'error': 'ID and name are required'})
+
+            cur.execute(f"SELECT name, description, is_active FROM {SCHEMA}.clinics WHERE id = %s", (clinic_id,))
+            old_clinic = cur.fetchone()
+            cur.execute(
+                f"""UPDATE {SCHEMA}.clinics SET name = %s, description = %s, is_active = %s
+                   WHERE id = %s
+                   RETURNING id, name, description, is_active, created_at""",
+                (name, description, is_active, clinic_id)
+            )
+            row = cur.fetchone()
+
+            if not row:
+                return response(404, {'error': 'Clinic not found'})
+
+            conn.commit()
+            clinic_changed = {}
+            if old_clinic:
+                if old_clinic[0] != row[1]:
+                    clinic_changed['name'] = {'old': old_clinic[0], 'new': row[1]}
+                if (old_clinic[1] or '') != (row[2] or ''):
+                    clinic_changed['description'] = {'old': old_clinic[1] or '', 'new': row[2] or ''}
+            create_audit_log(conn, 'clinic', row[0], 'updated', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), changed_fields=clinic_changed if clinic_changed else None, old_values={'name': old_clinic[0], 'description': old_clinic[1] or ''} if old_clinic else None, new_values={'name': row[1], 'description': row[2] or ''})
+
+            return response(200, {
+                'id': row[0],
+                'name': row[1],
+                'description': row[2] or '',
+                'is_active': row[3],
+                'created_at': row[4].isoformat() if row[4] else None
+            })
+
+        elif method == 'DELETE':
+            payload, error = verify_token_and_permission(event, conn, 'clinics.remove')
+            if error:
+                return error
+
+            params = event.get('queryStringParameters', {}) or {}
+            clinic_id = params.get('id')
+
+            if not clinic_id:
+                return response(400, {'error': 'ID is required'})
+
+            try:
+                cur.execute(f"SELECT name, description FROM {SCHEMA}.clinics WHERE id = %s", (clinic_id,))
+                clinic_row = cur.fetchone()
+                cur.execute(f"UPDATE {SCHEMA}.payments SET clinic_id = NULL WHERE clinic_id = %s", (clinic_id,))
+                cur.execute(f"DELETE FROM {SCHEMA}.clinics WHERE id = %s RETURNING id", (clinic_id,))
+                row = cur.fetchone()
+
+                if not row:
+                    return response(404, {'error': 'Клиника не найдена'})
+
+                conn.commit()
+                create_audit_log(conn, 'clinic', int(clinic_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'name': clinic_row[0], 'description': clinic_row[1] or ''} if clinic_row else None)
+                return response(200, {'success': True})
+            except Exception as e:
+                conn.rollback()
+                log(f"Error deleting clinic: {e}")
+                return response(500, {'error': 'Ошибка при удалении клиники'})
+
+        return response(405, {'error': 'Method not allowed'})
+
+    finally:
+        cur.close()
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Главная функция-роутер для обработки всех запросов.
@@ -4666,6 +4821,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             result = handle_contractors(method, event, conn)
         elif endpoint == 'customer-departments' or endpoint == 'customer_departments' or endpoint == 'departments':
             result = handle_customer_departments(method, event, conn)
+        elif endpoint == 'clinics' or endpoint == 'clinics-api':
+            result = handle_clinics(method, event, conn)
         elif endpoint == 'custom-fields':
             result = handle_custom_fields(method, event, conn)
         elif endpoint == 'services':
