@@ -86,6 +86,27 @@ export const ensureUserScope = (userId: number | null | undefined): boolean => {
 };
 
 /**
+ * Если сменилась клиника (контекст портала) — сбрасываем кеш платежей,
+ * чтобы общий портал и портал клиники не показывали данные друг друга.
+ * Возвращает true, если был сброс.
+ */
+export const ensureClinicScope = (clinicId: number | null): boolean => {
+  if (currentClinicScope === undefined) {
+    currentClinicScope = clinicId;
+    return false;
+  }
+  if (currentClinicScope !== clinicId) {
+    currentClinicScope = clinicId;
+    cache = null;
+    cacheTime = 0;
+    fetchPromise = null;
+    notify();
+    return true;
+  }
+  return false;
+};
+
+/**
  * Загрузка кеша. Возвращает Payment[] из кеша (если свежий) или из сети.
  */
 export const loadPaymentsCache = async (force = false): Promise<Payment[]> => {
