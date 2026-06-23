@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import { useCrudPage } from '@/hooks/useCrudPage';
@@ -12,7 +13,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,9 +26,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 
-interface CustomerDepartment {
+interface Clinic {
   id: number;
   name: string;
   description: string;
@@ -36,12 +36,13 @@ interface CustomerDepartment {
   created_at: string;
 }
 
-const CustomerDepartments = ({ embedded = false }: { embedded?: boolean } = {}) => {
+const Clinics = () => {
   const { hasPermission } = useAuth();
+  const navigate = useNavigate();
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [departmentToDelete, setDepartmentToDelete] = useState<CustomerDepartment | null>(null);
+  const [clinicToDelete, setClinicToDelete] = useState<Clinic | null>(null);
 
   const {
     menuOpen,
@@ -52,19 +53,19 @@ const CustomerDepartments = ({ embedded = false }: { embedded?: boolean } = {}) 
   } = useSidebarTouch();
 
   const {
-    items: departments,
+    items: clinics,
     loading,
     dialogOpen,
     setDialogOpen,
-    editingItem: editingDepartment,
+    editingItem: editingClinic,
     formData,
     setFormData,
-    loadData: loadDepartments,
+    loadData: loadClinics,
     handleEdit,
     handleSubmit,
     handleDelete: handleDeleteBase,
-  } = useCrudPage<CustomerDepartment>({
-    endpoint: 'customer-departments',
+  } = useCrudPage<Clinic>({
+    endpoint: 'clinics',
     initialFormData: {
       name: '',
       description: '',
@@ -73,23 +74,22 @@ const CustomerDepartments = ({ embedded = false }: { embedded?: boolean } = {}) 
   });
 
   useEffect(() => {
-    loadDepartments();
-  }, [loadDepartments]);
+    loadClinics();
+  }, [loadClinics]);
 
-  const handleDeleteClick = (department: CustomerDepartment) => {
-    setDepartmentToDelete(department);
+  const handleDeleteClick = (clinic: Clinic) => {
+    setClinicToDelete(clinic);
     setDeleteDialogOpen(true);
   };
 
   const handleDelete = async () => {
-    if (!departmentToDelete) return;
-
+    if (!clinicToDelete) return;
     try {
-      await handleDeleteBase(departmentToDelete.id);
+      await handleDeleteBase(clinicToDelete.id);
       setDeleteDialogOpen(false);
-      setDepartmentToDelete(null);
+      setClinicToDelete(null);
     } catch (error) {
-      console.error('Failed to delete department:', error);
+      console.error('Failed to delete clinic:', error);
     }
   };
 
@@ -99,70 +99,66 @@ const CustomerDepartments = ({ embedded = false }: { embedded?: boolean } = {}) 
   };
 
   return (
-    <div className={embedded ? '' : 'min-h-screen bg-background'}>
-      {!embedded && (
-        <PaymentsSidebar 
-          menuOpen={menuOpen}
-          dictionariesOpen={dictionariesOpen}
-          setDictionariesOpen={setDictionariesOpen}
-          settingsOpen={settingsOpen}
-          setSettingsOpen={setSettingsOpen}
-          handleTouchStart={handleTouchStart}
-          handleTouchMove={handleTouchMove}
-          handleTouchEnd={handleTouchEnd}
-        />
-      )}
-      
-      {!embedded && menuOpen && (
-        <div 
+    <div className="min-h-screen bg-background">
+      <PaymentsSidebar
+        menuOpen={menuOpen}
+        dictionariesOpen={dictionariesOpen}
+        setDictionariesOpen={setDictionariesOpen}
+        settingsOpen={settingsOpen}
+        setSettingsOpen={setSettingsOpen}
+        handleTouchStart={handleTouchStart}
+        handleTouchMove={handleTouchMove}
+        handleTouchEnd={handleTouchEnd}
+      />
+
+      {menuOpen && (
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
-      <div className={`${embedded ? '' : 'lg:ml-[250px]'} p-4 md:p-8 overflow-x-hidden max-w-full`}>
+      <div className="lg:ml-[250px] p-4 md:p-8 overflow-x-hidden max-w-full">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            {!embedded && (
-              <button 
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="lg:hidden text-foreground p-2 hover:bg-accent rounded-lg"
-              >
-                <Icon name="Menu" size={24} />
-              </button>
-            )}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="lg:hidden text-foreground p-2 hover:bg-accent rounded-lg"
+            >
+              <Icon name="Menu" size={24} />
+            </button>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Отделы-заказчики</h1>
-              <p className="text-muted-foreground mt-1">Управление отделами-заказчиками</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Клиники</h1>
+              <p className="text-muted-foreground mt-1">Отдельный портал по каждой клинике</p>
             </div>
           </div>
-          {hasPermission('customer_departments', 'create') && (
+          {hasPermission('clinics', 'create') && (
             <Button onClick={() => setDialogOpen(true)}>
               <Icon name="Plus" size={18} />
-              Добавить отдел
+              Добавить клинику
             </Button>
           )}
-          
+
           <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
-                  {editingDepartment ? 'Редактировать отдел' : 'Новый отдел-заказчик'}
+                  {editingClinic ? 'Редактировать клинику' : 'Новая клиника'}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingDepartment 
-                    ? 'Измените информацию об отделе' 
-                    : 'Создайте новый отдел-заказчик'}
+                  {editingClinic
+                    ? 'Измените информацию о клинике'
+                    : 'Создайте новую клинику'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Название отдела</Label>
+                  <Label htmlFor="name">Название клиники</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="IT отдел"
+                    placeholder="Клиника на Ленина"
                     required
                   />
                 </div>
@@ -172,7 +168,7 @@ const CustomerDepartments = ({ embedded = false }: { embedded?: boolean } = {}) 
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Описание отдела"
+                    placeholder="Описание клиники"
                     rows={3}
                   />
                 </div>
@@ -181,7 +177,7 @@ const CustomerDepartments = ({ embedded = false }: { embedded?: boolean } = {}) 
                     Отмена
                   </Button>
                   <Button type="submit">
-                    {editingDepartment ? 'Сохранить' : 'Создать'}
+                    {editingClinic ? 'Сохранить' : 'Создать'}
                   </Button>
                 </div>
               </form>
@@ -193,40 +189,47 @@ const CustomerDepartments = ({ embedded = false }: { embedded?: boolean } = {}) 
           <div className="flex items-center justify-center py-12">
             <Icon name="Loader2" size={32} className="text-primary animate-spin" />
           </div>
-        ) : departments.length === 0 ? (
+        ) : clinics.length === 0 ? (
           <Card className="border-border bg-card shadow-sm">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Icon name="Building" size={48} className="text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-center">
-                Нет отделов-заказчиков
-              </p>
+              <Icon name="Hospital" size={48} className="text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">Нет клиник</p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {departments.map((department) => (
-              <Card key={department.id} className="border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+            {clinics.map((clinic) => (
+              <Card key={clinic.id} className="border-border bg-card shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                        <Icon name="Building" size={20} className="text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">{department.name}</h3>
-                        {department.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {department.description}
-                          </p>
-                        )}
-                      </div>
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                      <Icon name="Hospital" size={20} className="text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{clinic.name}</h3>
+                      {clinic.description && (
+                        <p className="text-sm text-muted-foreground mt-1">{clinic.description}</p>
+                      )}
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-4">
+
+                  {hasPermission('clinics', 'dashboard') && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => navigate(`/clinics/${clinic.id}/dashboard`)}
+                      className="w-full mb-2"
+                    >
+                      <Icon name="LogIn" size={16} />
+                      Войти в портал
+                    </Button>
+                  )}
+
+                  <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleEdit(department)}
+                      onClick={() => handleEdit(clinic)}
                       className="flex-1"
                     >
                       <Icon name="Edit" size={16} />
@@ -235,7 +238,7 @@ const CustomerDepartments = ({ embedded = false }: { embedded?: boolean } = {}) 
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDeleteClick(department)}
+                      onClick={() => handleDeleteClick(clinic)}
                       className="text-red-500 hover:text-red-600"
                     >
                       <Icon name="Trash2" size={16} />
@@ -251,9 +254,9 @@ const CustomerDepartments = ({ embedded = false }: { embedded?: boolean } = {}) 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить отдел-заказчик?</AlertDialogTitle>
+            <AlertDialogTitle>Удалить клинику?</AlertDialogTitle>
             <AlertDialogDescription>
-              Вы уверены, что хотите удалить отдел "{departmentToDelete?.name}"? 
+              Вы уверены, что хотите удалить клинику "{clinicToDelete?.name}"?
               Это действие нельзя отменить.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -269,4 +272,4 @@ const CustomerDepartments = ({ embedded = false }: { embedded?: boolean } = {}) 
   );
 };
 
-export default CustomerDepartments;
+export default Clinics;

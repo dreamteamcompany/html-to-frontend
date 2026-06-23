@@ -19,6 +19,7 @@ let cache: Payment[] | null = null;
 let cacheTime = 0;
 let fetchPromise: Promise<Payment[]> | null = null;
 let currentUserId: number | null | undefined = undefined;
+let currentClinicScope: number | null | undefined = undefined;
 
 type Listener = () => void;
 const listeners = new Set<Listener>();

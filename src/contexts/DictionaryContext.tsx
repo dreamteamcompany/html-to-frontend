@@ -34,6 +34,13 @@ interface Department {
   description?: string;
 }
 
+interface Clinic {
+  id: number;
+  name: string;
+  description?: string;
+  is_active?: boolean;
+}
+
 interface Service {
   id: number;
   name: string;
@@ -73,6 +80,7 @@ interface DictionaryData {
   contractors: Contractor[];
   legalEntities: LegalEntity[];
   departments: Department[];
+  clinics: Clinic[];
   services: Service[];
   customFields: CustomField[];
   users: User[];
@@ -84,6 +92,7 @@ interface DictionaryContextType extends DictionaryData {
     contractors: boolean;
     legalEntities: boolean;
     departments: boolean;
+    clinics: boolean;
     services: boolean;
     customFields: boolean;
     users: boolean;
@@ -123,6 +132,7 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
     contractors: [],
     legalEntities: [],
     departments: [],
+    clinics: [],
     services: [],
     customFields: [],
     users: [],
@@ -133,6 +143,7 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
     contractors: false,
     legalEntities: false,
     departments: false,
+    clinics: false,
     services: false,
     customFields: false,
     users: false,
@@ -180,21 +191,41 @@ export const DictionaryProvider = ({ children }: DictionaryProviderProps) => {
     }
   }, []);
 
+  const fetchClinics = useCallback(async () => {
+    setLoading(prev => ({ ...prev, clinics: true }));
+    try {
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=clinics`);
+      if (response.ok) {
+        const result = await response.json();
+        setData(prev => ({ ...prev, clinics: Array.isArray(result) ? result : [] }));
+      }
+    } catch (error) {
+      console.error('Failed to load clinics:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, clinics: false }));
+    }
+  }, []);
+
   const refresh = useCallback(async (key: keyof DictionaryData) => {
     if (key === 'users') {
       await fetchUsers();
       return;
     }
+    if (key === 'clinics') {
+      await fetchClinics();
+      return;
+    }
     await fetchDictionary(key, DICT_ENDPOINTS_MAP[key]);
-  }, [fetchDictionary, fetchUsers]);
+  }, [fetchDictionary, fetchUsers, fetchClinics]);
 
   const refreshAll = useCallback(async () => {
     const dictKeys = Object.keys(DICT_ENDPOINTS_MAP);
     await Promise.all([
       ...dictKeys.map(key => fetchDictionary(key as keyof DictionaryData, DICT_ENDPOINTS_MAP[key])),
       fetchUsers(),
+      fetchClinics(),
     ]);
-  }, [fetchDictionary, fetchUsers]);
+  }, [fetchDictionary, fetchUsers, fetchClinics]);
 
   useEffect(() => {
     if (token) {

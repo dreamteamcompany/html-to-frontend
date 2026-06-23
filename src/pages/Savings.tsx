@@ -2,15 +2,14 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
-import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/icon';
 import SavingFormDialog from './Savings/SavingFormDialog';
 import SavingsTable from './Savings/SavingsTable';
 import { Saving, Service, Employee, SavingReason, SavingFormData, CustomerDepartment } from './Savings/types';
 import { API_ENDPOINTS } from '@/config/api';
-import { translateApiError } from '@/utils/api';
+import { translateApiError, apiFetch } from '@/utils/api';
 
-const Savings = () => {
+const Savings = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [savings, setSavings] = useState<Saving[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -21,7 +20,6 @@ const Savings = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [highlightId, setHighlightId] = useState<number | null>(null);
-  const { token } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -64,11 +62,7 @@ const Savings = () => {
 
   const loadSavings = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=savings`, {
-        headers: {
-          'X-Auth-Token': token || '',
-        },
-      });
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=savings`);
       
       if (response.ok) {
         const data = await response.json();
@@ -86,11 +80,7 @@ const Savings = () => {
 
   const loadServices = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=services`, {
-        headers: {
-          'X-Auth-Token': token || '',
-        },
-      });
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=services`);
       
       if (response.ok) {
         const data = await response.json();
@@ -104,11 +94,7 @@ const Savings = () => {
 
   const loadEmployees = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=users`, {
-        headers: {
-          'X-Auth-Token': token || '',
-        },
-      });
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=users`);
       
       if (response.ok) {
         const data = await response.json();
@@ -122,11 +108,7 @@ const Savings = () => {
 
   const loadSavingReasons = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=saving-reasons`, {
-        headers: {
-          'X-Auth-Token': token || '',
-        },
-      });
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=saving-reasons`);
       
       if (response.ok) {
         const data = await response.json();
@@ -139,11 +121,7 @@ const Savings = () => {
 
   const loadDepartments = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=customer-departments`, {
-        headers: {
-          'X-Auth-Token': token || '',
-        },
-      });
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=customer-departments`);
       
       if (response.ok) {
         const data = await response.json();
@@ -166,11 +144,10 @@ const Savings = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=savings`, {
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=savings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Auth-Token': token || '',
         },
         body: JSON.stringify({
           service_id: parseInt(formData.service_id),
@@ -209,11 +186,10 @@ const Savings = () => {
 
   const handleEditSaving = async (savingId: number, data: Record<string, unknown>): Promise<boolean> => {
     try {
-      const res = await fetch(`${API_ENDPOINTS.main}?endpoint=savings`, {
+      const res = await apiFetch(`${API_ENDPOINTS.main}?endpoint=savings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-Auth-Token': token || '',
         },
         body: JSON.stringify({ id: savingId, ...data }),
       });
@@ -235,11 +211,8 @@ const Savings = () => {
     if (!confirm('Вы уверены, что хотите удалить эту запись об экономии?')) return;
     
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=savings&id=${savingId}`, {
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=savings&id=${savingId}`, {
         method: 'DELETE',
-        headers: {
-          'X-Auth-Token': token || '',
-        },
       });
 
       if (response.ok) {
@@ -255,35 +228,39 @@ const Savings = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <PaymentsSidebar
-        menuOpen={menuOpen}
-        dictionariesOpen={dictionariesOpen}
-        setDictionariesOpen={setDictionariesOpen}
-        settingsOpen={settingsOpen}
-        setSettingsOpen={setSettingsOpen}
-        handleTouchStart={handleTouchStart}
-        handleTouchMove={handleTouchMove}
-        handleTouchEnd={handleTouchEnd}
-      />
+    <div className={embedded ? '' : 'flex min-h-screen'}>
+      {!embedded && (
+        <PaymentsSidebar
+          menuOpen={menuOpen}
+          dictionariesOpen={dictionariesOpen}
+          setDictionariesOpen={setDictionariesOpen}
+          settingsOpen={settingsOpen}
+          setSettingsOpen={setSettingsOpen}
+          handleTouchStart={handleTouchStart}
+          handleTouchMove={handleTouchMove}
+          handleTouchEnd={handleTouchEnd}
+        />
+      )}
 
-      {menuOpen && (
+      {!embedded && menuOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <div className="flex justify-between items-center mb-6">
-          <button
-            className="lg:hidden p-2 hover:bg-primary/10 rounded-lg transition-colors"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            <Icon name="Menu" size={24} className="text-muted-foreground" />
-          </button>
-          <div className="flex-1 lg:flex-none" />
-        </div>
+      <main className={`${embedded ? '' : 'lg:ml-[250px]'} p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full`}>
+        {!embedded && (
+          <div className="flex justify-between items-center mb-6">
+            <button
+              className="lg:hidden p-2 hover:bg-primary/10 rounded-lg transition-colors"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <Icon name="Menu" size={24} className="text-muted-foreground" />
+            </button>
+            <div className="flex-1 lg:flex-none" />
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>

@@ -6,7 +6,9 @@ import {
   paymentsCacheSubscribe,
   getPaymentsCacheSnapshot,
   ensureUserScope,
+  ensureClinicScope,
 } from '@/contexts/paymentsCacheStore';
+import { getCurrentClinicId } from '@/utils/api';
 
 /**
  * PaymentRecord — исторический локальный тип этого контекста.
@@ -84,7 +86,8 @@ export const PaymentsCacheProvider = ({ children }: { children: ReactNode }) => 
 
   useEffect(() => {
     const userChanged = ensureUserScope(user?.id ?? null);
-    if (userChanged) {
+    const clinicChanged = ensureClinicScope(getCurrentClinicId());
+    if (userChanged || clinicChanged) {
       setPayments([]);
     }
     load();

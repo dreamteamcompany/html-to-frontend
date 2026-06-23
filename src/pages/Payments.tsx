@@ -19,7 +19,7 @@ import { usePaymentCounters } from './payments/usePaymentCounters';
 import { useContentSwipe } from './payments/useContentSwipe';
 import { usePaymentDeepLink } from './payments/usePaymentDeepLink';
 
-const PaymentsInner = () => {
+const PaymentsInner = ({ embedded = false }: { embedded?: boolean }) => {
   const { user, token } = useAuth();
   const { payments: allPayments, refresh: refreshAllPayments } = useAllPaymentsCache();
   const { toast } = useToast();
@@ -114,19 +114,21 @@ const PaymentsInner = () => {
   } = useSidebarTouch();
 
   return (
-    <div className="flex min-h-screen">
-      <PaymentsSidebar
-        menuOpen={menuOpen}
-        dictionariesOpen={dictionariesOpen}
-        setDictionariesOpen={setDictionariesOpen}
-        settingsOpen={settingsOpen}
-        setSettingsOpen={setSettingsOpen}
-        handleTouchStart={handleTouchStart}
-        handleTouchMove={handleTouchMove}
-        handleTouchEnd={handleTouchEnd}
-      />
+    <div className={embedded ? '' : 'flex min-h-screen'}>
+      {!embedded && (
+        <PaymentsSidebar
+          menuOpen={menuOpen}
+          dictionariesOpen={dictionariesOpen}
+          setDictionariesOpen={setDictionariesOpen}
+          settingsOpen={settingsOpen}
+          setSettingsOpen={setSettingsOpen}
+          handleTouchStart={handleTouchStart}
+          handleTouchMove={handleTouchMove}
+          handleTouchEnd={handleTouchEnd}
+        />
+      )}
 
-      {menuOpen && (
+      {!embedded && menuOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setMenuOpen(false)}
@@ -134,7 +136,7 @@ const PaymentsInner = () => {
       )}
 
       <main
-        className="lg:ml-[250px] min-h-screen flex-1 overflow-x-hidden max-w-full"
+        className={`${embedded ? '' : 'lg:ml-[250px]'} min-h-screen flex-1 overflow-x-hidden max-w-full`}
         onTouchStart={handleContentTouchStart}
         onTouchEnd={handleContentTouchEnd}
       >
@@ -142,12 +144,14 @@ const PaymentsInner = () => {
           <div className="flex justify-between items-start gap-4 mb-6">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="lg:hidden p-2 -ml-2 text-white hover:bg-white/5 rounded-lg transition-colors"
-                >
-                  <Icon name="Menu" size={24} />
-                </button>
+                {!embedded && (
+                  <button
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    className="lg:hidden p-2 -ml-2 text-white hover:bg-white/5 rounded-lg transition-colors"
+                  >
+                    <Icon name="Menu" size={24} />
+                  </button>
+                )}
                 <h1 className="text-2xl md:text-3xl font-bold">История платежей</h1>
               </div>
               <p className="text-sm md:text-base text-muted-foreground">Все операции по IT расходам</p>
@@ -193,9 +197,9 @@ const PaymentsInner = () => {
   );
 };
 
-const Payments = () => (
+const Payments = ({ embedded = false }: { embedded?: boolean } = {}) => (
   <AllPaymentsCacheProvider>
-    <PaymentsInner />
+    <PaymentsInner embedded={embedded} />
   </AllPaymentsCacheProvider>
 );
 

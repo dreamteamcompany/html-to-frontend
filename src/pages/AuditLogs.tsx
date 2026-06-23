@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import PaymentDetailsModal from '@/components/payments/PaymentDetailsModal';
 import ApprovedPaymentDetailsModal from '@/components/payments/ApprovedPaymentDetailsModal';
 import { API_ENDPOINTS } from '@/config/api';
+import { apiFetch } from '@/utils/api';
 import AuditLogDetailModal, {
   type AuditLog,
   ENTITY_TYPES,
@@ -29,7 +30,7 @@ const ACTIONS = [
   { value: 'rejected',  label: 'Отклонение'                },
 ];
 
-const AuditLogs = () => {
+const AuditLogs = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { token } = useAuth();
   const { toast } = useToast();
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -60,9 +61,7 @@ const AuditLogs = () => {
           ...(entityTypeFilter !== 'all' && { entity_type: entityTypeFilter }),
           ...(actionFilter !== 'all' && { action: actionFilter }),
         });
-        const res = await fetch(`${API_ENDPOINTS.main}?endpoint=audit-logs&${params}`, {
-          headers: { 'X-Auth-Token': token },
-        });
+        const res = await apiFetch(`${API_ENDPOINTS.main}?endpoint=audit-logs&${params}`);
         const data = await res.json();
         setLogs(Array.isArray(data) ? data : []);
       } catch {
@@ -102,9 +101,8 @@ const AuditLogs = () => {
     if (!confirm('Удалить эту запись из истории?')) return;
     setDeletingLogId(logId);
     try {
-      const res = await fetch(`${API_ENDPOINTS.main}?endpoint=audit-logs&id=${logId}`, {
+      const res = await apiFetch(`${API_ENDPOINTS.main}?endpoint=audit-logs&id=${logId}`, {
         method: 'DELETE',
-        headers: { 'X-Auth-Token': token || '' },
       });
       if (!res.ok) throw new Error();
       setLogs(prev => prev.filter(l => l.id !== logId));
@@ -118,26 +116,37 @@ const AuditLogs = () => {
 
   /* ── Рендер ───────────────────────────────────── */
   return (
-    <div className="flex min-h-screen">
-      <PaymentsSidebar
-        menuOpen={menuOpen}
-        dictionariesOpen={dictionariesOpen}
-        setDictionariesOpen={setDictionariesOpen}
-        settingsOpen={settingsOpen}
-        setSettingsOpen={setSettingsOpen}
-        handleTouchStart={handleTouchStart}
-        handleTouchMove={handleTouchMove}
-        handleTouchEnd={handleTouchEnd}
-      />
+    <div className={embedded ? '' : 'flex min-h-screen'}>
+      {!embedded && (
+        <PaymentsSidebar
+          menuOpen={menuOpen}
+          dictionariesOpen={dictionariesOpen}
+          setDictionariesOpen={setDictionariesOpen}
+          settingsOpen={settingsOpen}
+          setSettingsOpen={setSettingsOpen}
+          handleTouchStart={handleTouchStart}
+          handleTouchMove={handleTouchMove}
+          handleTouchEnd={handleTouchEnd}
+        />
+      )}
 
-      <main className="flex-1 lg:ml-64 bg-background min-h-screen overflow-x-hidden max-w-full">
+      {!embedded && menuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      <main className={`${embedded ? '' : 'lg:ml-64'} flex-1 bg-background min-h-screen overflow-x-hidden max-w-full`}>
         <div className="p-4 sm:p-6 space-y-6">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="lg:hidden p-2 text-foreground hover:bg-muted rounded-lg transition-colors mb-4"
-          >
-            <Icon name="Menu" size={24} />
-          </button>
+          {!embedded && (
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="lg:hidden p-2 text-foreground hover:bg-muted rounded-lg transition-colors mb-4"
+            >
+              <Icon name="Menu" size={24} />
+            </button>
+          )}
 
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-1">История изменений</h1>

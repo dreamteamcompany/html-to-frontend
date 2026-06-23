@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSidebarTouch } from '@/hooks/useSidebarTouch';
 import { useCrudPage } from '@/hooks/useCrudPage';
 import PaymentsSidebar from '@/components/payments/PaymentsSidebar';
+import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import ServicesHeader from '@/components/services/ServicesHeader';
 import ServiceFormDialog from '@/components/services/ServiceFormDialog';
@@ -30,7 +31,7 @@ interface Service {
   created_at: string;
 }
 
-const Services = () => {
+const Services = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { hasPermission } = useAuth();
   const {
     categories,
@@ -173,31 +174,44 @@ const Services = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <PaymentsSidebar
-        menuOpen={menuOpen}
-        dictionariesOpen={dictionariesOpen}
-        setDictionariesOpen={setDictionariesOpen}
-        settingsOpen={settingsOpen}
-        setSettingsOpen={setSettingsOpen}
-        handleTouchStart={handleTouchStart}
-        handleTouchMove={handleTouchMove}
-        handleTouchEnd={handleTouchEnd}
-      />
+    <div className={embedded ? '' : 'flex min-h-screen'}>
+      {!embedded && (
+        <PaymentsSidebar
+          menuOpen={menuOpen}
+          dictionariesOpen={dictionariesOpen}
+          setDictionariesOpen={setDictionariesOpen}
+          settingsOpen={settingsOpen}
+          setSettingsOpen={setSettingsOpen}
+          handleTouchStart={handleTouchStart}
+          handleTouchMove={handleTouchMove}
+          handleTouchEnd={handleTouchEnd}
+        />
+      )}
 
-      {menuOpen && (
+      {!embedded && menuOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <ServicesHeader
-          menuOpen={menuOpen}
-          setMenuOpen={setMenuOpen}
-          onCreateClick={handleCreateClick}
-        />
+      <main className={`${embedded ? '' : 'lg:ml-[250px]'} p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full`}>
+        {!embedded ? (
+          <ServicesHeader
+            menuOpen={menuOpen}
+            setMenuOpen={setMenuOpen}
+            onCreateClick={handleCreateClick}
+          />
+        ) : (
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Сервисы</h1>
+            {hasPermission('services', 'create') && (
+              <button onClick={handleCreateClick} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold">
+                <Icon name="Plus" size={18} />Добавить сервис
+              </button>
+            )}
+          </div>
+        )}
 
         <ServiceFormDialog
           open={dialogOpen}

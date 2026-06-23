@@ -6,7 +6,9 @@ import {
   removePaymentFromCache,
   paymentsCacheSubscribe,
   getPaymentsCacheSnapshot,
+  ensureClinicScope,
 } from '@/contexts/paymentsCacheStore';
+import { getCurrentClinicId } from '@/utils/api';
 
 interface AllPaymentsCacheState {
   payments: Payment[];
@@ -51,6 +53,9 @@ export const AllPaymentsCacheProvider = ({ children }: { children: ReactNode }) 
       if (snap) setPayments(snap);
       else setPayments([]);
     });
+    if (ensureClinicScope(getCurrentClinicId())) {
+      setPayments([]);
+    }
     load();
     return unsubscribe;
   }, [load]);

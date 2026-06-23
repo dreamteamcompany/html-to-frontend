@@ -25,7 +25,7 @@ interface Contractor {
   created_at: string;
 }
 
-const Contractors = () => {
+const Contractors = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -124,26 +124,28 @@ const Contractors = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <PaymentsSidebar
-        menuOpen={menuOpen}
-        dictionariesOpen={dictionariesOpen}
-        setDictionariesOpen={setDictionariesOpen}
-        settingsOpen={settingsOpen}
-        setSettingsOpen={setSettingsOpen}
-        handleTouchStart={handleTouchStart}
-        handleTouchMove={handleTouchMove}
-        handleTouchEnd={handleTouchEnd}
-      />
+    <div className={embedded ? '' : 'flex min-h-screen'}>
+      {!embedded && (
+        <PaymentsSidebar
+          menuOpen={menuOpen}
+          dictionariesOpen={dictionariesOpen}
+          setDictionariesOpen={setDictionariesOpen}
+          settingsOpen={settingsOpen}
+          setSettingsOpen={setSettingsOpen}
+          handleTouchStart={handleTouchStart}
+          handleTouchMove={handleTouchMove}
+          handleTouchEnd={handleTouchEnd}
+        />
+      )}
 
-      {menuOpen && (
+      {!embedded && menuOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
+      <main className={`${embedded ? '' : 'lg:ml-[250px]'} p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full`}>
         <ContractorForm
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}

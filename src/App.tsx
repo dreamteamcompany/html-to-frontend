@@ -33,6 +33,9 @@ import CategoryPayments from "./pages/CategoryPayments";
 import PlannedPayments from "./pages/PlannedPayments";
 import Monitoring from "./pages/Monitoring";
 import CEOGuide from "./pages/CEOGuide";
+import Clinics from "./pages/Clinics";
+import ClinicLayout from "./components/clinic/ClinicLayout";
+import ClinicDashboard from "./pages/clinic/ClinicDashboard";
 
 import NotFound from "./pages/NotFound";
 
@@ -87,6 +90,20 @@ const App = () => {
             <Route path="/planned-payments" element={<ProtectedRoute requiredPermission={{ resource: 'payments', action: 'read' }}><PlannedPayments /></ProtectedRoute>} />
             <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
             <Route path="/ceo-guide" element={<ProtectedRoute><CEOGuide /></ProtectedRoute>} />
+            <Route path="/clinics" element={<ProtectedRoute requiredPermission={{ resource: 'clinics', action: 'read' }}><Clinics /></ProtectedRoute>} />
+            <Route path="/clinics/:clinicId" element={<ProtectedRoute requiredPermission={{ resource: 'clinics', action: 'dashboard' }}><ClinicLayout /></ProtectedRoute>}>
+              <Route path="dashboard" element={<ClinicDashboard />} />
+              <Route path="payments" element={<Payments embedded />} />
+              <Route path="savings" element={<Savings embedded />} />
+              <Route path="categories" element={<Categories embedded />} />
+              <Route path="legal-entities" element={<LegalEntities embedded />} />
+              <Route path="contractors" element={<Contractors embedded />} />
+              <Route path="customer-departments" element={<CustomerDepartments embedded />} />
+              <Route path="services" element={<Services embedded />} />
+              <Route path="custom-fields" element={<CustomFields embedded />} />
+              <Route path="saving-reasons" element={<SavingReasons embedded />} />
+              <Route path="audit-logs" element={<AuditLogs embedded />} />
+            </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

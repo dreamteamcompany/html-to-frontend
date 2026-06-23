@@ -5,6 +5,19 @@ const getAuthToken = (): string | null => {
     : sessionStorage.getItem('auth_token');
 };
 
+/**
+ * Текущая клиника («портал в портале»). Когда задана — все запросы через
+ * apiFetch получают заголовок X-Clinic-Id, и backend изолирует данные.
+ * null — общий портал (clinic_id IS NULL).
+ */
+let currentClinicId: number | null = null;
+
+export const setCurrentClinicId = (clinicId: number | null) => {
+  currentClinicId = clinicId;
+};
+
+export const getCurrentClinicId = (): number | null => currentClinicId;
+
 export const translateApiError = (errorText: string | undefined): string => {
   if (!errorText) return 'Произошла ошибка';
   const map: Record<string, string> = {
@@ -39,6 +52,10 @@ export const apiFetch = async (url: string, options: RequestInit = {}): Promise<
   
   if (token) {
     headers['X-Auth-Token'] = token;
+  }
+
+  if (currentClinicId != null) {
+    headers['X-Clinic-Id'] = String(currentClinicId);
   }
   
   return fetch(url, {

@@ -36,7 +36,7 @@ const availableIcons = [
   'DollarSign', 'Percent', 'ArrowDown', 'PiggyBank', 'Sparkles', 'Star'
 ];
 
-const SavingReasons = () => {
+const SavingReasons = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { hasPermission } = useAuth();
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
 
@@ -88,32 +88,36 @@ const SavingReasons = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <PaymentsSidebar
-        menuOpen={menuOpen}
-        dictionariesOpen={dictionariesOpen}
-        setDictionariesOpen={setDictionariesOpen}
-        settingsOpen={false}
-        setSettingsOpen={() => {}}
-        handleTouchStart={handleTouchStart}
-        handleTouchMove={handleTouchMove}
-        handleTouchEnd={handleTouchEnd}
-      />
+    <div className={embedded ? '' : 'flex min-h-screen'}>
+      {!embedded && (
+        <PaymentsSidebar
+          menuOpen={menuOpen}
+          dictionariesOpen={dictionariesOpen}
+          setDictionariesOpen={setDictionariesOpen}
+          settingsOpen={false}
+          setSettingsOpen={() => {}}
+          handleTouchStart={handleTouchStart}
+          handleTouchMove={handleTouchMove}
+          handleTouchEnd={handleTouchEnd}
+        />
+      )}
 
-      {menuOpen && (
+      {!embedded && menuOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="lg:hidden p-2 text-foreground hover:bg-muted rounded-lg transition-colors mb-4"
-        >
-          <Icon name="Menu" size={24} />
-        </button>
+      <main className={`${embedded ? '' : 'lg:ml-[250px]'} p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full`}>
+        {!embedded && (
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="lg:hidden p-2 text-foreground hover:bg-muted rounded-lg transition-colors mb-4"
+          >
+            <Icon name="Menu" size={24} />
+          </button>
+        )}
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
