@@ -15,11 +15,31 @@ class ErrorBoundary extends Component<Props, State> {
     hasError: false
   };
 
+  /**
+   * Ошибки removeChild/insertBefore — следствие вмешательства браузерных
+   * расширений-переводчиков (Google Translate, Яндекс.Переводчик), которые
+   * подменяют DOM-узлы. Это не баги приложения, поэтому такой экран ошибки
+   * не показываем — React восстановит дерево при следующем рендере.
+   */
+  private static isExtensionDomError(error: Error): boolean {
+    const msg = error?.message || '';
+    return (
+      (error?.name === 'NotFoundError' || /removeChild|insertBefore/.test(msg)) &&
+      /removeChild|insertBefore|not a child of this node/.test(msg)
+    );
+  }
+
   public static getDerivedStateFromError(error: Error): State {
+    if (ErrorBoundary.isExtensionDomError(error)) {
+      return { hasError: false };
+    }
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    if (ErrorBoundary.isExtensionDomError(error)) {
+      return;
+    }
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
