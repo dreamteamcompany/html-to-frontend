@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { invalidatePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { translateFetchError } from '@/utils/api';
+import { downloadFilesAsZip } from '@/utils/downloadZip';
 import UserAvatar from '@/components/ui/user-avatar';
 
 interface Department {
@@ -35,6 +36,7 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
   const [isSavingDept, setIsSavingDept] = useState(false);
   const [currentDeptName, setCurrentDeptName] = useState<string | undefined>(payment.department_name);
+  const [isZipping, setIsZipping] = useState(false);
 
   const loadDepartments = useCallback(async () => {
     if (departments.length > 0) return;
@@ -289,6 +291,37 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
           }
         };
 
+        const allFiles: { url: string; name: string }[] = [];
+        if (hasMainFile && payment.invoice_file_url) {
+          allFiles.push({ url: payment.invoice_file_url, name: prettyName(payment.invoice_file_url) });
+        }
+        invoiceDocs.forEach(doc => {
+          allFiles.push({ url: doc.file_url, name: prettyName(doc.file_url, doc.file_name) });
+        });
+
+        const handleDownloadAll = async () => {
+          setIsZipping(true);
+          try {
+            const zipName = `Счёт_платёж_${payment.id || ''}.zip`;
+            const added = await downloadFilesAsZip(allFiles, zipName);
+            if (added < allFiles.length) {
+              toast({
+                title: 'Архив скачан частично',
+                description: `В архив попало ${added} из ${allFiles.length} файлов. Остальные не удалось загрузить.`,
+              });
+            }
+          } catch (err) {
+            console.error('ZIP download failed:', err);
+            toast({
+              title: 'Не удалось скачать архив',
+              description: 'Попробуйте ещё раз или скачайте файлы по отдельности.',
+              variant: 'destructive',
+            });
+          } finally {
+            setIsZipping(false);
+          }
+        };
+
         const renderRow = (url: string, name: string, uploadedAt?: string, key?: string | number) => (
           <div
             key={key ?? url}
@@ -333,9 +366,22 @@ const PaymentDetailsInfo = ({ payment, views, isPlannedPayment, onEdit, onDepart
 
         return (
           <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <Icon name="Paperclip" size={12} className="text-primary" />
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Счёт</p>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-1.5">
+                <Icon name="Paperclip" size={12} className="text-primary" />
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Счёт</p>
+              </div>
+              {allFiles.length > 1 && (
+                <button
+                  type="button"
+                  onClick={handleDownloadAll}
+                  disabled={isZipping}
+                  className="flex items-center gap-1 text-xs font-semibold text-white bg-primary hover:bg-primary/90 disabled:opacity-60 px-3 py-1.5 rounded-md transition-colors flex-shrink-0"
+                >
+                  <Icon name={isZipping ? 'Loader2' : 'Download'} size={14} className={isZipping ? 'animate-spin' : ''} />
+                  {isZipping ? 'Архивируем…' : 'Скачать всё'}
+                </button>
+              )}
             </div>
             <div className="space-y-2">
               {hasMainFile && payment.invoice_file_url && renderRow(

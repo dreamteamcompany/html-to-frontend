@@ -3,6 +3,8 @@ import Icon from '@/components/ui/icon';
 import PaymentAuditLog from '@/components/approvals/PaymentAuditLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Payment, PaymentDocument } from './ApprovedPaymentInfo';
+import { downloadFilesAsZip } from '@/utils/downloadZip';
+import { useToast } from '@/hooks/use-toast';
 
 interface ApprovedPaymentSidebarProps {
   payment: Payment;
@@ -11,6 +13,8 @@ interface ApprovedPaymentSidebarProps {
 
 const ApprovedPaymentSidebar = ({ payment, auditKey }: ApprovedPaymentSidebarProps) => {
   const [showDocsPanel, setShowDocsPanel] = useState(false);
+  const [isZipping, setIsZipping] = useState(false);
+  const { toast } = useToast();
 
   const docs: PaymentDocument[] = payment.documents && payment.documents.length > 0
     ? payment.documents
@@ -24,6 +28,30 @@ const ApprovedPaymentSidebar = ({ payment, auditKey }: ApprovedPaymentSidebarPro
           uploaded_at: payment.invoice_file_uploaded_at || payment.created_at || '',
         }]
       : [];
+
+  const handleDownloadAll = async () => {
+    setIsZipping(true);
+    try {
+      const files = docs.map(d => ({ url: d.file_url, name: d.file_name || 'Счёт' }));
+      const zipName = `Счёт_платёж_${payment.id || ''}.zip`;
+      const added = await downloadFilesAsZip(files, zipName);
+      if (added < files.length) {
+        toast({
+          title: 'Архив скачан частично',
+          description: `В архив попало ${added} из ${files.length} файлов. Остальные не удалось загрузить.`,
+        });
+      }
+    } catch (err) {
+      console.error('ZIP download failed:', err);
+      toast({
+        title: 'Не удалось скачать архив',
+        description: 'Попробуйте ещё раз или скачайте файлы по отдельности.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsZipping(false);
+    }
+  };
 
   return (
     <div className="w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 border-border lg:overflow-hidden overflow-x-hidden">
@@ -80,6 +108,19 @@ const ApprovedPaymentSidebar = ({ payment, auditKey }: ApprovedPaymentSidebarPro
             </button>
             {showDocsPanel && (
               <div className="mt-2 rounded-lg border border-border bg-card divide-y divide-border overflow-hidden">
+                {docs.length > 1 && (
+                  <div className="flex justify-end px-3 py-2 bg-muted/40">
+                    <button
+                      type="button"
+                      onClick={handleDownloadAll}
+                      disabled={isZipping}
+                      className="flex items-center gap-1 text-xs font-semibold text-white bg-primary hover:bg-primary/90 disabled:opacity-60 px-3 py-1.5 rounded-md transition-colors"
+                    >
+                      <Icon name={isZipping ? 'Loader2' : 'Download'} size={14} className={isZipping ? 'animate-spin' : ''} />
+                      {isZipping ? 'Архивируем…' : 'Скачать всё'}
+                    </button>
+                  </div>
+                )}
                 {docs.map((doc) => (
                   <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2.5">
                     <div className="flex items-center gap-2 min-w-0">
