@@ -1014,8 +1014,11 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         if error:
             return error
         
+        clinic_id = get_clinic_id(event)
+        clinic_cond = clinic_sql(clinic_id, 'u')
+
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("""
+        cur.execute(f"""
             SELECT 
                 u.id, u.username, u.full_name, u.position, u.photo_url, u.is_active, 
                 u.created_at, u.last_login, u.email, u.bitrix_id,
@@ -1026,6 +1029,7 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             FROM users u
             LEFT JOIN user_roles ur ON u.id = ur.user_id
             LEFT JOIN roles r ON ur.role_id = r.id
+            WHERE {clinic_cond}
             GROUP BY u.id
             ORDER BY u.created_at DESC
         """)
@@ -1058,14 +1062,16 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         
         password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
+        clinic_id = get_clinic_id(event)
+        
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         try:
             cur.execute("""
-                INSERT INTO users (username, password_hash, full_name, position, photo_url, email, bitrix_id, is_active)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, true)
+                INSERT INTO users (username, password_hash, full_name, position, photo_url, email, bitrix_id, is_active, clinic_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, true, %s)
                 RETURNING id, username, full_name, position, photo_url, is_active, created_at
-            """, (username, password_hash, full_name, position, photo_url, email or (username + '@example.com'), bitrix_id or None))
+            """, (username, password_hash, full_name, position, photo_url, email or (username + '@example.com'), bitrix_id or None, clinic_id))
             
             new_user = cur.fetchone()
             
@@ -1117,6 +1123,16 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         body_data = json.loads(event.get('body', '{}'))
         
         cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        clinic_id = get_clinic_id(event)
+        cur.execute("SELECT clinic_id FROM users WHERE id = %s", (user_id,))
+        target = cur.fetchone()
+        if not target:
+            cur.close()
+            return response(404, {'error': 'Пользователь не найден'})
+        if target['clinic_id'] != clinic_id:
+            cur.close()
+            return response(403, {'error': 'Пользователь принадлежит другой клинике'})
         
         if 'is_active' in body_data:
             cur.execute("""
@@ -1207,8 +1223,15 @@ def handle_users(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         try:
-            cur.execute("SELECT id, username, full_name, position, is_active FROM users WHERE id = %s", (user_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute("SELECT id, username, full_name, position, is_active, clinic_id FROM users WHERE id = %s", (user_id,))
             user_before_delete = cur.fetchone()
+            if not user_before_delete:
+                cur.close()
+                return response(404, {'error': 'Пользователь не найден'})
+            if user_before_delete['clinic_id'] != clinic_id:
+                cur.close()
+                return response(403, {'error': 'Пользователь принадлежит другой клинике'})
             cur.execute("DELETE FROM user_roles WHERE user_id = %s", (user_id,))
             cur.execute("DELETE FROM users WHERE id = %s RETURNING id, username", (user_id,))
             deleted_user = cur.fetchone()

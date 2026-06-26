@@ -102,6 +102,7 @@ const App = () => {
               <Route path="services" element={<Services embedded />} />
               <Route path="custom-fields" element={<CustomFields embedded />} />
               <Route path="saving-reasons" element={<SavingReasons embedded />} />
+              <Route path="users" element={<Users embedded />} />
               <Route path="audit-logs" element={<AuditLogs embedded />} />
             </Route>
 

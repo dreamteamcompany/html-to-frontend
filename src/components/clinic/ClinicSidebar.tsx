@@ -184,6 +184,15 @@ const ClinicSidebar = ({
             </li>
           )}
 
+          {hasPermission('users', 'read') && (
+            <li>
+              <Link to={`${base}/users`} className={itemCls(`${base}/users`)}>
+                <Icon name="Users" size={20} />
+                <span>Пользователи</span>
+              </Link>
+            </li>
+          )}
+
           {hasPermission('audit_logs', 'read') && (
             <li>
               <button

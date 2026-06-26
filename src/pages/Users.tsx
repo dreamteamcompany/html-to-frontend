@@ -9,7 +9,7 @@ import UsersTable from '@/components/users/UsersTable';
 import UsersMobileList from '@/components/users/UsersMobileList';
 import { Switch } from '@/components/ui/switch';
 import { API_ENDPOINTS } from '@/config/api';
-import { translateApiError } from '@/utils/api';
+import { translateApiError, apiFetch, setCurrentClinicId, getCurrentClinicId } from '@/utils/api';
 
 interface User {
   id: number;
@@ -31,7 +31,7 @@ interface Role {
   description: string;
 }
 
-const Users = () => {
+const Users = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ const Users = () => {
   const [dictionariesOpen, setDictionariesOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [showBlocked, setShowBlocked] = useState(false);
-  const { token, hasPermission, user: currentUser, checkAuth } = useAuth();
+  const { hasPermission, user: currentUser, checkAuth } = useAuth();
 
   const {
     menuOpen,
@@ -63,11 +63,7 @@ const Users = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=users`, {
-        headers: {
-          'X-Auth-Token': token || '',
-        },
-      });
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=users`);
       
       if (response.ok) {
         const data = await response.json();
@@ -85,11 +81,7 @@ const Users = () => {
 
   const loadRoles = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=roles`, {
-        headers: {
-          'X-Auth-Token': token || '',
-        },
-      });
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=roles`);
       
       if (response.ok) {
         const data = await response.json();
@@ -104,9 +96,15 @@ const Users = () => {
   };
 
   useEffect(() => {
+    // На общем портале (не внутри клиники) гарантируем общий контекст,
+    // чтобы не «залип» clinic_id от ранее открытой клиники.
+    if (!embedded && getCurrentClinicId() !== null) {
+      setCurrentClinicId(null);
+    }
     loadUsers();
     loadRoles();
-  }, []);
+     
+  }, [embedded]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,11 +130,10 @@ const Users = () => {
         body.password = formData.password;
       }
       
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'X-Auth-Token': token || '',
         },
         body: JSON.stringify(body),
       });
@@ -171,11 +168,10 @@ const Users = () => {
 
   const toggleUserStatus = async (userId: number, currentStatus: boolean) => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=users&id=${userId}`, {
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=users&id=${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-Auth-Token': token || '',
         },
         body: JSON.stringify({
           is_active: !currentStatus,
@@ -194,11 +190,8 @@ const Users = () => {
     if (!confirm(`Вы уверены, что хотите удалить пользователя "${userName}"?`)) return;
     
     try {
-      const response = await fetch(`${API_ENDPOINTS.main}?endpoint=users&id=${userId}`, {
+      const response = await apiFetch(`${API_ENDPOINTS.main}?endpoint=users&id=${userId}`, {
         method: 'DELETE',
-        headers: {
-          'X-Auth-Token': token || '',
-        },
       });
 
       if (response.ok) {
@@ -231,27 +224,29 @@ const Users = () => {
   const visibleUsers = showBlocked ? users : users.filter(u => u.is_active);
 
   return (
-    <div className="flex min-h-screen">
-      <PaymentsSidebar
-        menuOpen={menuOpen}
-        dictionariesOpen={dictionariesOpen}
-        setDictionariesOpen={setDictionariesOpen}
-        settingsOpen={settingsOpen}
-        setSettingsOpen={setSettingsOpen}
-        handleTouchStart={handleTouchStart}
-        handleTouchMove={handleTouchMove}
-        handleTouchEnd={handleTouchEnd}
-      />
+    <div className={embedded ? '' : 'flex min-h-screen'}>
+      {!embedded && (
+        <PaymentsSidebar
+          menuOpen={menuOpen}
+          dictionariesOpen={dictionariesOpen}
+          setDictionariesOpen={setDictionariesOpen}
+          settingsOpen={settingsOpen}
+          setSettingsOpen={setSettingsOpen}
+          handleTouchStart={handleTouchStart}
+          handleTouchMove={handleTouchMove}
+          handleTouchEnd={handleTouchEnd}
+        />
+      )}
 
-      {menuOpen && (
+      {!embedded && menuOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
-      <main className="lg:ml-[250px] p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full">
-        <UsersHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <main className={`${embedded ? '' : 'lg:ml-[250px]'} p-4 md:p-6 lg:p-[30px] min-h-screen flex-1 overflow-x-hidden max-w-full`}>
+        {!embedded && <UsersHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
