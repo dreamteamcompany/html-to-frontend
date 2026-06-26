@@ -12,6 +12,22 @@ SCHEMA = 't_p61788166_html_to_frontend'
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
 
+def get_clinic_id(event):
+    headers = event.get('headers', {}) or {}
+    raw = headers.get('X-Clinic-Id') or headers.get('x-clinic-id')
+    if raw is None or str(raw).strip() == '':
+        return None
+    try:
+        return int(raw)
+    except (ValueError, TypeError):
+        return None
+
+def clinic_sql(clinic_id, alias=''):
+    col = f'{alias}.clinic_id' if alias else 'clinic_id'
+    if clinic_id is None:
+        return f'{col} IS NULL'
+    return f'{col} = {int(clinic_id)}'
+
 def _none_to_str(values: dict, fields: list) -> dict:
     for f in fields:
         if isinstance(values, dict) and values.get(f) is None:
@@ -214,6 +230,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         user_id = payload['user_id']
         is_admin = is_admin_user(conn, user_id)
+        clinic_id = get_clinic_id(event)
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         # Categories
@@ -223,7 +240,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
-                cur.execute(f'SELECT id, name, icon FROM {SCHEMA}.categories ORDER BY name')
+                cur.execute(f'SELECT id, name, icon FROM {SCHEMA}.categories WHERE {clinic_sql(clinic_id)} ORDER BY name')
                 categories = [dict(row) for row in cur.fetchall()]
                 
                 cur.close()
@@ -239,8 +256,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 cat_req = CategoryRequest(**data)
                 
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.categories (name, icon) VALUES (%s, %s) RETURNING id, name, icon",
-                    (cat_req.name, cat_req.icon)
+                    f"INSERT INTO {SCHEMA}.categories (name, icon, clinic_id) VALUES (%s, %s, %s) RETURNING id, name, icon",
+                    (cat_req.name, cat_req.icon, clinic_id)
                 )
                 row = cur.fetchone()
                 conn.commit()
@@ -308,7 +325,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
-                cur.execute(f'SELECT id, name, inn, kpp, address, postal_code FROM {SCHEMA}.legal_entities WHERE is_active = true ORDER BY name')
+                cur.execute(f'SELECT id, name, inn, kpp, address, postal_code FROM {SCHEMA}.legal_entities WHERE is_active = true AND {clinic_sql(clinic_id)} ORDER BY name')
                 entities = [dict(row) for row in cur.fetchall()]
                 
                 cur.close()
@@ -324,8 +341,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 le_req = LegalEntityRequest(**data)
                 
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.legal_entities (name, inn, kpp, address, postal_code, is_active) VALUES (%s, %s, %s, %s, %s, true) RETURNING id, name, inn, kpp, address, postal_code",
-                    (le_req.name, le_req.inn, le_req.kpp, le_req.address, le_req.postal_code)
+                    f"INSERT INTO {SCHEMA}.legal_entities (name, inn, kpp, address, postal_code, is_active, clinic_id) VALUES (%s, %s, %s, %s, %s, true, %s) RETURNING id, name, inn, kpp, address, postal_code",
+                    (le_req.name, le_req.inn, le_req.kpp, le_req.address, le_req.postal_code, clinic_id)
                 )
                 row = cur.fetchone()
                 conn.commit()
@@ -397,7 +414,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     SELECT id, name, inn, kpp, ogrn, legal_address, actual_address, 
                            phone, email, contact_person, bank_name, bank_bik, 
                            bank_account, correspondent_account, notes 
-                    FROM {SCHEMA}.contractors WHERE is_active = true ORDER BY name
+                    FROM {SCHEMA}.contractors WHERE is_active = true AND {clinic_sql(clinic_id)} ORDER BY name
                 """)
                 contractors = [dict(row) for row in cur.fetchall()]
                 
@@ -416,14 +433,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 cur.execute(f"""
                     INSERT INTO {SCHEMA}.contractors 
                     (name, inn, kpp, ogrn, legal_address, actual_address, phone, email, contact_person, 
-                     bank_name, bank_bik, bank_account, correspondent_account, notes) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
+                     bank_name, bank_bik, bank_account, correspondent_account, notes, clinic_id) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
                     RETURNING id, name, inn, kpp, ogrn, legal_address, actual_address, phone, email, contact_person, 
                               bank_name, bank_bik, bank_account, correspondent_account, notes
                 """, (cont_req.name, cont_req.inn, cont_req.kpp, cont_req.ogrn, cont_req.legal_address,
                       cont_req.actual_address, cont_req.phone, cont_req.email, cont_req.contact_person,
                       cont_req.bank_name, cont_req.bank_bik, cont_req.bank_account, 
-                      cont_req.correspondent_account, cont_req.notes))
+                      cont_req.correspondent_account, cont_req.notes, clinic_id))
                 row = cur.fetchone()
                 conn.commit()
                 create_audit_log(conn, 'contractor', row['id'], 'created', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'inn': row['inn']})
@@ -498,7 +515,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
-                cur.execute(f'SELECT id, name, description FROM {SCHEMA}.customer_departments WHERE is_active = true ORDER BY name')
+                cur.execute(f'SELECT id, name, description FROM {SCHEMA}.customer_departments WHERE is_active = true AND {clinic_sql(clinic_id)} ORDER BY name')
                 departments = [dict(row) for row in cur.fetchall()]
                 
                 cur.close()
@@ -514,8 +531,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 dept_req = CustomerDepartmentRequest(**data)
                 
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.customer_departments (name, description) VALUES (%s, %s) RETURNING id, name, description",
-                    (dept_req.name, dept_req.description)
+                    f"INSERT INTO {SCHEMA}.customer_departments (name, description, clinic_id) VALUES (%s, %s, %s) RETURNING id, name, description",
+                    (dept_req.name, dept_req.description, clinic_id)
                 )
                 row = cur.fetchone()
                 conn.commit()
@@ -599,6 +616,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     LEFT JOIN {SCHEMA}.users u2 ON s.final_approver_id = u2.id
                     LEFT JOIN {SCHEMA}.legal_entities le ON s.legal_entity_id = le.id
                     LEFT JOIN {SCHEMA}.contractors ct ON s.contractor_id = ct.id
+                    WHERE {clinic_sql(clinic_id, 's')}
                     ORDER BY s.name
                 """)
                 services = [dict(row) for row in cur.fetchall()]
@@ -621,13 +639,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cur.execute(f"""
                     INSERT INTO {SCHEMA}.services 
-                    (name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    (name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id, clinic_id)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id, name, description, intermediate_approver_id, final_approver_id,
                               customer_department_id, category_id, legal_entity_id, contractor_id, created_at
                 """, (svc_req.name, svc_req.description, svc_req.intermediate_approver_id, 
                       svc_req.final_approver_id, svc_req.customer_department_id, svc_req.category_id,
-                      svc_req.legal_entity_id, svc_req.contractor_id))
+                      svc_req.legal_entity_id, svc_req.contractor_id, clinic_id))
                 row = cur.fetchone()
                 conn.commit()
                 create_audit_log(conn, 'service', row['id'], 'created', user_id, payload.get('username', payload.get('email', 'unknown')), new_values={'name': row['name'], 'description': row['description']})
@@ -697,7 +715,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     LEFT JOIN {SCHEMA}.users u2 ON s.final_approver_id = u2.id
                     LEFT JOIN {SCHEMA}.legal_entities le ON s.legal_entity_id = le.id
                     LEFT JOIN {SCHEMA}.contractors ct ON s.contractor_id = ct.id
-                    WHERE s.id = %s
+                    WHERE s.id = %s AND {clinic_sql(clinic_id, 's')}
                 """, (svc_id,))
                 row = cur.fetchone()
                 
@@ -738,7 +756,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     conn.close()
                     return response(403, {'error': 'Forbidden'})
                 
-                cur.execute(f'SELECT id, name, field_type, options FROM {SCHEMA}.custom_fields ORDER BY name')
+                cur.execute(f'SELECT id, name, field_type, options FROM {SCHEMA}.custom_fields WHERE {clinic_sql(clinic_id)} ORDER BY name')
                 fields = [dict(row) for row in cur.fetchall()]
                 
                 cur.close()
@@ -754,8 +772,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 field_req = CustomFieldRequest(**data)
                 
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.custom_fields (name, field_type, options) VALUES (%s, %s, %s) RETURNING id, name, field_type, options",
-                    (field_req.name, field_req.field_type, field_req.options)
+                    f"INSERT INTO {SCHEMA}.custom_fields (name, field_type, options, clinic_id) VALUES (%s, %s, %s, %s) RETURNING id, name, field_type, options",
+                    (field_req.name, field_req.field_type, field_req.options, clinic_id)
                 )
                 row = cur.fetchone()
                 conn.commit()

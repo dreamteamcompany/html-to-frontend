@@ -13,6 +13,22 @@ from pydantic import BaseModel, Field
 SCHEMA = 't_p61788166_html_to_frontend'
 DSN = os.environ['DATABASE_URL']
 
+def get_clinic_id(event):
+    headers = event.get('headers', {}) or {}
+    raw = headers.get('X-Clinic-Id') or headers.get('x-clinic-id')
+    if raw is None or str(raw).strip() == '':
+        return None
+    try:
+        return int(raw)
+    except (ValueError, TypeError):
+        return None
+
+def clinic_sql(clinic_id, alias=''):
+    col = f'{alias}.clinic_id' if alias else 'clinic_id'
+    if clinic_id is None:
+        return f'{col} IS NULL'
+    return f'{col} = {int(clinic_id)}'
+
 def response(status: int, body: Any) -> Dict[str, Any]:
     """Формирует HTTP ответ"""
     return {
@@ -96,6 +112,7 @@ def handle_savings_get(event: Dict[str, Any], conn, path: str) -> Dict[str, Any]
     if len(path_parts) > 0 and path_parts[-1].isdigit():
         saving_id = int(path_parts[-1])
     
+    clinic_id = get_clinic_id(event)
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     if saving_id:
@@ -112,7 +129,7 @@ def handle_savings_get(event: Dict[str, Any], conn, path: str) -> Dict[str, Any]
             LEFT JOIN {SCHEMA}.services srv ON s.service_id = srv.id
             LEFT JOIN {SCHEMA}.users u ON s.employee_id = u.id
             LEFT JOIN {SCHEMA}.saving_reasons sr ON s.saving_reason_id = sr.id
-            WHERE s.id = %s
+            WHERE s.id = %s AND {clinic_sql(clinic_id, 's')}
         """, (saving_id,))
         
         saving = cur.fetchone()
@@ -141,7 +158,7 @@ def handle_savings_get(event: Dict[str, Any], conn, path: str) -> Dict[str, Any]
             LEFT JOIN {SCHEMA}.services srv ON s.service_id = srv.id
             LEFT JOIN {SCHEMA}.users u ON s.employee_id = u.id
             LEFT JOIN {SCHEMA}.saving_reasons sr ON s.saving_reason_id = sr.id
-            WHERE 1=1
+            WHERE 1=1 AND {clinic_sql(clinic_id, 's')}
         """
         params = []
         
@@ -174,6 +191,7 @@ def handle_savings_get(event: Dict[str, Any], conn, path: str) -> Dict[str, Any]
                     ELSE 0
                 END) as total_annual_savings
             FROM {SCHEMA}.savings
+            WHERE {clinic_sql(clinic_id)}
         """)
         
         stats = cur.fetchone()
@@ -186,11 +204,13 @@ def handle_savings_get(event: Dict[str, Any], conn, path: str) -> Dict[str, Any]
 
 def handle_saving_reasons_get(event: Dict[str, Any], conn) -> Dict[str, Any]:
     """Получение причин экономий"""
+    clinic_id = get_clinic_id(event)
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     cur.execute(f"""
         SELECT id, name, description, icon, created_at
         FROM {SCHEMA}.saving_reasons
+        WHERE {clinic_sql(clinic_id)}
         ORDER BY name
     """)
     
@@ -251,12 +271,13 @@ def handler(event: dict, context) -> dict:
                 body = json.loads(event.get('body', '{}'))
                 reason_req = SavingReasonRequest(**body)
                 
+                clinic_id = get_clinic_id(event)
                 cur = conn.cursor(cursor_factory=RealDictCursor)
                 cur.execute(f"""
-                    INSERT INTO {SCHEMA}.saving_reasons (name, description, icon)
-                    VALUES (%s, %s, %s)
+                    INSERT INTO {SCHEMA}.saving_reasons (name, description, icon, clinic_id)
+                    VALUES (%s, %s, %s, %s)
                     RETURNING id
-                """, (reason_req.name, reason_req.description, reason_req.icon))
+                """, (reason_req.name, reason_req.description, reason_req.icon, clinic_id))
                 
                 reason_id = cur.fetchone()['id']
                 conn.commit()
@@ -330,12 +351,13 @@ def handler(event: dict, context) -> dict:
                 body = json.loads(event.get('body', '{}'))
                 saving_req = SavingRequest(**body)
                 
+                clinic_id = get_clinic_id(event)
                 cur = conn.cursor(cursor_factory=RealDictCursor)
                 
                 # Создаём экономию
                 cur.execute(f"""
-                    INSERT INTO {SCHEMA}.savings (service_id, description, amount, frequency, currency, employee_id, saving_reason_id)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO {SCHEMA}.savings (service_id, description, amount, frequency, currency, employee_id, saving_reason_id, clinic_id)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
                 """, (
                     saving_req.service_id,
@@ -344,7 +366,8 @@ def handler(event: dict, context) -> dict:
                     saving_req.frequency,
                     saving_req.currency,
                     saving_req.employee_id,
-                    saving_req.saving_reason_id
+                    saving_req.saving_reason_id,
+                    clinic_id
                 ))
                 
                 saving_id = cur.fetchone()['id']

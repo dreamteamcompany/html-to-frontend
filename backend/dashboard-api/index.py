@@ -23,6 +23,22 @@ def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         return None
 
+def get_clinic_id(event):
+    headers = event.get('headers', {}) or {}
+    raw = headers.get('X-Clinic-Id') or headers.get('x-clinic-id')
+    if raw is None or str(raw).strip() == '':
+        return None
+    try:
+        return int(raw)
+    except (ValueError, TypeError):
+        return None
+
+def clinic_sql(clinic_id, alias=''):
+    col = f'{alias}.clinic_id' if alias else 'clinic_id'
+    if clinic_id is None:
+        return f'{col} IS NULL'
+    return f'{col} = {int(clinic_id)}'
+
 def handler(event: dict, context) -> dict:
     '''API для получения данных дашборда с реальной статистикой из БД'''
     
@@ -61,12 +77,14 @@ def handler(event: dict, context) -> dict:
         
         conn = psycopg2.connect(dsn)
         cur = conn.cursor()
+        clinic_id = get_clinic_id(event)
         
         # KPI: Активные источники (сервисы)
         cur.execute(f'''
             SELECT COUNT(DISTINCT service_id) 
             FROM {schema}.payments 
             WHERE service_id IS NOT NULL
+            AND {clinic_sql(clinic_id)}
         ''')
         active_services = cur.fetchone()[0] or 0
         
@@ -75,6 +93,7 @@ def handler(event: dict, context) -> dict:
             SELECT COUNT(*) 
             FROM {schema}.payments 
             WHERE payment_date >= CURRENT_DATE - INTERVAL '30 days'
+            AND {clinic_sql(clinic_id)}
         ''')
         operations_count = cur.fetchone()[0] or 0
         
@@ -84,6 +103,7 @@ def handler(event: dict, context) -> dict:
             FROM {schema}.payments 
             WHERE invoice_number IS NOT NULL 
             AND payment_date >= CURRENT_DATE - INTERVAL '30 days'
+            AND {clinic_sql(clinic_id)}
         ''')
         invoices_count = cur.fetchone()[0] or 0
         
@@ -92,6 +112,7 @@ def handler(event: dict, context) -> dict:
             SELECT COUNT(*) 
             FROM {schema}.payments 
             WHERE status = 'pending_approval'
+            AND {clinic_sql(clinic_id)}
         ''')
         pending_count = cur.fetchone()[0] or 0
         
@@ -102,6 +123,7 @@ def handler(event: dict, context) -> dict:
                 COUNT(*) as count
             FROM {schema}.payments
             WHERE payment_date >= CURRENT_DATE - INTERVAL '30 days'
+            AND {clinic_sql(clinic_id)}
             GROUP BY DATE(payment_date)
             ORDER BY date ASC
         ''')
@@ -143,6 +165,7 @@ def handler(event: dict, context) -> dict:
             FROM {schema}.payments p
             LEFT JOIN {schema}.legal_entities le ON p.legal_entity_id = le.id
             LEFT JOIN {schema}.contractors c ON p.contractor_id = c.id
+            WHERE {clinic_sql(clinic_id, 'p')}
             ORDER BY p.payment_date DESC
             LIMIT 5
         ''')

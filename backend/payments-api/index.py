@@ -18,6 +18,22 @@ SCHEMA = 't_p61788166_html_to_frontend'
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
 
+def get_clinic_id(event):
+    headers = event.get('headers', {}) or {}
+    raw = headers.get('X-Clinic-Id') or headers.get('x-clinic-id')
+    if raw is None or str(raw).strip() == '':
+        return None
+    try:
+        return int(raw)
+    except (ValueError, TypeError):
+        return None
+
+def clinic_sql(clinic_id, alias=''):
+    col = f'{alias}.clinic_id' if alias else 'clinic_id'
+    if clinic_id is None:
+        return f'{col} IS NULL'
+    return f'{col} = {int(clinic_id)}'
+
 class PaymentRequest(BaseModel):
     category_id: int = Field(..., gt=0)
     amount: float = Field(..., gt=0)
@@ -165,9 +181,9 @@ def write_audit_approval(cur, payment_id: int, user_id: int, comment: str):
     except Exception:
         now_moscow = datetime.now()
     cur.execute(
-        f"""INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s)""",
-        (payment_id, user_id, approver_role, 'updated', comment, now_moscow)
+        f"""INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, created_at, clinic_id)
+            VALUES (%s, %s, %s, %s, %s, %s, (SELECT clinic_id FROM {SCHEMA}.payments WHERE id = %s))""",
+        (payment_id, user_id, approver_role, 'updated', comment, now_moscow, payment_id)
     )
 
 
@@ -223,6 +239,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return response(403, {'error': 'Forbidden'})
             
             is_admin = is_admin_user(conn, payload['user_id'])
+            clinic_id = get_clinic_id(event)
             query_params = event.get('queryStringParameters') or {}
             scope = query_params.get('scope', 'my')
             
@@ -243,10 +260,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if not is_admin and not is_ceo and not is_financier and not is_approver_role and not has_view_all:
                     conn.close()
                     return response(403, {'error': 'Недостаточно прав для просмотра всех платежей'})
-                where_clause = ""
+                where_clause = f"WHERE {clinic_sql(clinic_id, 'p')}"
                 params = tuple()
             else:
-                where_clause = "WHERE p.created_by = %s"
+                where_clause = f"WHERE p.created_by = %s AND {clinic_sql(clinic_id, 'p')}"
                 params = (payload['user_id'],)
             
             cur.execute(f"""
@@ -395,14 +412,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             category_name = category['name']
             
+            clinic_id = get_clinic_id(event)
             file_uploaded_at = datetime.now().isoformat() if pay_req.invoice_file_url else None
             cur.execute(
-                f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, invoice_file_url, invoice_file_uploaded_at, created_by, status) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft') 
+                f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, invoice_file_url, invoice_file_uploaded_at, created_by, status, clinic_id) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft', %s) 
                    RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, invoice_file_url, invoice_file_uploaded_at, status, created_by""",
                 (category_name, pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
                  pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, pay_req.service_id, 
-                 pay_req.invoice_number, pay_req.invoice_date, pay_req.invoice_file_url, file_uploaded_at, payload['user_id'])
+                 pay_req.invoice_number, pay_req.invoice_date, pay_req.invoice_file_url, file_uploaded_at, payload['user_id'], clinic_id)
             )
             row = cur.fetchone()
             payment_id = row['id']

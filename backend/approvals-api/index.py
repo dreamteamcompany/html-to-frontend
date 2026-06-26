@@ -22,6 +22,22 @@ APP_BASE_URL = 'https://finance-km.ru'
 def log(msg):
     print(msg, file=sys.stderr, flush=True)
 
+def get_clinic_id(event):
+    headers = event.get('headers', {}) or {}
+    raw = headers.get('X-Clinic-Id') or headers.get('x-clinic-id')
+    if raw is None or str(raw).strip() == '':
+        return None
+    try:
+        return int(raw)
+    except (ValueError, TypeError):
+        return None
+
+def clinic_sql(clinic_id, alias=''):
+    col = f'{alias}.clinic_id' if alias else 'clinic_id'
+    if clinic_id is None:
+        return f'{col} IS NULL'
+    return f'{col} = {int(clinic_id)}'
+
 def response(status: int, body: Any) -> Dict[str, Any]:
     """Формирует HTTP ответ"""
     return {
@@ -150,6 +166,7 @@ def handle_payment_history(event: Dict[str, Any], conn, payment_id: int, user_id
 def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str, Any]:
     """Получение списка платежей на утверждение"""
     cur = conn.cursor(cursor_factory=RealDictCursor)
+    clinic_id = get_clinic_id(event)
     
     # Получаем платежи, где текущий пользователь - промежуточный или финальный утверждающий
     cur.execute(f"""
@@ -173,6 +190,7 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
         LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
         LEFT JOIN {SCHEMA}.users u ON p.created_by = u.id
         WHERE p.status IN ('pending_ceo', 'pending_tech_director', 'pending_ib', 'pending_cfo')
+        AND {clinic_sql(clinic_id, 'p')}
         ORDER BY p.created_at DESC
     """)
     
@@ -814,11 +832,12 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
             WHERE id = %s
         """, (new_status, approval_action.payment_id))
     
-    # Добавляем запись в историю утверждений с московским временем
+    # Добавляем запись в историю утверждений с московским временем.
+    # clinic_id наследуем от платежа, чтобы согласования были изолированы по клинике.
     cur.execute(f"""
-        INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, created_at)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (approval_action.payment_id, user_id, 'submitter', approval_action.action, approval_action.comment, now_moscow))
+        INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, created_at, clinic_id)
+        VALUES (%s, %s, %s, %s, %s, %s, (SELECT clinic_id FROM {SCHEMA}.payments WHERE id = %s))
+    """, (approval_action.payment_id, user_id, 'submitter', approval_action.action, approval_action.comment, now_moscow, approval_action.payment_id))
     
     conn.commit()
     cur.close()

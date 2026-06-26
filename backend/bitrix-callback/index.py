@@ -219,9 +219,9 @@ def _approve_or_reject(conn, payment_id: int, user_id: int, action: str) -> Dict
         comment_text = 'Отклонено через Битрикс'
 
     cur.execute(f"""
-        INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, created_at)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (payment_id, user_id, 'ceo', action_label, comment_text, now_moscow))
+        INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, created_at, clinic_id)
+        VALUES (%s, %s, %s, %s, %s, %s, (SELECT clinic_id FROM {SCHEMA}.payments WHERE id = %s))
+    """, (payment_id, user_id, 'ceo', action_label, comment_text, now_moscow, payment_id))
     conn.commit()
     cur.close()
     return {'ok': True}

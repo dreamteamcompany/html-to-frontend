@@ -1385,7 +1385,8 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if error:
                 return error
             
-            cur.execute('SELECT id, name, icon, created_at FROM saving_reasons WHERE is_active = true ORDER BY name')
+            clinic_id = get_clinic_id(event)
+            cur.execute(f'SELECT id, name, icon, created_at FROM saving_reasons WHERE is_active = true AND {clinic_sql(clinic_id)} ORDER BY name')
             rows = cur.fetchall()
             reasons = [
                 {
@@ -1406,9 +1407,10 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
             body = json.loads(event.get('body', '{}'))
             reason_req = SavingReasonRequest(**body)
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
-                "INSERT INTO saving_reasons (name, icon) VALUES (%s, %s) RETURNING id, name, icon, created_at",
-                (reason_req.name, reason_req.icon)
+                "INSERT INTO saving_reasons (name, icon, clinic_id) VALUES (%s, %s, %s) RETURNING id, name, icon, created_at",
+                (reason_req.name, reason_req.icon, clinic_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -1432,6 +1434,13 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if not reason_id:
                 return response(400, {'error': 'ID is required'})
             
+            clinic_id = get_clinic_id(event)
+            cur.execute("SELECT clinic_id FROM saving_reasons WHERE id = %s", (reason_id,))
+            sr_old = cur.fetchone()
+            if not sr_old:
+                return response(404, {'error': 'Saving reason not found'})
+            if sr_old[0] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 "UPDATE saving_reasons SET name = %s, icon = %s WHERE id = %s RETURNING id, name, icon, created_at",
                 (reason_req.name, reason_req.icon, reason_id)
@@ -1461,6 +1470,13 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if not reason_id:
                 return response(400, {'error': 'ID is required'})
             
+            clinic_id = get_clinic_id(event)
+            cur.execute("SELECT clinic_id FROM saving_reasons WHERE id = %s", (reason_id,))
+            sr_del = cur.fetchone()
+            if not sr_del:
+                return response(404, {'error': 'Saving reason not found'})
+            if sr_del[0] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute('DELETE FROM saving_reasons WHERE id = %s', (reason_id,))
             conn.commit()
             
@@ -1480,6 +1496,7 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if error:
                 return error
             
+            clinic_id = get_clinic_id(event)
             cur.execute(f"""
                 SELECT 
                     p.id, 
@@ -1519,6 +1536,7 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 LEFT JOIN {SCHEMA}.users u ON p.created_by = u.id
                 LEFT JOIN {SCHEMA}.services s ON p.service_id = s.id
                 LEFT JOIN {SCHEMA}.planned_payments pp ON pp.converted_to_payment_id = p.id
+                WHERE {clinic_sql(clinic_id, 'p')}
                 ORDER BY p.payment_date DESC
             """)
             rows = cur.fetchall()
@@ -1605,13 +1623,14 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 
                 category_name = category['name']
                 
+                clinic_id = get_clinic_id(event)
                 cur.execute(
-                    f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, created_by, status, is_planned) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft', %s) 
+                    f"""INSERT INTO {SCHEMA}.payments (category, category_id, amount, description, payment_date, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, created_by, status, is_planned, clinic_id) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft', %s, %s) 
                        RETURNING id, category_id, amount, description, payment_date, created_at, legal_entity_id, contractor_id, department_id, service_id, invoice_number, invoice_date, status, created_by, is_planned""",
                     (category_name, pay_req.category_id, pay_req.amount, pay_req.description, payment_date, 
                      pay_req.legal_entity_id, pay_req.contractor_id, pay_req.department_id, pay_req.service_id, 
-                     pay_req.invoice_number, pay_req.invoice_date, payload['user_id'], pay_req.is_planned)
+                     pay_req.invoice_number, pay_req.invoice_date, payload['user_id'], pay_req.is_planned, clinic_id)
                 )
                 row = cur.fetchone()
                 payment_id = row['id']
@@ -1690,6 +1709,11 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if not old_payment:
                 cur.close()
                 return response(404, {'error': 'Payment not found'})
+            
+            clinic_id = get_clinic_id(event)
+            if old_payment.get('clinic_id') != clinic_id:
+                cur.close()
+                return response(403, {'error': 'Платёж принадлежит другому порталу'})
             
             cur.execute(
                 f"""UPDATE {SCHEMA}.payments 
@@ -1771,6 +1795,11 @@ def handle_payments(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if not payment:
                 cur.close()
                 return response(404, {'error': 'Платёж не найден'})
+            
+            clinic_id = get_clinic_id(event)
+            if payment.get('clinic_id') != clinic_id:
+                cur.close()
+                return response(403, {'error': 'Платёж принадлежит другому порталу'})
             
             is_admin = payload.get('is_admin', False)
 
@@ -1858,6 +1887,7 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             user_id_safe = int(payload['user_id'])
             user_filter = "" if is_admin else f"AND pp.created_by = {user_id_safe}"
 
+            clinic_id = get_clinic_id(event)
             cur.execute(f"""
                 WITH base AS (
                     SELECT pp.id,
@@ -1879,6 +1909,7 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                     LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
                     WHERE pp.is_active = true
                       AND pp.converted_to_payment_id IS NULL
+                      AND {clinic_sql(clinic_id, 'pp')}
                       {user_filter}
                 ),
                 expanded AS (
@@ -2002,10 +2033,13 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             if not pp_id:
                 return response(400, {'error': 'ID is required'})
 
-            cur.execute(f"SELECT created_by FROM {SCHEMA}.planned_payments WHERE id = %s", (pp_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT created_by, clinic_id FROM {SCHEMA}.planned_payments WHERE id = %s", (pp_id,))
             row = cur.fetchone()
             if not row:
                 return response(404, {'error': 'Запланированный платёж не найден'})
+            if row['clinic_id'] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             if not payload.get('is_admin', False) and row['created_by'] != payload['user_id']:
                 return response(403, {'error': 'Нет доступа'})
 
@@ -2034,10 +2068,13 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             if not pp_id:
                 return response(400, {'error': 'ID is required'})
 
-            cur.execute(f"SELECT created_by FROM {SCHEMA}.planned_payments WHERE id = %s", (pp_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT created_by, clinic_id FROM {SCHEMA}.planned_payments WHERE id = %s", (pp_id,))
             row = cur.fetchone()
             if not row:
                 return response(404, {'error': 'Запланированный платёж не найден'})
+            if row['clinic_id'] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             if not payload.get('is_admin', False) and row['created_by'] != payload['user_id']:
                 return response(403, {'error': 'Нет доступа'})
 
@@ -2102,7 +2139,8 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
             if error:
                 return error
             
-            cur.execute(f'SELECT id, name, icon, created_at FROM {SCHEMA}.categories ORDER BY name')
+            clinic_id = get_clinic_id(event)
+            cur.execute(f'SELECT id, name, icon, created_at FROM {SCHEMA}.categories WHERE {clinic_sql(clinic_id)} ORDER BY name')
             rows = cur.fetchall()
             categories = [
                 {
@@ -2123,9 +2161,10 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
             body = json.loads(event.get('body', '{}'))
             cat_req = CategoryRequest(**body)
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
-                f"INSERT INTO {SCHEMA}.categories (name, icon) VALUES (%s, %s) RETURNING id, name, icon, created_at",
-                (cat_req.name, cat_req.icon)
+                f"INSERT INTO {SCHEMA}.categories (name, icon, clinic_id) VALUES (%s, %s, %s) RETURNING id, name, icon, created_at",
+                (cat_req.name, cat_req.icon, clinic_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -2150,8 +2189,13 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
             if not category_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute(f"SELECT name, icon FROM {SCHEMA}.categories WHERE id = %s", (category_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT name, icon, clinic_id FROM {SCHEMA}.categories WHERE id = %s", (category_id,))
             old_cat = cur.fetchone()
+            if not old_cat:
+                return response(404, {'error': 'Category not found'})
+            if old_cat[2] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 f"UPDATE {SCHEMA}.categories SET name = %s, icon = %s WHERE id = %s RETURNING id, name, icon, created_at",
                 (cat_req.name, cat_req.icon, category_id)
@@ -2188,8 +2232,13 @@ def handle_categories(method: str, event: Dict[str, Any], conn) -> Dict[str, Any
             if not category_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute(f"SELECT name, icon FROM {SCHEMA}.categories WHERE id = %s", (category_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT name, icon, clinic_id FROM {SCHEMA}.categories WHERE id = %s", (category_id,))
             cat_row = cur.fetchone()
+            if not cat_row:
+                return response(404, {'error': 'Category not found'})
+            if cat_row[2] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(f'DELETE FROM {SCHEMA}.categories WHERE id = %s', (category_id,))
             conn.commit()
             create_audit_log(conn, 'category', int(category_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'name': cat_row[0], 'icon': cat_row[1]} if cat_row else None)
@@ -2211,7 +2260,8 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             if error:
                 return error
             
-            cur.execute(f'SELECT id, name, inn, kpp, created_at FROM {SCHEMA}.contractors WHERE is_active = true ORDER BY name')
+            clinic_id = get_clinic_id(event)
+            cur.execute(f'SELECT id, name, inn, kpp, created_at FROM {SCHEMA}.contractors WHERE is_active = true AND {clinic_sql(clinic_id)} ORDER BY name')
             rows = cur.fetchall()
             contractors = [
                 {
@@ -2233,9 +2283,10 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             body = json.loads(event.get('body', '{}'))
             contractor_req = ContractorRequest(**body)
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
-                f"INSERT INTO {SCHEMA}.contractors (name, inn, kpp) VALUES (%s, %s, %s) RETURNING id, name, inn, kpp, created_at",
-                (contractor_req.name, contractor_req.inn, contractor_req.kpp)
+                f"INSERT INTO {SCHEMA}.contractors (name, inn, kpp, clinic_id) VALUES (%s, %s, %s, %s) RETURNING id, name, inn, kpp, created_at",
+                (contractor_req.name, contractor_req.inn, contractor_req.kpp, clinic_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -2261,8 +2312,13 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             if not contractor_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute(f"SELECT name, inn, kpp FROM {SCHEMA}.contractors WHERE id = %s", (contractor_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT name, inn, kpp, clinic_id FROM {SCHEMA}.contractors WHERE id = %s", (contractor_id,))
             old_ctr = cur.fetchone()
+            if not old_ctr:
+                return response(404, {'error': 'Contractor not found'})
+            if old_ctr[3] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 f"UPDATE {SCHEMA}.contractors SET name = %s, inn = %s, kpp = %s WHERE id = %s RETURNING id, name, inn, kpp, created_at",
                 (contractor_req.name, contractor_req.inn, contractor_req.kpp, contractor_id)
@@ -2302,8 +2358,13 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             if not contractor_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute(f"SELECT name, inn, kpp FROM {SCHEMA}.contractors WHERE id = %s", (contractor_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT name, inn, kpp, clinic_id FROM {SCHEMA}.contractors WHERE id = %s", (contractor_id,))
             ctr_row = cur.fetchone()
+            if not ctr_row:
+                return response(404, {'error': 'Contractor not found'})
+            if ctr_row[3] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(f'DELETE FROM {SCHEMA}.contractors WHERE id = %s', (contractor_id,))
             conn.commit()
             create_audit_log(conn, 'contractor', int(contractor_id), 'deleted', payload['user_id'], payload.get('username', payload.get('email', 'unknown')), old_values={'name': ctr_row[0], 'inn': ctr_row[1], 'kpp': ctr_row[2]} if ctr_row else None)
@@ -2438,7 +2499,8 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if error:
                 return error
             
-            cur.execute(f'SELECT id, name, inn, kpp, address, created_at FROM {SCHEMA}.legal_entities ORDER BY name')
+            clinic_id = get_clinic_id(event)
+            cur.execute(f'SELECT id, name, inn, kpp, address, created_at FROM {SCHEMA}.legal_entities WHERE {clinic_sql(clinic_id)} ORDER BY name')
             rows = cur.fetchall()
             entities = [
                 {
@@ -2461,9 +2523,10 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             body = json.loads(event.get('body', '{}'))
             entity_req = LegalEntityRequest(**body)
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
-                f"INSERT INTO {SCHEMA}.legal_entities (name, inn, kpp, address) VALUES (%s, %s, %s, %s) RETURNING id, name, inn, kpp, address, created_at",
-                (entity_req.name, entity_req.inn, entity_req.kpp, entity_req.address)
+                f"INSERT INTO {SCHEMA}.legal_entities (name, inn, kpp, address, clinic_id) VALUES (%s, %s, %s, %s, %s) RETURNING id, name, inn, kpp, address, created_at",
+                (entity_req.name, entity_req.inn, entity_req.kpp, entity_req.address, clinic_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -2490,8 +2553,13 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if not entity_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute(f"SELECT name, inn, kpp, address FROM {SCHEMA}.legal_entities WHERE id = %s", (entity_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT name, inn, kpp, address, clinic_id FROM {SCHEMA}.legal_entities WHERE id = %s", (entity_id,))
             old_le = cur.fetchone()
+            if not old_le:
+                return response(404, {'error': 'Legal entity not found'})
+            if old_le[4] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 f"UPDATE {SCHEMA}.legal_entities SET name = %s, inn = %s, kpp = %s, address = %s WHERE id = %s RETURNING id, name, inn, kpp, address, created_at",
                 (entity_req.name, entity_req.inn, entity_req.kpp, entity_req.address, entity_id)
@@ -2535,8 +2603,13 @@ def handle_legal_entities(method: str, event: Dict[str, Any], conn) -> Dict[str,
                 return response(400, {'error': 'ID обязателен'})
             
             try:
-                cur.execute(f"SELECT name, inn, kpp, address FROM {SCHEMA}.legal_entities WHERE id = %s", (entity_id,))
+                clinic_id = get_clinic_id(event)
+                cur.execute(f"SELECT name, inn, kpp, address, clinic_id FROM {SCHEMA}.legal_entities WHERE id = %s", (entity_id,))
                 le_row = cur.fetchone()
+                if not le_row:
+                    return response(404, {'error': 'Юридическое лицо не найдено'})
+                if le_row[4] != clinic_id:
+                    return response(403, {'error': 'Запись принадлежит другому порталу'})
                 # Обнуляем legal_entity_id в связанных платежах
                 cur.execute(f"UPDATE {SCHEMA}.payments SET legal_entity_id = NULL WHERE legal_entity_id = %s", (entity_id,))
                 
@@ -2569,7 +2642,8 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             if error:
                 return error
             
-            cur.execute(f'SELECT id, name, field_type, options, created_at FROM {SCHEMA}.custom_fields ORDER BY created_at DESC')
+            clinic_id = get_clinic_id(event)
+            cur.execute(f'SELECT id, name, field_type, options, created_at FROM {SCHEMA}.custom_fields WHERE {clinic_sql(clinic_id)} ORDER BY created_at DESC')
             rows = cur.fetchall()
             fields = [
                 {
@@ -2591,9 +2665,10 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             body = json.loads(event.get('body', '{}'))
             field_req = CustomFieldRequest(**body)
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
-                f"INSERT INTO {SCHEMA}.custom_fields (name, field_type, options) VALUES (%s, %s, %s) RETURNING id, name, field_type, options, created_at",
-                (field_req.name, field_req.field_type, field_req.options)
+                f"INSERT INTO {SCHEMA}.custom_fields (name, field_type, options, clinic_id) VALUES (%s, %s, %s, %s) RETURNING id, name, field_type, options, created_at",
+                (field_req.name, field_req.field_type, field_req.options, clinic_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -2618,6 +2693,13 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             if not field_id:
                 return response(400, {'error': 'ID is required'})
             
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT clinic_id FROM {SCHEMA}.custom_fields WHERE id = %s", (field_id,))
+            cf_old = cur.fetchone()
+            if not cf_old:
+                return response(404, {'error': 'Custom field not found'})
+            if cf_old[0] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 f"UPDATE {SCHEMA}.custom_fields SET name = %s, field_type = %s, options = %s WHERE id = %s RETURNING id, name, field_type, options, created_at",
                 (field_req.name, field_req.field_type, field_req.options, field_id)
@@ -2657,9 +2739,13 @@ def handle_custom_fields(method: str, event: Dict[str, Any], conn) -> Dict[str, 
             except (ValueError, TypeError):
                 return response(400, {'error': 'Invalid ID format'})
             
-            cur.execute(f"SELECT id FROM {SCHEMA}.custom_fields WHERE id = %s", (field_id_int,))
-            if not cur.fetchone():
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT clinic_id FROM {SCHEMA}.custom_fields WHERE id = %s", (field_id_int,))
+            cf_del = cur.fetchone()
+            if not cf_del:
                 return response(404, {'error': 'Custom field not found'})
+            if cf_del[0] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             
             cur.execute(f"DELETE FROM {SCHEMA}.custom_field_values WHERE custom_field_id = %s", (field_id_int,))
             cur.execute(f"DELETE FROM {SCHEMA}.custom_fields WHERE id = %s", (field_id_int,))
@@ -2680,9 +2766,10 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             if error:
                 return error
             
+            clinic_id = get_clinic_id(event)
             cur.execute(f'''SELECT id, name, inn, kpp, ogrn, legal_address, actual_address, phone, email, 
                           contact_person, bank_name, bank_bik, bank_account, correspondent_account, notes, created_at 
-                          FROM {SCHEMA}.contractors ORDER BY name''')
+                          FROM {SCHEMA}.contractors WHERE {clinic_sql(clinic_id)} ORDER BY name''')
             rows = cur.fetchall()
             contractors = [
                 {
@@ -2715,15 +2802,16 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             body = json.loads(event.get('body', '{}'))
             cont_req = ContractorRequest(**body)
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
                 f"""INSERT INTO {SCHEMA}.contractors (name, inn, kpp, ogrn, legal_address, actual_address, phone, email, 
-                   contact_person, bank_name, bank_bik, bank_account, correspondent_account, notes) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
+                   contact_person, bank_name, bank_bik, bank_account, correspondent_account, notes, clinic_id) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
                    RETURNING id, name, inn, kpp, ogrn, legal_address, actual_address, phone, email, 
                    contact_person, bank_name, bank_bik, bank_account, correspondent_account, notes, created_at""",
                 (cont_req.name, cont_req.inn, cont_req.kpp, cont_req.ogrn, cont_req.legal_address,
                  cont_req.actual_address, cont_req.phone, cont_req.email, cont_req.contact_person,
-                 cont_req.bank_name, cont_req.bank_bik, cont_req.bank_account, cont_req.correspondent_account, cont_req.notes)
+                 cont_req.bank_name, cont_req.bank_bik, cont_req.bank_account, cont_req.correspondent_account, cont_req.notes, clinic_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -2759,6 +2847,13 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
             if not contractor_id:
                 return response(400, {'error': 'ID is required'})
             
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT clinic_id FROM {SCHEMA}.contractors WHERE id = %s", (contractor_id,))
+            cont_old = cur.fetchone()
+            if not cont_old:
+                return response(404, {'error': 'Contractor not found'})
+            if cont_old[0] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 f"""UPDATE {SCHEMA}.contractors SET name = %s, inn = %s, kpp = %s, ogrn = %s, legal_address = %s, 
                    actual_address = %s, phone = %s, email = %s, contact_person = %s, bank_name = %s, 
@@ -2809,6 +2904,13 @@ def handle_contractors(method: str, event: Dict[str, Any], conn) -> Dict[str, An
                 return response(400, {'error': 'ID обязателен'})
             
             try:
+                clinic_id = get_clinic_id(event)
+                cur.execute(f"SELECT clinic_id FROM {SCHEMA}.contractors WHERE id = %s", (contractor_id,))
+                cont_del = cur.fetchone()
+                if not cont_del:
+                    return response(404, {'error': 'Контрагент не найден'})
+                if cont_del[0] != clinic_id:
+                    return response(403, {'error': 'Запись принадлежит другому порталу'})
                 # Обнуляем contractor_id в связанных платежах
                 cur.execute(f"UPDATE {SCHEMA}.payments SET contractor_id = NULL WHERE contractor_id = %s", (contractor_id,))
                 
@@ -3139,7 +3241,8 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             if error:
                 return error
             
-            cur.execute(f'SELECT id, name, description, is_active, created_at FROM {SCHEMA}.customer_departments WHERE is_active = true ORDER BY name')
+            clinic_id = get_clinic_id(event)
+            cur.execute(f'SELECT id, name, description, is_active, created_at FROM {SCHEMA}.customer_departments WHERE is_active = true AND {clinic_sql(clinic_id)} ORDER BY name')
             rows = cur.fetchall()
             departments = [
                 {
@@ -3161,9 +3264,10 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             body = json.loads(event.get('body', '{}'))
             dept_req = CustomerDepartmentRequest(**body)
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
-                f"INSERT INTO {SCHEMA}.customer_departments (name, description) VALUES (%s, %s) RETURNING id, name, description, is_active, created_at",
-                (dept_req.name, dept_req.description)
+                f"INSERT INTO {SCHEMA}.customer_departments (name, description, clinic_id) VALUES (%s, %s, %s) RETURNING id, name, description, is_active, created_at",
+                (dept_req.name, dept_req.description, clinic_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -3189,8 +3293,13 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             if not dept_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute(f"SELECT name, description FROM {SCHEMA}.customer_departments WHERE id = %s", (dept_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT name, description, clinic_id FROM {SCHEMA}.customer_departments WHERE id = %s", (dept_id,))
             old_dept = cur.fetchone()
+            if not old_dept:
+                return response(404, {'error': 'Department not found'})
+            if old_dept[2] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 f"UPDATE {SCHEMA}.customer_departments SET name = %s, description = %s WHERE id = %s RETURNING id, name, description, is_active, created_at",
                 (dept_req.name, dept_req.description, dept_id)
@@ -3225,8 +3334,13 @@ def handle_customer_departments(method: str, event: Dict[str, Any], conn) -> Dic
             body_data = json.loads(event.get('body', '{}'))
             dept_id = body_data.get('id')
             
-            cur.execute(f"SELECT name, description FROM {SCHEMA}.customer_departments WHERE id = %s", (dept_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT name, description, clinic_id FROM {SCHEMA}.customer_departments WHERE id = %s", (dept_id,))
             dept_row = cur.fetchone()
+            if not dept_row:
+                return response(404, {'error': 'Department not found'})
+            if dept_row[2] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(f"DELETE FROM {SCHEMA}.customer_departments WHERE id = %s RETURNING id", (dept_id,))
             row = cur.fetchone()
             
@@ -3286,9 +3400,9 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
         """, (now_moscow, payment_id))
         
         cur.execute(f"""
-            INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment)
-            VALUES (%s, %s, 'creator', 'submitted', 'Отправлено на согласование')
-        """, (payment_id, payload['user_id']))
+            INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, clinic_id)
+            VALUES (%s, %s, 'creator', 'submitted', 'Отправлено на согласование', (SELECT clinic_id FROM {SCHEMA}.payments WHERE id = %s))
+        """, (payment_id, payload['user_id'], payment_id))
         
         conn.commit()
         cur.close()
@@ -3348,9 +3462,9 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
         try:
             log(f"[DEBUG] Inserting approval for payment_id={req.payment_id}")
             cur.execute(f"""
-                INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (req.payment_id, user_id, user_role, req.action, req.comment))
+                INSERT INTO {SCHEMA}.approvals (payment_id, approver_id, approver_role, action, comment, clinic_id)
+                VALUES (%s, %s, %s, %s, %s, (SELECT clinic_id FROM {SCHEMA}.payments WHERE id = %s))
+            """, (req.payment_id, user_id, user_role, req.action, req.comment, req.payment_id))
             
             conn.commit()
         except Exception as e:
@@ -3383,6 +3497,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
     elif method == 'GET':
         params = event.get('queryStringParameters') or {}
         payment_id = params.get('payment_id')
+        clinic_id = get_clinic_id(event)
         
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
@@ -3391,7 +3506,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
                 SELECT a.*, u.full_name as approver_name, u.photo_url as approver_photo_url
                 FROM {SCHEMA}.approvals a
                 JOIN {SCHEMA}.users u ON a.approver_id = u.id
-                WHERE a.payment_id = %s
+                WHERE a.payment_id = %s AND {clinic_sql(clinic_id, 'a')}
                 ORDER BY a.created_at DESC
             """, (payment_id,))
         else:
@@ -3400,6 +3515,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
                 FROM {SCHEMA}.approvals a
                 JOIN {SCHEMA}.users u ON a.approver_id = u.id
                 JOIN {SCHEMA}.payments p ON a.payment_id = p.id
+                WHERE {clinic_sql(clinic_id, 'a')}
                 ORDER BY a.created_at DESC
                 LIMIT 100
             """)
@@ -3420,6 +3536,7 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if error:
                 return error
             
+            clinic_id = get_clinic_id(event)
             cur.execute(f"""
                 SELECT 
                     s.id, s.name, s.description, 
@@ -3441,6 +3558,7 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 LEFT JOIN {SCHEMA}.ticket_service_categories c ON s.category_id = c.id
                 LEFT JOIN {SCHEMA}.legal_entities le ON s.legal_entity_id = le.id
                 LEFT JOIN {SCHEMA}.contractors co ON s.contractor_id = co.id
+                WHERE {clinic_sql(clinic_id, 's')}
                 ORDER BY s.created_at DESC
             """)
             rows = cur.fetchall()
@@ -3455,14 +3573,15 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             body = json.loads(event.get('body', '{}'))
             service_req = ServiceRequest(**body)
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
                 f"""INSERT INTO {SCHEMA}.services 
-                   (name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, created_at, updated_at) 
-                   VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW()) 
+                   (name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, created_at, updated_at, clinic_id) 
+                   VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW(), %s) 
                    RETURNING id, name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, created_at""",
                 (service_req.name, service_req.description, 
                  service_req.intermediate_approver_id, service_req.final_approver_id,
-                 service_req.customer_department_id, service_req.category_id)
+                 service_req.customer_department_id, service_req.category_id, clinic_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -3493,8 +3612,13 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             body = json.loads(event.get('body', '{}'))
             service_req = ServiceRequest(**body)
             
-            cur.execute(f"SELECT name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id FROM {SCHEMA}.services WHERE id = %s", (service_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT name, description, intermediate_approver_id, final_approver_id, customer_department_id, category_id, legal_entity_id, contractor_id, clinic_id FROM {SCHEMA}.services WHERE id = %s", (service_id,))
             old_svc = cur.fetchone()
+            if not old_svc:
+                return response(404, {'error': 'Service not found'})
+            if old_svc['clinic_id'] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 f"""UPDATE {SCHEMA}.services 
                    SET name = %s, description = %s, 
@@ -3552,6 +3676,14 @@ def handle_services(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 
                 if not service_id:
                     return response(400, {'error': 'ID is required'})
+                
+                clinic_id = get_clinic_id(event)
+                cur.execute(f"SELECT clinic_id FROM {SCHEMA}.services WHERE id = %s", (service_id,))
+                svc_clinic = cur.fetchone()
+                if not svc_clinic:
+                    return response(404, {'error': 'Service not found'})
+                if svc_clinic['clinic_id'] != clinic_id:
+                    return response(403, {'error': 'Запись принадлежит другому порталу'})
                 
                 cur.execute(f"SELECT COUNT(*) as cnt FROM {SCHEMA}.payments WHERE service_id = %s", (service_id,))
                 payment_count = cur.fetchone()['cnt']
@@ -3642,6 +3774,7 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if error:
                 return error
             
+            clinic_id = get_clinic_id(event)
             cur.execute(f"""
                 SELECT 
                     s.id, s.service_id, s.description, s.amount, s.frequency, 
@@ -3656,6 +3789,7 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
                 LEFT JOIN {SCHEMA}.users u ON s.employee_id = u.id
                 LEFT JOIN {SCHEMA}.saving_reasons sr ON s.saving_reason_id = sr.id
                 LEFT JOIN {SCHEMA}.customer_departments cd ON s.customer_department_id = cd.id
+                WHERE {clinic_sql(clinic_id, 's')}
                 ORDER BY s.created_at DESC
             """)
             
@@ -3670,14 +3804,15 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             body = json.loads(event.get('body', '{}'))
             saving_req = SavingRequest(**body)
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
                 f"""INSERT INTO {SCHEMA}.savings 
-                   (service_id, description, amount, frequency, currency, employee_id, saving_reason_id, customer_department_id) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s) 
+                   (service_id, description, amount, frequency, currency, employee_id, saving_reason_id, customer_department_id, clinic_id) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) 
                    RETURNING id, service_id, description, amount, frequency, currency, employee_id, saving_reason_id, customer_department_id, created_at""",
                 (saving_req.service_id, saving_req.description, saving_req.amount, 
                  saving_req.frequency, saving_req.currency, saving_req.employee_id, saving_req.saving_reason_id,
-                 saving_req.customer_department_id)
+                 saving_req.customer_department_id, clinic_id)
             )
             
             row = cur.fetchone()
@@ -3697,8 +3832,13 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if not saving_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute(f"SELECT id, description, amount, frequency, currency, service_id, employee_id, saving_reason_id, customer_department_id FROM {SCHEMA}.savings WHERE id = %s", (saving_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT id, description, amount, frequency, currency, service_id, employee_id, saving_reason_id, customer_department_id, clinic_id FROM {SCHEMA}.savings WHERE id = %s", (saving_id,))
             sv_row = cur.fetchone()
+            if not sv_row:
+                return response(404, {'error': 'Saving not found'})
+            if sv_row['clinic_id'] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(f"DELETE FROM {SCHEMA}.savings WHERE id = %s RETURNING id", (saving_id,))
             row = cur.fetchone()
             
@@ -3722,10 +3862,13 @@ def handle_savings(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
             if not saving_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute(f"SELECT id, service_id, description, amount, frequency, currency, employee_id, saving_reason_id, customer_department_id FROM {SCHEMA}.savings WHERE id = %s", (saving_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT id, service_id, description, amount, frequency, currency, employee_id, saving_reason_id, customer_department_id, clinic_id FROM {SCHEMA}.savings WHERE id = %s", (saving_id,))
             old_row = cur.fetchone()
             if not old_row:
                 return response(404, {'error': 'Saving not found'})
+            if old_row['clinic_id'] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             
             saving_req = SavingRequest(**{k: v for k, v in body.items() if k != 'id'})
             
@@ -3762,7 +3905,8 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if error:
                 return error
             
-            cur.execute(f'SELECT id, name, icon, is_active, created_at FROM {SCHEMA}.saving_reasons ORDER BY name')
+            clinic_id = get_clinic_id(event)
+            cur.execute(f'SELECT id, name, icon, is_active, created_at FROM {SCHEMA}.saving_reasons WHERE {clinic_sql(clinic_id)} ORDER BY name')
             rows = cur.fetchall()
             reasons = [
                 {
@@ -3784,9 +3928,10 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
             body = json.loads(event.get('body', '{}'))
             reason_req = SavingReasonRequest(**body)
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
-                f"INSERT INTO {SCHEMA}.saving_reasons (name, icon) VALUES (%s, %s) RETURNING id, name, icon, is_active, created_at",
-                (reason_req.name, reason_req.icon)
+                f"INSERT INTO {SCHEMA}.saving_reasons (name, icon, clinic_id) VALUES (%s, %s, %s) RETURNING id, name, icon, is_active, created_at",
+                (reason_req.name, reason_req.icon, clinic_id)
             )
             row = cur.fetchone()
             conn.commit()
@@ -3812,8 +3957,13 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if not reason_id:
                 return response(400, {'error': 'ID is required'})
             
-            cur.execute(f"SELECT name, icon FROM {SCHEMA}.saving_reasons WHERE id = %s", (reason_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT name, icon, clinic_id FROM {SCHEMA}.saving_reasons WHERE id = %s", (reason_id,))
             old_sr = cur.fetchone()
+            if not old_sr:
+                return response(404, {'error': 'Saving reason not found'})
+            if old_sr[2] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 f"UPDATE {SCHEMA}.saving_reasons SET name = %s, icon = %s WHERE id = %s RETURNING id, name, icon, is_active, created_at",
                 (reason_req.name, reason_req.icon, reason_id)
@@ -3857,8 +4007,13 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
             if count > 0:
                 return response(400, {'error': f'Невозможно удалить причину экономии, так как она используется в {count} записях'})
             
-            cur.execute(f'SELECT name, icon FROM {SCHEMA}.saving_reasons WHERE id = %s', (reason_id,))
+            clinic_id = get_clinic_id(event)
+            cur.execute(f'SELECT name, icon, clinic_id FROM {SCHEMA}.saving_reasons WHERE id = %s', (reason_id,))
             sr_row = cur.fetchone()
+            if not sr_row:
+                return response(404, {'error': 'Saving reason not found'})
+            if sr_row[2] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(f'DELETE FROM {SCHEMA}.saving_reasons WHERE id = %s RETURNING id', (reason_id,))
             row = cur.fetchone()
             
@@ -3875,9 +4030,7 @@ def handle_saving_reasons(method: str, event: Dict[str, Any], conn) -> Dict[str,
     finally:
         cur.close()
 
-def handle_stats(event: Dict[str, Any], conn) -> Dict[str, Any]:
-    method = event.get('httpMethod', 'GET')
-    
+def handle_stats(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
     if method != 'GET':
         return response(405, {'error': 'Метод не разрешен'})
     
@@ -3887,6 +4040,7 @@ def handle_stats(event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
+    clinic_id = get_clinic_id(event)
     try:
         cur.execute(f"""
             SELECT 
@@ -3896,6 +4050,7 @@ def handle_stats(event: Dict[str, Any], conn) -> Dict[str, Any]:
                 COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
                 COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_count
             FROM {SCHEMA}.payments
+            WHERE {clinic_sql(clinic_id)}
         """)
         
         stats_data = dict(cur.fetchone())
@@ -3908,7 +4063,7 @@ def handle_stats(event: Dict[str, Any], conn) -> Dict[str, Any]:
                 COUNT(p.id) as payment_count,
                 COALESCE(SUM(p.amount), 0) as total_amount
             FROM {SCHEMA}.categories c
-            LEFT JOIN {SCHEMA}.payments p ON c.id = p.category_id
+            LEFT JOIN {SCHEMA}.payments p ON c.id = p.category_id AND {clinic_sql(clinic_id, 'p')}
             GROUP BY c.id, c.name, c.icon
             ORDER BY total_amount DESC
         """)
@@ -3923,7 +4078,7 @@ def handle_stats(event: Dict[str, Any], conn) -> Dict[str, Any]:
                 COUNT(p.id) as payment_count,
                 COALESCE(SUM(p.amount), 0) as total_amount
             FROM {SCHEMA}.customer_departments d
-            LEFT JOIN {SCHEMA}.payments p ON d.id = p.department_id
+            LEFT JOIN {SCHEMA}.payments p ON d.id = p.department_id AND {clinic_sql(clinic_id, 'p')}
             GROUP BY d.id, d.name, d.description
             ORDER BY total_amount DESC
         """)
@@ -4317,6 +4472,7 @@ def handle_comment_likes(method: str, event: Dict[str, Any], conn, current_user:
 def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str, Any] = None) -> Dict[str, Any]:
     '''Обработка запросов к истории согласований'''
     if method == 'GET':
+        clinic_id = get_clinic_id(event)
         cur = conn.cursor(cursor_factory=RealDictCursor)
         try:
             cur.execute(f'''
@@ -4334,6 +4490,7 @@ def handle_approvals(method: str, event: Dict[str, Any], conn, payload: Dict[str
                 FROM {SCHEMA}.approvals a
                 LEFT JOIN {SCHEMA}.users u ON a.approver_id = u.id
                 LEFT JOIN {SCHEMA}.payments p ON a.payment_id = p.id
+                WHERE {clinic_sql(clinic_id, 'a')}
                 ORDER BY a.created_at DESC
                 LIMIT 500
             ''')
@@ -4380,10 +4537,11 @@ def handle_audit_logs(method: str, event: Dict[str, Any], conn, payload: Dict[st
         limit = int(params.get('limit', 100))
         offset = int(params.get('offset', 0))
         
+        clinic_id = get_clinic_id(event)
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         try:
-            query = f"SELECT * FROM {SCHEMA}.audit_logs WHERE 1=1"
+            query = f"SELECT * FROM {SCHEMA}.audit_logs WHERE 1=1 AND {clinic_sql(clinic_id)}"
             query_params = []
             
             if entity_type:
@@ -4425,8 +4583,17 @@ def handle_audit_logs(method: str, event: Dict[str, Any], conn, payload: Dict[st
         if not log_id:
             return response(400, {'error': 'Missing log ID'})
         
+        clinic_id = get_clinic_id(event)
         cur = conn.cursor()
         try:
+            cur.execute(f'SELECT clinic_id FROM {SCHEMA}.audit_logs WHERE id = %s', (int(log_id),))
+            al_row = cur.fetchone()
+            if not al_row:
+                cur.close()
+                return response(404, {'error': 'Audit log не найден'})
+            if al_row[0] != clinic_id:
+                cur.close()
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(f'DELETE FROM {SCHEMA}.audit_logs WHERE id = %s', (int(log_id),))
             conn.commit()
             cur.close()
@@ -4450,6 +4617,7 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             if error:
                 return error
             
+            clinic_id = get_clinic_id(event)
             cur.execute(f"""
                 SELECT 
                     pp.id,
@@ -4485,7 +4653,7 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
                 LEFT JOIN {SCHEMA}.customer_departments cd ON pp.department_id = cd.id
                 LEFT JOIN {SCHEMA}.services s ON pp.service_id = s.id
                 LEFT JOIN {SCHEMA}.users u ON pp.created_by = u.id
-                WHERE pp.is_active = true AND pp.planned_date >= NOW()
+                WHERE pp.is_active = true AND pp.planned_date >= NOW() AND {clinic_sql(clinic_id, 'pp')}
                 ORDER BY pp.planned_date ASC
             """)
             
@@ -4515,16 +4683,17 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             if not category_id or not amount or not planned_date:
                 return response(400, {'error': 'category_id, amount и planned_date обязательны'})
             
+            clinic_id = get_clinic_id(event)
             cur.execute(
                 f"""INSERT INTO {SCHEMA}.planned_payments 
                    (category_id, amount, description, planned_date, legal_entity_id, 
                     contractor_id, department_id, service_id, invoice_number, invoice_date,
-                    recurrence_type, recurrence_end_date, created_by, is_active) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, true) 
+                    recurrence_type, recurrence_end_date, created_by, is_active, clinic_id) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, true, %s) 
                    RETURNING id""",
                 (category_id, amount, description, planned_date, legal_entity_id,
                  contractor_id, department_id, service_id, invoice_number, invoice_date,
-                 recurrence_type, recurrence_end_date, payload['user_id'])
+                 recurrence_type, recurrence_end_date, payload['user_id'], clinic_id)
             )
             
             new_id = cur.fetchone()['id']
@@ -4582,6 +4751,13 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             if not category_id or not amount or not planned_date:
                 return response(400, {'error': 'category_id, amount и planned_date обязательны'})
             
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT clinic_id FROM {SCHEMA}.planned_payments WHERE id = %s", (planned_payment_id,))
+            pp_old = cur.fetchone()
+            if not pp_old:
+                return response(404, {'error': 'Planned payment not found'})
+            if pp_old['clinic_id'] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 f"""UPDATE {SCHEMA}.planned_payments SET
                     category_id = %s, amount = %s, description = %s, planned_date = %s,
@@ -4633,6 +4809,13 @@ def handle_planned_payments(method: str, event: Dict[str, Any], conn) -> Dict[st
             if not planned_payment_id:
                 return response(400, {'error': 'ID is required'})
             
+            clinic_id = get_clinic_id(event)
+            cur.execute(f"SELECT clinic_id FROM {SCHEMA}.planned_payments WHERE id = %s", (planned_payment_id,))
+            pp_del = cur.fetchone()
+            if not pp_del:
+                return response(404, {'error': 'Planned payment not found'})
+            if pp_del['clinic_id'] != clinic_id:
+                return response(403, {'error': 'Запись принадлежит другому порталу'})
             cur.execute(
                 f"UPDATE {SCHEMA}.planned_payments SET is_active = false WHERE id = %s RETURNING id", 
                 (planned_payment_id,)
