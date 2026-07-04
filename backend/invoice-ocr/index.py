@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import base64
 import boto3
 import requests
@@ -10,9 +11,22 @@ from datetime import datetime
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 't_p61788166_html_to_frontend')
 HEADERS = {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
 
+ROUTERAI_URL = 'https://routerai.ru/api/v1/chat/completions'
+ROUTERAI_MODEL = 'gpt-4o-mini'
+
+ALLOWED_CONTENT_TYPES = {
+    'application/pdf': '.pdf',
+    'image/png': '.png',
+    'image/jpeg': '.jpeg',
+}
+
+
+def log(msg):
+    print(msg, file=sys.stderr, flush=True)
+
 
 def handler(event: dict, context) -> dict:
-    """Обработка финансовых документов: загрузка → Yandex GPT → сохранение в БД"""
+    """Обработка финансовых документов: загрузка → распознавание через RouterAI (GPT-4o mini) → сохранение в БД"""
 
     method = event.get('httpMethod', 'POST')
 
@@ -40,120 +54,59 @@ def handler(event: dict, context) -> dict:
     file_data = body.get('file')
     file_name = body.get('fileName', 'invoice.jpg')
     user_id = body.get('user_id')
-    # Распознавание через Yandex GPT отключено — всегда работаем в режиме "только загрузка".
-    upload_only = True
+    upload_only = bool(body.get('upload_only', False))
 
     if not file_data:
         return resp(400, {'error': 'File data is required'})
 
-    # ===== Режим "только загрузка" (без OCR / GPT) =====
+    mime_type, encoded = split_data_url(file_data)
+    try:
+        file_bytes = base64.b64decode(encoded)
+    except Exception:
+        return resp(400, {'error': 'Некорректный base64 файла'})
+
+    max_bytes = 20 * 1024 * 1024
+    if len(file_bytes) > max_bytes:
+        return resp(400, {'error': 'Файл превышает допустимый размер (20 МБ)'})
+
+    content_type = resolve_content_type(mime_type, file_name)
+    if not content_type:
+        return resp(400, {'error': 'Допустимы только PDF, JPG и PNG'})
+
+    try:
+        cdn_url = upload_to_s3(file_bytes, file_name, content_type)
+    except Exception as e:
+        log(f"[UPLOAD ERROR] {e}")
+        return resp(500, {'error': 'Не удалось сохранить файл'})
+
+    # ===== Режим "только загрузка" (без распознавания) =====
     if upload_only:
-        try:
-            if ',' in file_data:
-                file_data_clean = file_data.split(',')[1]
-            else:
-                file_data_clean = file_data
-            try:
-                file_bytes = base64.b64decode(file_data_clean)
-            except Exception:
-                return resp(400, {'error': 'Некорректный base64 файла'})
+        return resp(200, {'file_url': cdn_url, 'file_name': file_name})
 
-            max_bytes = 20 * 1024 * 1024
-            if len(file_bytes) > max_bytes:
-                return resp(400, {'error': 'Файл превышает допустимый размер (20 МБ)'})
-
-            name_lower = (file_name or '').lower()
-            if name_lower.endswith('.pdf'):
-                content_type = 'application/pdf'
-            elif name_lower.endswith('.png'):
-                content_type = 'image/png'
-            elif name_lower.endswith('.jpg') or name_lower.endswith('.jpeg'):
-                content_type = 'image/jpeg'
-            else:
-                return resp(400, {'error': 'Допустимы только PDF, JPG и PNG'})
-
-            aws_key = os.environ.get('AWS_ACCESS_KEY_ID')
-            aws_secret = os.environ.get('AWS_SECRET_ACCESS_KEY')
-            if not aws_key or not aws_secret:
-                return resp(500, {'error': 'S3 credentials are not configured'})
-
-            s3 = boto3.client(
-                's3',
-                endpoint_url='https://bucket.poehali.dev',
-                aws_access_key_id=aws_key,
-                aws_secret_access_key=aws_secret,
-            )
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            safe_name = (file_name or 'file').replace('/', '_').replace('\\', '_')
-            s3_key = f'invoices/{timestamp}_{safe_name}'
-            s3.put_object(Bucket='files', Key=s3_key, Body=file_bytes, ContentType=content_type)
-            cdn_url = f"https://cdn.poehali.dev/projects/{aws_key}/bucket/{s3_key}"
-            return resp(200, {'file_url': cdn_url, 'file_name': file_name})
-        except Exception as e:
-            import sys; print(f"[UPLOAD ONLY ERROR] {e}", file=sys.stderr, flush=True)
-            return resp(500, {'error': 'Не удалось сохранить файл'})
-
-    all_candidates = [
-        os.environ.get('YANDEX_GPT_API_KEY', ''),
-        os.environ.get('API_KEY', ''),
-        os.environ.get('API_KEY_SECRET', ''),
-        os.environ.get('FOLDER_ID', ''),
-        os.environ.get('YANDEX_FOLDER_ID', ''),
-    ]
-
-    api_key = ''
-    folder_id = ''
-    for val in all_candidates:
-        if not val:
-            continue
-        if val.startswith('AQV') or val.startswith('aje') or len(val) > 30:
-            if not api_key:
-                api_key = val
-        elif val.startswith('b1g') and len(val) < 30:
-            if not folder_id:
-                folder_id = val
-
+    # ===== Распознавание через RouterAI (GPT-4o mini) =====
+    api_key = os.environ.get('ROUTERAI_API_KEY')
     if not api_key:
-        return resp(500, {
-            'error': 'Отсутствует API-ключ Yandex GPT. Необходимо сохранить ключ в переменной окружения с именем: YANDEX_GPT_API_KEY'
+        return resp(200, {
+            'file_url': cdn_url,
+            'extracted_data': None,
+            'warning': 'Отсутствует API-ключ RouterAI. Сохраните его в переменной окружения ROUTERAI_API_KEY'
         })
 
-    if not folder_id:
-        folder_id = resolve_folder_id(api_key)
-    if not folder_id:
-        return resp(500, {'error': 'Не удалось определить FOLDER_ID для Yandex GPT'})
-
-    # ===== ШАГ 1: Загрузка файла на сервер =====
-
-    if ',' in file_data:
-        file_data = file_data.split(',')[1]
-    file_bytes = base64.b64decode(file_data)
-
-    s3 = boto3.client('s3',
-        endpoint_url='https://bucket.poehali.dev',
-        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
-        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
-    )
-
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    s3_key = f'invoices/{timestamp}_{file_name}'
-    content_type = 'application/pdf' if file_name.lower().endswith('.pdf') else 'image/jpeg'
-
-    s3.put_object(Bucket='files', Key=s3_key, Body=file_bytes, ContentType=content_type)
-    cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{s3_key}"
-
-    upload_date = datetime.now().isoformat()
-
-
-    # ===== ШАГ 2: Отправка в Yandex GPT =====
+    if content_type not in ('image/png', 'image/jpeg'):
+        return resp(200, {
+            'file_url': cdn_url,
+            'extracted_data': None,
+            'warning': 'Распознавание доступно только для изображений (PDF конвертируется на стороне браузера)'
+        })
 
     ref_data = load_reference_data()
 
-    categories_list = ', '.join([f'id={c["id"]} "{c["name"]}"' for c in ref_data['categories']])
-    services_list = ', '.join([f'id={s["id"]} "{s["name"]}"' for s in ref_data['services']])
-    departments_list = ', '.join([f'id={d["id"]} "{d["name"]}"' for d in ref_data['departments']])
-    legal_entities_list = ', '.join([f'id={le["id"]} "{le["name"]}" ИНН:{le.get("inn","")}'.strip() for le in ref_data['legal_entities']])
-    contractors_list = ', '.join([f'id={c["id"]} "{c["name"]}" ИНН:{c.get("inn","")}'.strip() for c in ref_data['contractors']])
+    legal_entities_list = ', '.join(
+        [f'id={le["id"]} "{le["name"]}" ИНН:{le.get("inn", "")}'.strip() for le in ref_data['legal_entities']]
+    )
+    contractors_list = ', '.join(
+        [f'id={c["id"]} "{c["name"]}" ИНН:{c.get("inn", "")}'.strip() for c in ref_data['contractors']]
+    )
 
     gpt_prompt = f"""Ты — финансовый аналитик. Проанализируй изображение счёта/финансового документа и извлеки данные.
 
@@ -179,21 +132,16 @@ def handler(event: dict, context) -> dict:
 
 ВАЖНО: Верни ТОЛЬКО JSON без markdown-разметки, без комментариев, без дополнительного текста."""
 
-    gpt_result = call_yandex_gpt(api_key, folder_id, gpt_prompt, file_data)
+    gpt_result = call_router_ai(api_key, gpt_prompt, encoded, content_type)
 
     if not gpt_result:
         return resp(200, {
             'file_url': cdn_url,
             'extracted_data': None,
-            'step': 2,
-            'warning': 'Yandex GPT не вернул результат'
+            'warning': 'Не удалось распознать документ'
         })
 
-
-    # ===== ШАГ 3: Сохранение в БД =====
-
     extracted = map_gpt_to_db(gpt_result, ref_data)
-
 
     return resp(200, {
         'file_url': cdn_url,
@@ -211,36 +159,50 @@ def resp(status: int, body: dict) -> dict:
     }
 
 
-def resolve_folder_id(api_key: str) -> str:
-    try:
-        r = requests.get(
-            'https://resource-manager.api.cloud.yandex.net/resource-manager/v1/clouds',
-            headers={'Authorization': f'Api-Key {api_key}'},
-            timeout=10
-        )
-        if r.status_code != 200:
-            return ''
-        clouds = r.json().get('clouds', [])
-        if not clouds:
-            return ''
-        cloud_id = clouds[0]['id']
+def split_data_url(file_data: str):
+    """Разбирает data:<mime>;base64,<data> при наличии префикса. Возвращает (mime|None, base64-строка)."""
+    if file_data.startswith('data:') and ',' in file_data:
+        header, encoded = file_data.split(',', 1)
+        try:
+            mime = header.split(':', 1)[1].split(';')[0].strip().lower()
+        except Exception:
+            mime = None
+        return mime, encoded
+    return None, file_data
 
-        r2 = requests.get(
-            f'https://resource-manager.api.cloud.yandex.net/resource-manager/v1/folders?cloudId={cloud_id}',
-            headers={'Authorization': f'Api-Key {api_key}'},
-            timeout=10
-        )
-        if r2.status_code != 200:
-            return ''
-        folders = r2.json().get('folders', [])
-        for f in folders:
-            if f.get('status') == 'ACTIVE':
-                return f['id']
-        if folders:
-            return folders[0]['id']
-    except Exception:
-        pass
-    return ''
+
+def resolve_content_type(mime_type: str | None, file_name: str) -> str | None:
+    """Определяет content-type файла: сперва по data-URL, затем по расширению имени."""
+    if mime_type in ALLOWED_CONTENT_TYPES:
+        return mime_type
+
+    name_lower = (file_name or '').lower()
+    if name_lower.endswith('.pdf'):
+        return 'application/pdf'
+    if name_lower.endswith('.png'):
+        return 'image/png'
+    if name_lower.endswith('.jpg') or name_lower.endswith('.jpeg'):
+        return 'image/jpeg'
+    return None
+
+
+def upload_to_s3(file_bytes: bytes, file_name: str, content_type: str) -> str:
+    aws_key = os.environ.get('AWS_ACCESS_KEY_ID')
+    aws_secret = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    if not aws_key or not aws_secret:
+        raise RuntimeError('S3 credentials are not configured')
+
+    s3 = boto3.client(
+        's3',
+        endpoint_url='https://bucket.poehali.dev',
+        aws_access_key_id=aws_key,
+        aws_secret_access_key=aws_secret,
+    )
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    safe_name = (file_name or 'file').replace('/', '_').replace('\\', '_')
+    s3_key = f'invoices/{timestamp}_{safe_name}'
+    s3.put_object(Bucket='files', Key=s3_key, Body=file_bytes, ContentType=content_type)
+    return f"https://cdn.poehali.dev/projects/{aws_key}/bucket/{s3_key}"
 
 
 def load_reference_data() -> dict:
@@ -265,129 +227,42 @@ def load_reference_data() -> dict:
     return ref
 
 
-def call_yandex_gpt(api_key: str, folder_id: str, prompt: str, image_base64: str) -> dict | None:
-    url = 'https://llm.api.cloud.yandex.net/foundationModels/v1/completion'
-
+def call_router_ai(api_key: str, prompt: str, image_base64: str, mime_type: str) -> dict | None:
+    """Отправляет изображение и промпт в RouterAI (GPT-4o mini, OpenAI-совместимый API)."""
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Api-Key {api_key}',
-        'x-folder-id': folder_id
+        'Authorization': f'Bearer {api_key}',
     }
 
     payload = {
-        'modelUri': f'gpt://{folder_id}/yandexgpt/latest',
-        'completionOptions': {
-            'stream': False,
-            'temperature': 0.1,
-            'maxTokens': 2000
-        },
+        'model': ROUTERAI_MODEL,
+        'temperature': 0.1,
+        'max_tokens': 2000,
         'messages': [
             {
                 'role': 'user',
-                'text': prompt,
-                'image': {
-                    'content': image_base64
-                }
+                'content': [
+                    {'type': 'text', 'text': prompt},
+                    {'type': 'image_url', 'image_url': {'url': f'data:{mime_type};base64,{image_base64}'}}
+                ]
             }
         ]
     }
 
     try:
-        r = requests.post(url, headers=headers, json=payload, timeout=60)
-        import sys; print(f"[GPT] Status: {r.status_code}", file=sys.stderr, flush=True)
+        r = requests.post(ROUTERAI_URL, headers=headers, json=payload, timeout=60)
+        log(f"[ROUTERAI] Status: {r.status_code}")
 
         if r.status_code != 200:
-            import sys; print(f"[GPT ERROR] status={r.status_code}", file=sys.stderr, flush=True)
-
-            if r.status_code == 400 or 'image' in r.text.lower():
-                ocr_text = run_vision_ocr(image_base64, api_key, folder_id)
-                if ocr_text:
-                    return call_gpt_text_only(api_key, folder_id, prompt, ocr_text)
-
+            log(f"[ROUTERAI ERROR] {r.text[:500]}")
             return None
 
         data = r.json()
-        text = data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text', '')
-
+        text = data.get('choices', [{}])[0].get('message', {}).get('content', '')
         return parse_gpt_json(text)
 
     except Exception as e:
-        import sys; print(f"[GPT EXCEPTION] {e}", file=sys.stderr, flush=True)
-        return None
-
-
-def run_vision_ocr(image_base64: str, api_key: str, folder_id: str) -> str:
-    r = requests.post(
-        'https://vision.api.cloud.yandex.net/vision/v1/batchAnalyze',
-        headers={'Authorization': f'Api-Key {api_key}', 'Content-Type': 'application/json'},
-        json={
-            'folderId': folder_id,
-            'analyze_specs': [{
-                'content': image_base64,
-                'features': [{'type': 'TEXT_DETECTION', 'text_detection_config': {'language_codes': ['ru', 'en']}}]
-            }]
-        },
-        timeout=30
-    )
-
-    if r.status_code != 200:
-        import sys; print(f"[VISION ERROR] status={r.status_code}", file=sys.stderr, flush=True)
-        return ''
-
-    data = r.json()
-    full_text = ''
-
-    try:
-        pages = data['results'][0]['results'][0]['textDetection']['pages']
-        for page in pages:
-            for block in page.get('blocks', []):
-                for line in block.get('lines', []):
-                    words = [w.get('text', '') for w in line.get('words', [])]
-                    full_text += ' '.join(words) + '\n'
-    except (KeyError, IndexError) as e:
-        import sys; print(f"[VISION PARSE] {e}", file=sys.stderr, flush=True)
-
-    return full_text.strip()
-
-
-def call_gpt_text_only(api_key: str, folder_id: str, original_prompt: str, ocr_text: str) -> dict | None:
-    url = 'https://llm.api.cloud.yandex.net/foundationModels/v1/completion'
-
-    prompt_with_text = original_prompt + f"\n\nТекст документа (распознан через OCR):\n{ocr_text[:4000]}"
-
-    payload = {
-        'modelUri': f'gpt://{folder_id}/yandexgpt/latest',
-        'completionOptions': {
-            'stream': False,
-            'temperature': 0.1,
-            'maxTokens': 2000
-        },
-        'messages': [
-            {
-                'role': 'user',
-                'text': prompt_with_text
-            }
-        ]
-    }
-
-    try:
-        r = requests.post(url, headers={
-            'Content-Type': 'application/json',
-            'Authorization': f'Api-Key {api_key}',
-            'x-folder-id': folder_id
-        }, json=payload, timeout=60)
-
-        import sys; print(f"[GPT TEXT] Status: {r.status_code}", file=sys.stderr, flush=True)
-
-        if r.status_code != 200:
-            return None
-
-        data = r.json()
-        text = data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text', '')
-        return parse_gpt_json(text)
-
-    except Exception as e:
-        import sys; print(f"[GPT TEXT EXCEPTION] {e}", file=sys.stderr, flush=True)
+        log(f"[ROUTERAI EXCEPTION] {e}")
         return None
 
 
@@ -408,7 +283,7 @@ def parse_gpt_json(text: str) -> dict | None:
                 return json.loads(match.group())
             except json.JSONDecodeError:
                 pass
-    import sys; print("[GPT PARSE FAIL] Could not parse GPT response", file=sys.stderr, flush=True)
+    log("[GPT PARSE FAIL] Could not parse AI response")
     return None
 
 

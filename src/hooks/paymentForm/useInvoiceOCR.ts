@@ -49,7 +49,7 @@ export const useInvoiceOCR = ({
 
       onToast({
         title: 'Шаг 2: Анализ документа',
-        description: 'Отправляю в Yandex GPT для распознавания...',
+        description: 'Распознаю данные счёта с помощью ИИ...',
       });
 
       const ocrResponse = await fetch(FUNC2URL['invoice-ocr'], {
