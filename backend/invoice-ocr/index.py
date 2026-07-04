@@ -12,7 +12,7 @@ SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 't_p61788166_html_to_frontend')
 HEADERS = {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
 
 ROUTERAI_URL = 'https://routerai.ru/api/v1/chat/completions'
-ROUTERAI_MODEL = 'gpt-4o-mini'
+ROUTERAI_MODEL = 'openai/gpt-4o-mini'
 
 ALLOWED_CONTENT_TYPES = {
     'application/pdf': '.pdf',
