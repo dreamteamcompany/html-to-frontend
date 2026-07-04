@@ -28,7 +28,7 @@ def make_response(status: int, body: dict) -> dict:
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, X-Authorization, X-Auth-Token',
+            'Access-Control-Allow-Headers': 'Content-Type, X-Authorization, X-Auth-Token, X-Clinic-Id',
         },
         'body': json.dumps(body, ensure_ascii=False),
         'isBase64Encoded': False,

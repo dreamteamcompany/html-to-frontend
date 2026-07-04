@@ -4,7 +4,7 @@ import base64
 def handler(event: dict, context) -> dict:
     """Проксирует изображение кота для обхода CORS при скачивании раскраски"""
     if event.get('httpMethod') == 'OPTIONS':
-        return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400'}, 'body': ''}
+        return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, X-Clinic-Id', 'Access-Control-Max-Age': '86400'}, 'body': ''}
 
     url = (event.get('queryStringParameters') or {}).get('url', '')
     if not url:

@@ -6,7 +6,7 @@ import re
 CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, X-Clinic-Id',
     'Access-Control-Max-Age': '86400',
 }
 

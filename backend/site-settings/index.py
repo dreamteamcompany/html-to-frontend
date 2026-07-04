@@ -60,7 +60,7 @@ def handler(event: dict, context) -> dict:
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, X-Authorization',
+                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, X-Authorization, X-Clinic-Id',
                 'Access-Control-Max-Age': '86400'
             },
             'body': ''

@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, Authorization, X-Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, Authorization, X-Authorization, X-Clinic-Id',
 }
 
 def verify_token(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:

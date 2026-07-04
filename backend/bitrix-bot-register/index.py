@@ -28,7 +28,7 @@ def response(status: int, body: Any) -> Dict[str, Any]:
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, X-Authorization, X-Auth-Token, X-User-Id, X-Session-Id',
+            'Access-Control-Allow-Headers': 'Content-Type, X-Authorization, X-Auth-Token, X-User-Id, X-Session-Id, X-Clinic-Id',
         },
         'body': json.dumps(body, ensure_ascii=False, default=str),
     }
@@ -61,7 +61,7 @@ def handler(event: Dict[str, Any], context) -> Dict[str, Any]:
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, X-Authorization, X-Auth-Token, X-User-Id, X-Session-Id',
+                'Access-Control-Allow-Headers': 'Content-Type, X-Authorization, X-Auth-Token, X-User-Id, X-Session-Id, X-Clinic-Id',
                 'Access-Control-Max-Age': '86400',
             },
             'body': '',
