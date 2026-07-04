@@ -10,6 +10,7 @@ interface CategoryChartHeaderProps {
   setShowAll: (v: boolean) => void;
   isLight: boolean;
   openDrillAll: () => void;
+  title?: string;
 }
 
 const CategoryChartHeader = ({
@@ -20,6 +21,7 @@ const CategoryChartHeader = ({
   setShowAll,
   isLight,
   openDrillAll,
+  title = 'IT Расходы по Категориям',
 }: CategoryChartHeaderProps) => {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
@@ -34,7 +36,7 @@ const CategoryChartHeader = ({
             <Icon name="LayoutGrid" size={16} style={{ color: '#7551e9' }} />
           </div>
           <h3 className={dashboardTypography.cardTitle} style={{ fontSize: '15px' }}>
-            IT Расходы по Категориям
+            {title}
           </h3>
         </div>
         {!loading && total > 0 && (

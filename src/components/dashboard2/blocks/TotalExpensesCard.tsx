@@ -7,6 +7,7 @@ import { usePaymentsCache } from '@/contexts/PaymentsCacheContext';
 import { parsePaymentDate, getPreviousPeriodRange } from '../dashboardUtils';
 import { useDrillDown } from '../useDrillDown';
 import DrillDownModal from '../DrillDownModal';
+import { useClinic } from '@/contexts/ClinicContext';
 
 interface PaymentRecord {
   status: string;
@@ -19,6 +20,8 @@ const TotalExpensesCard = () => {
   const { getDateRange, period, dateFrom, dateTo } = usePeriod();
   const { payments: allPayments, loading } = usePaymentsCache();
   const { drillFilter, openDrill, closeDrill } = useDrillDown();
+  const { clinicId } = useClinic();
+  const title = clinicId != null ? 'Общие Расходы' : 'Общие IT Расходы';
 
   const stats = useMemo(() => {
     const { from, to } = getDateRange();
@@ -61,12 +64,12 @@ const TotalExpensesCard = () => {
       <Card
         className="h-full"
         style={{ background: 'hsl(var(--card))', border: '1px solid rgba(117, 81, 233, 0.4)', borderTop: '4px solid #7551e9', boxShadow: '0 4px 28px rgba(117,81,233,0.13)', cursor: loading ? 'default' : 'pointer' }}
-        onClick={() => !loading && openDrill({ type: 'all', value: '', label: 'Общие IT Расходы' })}
+        onClick={() => !loading && openDrill({ type: 'all', value: '', label: title })}
       >
         <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-between">
           <div className="flex justify-between items-start mb-4 sm:mb-5">
             <div>
-              <div className={`${dashboardTypography.cardTitle} mb-2`}>Общие IT Расходы</div>
+              <div className={`${dashboardTypography.cardTitle} mb-2`}>{title}</div>
               <div className={dashboardTypography.cardSubtitle}>
                 {loading ? 'Загрузка...' : `${stats.count} платежей`}
               </div>

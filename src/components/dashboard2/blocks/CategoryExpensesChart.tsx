@@ -7,6 +7,7 @@ import DrillDownModal from '../DrillDownModal';
 import { useResponsiveState, useCategoryData, useTimelineData } from './categoryExpenses/hooks';
 import CategoryChartHeader from './categoryExpenses/CategoryChartHeader';
 import CategoryChartCanvas from './categoryExpenses/CategoryChartCanvas';
+import { useClinic } from '@/contexts/ClinicContext';
 
 const CategoryExpensesChart = () => {
   const { period, getDateRange, dateFrom, dateTo } = usePeriod();
@@ -14,6 +15,7 @@ const CategoryExpensesChart = () => {
   const { drillFilter, openDrill, closeDrill } = useDrillDown();
   const [showAll, setShowAll] = useState(false);
   const { isMobile, isLight } = useResponsiveState();
+  const { clinicId } = useClinic();
 
   useEffect(() => {
     setShowAll(false);
@@ -64,6 +66,7 @@ const CategoryExpensesChart = () => {
           setShowAll={setShowAll}
           isLight={isLight}
           openDrillAll={() => openDrill({ type: 'all', value: 'all', label: 'Все расходы' })}
+          title={clinicId != null ? 'Расходы по Категориям' : undefined}
         />
 
         <CategoryChartCanvas
