@@ -4135,8 +4135,55 @@ def _save_chat_message_simple(conn, bitrix_user_id: str, message_text: str, bitr
         log(f'[COMMENT-NOTIFY] Failed to save chat message: {e}')
 
 
-def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id: int, conn=None) -> None:
-    """Отправляет сообщение от бота в Битрикс24 пользователю (упрощённая версия для уведомлений о комментариях)."""
+def _bitrix_upload_file_to_dialog(webhook_url: str, bitrix_user_id: str, file_url: str, file_name: str):
+    """Скачивает файл по ссылке (S3/CDN) и загружает его в Диск Битрикс24 в папку диалога с пользователем.
+    Возвращает ID файла в Битриксе (для параметра FILES в imbot.message.add) или None при ошибке."""
+    try:
+        folder_req = urllib.request.Request(
+            f'{webhook_url}/im.disk.folder.get.json',
+            data=json.dumps({'type': 'user', 'id': str(bitrix_user_id)}).encode('utf-8'),
+            headers={'Content-Type': 'application/json'}, method='POST',
+        )
+        folder_resp = urllib.request.urlopen(folder_req, timeout=15)
+        folder_result = json.loads(folder_resp.read().decode())
+        folder_id = (folder_result.get('result') or {}).get('FOLDER_ID') or (folder_result.get('result') or {}).get('ID')
+        if not folder_id:
+            log(f'[COMMENT-NOTIFY] im.disk.folder.get no folder_id: {folder_result}')
+            return None
+
+        file_req = urllib.request.Request(file_url, method='GET')
+        file_resp = urllib.request.urlopen(file_req, timeout=20)
+        file_bytes = file_resp.read()
+        if len(file_bytes) > 20 * 1024 * 1024:
+            log(f'[COMMENT-NOTIFY] attachment too large: {len(file_bytes)} bytes')
+            return None
+        file_base64 = base64.b64encode(file_bytes).decode('utf-8')
+
+        upload_req = urllib.request.Request(
+            f'{webhook_url}/disk.folder.uploadfile.json',
+            data=json.dumps({
+                'id': folder_id,
+                'fileContent': [file_name, file_base64],
+                'data': {'NAME': file_name},
+                'generateUniqueName': 'Y',
+            }).encode('utf-8'),
+            headers={'Content-Type': 'application/json'}, method='POST',
+        )
+        upload_resp = urllib.request.urlopen(upload_req, timeout=30)
+        upload_result = json.loads(upload_resp.read().decode())
+        uploaded_file_id = (upload_result.get('result') or {}).get('ID')
+        if not uploaded_file_id:
+            log(f'[COMMENT-NOTIFY] disk.folder.uploadfile failed: {upload_result}')
+            return None
+        return uploaded_file_id
+    except Exception as e:
+        log(f'[COMMENT-NOTIFY] file upload to Bitrix failed: {e}')
+        return None
+
+
+def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id: int, conn=None, attachment_url: str = None, attachment_name: str = None) -> None:
+    """Отправляет сообщение от бота в Битрикс24 пользователю (упрощённая версия для уведомлений о комментариях).
+    Если передан attachment_url — файл загружается в Диск Битрикса и прикрепляется к сообщению."""
     webhook_url = os.environ.get('BITRIX_WEBHOOK_URL', '').rstrip('/')
     bot_id = os.environ.get('BITRIX_BOT_ID', '')
     bot_client_id = os.environ.get('BITRIX_BOT_CLIENT_ID', '')
@@ -4159,6 +4206,10 @@ def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id
 
     fallback_message = f"{message}\n[url={payment_url}]Перейти к платежу[/url]"
 
+    uploaded_file_id = None
+    if attachment_url and webhook_url:
+        uploaded_file_id = _bitrix_upload_file_to_dialog(webhook_url, bitrix_user_id, attachment_url, attachment_name or 'файл')
+
     if bot_id:
         url = f'{webhook_url}/imbot.message.add.json'
         base_payload = {
@@ -4167,6 +4218,8 @@ def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id
             'MESSAGE': message,
             'KEYBOARD': keyboard,
         }
+        if uploaded_file_id:
+            base_payload['FILES'] = [uploaded_file_id]
         attempts = []
         if bot_client_id:
             attempts.append({**base_payload, 'CLIENT_ID': bot_client_id})
@@ -4176,6 +4229,7 @@ def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id
             'TO_USER_ID': str(bitrix_user_id),
             'MESSAGE': message,
             'KEYBOARD': keyboard,
+            **({'FILES': [uploaded_file_id]} if uploaded_file_id else {}),
         })
         attempts.append(base_payload)
 
@@ -4226,7 +4280,7 @@ def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id
         log(f'[COMMENT-NOTIFY] im.notify.system.add failed for user {bitrix_user_id}: {e2}')
 
 
-def notify_comment_recipients(conn, payment_id: int, author_id: int, comment_text: str) -> None:
+def notify_comment_recipients(conn, payment_id: int, author_id: int, comment_text: str, attachment_url: str = None, attachment_name: str = None) -> None:
     """
     Шлёт Битрикс-уведомление о новом комментарии к платежу.
     Правило: коммент от Финансиста -> уведомление CEO-согласующему;
@@ -4348,10 +4402,12 @@ def notify_comment_recipients(conn, payment_id: int, author_id: int, comment_tex
             f"Автор комментария: {author_name}\n\n"
             f"«{short_text}»"
         )
+        if attachment_url:
+            message += f"\n\n📎 Приложен файл: {attachment_name or 'файл'}"
 
         for bitrix_id in recipients_bitrix_ids:
             try:
-                send_bitrix_bot_message_simple(str(bitrix_id), message, payment_id, conn=conn)
+                send_bitrix_bot_message_simple(str(bitrix_id), message, payment_id, conn=conn, attachment_url=attachment_url, attachment_name=attachment_name)
             except Exception as e:
                 log(f'[COMMENT-NOTIFY] send failed to {bitrix_id}: {e}')
     except Exception as e:
@@ -4378,6 +4434,8 @@ def handle_comments(method: str, event: Dict[str, Any], conn, current_user: Dict
                     u.photo_url,
                     c.parent_comment_id,
                     c.comment_text,
+                    c.attachment_url,
+                    c.attachment_name,
                     c.created_at,
                     c.updated_at,
                     (SELECT COUNT(*) FROM {SCHEMA}.comment_likes WHERE comment_id = c.id) as likes_count,
@@ -4404,25 +4462,27 @@ def handle_comments(method: str, event: Dict[str, Any], conn, current_user: Dict
             payment_id = body.get('payment_id')
             comment_text = body.get('comment_text', '').strip()
             parent_comment_id = body.get('parent_comment_id')
+            attachment_url = body.get('attachment_url') or None
+            attachment_name = body.get('attachment_name') or None
             
-            if not payment_id or not comment_text:
+            if not payment_id or (not comment_text and not attachment_url):
                 return response(400, {'error': 'payment_id and comment_text are required'})
             
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
             cur.execute(f"""
                 INSERT INTO {SCHEMA}.payment_comments 
-                (payment_id, user_id, parent_comment_id, comment_text)
-                VALUES (%s, %s, %s, %s)
-                RETURNING id, payment_id, user_id, parent_comment_id, comment_text, created_at
-            """, (payment_id, current_user['id'], parent_comment_id, comment_text))
+                (payment_id, user_id, parent_comment_id, comment_text, attachment_url, attachment_name)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id, payment_id, user_id, parent_comment_id, comment_text, attachment_url, attachment_name, created_at
+            """, (payment_id, current_user['id'], parent_comment_id, comment_text, attachment_url, attachment_name))
             
             new_comment = cur.fetchone()
             conn.commit()
             cur.close()
 
             try:
-                notify_comment_recipients(conn, int(payment_id), int(current_user['id']), comment_text)
+                notify_comment_recipients(conn, int(payment_id), int(current_user['id']), comment_text, attachment_url, attachment_name)
             except Exception as notify_err:
                 log(f"[COMMENT-NOTIFY] dispatch error: {notify_err}")
 
