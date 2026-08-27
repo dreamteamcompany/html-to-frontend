@@ -126,8 +126,12 @@ def _user_has_role(conn, user_id: int, role_names) -> bool:
     return has
 
 
-def _send_bot_text(bitrix_user_id: str, text: str) -> None:
-    """Простое текстовое сообщение пользователю в Битрикс (без кнопок)."""
+def _send_bot_text(bitrix_user_id: str, text: str, conn=None, user_id: Optional[int] = None) -> None:
+    """Простое текстовое сообщение пользователю в Битрикс (без кнопок).
+    Если передан conn — ответ бота также сохраняется в раздел «Чат»."""
+    if conn is not None:
+        _save_chat_message(conn, bitrix_user_id, user_id, text, direction='bot')
+
     webhook_url = os.environ.get('BITRIX_WEBHOOK_URL', '').rstrip('/')
     if not webhook_url or not bitrix_user_id:
         return
@@ -305,14 +309,14 @@ def _set_pending_comment(conn, bitrix_user_id: str, user_id: int, payment_id: in
     cur.close()
 
 
-def _save_chat_message(conn, bitrix_user_id: str, user_id: Optional[int], message_text: str, bitrix_message_id: Optional[str] = None) -> None:
-    """Сохраняет входящее сообщение от пользователя боту в раздел «Чат» приложения."""
+def _save_chat_message(conn, bitrix_user_id: str, user_id: Optional[int], message_text: str, bitrix_message_id: Optional[str] = None, direction: str = 'user') -> None:
+    """Сохраняет сообщение (от пользователя боту или ответ бота) в раздел «Чат» приложения."""
     try:
         cur = conn.cursor()
         cur.execute(f"""
-            INSERT INTO {SCHEMA}.bitrix_chat_messages (bitrix_user_id, user_id, message_text, bitrix_message_id)
-            VALUES (%s, %s, %s, %s)
-        """, (str(bitrix_user_id), user_id, message_text, str(bitrix_message_id) if bitrix_message_id else None))
+            INSERT INTO {SCHEMA}.bitrix_chat_messages (bitrix_user_id, user_id, message_text, bitrix_message_id, direction)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (str(bitrix_user_id), user_id, message_text, str(bitrix_message_id) if bitrix_message_id else None, direction))
         conn.commit()
         cur.close()
     except Exception as e:
@@ -385,19 +389,19 @@ def handle_command_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
 
     user = _find_user_by_bitrix_id(conn, bitrix_user_id)
     if not user:
-        _send_bot_text(bitrix_user_id, 'Вы не привязаны к системе финансов. Действие не выполнено.')
+        _send_bot_text(bitrix_user_id, 'Вы не привязаны к системе финансов. Действие не выполнено.', conn=conn)
         return response(200, {'ok': False, 'reason': 'no_user'})
 
     if not _user_has_role(conn, user['id'], ('CEO', 'Генеральный директор', 'Администратор', 'Admin')):
-        _send_bot_text(bitrix_user_id, 'У вас нет прав на согласование платежей.')
+        _send_bot_text(bitrix_user_id, 'У вас нет прав на согласование платежей.', conn=conn, user_id=user['id'])
         return response(200, {'ok': False, 'reason': 'forbidden'})
 
     if command == 'approve_all':
         result = _approve_all_pending(conn, user['id'])
         if result['total'] == 0:
-            _send_bot_text(bitrix_user_id, 'Нет платежей, ожидающих согласования.')
+            _send_bot_text(bitrix_user_id, 'Нет платежей, ожидающих согласования.', conn=conn, user_id=user['id'])
         else:
-            _send_bot_text(bitrix_user_id, f"✅ Согласовано платежей: {result['approved']} из {result['total']}.")
+            _send_bot_text(bitrix_user_id, f"✅ Согласовано платежей: {result['approved']} из {result['total']}.", conn=conn, user_id=user['id'])
         return response(200, {'ok': True, 'approved': result['approved'], 'total': result['total']})
 
     summary = _payment_summary(conn, payment_id)
@@ -405,21 +409,21 @@ def handle_command_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
     if command == 'approve':
         result = _approve_or_reject(conn, payment_id, user['id'], 'approve')
         if not result['ok'] and result.get('reason') == 'already':
-            _send_bot_text(bitrix_user_id, f'Платёж уже обработан ранее: {summary}.')
+            _send_bot_text(bitrix_user_id, f'Платёж уже обработан ранее: {summary}.', conn=conn, user_id=user['id'])
         elif not result['ok']:
-            _send_bot_text(bitrix_user_id, f'Не удалось согласовать {summary}.')
+            _send_bot_text(bitrix_user_id, f'Не удалось согласовать {summary}.', conn=conn, user_id=user['id'])
         else:
-            _send_bot_text(bitrix_user_id, f'✅ Согласовано: {summary}.')
+            _send_bot_text(bitrix_user_id, f'✅ Согласовано: {summary}.', conn=conn, user_id=user['id'])
         return response(200, {'ok': result.get('ok', False)})
 
     if command == 'reject':
         result = _approve_or_reject(conn, payment_id, user['id'], 'reject')
         if not result['ok'] and result.get('reason') == 'already':
-            _send_bot_text(bitrix_user_id, f'Платёж уже обработан ранее: {summary}.')
+            _send_bot_text(bitrix_user_id, f'Платёж уже обработан ранее: {summary}.', conn=conn, user_id=user['id'])
         elif not result['ok']:
-            _send_bot_text(bitrix_user_id, f'Не удалось отклонить {summary}.')
+            _send_bot_text(bitrix_user_id, f'Не удалось отклонить {summary}.', conn=conn, user_id=user['id'])
         else:
-            _send_bot_text(bitrix_user_id, f'❌ Отклонено: {summary}.')
+            _send_bot_text(bitrix_user_id, f'❌ Отклонено: {summary}.', conn=conn, user_id=user['id'])
         return response(200, {'ok': result.get('ok', False)})
 
     if command == 'comment':
@@ -427,6 +431,7 @@ def handle_command_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
         _send_bot_text(
             bitrix_user_id,
             f'💬 Напишите комментарий следующим сообщением — он будет добавлен к {summary}.',
+            conn=conn, user_id=user['id'],
         )
         return response(200, {'ok': True})
 
@@ -476,7 +481,7 @@ def handle_message_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
         payment_id = pending['payment_id']
         _add_payment_comment(conn, payment_id, user['id'], message_text)
         summary = _payment_summary(conn, payment_id)
-        _send_bot_text(bitrix_user_id, f'💬 Комментарий добавлен к {summary}.')
+        _send_bot_text(bitrix_user_id, f'💬 Комментарий добавлен к {summary}.', conn=conn, user_id=user['id'])
         return response(200, {'ok': True, 'mode': 'pending_comment'})
 
     if reply_to_id:
@@ -485,7 +490,7 @@ def handle_message_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
             payment_id = link['payment_id']
             _add_payment_comment(conn, payment_id, user['id'], message_text)
             summary = _payment_summary(conn, payment_id)
-            _send_bot_text(bitrix_user_id, f'💬 Комментарий добавлен к {summary}.')
+            _send_bot_text(bitrix_user_id, f'💬 Комментарий добавлен к {summary}.', conn=conn, user_id=user['id'])
             return response(200, {'ok': True, 'mode': 'reply'})
 
     return response(200, {'ok': True, 'mode': 'ignored'})

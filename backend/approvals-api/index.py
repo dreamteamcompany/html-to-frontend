@@ -278,6 +278,24 @@ def handle_approvals_list(event: Dict[str, Any], conn, user_id: int) -> Dict[str
     cur.close()
     return response(200, {'payments': payments})
 
+def _save_chat_message(conn, bitrix_user_id: str, message_text: str, bitrix_message_id: str = None, direction: str = 'bot'):
+    """Сохраняет сообщение бота (уведомление о согласовании и т.п.) в раздел «Чат» приложения."""
+    if not bitrix_user_id:
+        return
+    try:
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE bitrix_id = %s AND is_active = true LIMIT 1", (str(bitrix_user_id),))
+        user_row = cur.fetchone()
+        user_id = user_row['id'] if user_row else None
+        cur.execute(f"""
+            INSERT INTO {SCHEMA}.bitrix_chat_messages (bitrix_user_id, user_id, message_text, bitrix_message_id, direction)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (str(bitrix_user_id), user_id, message_text, str(bitrix_message_id) if bitrix_message_id else None, direction))
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        log(f'[BITRIX-BOT] Failed to save chat message: {e}')
+
 def _save_bitrix_message_link(conn, bitrix_user_id: str, bitrix_message_id: str, payment_id: int, purpose: str = 'approval'):
     """Сохраняет связку сообщения Битрикса с платежом для последующей обработки нажатий/reply."""
     if not bitrix_message_id or not bitrix_user_id:
@@ -397,8 +415,10 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int, 
                 log(f'[BITRIX-BOT] imbot.message.add attempt {idx+1} to user {bitrix_user_id}: {result}')
                 msg_id = result.get('result')
                 if msg_id:
-                    if with_actions and conn is not None:
-                        _save_bitrix_message_link(conn, bitrix_user_id, str(msg_id), payment_id, 'approval')
+                    if conn is not None:
+                        if with_actions:
+                            _save_bitrix_message_link(conn, bitrix_user_id, str(msg_id), payment_id, 'approval')
+                        _save_chat_message(conn, bitrix_user_id, message, str(msg_id))
                     return
             except urllib.error.HTTPError as e:
                 error_body = ''
@@ -424,8 +444,10 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int, 
         log(f'[BITRIX-BOT] im.message.add to user {bitrix_user_id}: {result3}')
         msg_id3 = result3.get('result')
         if msg_id3:
-            if with_actions and conn is not None:
-                _save_bitrix_message_link(conn, bitrix_user_id, str(msg_id3), payment_id, 'approval')
+            if conn is not None:
+                if with_actions:
+                    _save_bitrix_message_link(conn, bitrix_user_id, str(msg_id3), payment_id, 'approval')
+                _save_chat_message(conn, bitrix_user_id, message, str(msg_id3))
             return
     except Exception as e:
         log(f'[BITRIX-BOT] im.message.add failed for user {bitrix_user_id}: {e}')
@@ -442,6 +464,8 @@ def send_bitrix_bot_message(bitrix_user_id: str, message: str, payment_id: int, 
         resp2 = urllib.request.urlopen(req2, timeout=10)
         result2 = json.loads(resp2.read().decode())
         log(f'[BITRIX-BOT] im.notify.system.add to user {bitrix_user_id}: {result2}')
+        if result2.get('result') and conn is not None:
+            _save_chat_message(conn, bitrix_user_id, message)
     except Exception as e2:
         log(f'[BITRIX-BOT] im.notify.system.add also failed for user {bitrix_user_id}: {e2}')
 
@@ -868,7 +892,7 @@ def handle_chat_messages(event: Dict[str, Any], conn) -> Dict[str, Any]:
         limit = 200
 
     cur.execute(f"""
-        SELECT m.id, m.bitrix_user_id, m.user_id, m.message_text, m.created_at,
+        SELECT m.id, m.bitrix_user_id, m.user_id, m.message_text, m.created_at, m.direction,
                u.full_name AS user_full_name, u.username AS user_username, u.photo_url AS user_photo_url
         FROM {SCHEMA}.bitrix_chat_messages m
         JOIN {SCHEMA}.users u ON m.user_id = u.id

@@ -4116,7 +4116,26 @@ def handle_stats(method: str, event: Dict[str, Any], conn) -> Dict[str, Any]:
         cur.close()
         return response(500, {'error': 'Internal server error'})
 
-def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id: int) -> None:
+def _save_chat_message_simple(conn, bitrix_user_id: str, message_text: str, bitrix_message_id: str = None) -> None:
+    """Сохраняет ответ бота (уведомление о комментарии) в раздел «Чат» приложения."""
+    if not conn or not bitrix_user_id:
+        return
+    try:
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE bitrix_id = %s AND is_active = true LIMIT 1", (str(bitrix_user_id),))
+        user_row = cur.fetchone()
+        user_id = user_row['id'] if user_row else None
+        cur.execute(f"""
+            INSERT INTO {SCHEMA}.bitrix_chat_messages (bitrix_user_id, user_id, message_text, bitrix_message_id, direction)
+            VALUES (%s, %s, %s, %s, 'bot')
+        """, (str(bitrix_user_id), user_id, message_text, str(bitrix_message_id) if bitrix_message_id else None))
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        log(f'[COMMENT-NOTIFY] Failed to save chat message: {e}')
+
+
+def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id: int, conn=None) -> None:
     """Отправляет сообщение от бота в Битрикс24 пользователю (упрощённая версия для уведомлений о комментариях)."""
     webhook_url = os.environ.get('BITRIX_WEBHOOK_URL', '').rstrip('/')
     bot_id = os.environ.get('BITRIX_BOT_ID', '')
@@ -4168,6 +4187,7 @@ def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id
                 result = json.loads(resp.read().decode())
                 log(f'[COMMENT-NOTIFY] imbot.message.add attempt {idx+1} to user {bitrix_user_id}: {result}')
                 if result.get('result'):
+                    _save_chat_message_simple(conn, bitrix_user_id, message, str(result['result']))
                     return
             except Exception as e:
                 log(f'[COMMENT-NOTIFY] imbot.message.add attempt {idx+1} failed for user {bitrix_user_id}: {e}')
@@ -4184,6 +4204,7 @@ def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id
         result3 = json.loads(resp3.read().decode())
         log(f'[COMMENT-NOTIFY] im.message.add to user {bitrix_user_id}: {result3}')
         if result3.get('result'):
+            _save_chat_message_simple(conn, bitrix_user_id, message, str(result3['result']))
             return
     except Exception as e:
         log(f'[COMMENT-NOTIFY] im.message.add failed for user {bitrix_user_id}: {e}')
@@ -4199,6 +4220,8 @@ def send_bitrix_bot_message_simple(bitrix_user_id: str, message: str, payment_id
         resp2 = urllib.request.urlopen(req2, timeout=10)
         result2 = json.loads(resp2.read().decode())
         log(f'[COMMENT-NOTIFY] im.notify.system.add to user {bitrix_user_id}: {result2}')
+        if result2.get('result'):
+            _save_chat_message_simple(conn, bitrix_user_id, message)
     except Exception as e2:
         log(f'[COMMENT-NOTIFY] im.notify.system.add failed for user {bitrix_user_id}: {e2}')
 
@@ -4328,7 +4351,7 @@ def notify_comment_recipients(conn, payment_id: int, author_id: int, comment_tex
 
         for bitrix_id in recipients_bitrix_ids:
             try:
-                send_bitrix_bot_message_simple(str(bitrix_id), message, payment_id)
+                send_bitrix_bot_message_simple(str(bitrix_id), message, payment_id, conn=conn)
             except Exception as e:
                 log(f'[COMMENT-NOTIFY] send failed to {bitrix_id}: {e}')
     except Exception as e:

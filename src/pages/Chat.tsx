@@ -14,6 +14,7 @@ interface ChatMessage {
   user_id: number;
   message_text: string;
   created_at: string;
+  direction: 'user' | 'bot';
   user_full_name?: string;
   user_username?: string;
   user_photo_url?: string;
@@ -219,18 +220,24 @@ const Chat = () => {
               const prevDate = idx > 0 ? formatShortDate(openThread.messages[idx - 1].created_at) : null;
               const currDate = formatShortDate(msg.created_at);
               const showDateSeparator = currDate !== prevDate;
+              const isBot = msg.direction === 'bot';
               return (
                 <div key={msg.id}>
                   {showDateSeparator && (
                     <div className="text-center text-xs text-muted-foreground my-3">{currDate}</div>
                   )}
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <p className="text-sm text-foreground whitespace-pre-wrap break-words">
-                      {msg.message_text}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 text-right">
-                      {new Date(msg.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                  <div className={`flex ${isBot ? 'justify-start' : 'justify-end'}`}>
+                    <div className={`max-w-[85%] rounded-lg p-3 ${isBot ? 'bg-primary/10' : 'bg-muted/50'}`}>
+                      {isBot && (
+                        <p className="text-xs font-medium text-primary mb-1">Бот</p>
+                      )}
+                      <p className="text-sm text-foreground whitespace-pre-wrap break-words">
+                        {msg.message_text}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1 text-right">
+                        {new Date(msg.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
                   </div>
                 </div>
               );
