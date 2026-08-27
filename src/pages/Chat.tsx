@@ -46,7 +46,7 @@ const Chat = () => {
   const loadMessages = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const res = await apiFetch(`${API_ENDPOINTS.chatApi}`);
+      const res = await apiFetch(`${API_ENDPOINTS.approvalsApi}?endpoint=chat-messages`);
       if (res.ok) {
         const data = await res.json();
         setMessages(Array.isArray(data?.messages) ? data.messages : []);

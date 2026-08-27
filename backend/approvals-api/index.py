@@ -857,6 +857,29 @@ def handle_approval_action(event: Dict[str, Any], conn, user_id: int) -> Dict[st
 
     return response(200, {'message': 'Действие выполнено успешно', 'new_status': new_status})
 
+def handle_chat_messages(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    """Получение истории сообщений, которые CEO пишет напрямую боту в Битрикс24."""
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    qs = event.get('queryStringParameters') or {}
+    try:
+        limit = min(int(qs.get('limit', 200)), 500)
+    except (ValueError, TypeError):
+        limit = 200
+
+    cur.execute(f"""
+        SELECT m.id, m.bitrix_user_id, m.user_id, m.message_text, m.created_at,
+               u.full_name AS user_full_name, u.username AS user_username, u.photo_url AS user_photo_url
+        FROM {SCHEMA}.bitrix_chat_messages m
+        LEFT JOIN {SCHEMA}.users u ON m.user_id = u.id
+        ORDER BY m.created_at DESC
+        LIMIT %s
+    """, (limit,))
+    messages = [dict(row) for row in cur.fetchall()]
+    cur.close()
+
+    return response(200, {'messages': messages})
+
 def handle_approvers_list(event: Dict[str, Any], conn) -> Dict[str, Any]:
     """Получение списка утверждающих"""
     cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -909,7 +932,15 @@ def handler(event: dict, context) -> dict:
                     return error
                 return handle_approvers_list(event, conn)
             return response(405, {'error': 'Method not allowed'})
-        
+
+        elif endpoint == 'chat-messages':
+            if method == 'GET':
+                payload, error = verify_token_and_permission(event, conn, 'chat.read')
+                if error:
+                    return error
+                return handle_chat_messages(event, conn)
+            return response(405, {'error': 'Method not allowed'})
+
         else:
             payload, error = verify_token_and_permission(event, conn, 'approvals.read' if method == 'GET' else 'payments.update')
             if error:

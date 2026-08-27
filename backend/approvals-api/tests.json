@@ -19,6 +19,16 @@
         "error": "Unauthorized"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get chat messages (unauthorized)",
+      "method": "GET",
+      "path": "/?endpoint=chat-messages",
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "Unauthorized"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }
