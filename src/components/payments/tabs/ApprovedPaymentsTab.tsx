@@ -36,7 +36,13 @@ const ApprovedPaymentsTab = ({ openPaymentId, onOpenPaymentIdHandled }: Approved
   const { toast } = useToast();
 
   const payments = useMemo(() =>
-    (allPayments as ExtendedPayment[]).filter(p => p.status === 'approved'),
+    (allPayments as ExtendedPayment[])
+      .filter(p => p.status === 'approved')
+      .sort((a, b) => {
+        const aDate = new Date(a.submitted_at || a.created_at || 0).getTime();
+        const bDate = new Date(b.submitted_at || b.created_at || 0).getTime();
+        return bDate - aDate;
+      }),
     [allPayments]
   );
 
