@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
   uploadFile: 'https://functions.poehali.dev/a8d52b31-112f-4c93-9671-47788732fa56',
   tokenRefresh: 'https://functions.poehali.dev/597de3a8-5db2-4e46-8835-5a37042b00f1',
   autoBackup: 'https://functions.poehali.dev/a1f700ad-4018-4498-b87f-c211700e5477',
+  chatApi: 'https://functions.poehali.dev/PLACEHOLDER-chat-api',
 } as const;
 
 export const getApiUrl = (endpoint: string, baseApi: keyof typeof API_ENDPOINTS = 'dictionariesApi'): string => {

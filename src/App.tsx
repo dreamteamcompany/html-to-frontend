@@ -34,6 +34,7 @@ import PlannedPayments from "./pages/PlannedPayments";
 import Monitoring from "./pages/Monitoring";
 import CEOGuide from "./pages/CEOGuide";
 import Clinics from "./pages/Clinics";
+import Chat from "./pages/Chat";
 import ClinicLayout from "./components/clinic/ClinicLayout";
 import ClinicDashboard from "./pages/clinic/ClinicDashboard";
 
@@ -91,6 +92,7 @@ const App = () => {
             <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
             <Route path="/ceo-guide" element={<ProtectedRoute><CEOGuide /></ProtectedRoute>} />
             <Route path="/clinics" element={<ProtectedRoute requiredPermission={{ resource: 'clinics', action: 'read' }}><Clinics /></ProtectedRoute>} />
+            <Route path="/chat" element={<ProtectedRoute requiredPermission={{ resource: 'chat', action: 'read' }}><Chat /></ProtectedRoute>} />
             <Route path="/clinics/:clinicId" element={<ProtectedRoute requiredPermission={{ resource: 'clinics', action: 'dashboard' }}><ClinicLayout /></ProtectedRoute>}>
               <Route path="dashboard" element={<ClinicDashboard />} />
               <Route path="payments" element={<Payments embedded />} />

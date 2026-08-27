@@ -305,6 +305,20 @@ def _set_pending_comment(conn, bitrix_user_id: str, user_id: int, payment_id: in
     cur.close()
 
 
+def _save_chat_message(conn, bitrix_user_id: str, user_id: Optional[int], message_text: str, bitrix_message_id: Optional[str] = None) -> None:
+    """Сохраняет входящее сообщение от пользователя боту в раздел «Чат» приложения."""
+    try:
+        cur = conn.cursor()
+        cur.execute(f"""
+            INSERT INTO {SCHEMA}.bitrix_chat_messages (bitrix_user_id, user_id, message_text, bitrix_message_id)
+            VALUES (%s, %s, %s, %s)
+        """, (str(bitrix_user_id), user_id, message_text, str(bitrix_message_id) if bitrix_message_id else None))
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        log(f'[CALLBACK] Failed to save chat message: {e}')
+
+
 def _extract_payment_id_from_params(params: Any) -> Optional[int]:
     if isinstance(params, dict):
         v = params.get('payment_id') or params.get('PAYMENT_ID')
@@ -441,12 +455,20 @@ def handle_message_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
     if not reply_to_id and params:
         reply_to_id = params.get('REPLY_ID') or params.get('REPLY_TO_ID')
 
+    message_id = payload.get('MESSAGE_ID') or params.get('MESSAGE_ID')
+
     log(f'[CALLBACK] message user={bitrix_user_id!r} text_len={len(message_text)} reply={reply_to_id!r}')
 
     if not bitrix_user_id or not message_text:
         return response(200, {'ok': False, 'reason': 'empty'})
 
     user = _find_user_by_bitrix_id(conn, bitrix_user_id)
+
+    # Сохраняем ЛЮБОЕ входящее сообщение в раздел «Чат», независимо от того,
+    # является ли оно комментарием к платежу — чтобы CEO/Администратор видели
+    # всю переписку с ботом в системе.
+    _save_chat_message(conn, bitrix_user_id, user['id'] if user else None, message_text, message_id)
+
     if not user:
         return response(200, {'ok': False, 'reason': 'no_user'})
 

@@ -124,6 +124,15 @@ const PaymentsSidebar = ({
           </li>
         )}
 
+        {hasPermission('chat', 'read') && (
+          <li>
+            <Link to="/chat" className={`flex items-center gap-3 px-[15px] py-3 rounded-lg ${isActive('/chat') ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'} transition-colors`}>
+              <Icon name="MessageCircle" size={20} />
+              <span>Чат</span>
+            </Link>
+          </li>
+        )}
+
         {!isCEO && (hasPermission('legal_entities', 'read') || hasPermission('categories', 'read') || hasPermission('custom_fields', 'read') || hasPermission('contractors', 'read') || hasPermission('customer_departments', 'read') || hasPermission('services', 'read') || hasPermission('saving_reasons', 'read')) && (
           <li>
             <button 
