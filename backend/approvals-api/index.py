@@ -871,7 +871,7 @@ def handle_chat_messages(event: Dict[str, Any], conn) -> Dict[str, Any]:
         SELECT m.id, m.bitrix_user_id, m.user_id, m.message_text, m.created_at,
                u.full_name AS user_full_name, u.username AS user_username, u.photo_url AS user_photo_url
         FROM {SCHEMA}.bitrix_chat_messages m
-        LEFT JOIN {SCHEMA}.users u ON m.user_id = u.id
+        JOIN {SCHEMA}.users u ON m.user_id = u.id
         ORDER BY m.created_at DESC
         LIMIT %s
     """, (limit,))

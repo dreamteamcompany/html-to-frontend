@@ -463,14 +463,13 @@ def handle_message_event(conn, payload: Dict[str, Any]) -> Dict[str, Any]:
         return response(200, {'ok': False, 'reason': 'empty'})
 
     user = _find_user_by_bitrix_id(conn, bitrix_user_id)
-
-    # Сохраняем ЛЮБОЕ входящее сообщение в раздел «Чат», независимо от того,
-    # является ли оно комментарием к платежу — чтобы CEO/Администратор видели
-    # всю переписку с ботом в системе.
-    _save_chat_message(conn, bitrix_user_id, user['id'] if user else None, message_text, message_id)
-
     if not user:
         return response(200, {'ok': False, 'reason': 'no_user'})
+
+    # Сохраняем сообщение от привязанного к системе пользователя в раздел «Чат»,
+    # независимо от того, является ли оно комментарием к платежу — чтобы
+    # CEO/Администратор видели всю переписку с ботом в системе.
+    _save_chat_message(conn, bitrix_user_id, user['id'], message_text, message_id)
 
     pending = _pop_pending_comment(conn, bitrix_user_id)
     if pending:
